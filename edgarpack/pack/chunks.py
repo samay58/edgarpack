@@ -1,5 +1,6 @@
 """Generate semantic chunks from sections."""
 
+from bisect import bisect_right
 import hashlib
 import json
 import re
@@ -133,33 +134,40 @@ def chunk_section(
         fallback_end: int | None = None
         fallback_tokens: int | None = None
 
-        for end in all_boundaries:
-            if end <= start:
-                continue
-            candidate = content[start:end]
-            candidate_tokens = count_tokens(candidate)
-            if candidate_tokens <= max_tokens:
-                if candidate_tokens >= min_tokens:
-                    best_end = end
-                    best_tokens = candidate_tokens
-                else:
-                    fallback_end = end
-                    fallback_tokens = candidate_tokens
-                continue
-            break
-
-        if best_end is None or best_end <= start:
-            if fallback_end is not None and fallback_end > start:
-                best_end = fallback_end
-                best_tokens = fallback_tokens
+        if has_tiktoken():
+            truncated = truncate_to_tokens(content[start:], max_tokens)
+            if not truncated:
+                break
+            max_end = start + len(truncated)
+            idx = bisect_right(all_boundaries, max_end) - 1
+            if idx >= 0 and all_boundaries[idx] > start:
+                best_end = all_boundaries[idx]
             else:
-                # No boundary within max_tokens; hard split.
-                if has_tiktoken():
-                    truncated = truncate_to_tokens(content[start:], max_tokens)
-                    if not truncated:
-                        break
-                    best_end = start + len(truncated)
-                    best_tokens = count_tokens(truncated)
+                best_end = max_end
+            text = content[start:best_end]
+            if not text:
+                break
+            best_tokens = count_tokens(text)
+        else:
+            for end in all_boundaries:
+                if end <= start:
+                    continue
+                candidate = content[start:end]
+                candidate_tokens = count_tokens(candidate)
+                if candidate_tokens <= max_tokens:
+                    if candidate_tokens >= min_tokens:
+                        best_end = end
+                        best_tokens = candidate_tokens
+                    else:
+                        fallback_end = end
+                        fallback_tokens = candidate_tokens
+                    continue
+                break
+
+            if best_end is None or best_end <= start:
+                if fallback_end is not None and fallback_end > start:
+                    best_end = fallback_end
+                    best_tokens = fallback_tokens
                 else:
                     best_end = min(n, start + max_tokens * 4)
                     best_tokens = count_tokens(content[start:best_end])
