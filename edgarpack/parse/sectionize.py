@@ -230,6 +230,26 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             parts = parts[:-1]
         return [p.strip() for p in parts]
 
+    def _extract_part(cell: str) -> str | None:
+        pm = PART_HEADING_PATTERN.match(cell)
+        if pm and pm.group("part"):
+            return pm.group("part").upper()
+        pm2 = re.search(r"\bPART\s+(?P<part>[IVX]+)\b", cell, flags=re.IGNORECASE)
+        if pm2 and pm2.group("part"):
+            return pm2.group("part").upper()
+        return None
+
+    def _match_item_in_cell(cell: str, pattern: re.Pattern[str], item_regex: str) -> re.Match[str] | None:
+        m = pattern.match(cell)
+        if m:
+            return m
+        for im in re.finditer(item_regex, cell, flags=re.IGNORECASE):
+            tail = cell[im.start():].strip()
+            mm = pattern.match(tail)
+            if mm:
+                return mm
+        return None
+
     def _clean_title(raw: str) -> str:
         t = re.sub(r"\s+", " ", raw).strip()
         # Fix common flattening artifacts where words get concatenated when HTML tags are stripped.
@@ -270,9 +290,9 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         # Update current_part if we see a PART heading (line or table cell).
         if is_table:
             for cell in _split_table_cells(line_stripped):
-                pm = PART_HEADING_PATTERN.match(cell)
-                if pm and pm.group("part"):
-                    current_part = pm.group("part").upper()
+                part = _extract_part(cell)
+                if part:
+                    current_part = part
                     break
         else:
             pm = PART_HEADING_PATTERN.match(line_stripped)
@@ -296,7 +316,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if is_table:
                 cells = _split_table_cells(line_stripped)
                 for idx, cell in enumerate(cells):
-                    m = ITEM_PATTERN_8K.match(cell)
+                    m = _match_item_in_cell(cell, ITEM_PATTERN_8K, r"ITEM\s+\d+\.\d+\b")
                     if not m:
                         continue
                     item = m.group("item")
@@ -332,7 +352,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if is_table:
                 cells = _split_table_cells(line_stripped)
                 for idx, cell in enumerate(cells):
-                    m = ITEM_PATTERN_10K.match(cell)
+                    m = _match_item_in_cell(cell, ITEM_PATTERN_10K, r"ITEM\s*\d+[A-Z]?\b")
                     if not m or not m.group("item"):
                         continue
                     item = m.group("item")

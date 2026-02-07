@@ -84,6 +84,18 @@ class TestFindSections(unittest.TestCase):
         self.assertTrue(matches)
         self.assertLessEqual(len(matches[0].title), 100)
 
+    def test_table_cells_with_prefixed_item(self) -> None:
+        md = (
+            "| 1. Item 1. Business | 3 |\n"
+            "| --- | --- |\n"
+            "| 2. Item 1A. Risk Factors | 5 |\n"
+            "\n"
+        )
+        matches = find_sections(md, "10-K")
+        items = [m.item for m in matches if m.item != "other"]
+        self.assertIn("1", items)
+        self.assertIn("1A", items)
+
     def test_amended_8k_uses_8k_pattern(self) -> None:
         md = "ITEM 1.01 Entry into a Material Definitive Agreement\nBody\n"
         matches = find_sections(md, "8-K/A")

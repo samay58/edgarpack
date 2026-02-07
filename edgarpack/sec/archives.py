@@ -107,9 +107,11 @@ def identify_html_files(index: dict[str, Any], primary_doc: str) -> list[str]:
             # These patterns indicate supplementary files
             skip_patterns = [
                 r"^index\.html?$",  # SEC folder index page (not a filing document)
+                r".*-index\.html?$",  # Accession index page
+                r"^index-headers\.html?$",  # Accession header index
                 r"^R\d+\.htm",  # XBRL rendering files
                 r"^ex\d+",  # Exhibits (unless primary)
-                r"FilingSummary\.htm",
+                r"FilingSummary\.html?$",
                 r"Financial_Report\.xlsx",
             ]
 
