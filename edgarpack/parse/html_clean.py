@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from html import escape
 from html.parser import HTMLParser
 
-
 # Tags to completely remove (including content)
 REMOVE_TAGS = {
     "script",
@@ -260,4 +259,3 @@ class _TextHTMLParser(HTMLParser):
     def handle_data(self, data: str) -> None:
         if data:
             self.out.append(data)
-

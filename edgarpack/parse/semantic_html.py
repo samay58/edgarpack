@@ -16,7 +16,6 @@ from __future__ import annotations
 import re
 from urllib.parse import urljoin
 
-
 _TAG_RENAMES: dict[str, str] = {
     "b": "strong",
     "i": "em",
@@ -56,6 +55,7 @@ def reduce_to_semantic(html: str, base_url: str | None = None) -> str:
 
     # Make links absolute if requested.
     if base_url:
+
         def _abs_href(match: re.Match) -> str:
             href = match.group(1)
             if not href:
@@ -98,4 +98,3 @@ def simplify_html(html: str, base_url: str | None = None) -> str:
     html = clean_html(html)
     html = reduce_to_semantic(html, base_url)
     return html
-

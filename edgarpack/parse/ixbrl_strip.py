@@ -2,7 +2,6 @@
 
 import re
 
-
 # iXBRL namespace prefixes
 IXBRL_PREFIXES = [
     "ix:",
@@ -88,10 +87,12 @@ def has_ixbrl(html: str) -> bool:
     """
     # Quick check for common iXBRL indicators
     html_lower = html.lower()
-    return any([
-        "ix:" in html_lower,
-        "xbrli:" in html_lower,
-        "inline xbrl" in html_lower,
-        'xmlns:ix="' in html_lower,
-        XMLNS_PATTERN.search(html) is not None,
-    ])
+    return any(
+        [
+            "ix:" in html_lower,
+            "xbrli:" in html_lower,
+            "inline xbrl" in html_lower,
+            'xmlns:ix="' in html_lower,
+            XMLNS_PATTERN.search(html) is not None,
+        ]
+    )

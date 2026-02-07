@@ -28,6 +28,7 @@ async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
         cached = cache.get(url, max_age_seconds=86400)
         if cached is not None:
             import json
+
             return json.loads(cached)
 
     client = await get_client()
@@ -38,6 +39,7 @@ async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
         return {}
 
     import json
+
     cache.put(url, json.dumps(data).encode(), headers)
 
     return data
@@ -88,13 +90,15 @@ def filter_facts_by_accession(
                     value_accession = value.get("accn", "").replace("-", "")
                     if value_accession == accession_nodash:
                         # Include relevant fields
-                        matching_values.append({
-                            "period": _format_period(value),
-                            "value": value.get("val"),
-                            "unit": unit_type,
-                            "form": value.get("form"),
-                            "frame": value.get("frame"),
-                        })
+                        matching_values.append(
+                            {
+                                "period": _format_period(value),
+                                "value": value.get("val"),
+                                "unit": unit_type,
+                                "form": value.get("form"),
+                                "frame": value.get("frame"),
+                            }
+                        )
 
                 if matching_values:
                     if concept_name not in taxonomy_result:

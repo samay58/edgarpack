@@ -138,14 +138,17 @@ def scan_filings_for_company_llms(cik_dir: Path) -> list[dict[str, Any]]:
 
         try:
             import json
+
             manifest = json.loads(manifest_path.read_text())
             filing_info = manifest.get("filing", {})
 
-            filings.append({
-                "form_type": filing_info.get("form_type", "Unknown"),
-                "filing_date": filing_info.get("filing_date", "Unknown"),
-                "accession": subdir.name,
-            })
+            filings.append(
+                {
+                    "form_type": filing_info.get("form_type", "Unknown"),
+                    "filing_date": filing_info.get("filing_date", "Unknown"),
+                    "accession": subdir.name,
+                }
+            )
         except Exception:
             continue
 

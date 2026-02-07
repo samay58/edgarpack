@@ -58,11 +58,7 @@ class TestStripIXBRL(unittest.TestCase):
         self.assertIn("100", result)
 
     def test_strips_declared_xbrl_prefixes(self) -> None:
-        html = (
-            '<html xmlns:foo="http://xbrl.org/2003/instance">'
-            "<foo:bar>123</foo:bar>"
-            "</html>"
-        )
+        html = '<html xmlns:foo="http://xbrl.org/2003/instance"><foo:bar>123</foo:bar></html>'
         result = strip_ixbrl(html)
         self.assertNotIn("foo:", result)
         self.assertIn("123", result)

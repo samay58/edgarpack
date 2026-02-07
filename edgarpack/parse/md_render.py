@@ -217,6 +217,7 @@ def _process_lists(html: str) -> str:
 
 def _process_tables(html: str) -> str:
     """Process tables to GFM format."""
+
     def process_table(match: re.Match) -> str:
         content = match.group(1)
 
@@ -230,13 +231,21 @@ def _process_tables(html: str) -> str:
             is_header_row = False
 
             # Find header cells
-            for th_match in re.finditer(r"<th[^>]*>(.*?)</th>", tr_content, re.DOTALL | re.IGNORECASE):
+            for th_match in re.finditer(
+                r"<th[^>]*>(.*?)</th>",
+                tr_content,
+                re.DOTALL | re.IGNORECASE,
+            ):
                 cells.append(_strip_tags(th_match.group(1)).strip())
                 is_header_row = True
 
             # Find data cells (if no header cells found)
             if not cells:
-                for td_match in re.finditer(r"<td[^>]*>(.*?)</td>", tr_content, re.DOTALL | re.IGNORECASE):
+                for td_match in re.finditer(
+                    r"<td[^>]*>(.*?)</td>",
+                    tr_content,
+                    re.DOTALL | re.IGNORECASE,
+                ):
                     cells.append(_strip_tags(td_match.group(1)).strip())
 
             if cells:

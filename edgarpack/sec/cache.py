@@ -3,7 +3,7 @@
 import hashlib
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -55,7 +55,7 @@ class DiskCache:
             try:
                 meta = json.loads(meta_path.read_text())
                 cached_at = datetime.fromisoformat(meta.get("cached_at", ""))
-                age = (datetime.now(timezone.utc) - cached_at).total_seconds()
+                age = (datetime.now(UTC) - cached_at).total_seconds()
                 if age > max_age_seconds:
                     return None
             except (json.JSONDecodeError, ValueError):
@@ -63,12 +63,7 @@ class DiskCache:
 
         return path.read_bytes()
 
-    def put(
-        self,
-        url: str,
-        content: bytes,
-        headers: dict[str, Any] | None = None
-    ) -> None:
+    def put(self, url: str, content: bytes, headers: dict[str, Any] | None = None) -> None:
         """Store content in cache.
 
         Args:
@@ -87,7 +82,7 @@ class DiskCache:
 
         meta = {
             "url": url,
-            "cached_at": datetime.now(timezone.utc).isoformat(),
+            "cached_at": datetime.now(UTC).isoformat(),
             "size": len(content),
             "headers": headers or {},
         }

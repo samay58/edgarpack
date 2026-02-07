@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -54,7 +54,7 @@ class TestManifestDeterminism(unittest.TestCase):
             source_url="https://example.test",
         )
 
-        expected = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        expected = datetime(2024, 1, 15, tzinfo=UTC)
         self.assertEqual(manifest.generated_at, expected)
         self.assertEqual(manifest.source.fetched_at, expected)
 
@@ -113,8 +113,18 @@ class TestChunkSection(unittest.TestCase):
     def test_prefers_chunk_meeting_min_tokens(self) -> None:
         para = ("word " * 120).strip()
         content = f"{para}\n\n{para}\n\n{para}"
-        single_tokens = chunk_section("tmp", para, min_tokens=1, max_tokens=10_000)[0].tokens
-        double_tokens = chunk_section("tmp", f"{para}\n\n{para}", min_tokens=1, max_tokens=10_000)[0].tokens
+        single_tokens = chunk_section(
+            "tmp",
+            para,
+            min_tokens=1,
+            max_tokens=10_000,
+        )[0].tokens
+        double_tokens = chunk_section(
+            "tmp",
+            f"{para}\n\n{para}",
+            min_tokens=1,
+            max_tokens=10_000,
+        )[0].tokens
         min_tokens = single_tokens + 1
         max_tokens = double_tokens
         chunks = chunk_section("sec1", content, min_tokens=min_tokens, max_tokens=max_tokens)
@@ -137,14 +147,14 @@ class TestBuildPackDeterminism(unittest.IsolatedAsyncioTestCase):
         )
 
         html = (
-            "<html><body>"
-            "<h1>PART I</h1>"
-            "<h2>ITEM 1. BUSINESS</h2><p>A</p>"
-            "<h2>ITEM 2. MANAGEMENT'S DISCUSSION</h2><p>B</p>"
-            "<h1>PART II</h1>"
-            "<h2>ITEM 1. LEGAL PROCEEDINGS</h2><p>C</p>"
-            "</body></html>"
-        ).encode("utf-8")
+            b"<html><body>"
+            b"<h1>PART I</h1>"
+            b"<h2>ITEM 1. BUSINESS</h2><p>A</p>"
+            b"<h2>ITEM 2. MANAGEMENT'S DISCUSSION</h2><p>B</p>"
+            b"<h1>PART II</h1>"
+            b"<h2>ITEM 1. LEGAL PROCEEDINGS</h2><p>C</p>"
+            b"</body></html>"
+        )
 
         async def _run_once(tmp: Path) -> dict[str, bytes]:
             await build_pack(
@@ -164,8 +174,15 @@ class TestBuildPackDeterminism(unittest.IsolatedAsyncioTestCase):
 
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
-            with patch("edgarpack.pack.build.get_filing_by_accession", new=AsyncMock(return_value=meta)), patch(
-                "edgarpack.pack.build.fetch_filing_html", new=AsyncMock(return_value=[("doc.htm", html)])
+            with (
+                patch(
+                    "edgarpack.pack.build.get_filing_by_accession",
+                    new=AsyncMock(return_value=meta),
+                ),
+                patch(
+                    "edgarpack.pack.build.fetch_filing_html",
+                    new=AsyncMock(return_value=[("doc.htm", html)]),
+                ),
             ):
                 a = await _run_once(tmp)
                 b = await _run_once(tmp)

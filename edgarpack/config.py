@@ -6,10 +6,7 @@ from pathlib import Path
 # User-Agent must be declared per SEC requirements
 # SEC requires format: "Company Name AdminContact@company.com"
 # Override via EDGARPACK_USER_AGENT environment variable
-USER_AGENT = os.getenv(
-    "EDGARPACK_USER_AGENT",
-    "EdgarPack admin@edgarpack.dev"
-)
+USER_AGENT = os.getenv("EDGARPACK_USER_AGENT", "EdgarPack admin@edgarpack.dev")
 
 # Cache location - user-level, survives project moves
 CACHE_DIR = Path(os.getenv("EDGARPACK_CACHE_DIR", Path.home() / ".edgarpack" / "cache"))

@@ -91,7 +91,7 @@ class SECClient:
         """Compatibility no-op (stdlib client has no persistent resources)."""
         return
 
-    async def __aenter__(self) -> "SECClient":
+    async def __aenter__(self) -> SECClient:
         return self
 
     async def __aexit__(self, *args: Any) -> None:
@@ -187,4 +187,3 @@ async def get_client() -> SECClient:
     if _global_client is None:
         _global_client = SECClient()
     return _global_client
-

@@ -85,12 +85,7 @@ class TestFindSections(unittest.TestCase):
         self.assertLessEqual(len(matches[0].title), 100)
 
     def test_table_cells_with_prefixed_item(self) -> None:
-        md = (
-            "| 1. Item 1. Business | 3 |\n"
-            "| --- | --- |\n"
-            "| 2. Item 1A. Risk Factors | 5 |\n"
-            "\n"
-        )
+        md = "| 1. Item 1. Business | 3 |\n| --- | --- |\n| 2. Item 1A. Risk Factors | 5 |\n\n"
         matches = find_sections(md, "10-K")
         items = [m.item for m in matches if m.item != "other"]
         self.assertIn("1", items)
@@ -112,18 +107,14 @@ class TestSectionize(unittest.TestCase):
 
     def test_splits_into_sections(self) -> None:
         md = (
-            "## ITEM 1. BUSINESS\n\nWe make things.\n\n"
-            "## ITEM 2. PROPERTIES\n\nWe own buildings.\n"
+            "## ITEM 1. BUSINESS\n\nWe make things.\n\n## ITEM 2. PROPERTIES\n\nWe own buildings.\n"
         )
         sections = sectionize(md, "10-K")
         self.assertTrue(all(isinstance(s, Section) for s in sections))
         self.assertGreaterEqual(len(sections), 2)
 
     def test_handles_duplicate_ids(self) -> None:
-        md = (
-            "## ITEM 1. BUSINESS\n\nFirst.\n\n"
-            "## ITEM 1. BUSINESS\n\nSecond.\n"
-        )
+        md = "## ITEM 1. BUSINESS\n\nFirst.\n\n## ITEM 1. BUSINESS\n\nSecond.\n"
         sections = sectionize(md, "10-K")
         ids = [s.id for s in sections]
         self.assertEqual(len(ids), len(set(ids)))

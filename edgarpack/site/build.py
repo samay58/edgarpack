@@ -213,7 +213,7 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
 
     overview_html = html_doc(
         title=f"{pack.company_name} {pack.form_type} ({pack.filing_date})",
-        header_left=link(f"../index.html", f"← {pack.company_name}"),
+        header_left=link("../index.html", f"← {pack.company_name}"),
         header_right="",
         body=overview,
     )
@@ -231,7 +231,7 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
     full_html = html_doc(
         title=f"{pack.company_name} {pack.form_type} Full",
         header_left=link("index.html", f"← {pack.company_name}"),
-        header_right=f'{link("filing.full.md", "Raw MD")}',
+        header_right=f"{link('filing.full.md', 'Raw MD')}",
         body=full_html_body,
     )
     (out_pack_dir / "full.html").write_text(full_html, encoding="utf-8")
@@ -255,7 +255,7 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
         page = html_doc(
             title=f"{pack.company_name} {pack.form_type} {title}",
             header_left=link("../index.html", "← Overview"),
-            header_right=f'{link("../full.html", "Full")} {link(_section_md_href(sid), "Raw MD")}',
+            header_right=f"{link('../full.html', 'Full')} {link(_section_md_href(sid), 'Raw MD')}",
             body=body,
         )
         (sections_dir / f"{_section_page_name(sid)}.html").write_text(page, encoding="utf-8")
@@ -312,7 +312,8 @@ def _markdown_to_html(md: str) -> str:
                 in_code = True
                 code_buf = []
             else:
-                out.append(f"<pre><code>{_escape_block('\\n'.join(code_buf))}</code></pre>")
+                code_text = "\n".join(code_buf)
+                out.append(f"<pre><code>{_escape_block(code_text)}</code></pre>")
                 in_code = False
             i += 1
             continue
@@ -406,18 +407,15 @@ def _markdown_to_html(md: str) -> str:
 
     flush_paragraph(para_buf)
     if in_code:
-        out.append(f"<pre><code>{_escape_block('\\n'.join(code_buf))}</code></pre>")
+        code_text = "\n".join(code_buf)
+        out.append(f"<pre><code>{_escape_block(code_text)}</code></pre>")
 
     return "\n".join(out)
 
 
 def _escape_block(text: str) -> str:
     # Block escaping (pre/code) – keep newlines.
-    return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _inline(text: str) -> str:
@@ -430,13 +428,14 @@ def _inline(text: str) -> str:
         return token
 
     text = _re_sub(r"`([^`]+)`", text, lambda m: stash(f"<code>{_escape_block(m.group(1))}</code>"))
+
     # Links
     def _link_repl(match) -> str:
         href = _safe_href(match.group(2))
         label = match.group(1)
         if not href:
             return label
-        return stash(f"<a href=\"{_escape_attr(href)}\">{_escape_block(label)}</a>")
+        return stash(f'<a href="{_escape_attr(href)}">{_escape_block(label)}</a>')
 
     text = _re_sub(r"\[([^\]]+)\]\(([^)]+)\)", text, _link_repl)
     # Bold
@@ -454,10 +453,7 @@ def _inline(text: str) -> str:
 
 def _escape_attr(text: str) -> str:
     return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
     )
 
 

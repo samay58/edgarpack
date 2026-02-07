@@ -70,6 +70,7 @@ async def fetch_submissions(cik: str, force: bool = False) -> dict[str, Any]:
         cached = cache.get(url, max_age_seconds=3600)
         if cached is not None:
             import json
+
             return json.loads(cached)
 
     client = await get_client()
@@ -77,6 +78,7 @@ async def fetch_submissions(cik: str, force: bool = False) -> dict[str, Any]:
 
     # Cache the response
     import json
+
     cache.put(url, json.dumps(data).encode(), headers)
 
     return data
@@ -211,14 +213,16 @@ async def list_filings(
     target_form = normalize_form_type(form_type) if form_type else None
     for i, form in enumerate(forms):
         if target_form is None or normalize_form_type(form) == target_form:
-            results.append(FilingMeta(
-                cik=cik,
-                accession=accessions[i],
-                form_type=form,
-                filing_date=date.fromisoformat(dates[i]),
-                primary_document=docs[i],
-                company_name=company_name,
-            ))
+            results.append(
+                FilingMeta(
+                    cik=cik,
+                    accession=accessions[i],
+                    form_type=form,
+                    filing_date=date.fromisoformat(dates[i]),
+                    primary_document=docs[i],
+                    company_name=company_name,
+                )
+            )
             if len(results) >= limit:
                 break
 

@@ -2,9 +2,9 @@
 
 from .html_clean import clean_html
 from .ixbrl_strip import strip_ixbrl
-from .semantic_html import reduce_to_semantic
 from .md_render import render_markdown
 from .sectionize import Section, sectionize
+from .semantic_html import reduce_to_semantic
 from .tokenize import count_tokens
 
 __all__ = [

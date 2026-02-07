@@ -21,7 +21,9 @@ class TestRenderMarkdown(unittest.TestCase):
         self.assertIn("\n\n", md)
 
     def test_renders_strong_emphasis_links_code(self) -> None:
-        html = '<p><strong>Bold</strong> <em>Em</em> <a href="https://x">Link</a> <code>cmd</code></p>'
+        html = (
+            '<p><strong>Bold</strong> <em>Em</em> <a href="https://x">Link</a> <code>cmd</code></p>'
+        )
         md = render_markdown(html)
         self.assertIn("**Bold**", md)
         self.assertIn("*Em*", md)
@@ -29,7 +31,7 @@ class TestRenderMarkdown(unittest.TestCase):
         self.assertIn("`cmd`", md)
 
     def test_renders_code_block(self) -> None:
-        html = '<pre>function hello() {\\n  console.log(\"hi\");\\n}</pre>'
+        html = '<pre>function hello() {\\n  console.log("hi");\\n}</pre>'
         md = render_markdown(html)
         self.assertIn("```", md)
         self.assertIn("function hello()", md)
@@ -71,4 +73,3 @@ class TestNormalizeOutput(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

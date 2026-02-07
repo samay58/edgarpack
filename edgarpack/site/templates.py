@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from html import escape
-from typing import Iterable
 
 from .styles import CSS
 
@@ -35,7 +35,7 @@ def link(href: str, text: str) -> str:
 
 
 def monospace(text: str) -> str:
-    return f"<span class=\"mono\">{escape(text)}</span>"
+    return f'<span class="mono">{escape(text)}</span>'
 
 
 def h1(text: str) -> str:
@@ -68,7 +68,7 @@ def companies_index(rows: Iterable[CompanyRow]) -> str:
         lines.append(
             "<li>"
             f"{link(r.href, f'{r.name} ({r.cik})')}"
-            f"<div class=\"muted\">{escape(r.filings_summary)}</div>"
+            f'<div class="muted">{escape(r.filings_summary)}</div>'
             "</li>"
         )
     lines.append("</ul>")
@@ -86,14 +86,14 @@ class FilingRow:
 def company_index(company_name: str, cik: str, rows: Iterable[FilingRow]) -> str:
     lines = [
         h2("FILINGS"),
-        f"<div class=\"muted\">{escape(company_name)} ({escape(cik)})</div>",
+        f'<div class="muted">{escape(company_name)} ({escape(cik)})</div>',
         "<ul>",
     ]
     for r in rows:
         lines.append(
             "<li>"
             f"{link(r.href, f'{r.form_type} {r.filing_date}')}"
-            f" <span class=\"muted\">· {escape(r.accession)}</span>"
+            f' <span class="muted">· {escape(r.accession)}</span>'
             "</li>"
         )
     lines.append("</ul>")
@@ -109,7 +109,7 @@ def filing_overview(
 ) -> str:
     lines = [h1(heading)]
     for m in meta_lines:
-        lines.append(f"<div class=\"muted\">{escape(m)}</div>")
+        lines.append(f'<div class="muted">{escape(m)}</div>')
     lines.append(rule())
     lines.append(sections_html)
     lines.append(rule())
@@ -117,7 +117,7 @@ def filing_overview(
     if source_url:
         lines.append(rule())
         lines.append(h2("SOURCE"))
-        lines.append(f"<div class=\"muted\">{escape(source_url)}</div>")
+        lines.append(f'<div class="muted">{escape(source_url)}</div>')
     return "\n".join(lines)
 
 
@@ -133,7 +133,7 @@ def sections_list(items: Iterable[tuple[str, str, str | None]]) -> str:
     """Items: (label, href, tokens)."""
     lines = [h2("SECTIONS"), "<ul>"]
     for label, href, tokens in items:
-        tok = f" <span class=\"muted\">{escape(tokens)}</span>" if tokens else ""
+        tok = f' <span class="muted">{escape(tokens)}</span>' if tokens else ""
         lines.append(f"<li>{link(href, label)}{tok}</li>")
     lines.append("</ul>")
     return "\n".join(lines)
@@ -142,8 +142,7 @@ def sections_list(items: Iterable[tuple[str, str, str | None]]) -> str:
 def content_page(title: str, stats: list[str], html: str) -> str:
     lines = [h1(title)]
     for s in stats:
-        lines.append(f"<div class=\"muted\">{escape(s)}</div>")
+        lines.append(f'<div class="muted">{escape(s)}</div>')
     lines.append(rule())
     lines.append(html)
     return "\n".join(lines)
-

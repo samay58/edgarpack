@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -96,22 +96,24 @@ def create_manifest(
         section_path = f"sections/{section.id}.md"
         section_hash = compute_sha256(section.content)
 
-        section_infos.append(SectionInfo(
-            id=section.id,
-            title=section.title,
-            path=section_path,
-            char_start=section.char_start,
-            char_end=section.char_end,
-            tokens_approx=count_tokens(section.content),
-            sha256=section_hash,
-        ))
+        section_infos.append(
+            SectionInfo(
+                id=section.id,
+                title=section.title,
+                path=section_path,
+                char_start=section.char_start,
+                char_end=section.char_end,
+                tokens_approx=count_tokens(section.content),
+                sha256=section_hash,
+            )
+        )
 
     # Determinism: use a stable timestamp derived from the filing date.
     stable_at = datetime(
         filing_meta.filing_date.year,
         filing_meta.filing_date.month,
         filing_meta.filing_date.day,
-        tzinfo=timezone.utc,
+        tzinfo=UTC,
     )
 
     return Manifest(

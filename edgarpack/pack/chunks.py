@@ -1,9 +1,8 @@
 """Generate semantic chunks from sections."""
 
-from bisect import bisect_right
 import hashlib
-import json
 import re
+from bisect import bisect_right
 from pathlib import Path
 
 from pydantic import BaseModel

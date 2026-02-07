@@ -35,17 +35,54 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_build = sub.add_parser("build", help="Build a filing pack")
-    p_build.add_argument("--cik", "-c", required=True, help="CIK number (with or without leading zeros)")
-    p_build.add_argument("--accession", "-a", help="Accession number (e.g., 0000320193-24-000123)")
-    p_build.add_argument("--form", "-f", help="Form type: 10-K, 10-Q, 8-K (fetches latest)")
-    p_build.add_argument("--out", "-o", type=Path, default=Path("./packs"), help="Output directory")
-    p_build.add_argument("--with-chunks", action="store_true", help="Generate chunks.ndjson for RAG")
-    p_build.add_argument("--with-xbrl", action="store_true", help="Generate xbrl.json with financial data")
-    p_build.add_argument("--force", action="store_true", help="Bypass cache and rebuild")
+    p_build.add_argument(
+        "--cik",
+        "-c",
+        required=True,
+        help="CIK number (with or without leading zeros)",
+    )
+    p_build.add_argument(
+        "--accession",
+        "-a",
+        help="Accession number (e.g., 0000320193-24-000123)",
+    )
+    p_build.add_argument(
+        "--form",
+        "-f",
+        help="Form type: 10-K, 10-Q, 8-K (fetches latest)",
+    )
+    p_build.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        default=Path("./packs"),
+        help="Output directory",
+    )
+    p_build.add_argument(
+        "--with-chunks",
+        action="store_true",
+        help="Generate chunks.ndjson for RAG",
+    )
+    p_build.add_argument(
+        "--with-xbrl",
+        action="store_true",
+        help="Generate xbrl.json with financial data",
+    )
+    p_build.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass cache and rebuild",
+    )
 
     p_company = sub.add_parser("company-llms", help="Generate company-level llms.txt")
     p_company.add_argument("--cik", "-c", required=True, help="CIK number")
-    p_company.add_argument("--out", "-o", type=Path, default=Path("./packs"), help="Packs output directory")
+    p_company.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        default=Path("./packs"),
+        help="Packs output directory",
+    )
 
     p_list = sub.add_parser("list", help="List recent filings for a company")
     p_list.add_argument("--cik", "-c", required=True, help="CIK number")
@@ -56,8 +93,19 @@ def main(argv: list[str] | None = None) -> int:
     p_cache.add_argument("--clear", action="store_true", help="Clear the cache")
 
     p_site = sub.add_parser("site", help="Generate a minimal static site from packs")
-    p_site.add_argument("--packs", type=Path, default=Path("./packs"), help="Directory containing packs")
-    p_site.add_argument("--out", "-o", type=Path, default=Path("./site"), help="Site output directory")
+    p_site.add_argument(
+        "--packs",
+        type=Path,
+        default=Path("./packs"),
+        help="Directory containing packs",
+    )
+    p_site.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        default=Path("./site"),
+        help="Site output directory",
+    )
     p_site.add_argument("--base-url", default=None, help="Optional base URL (reserved)")
 
     args = parser.parse_args(argv)
@@ -201,11 +249,10 @@ def _cmd_site(args: Any) -> int:
     print(f"  Output: {report.get('out_dir')}")
     print(f"  Companies: {report.get('companies')}")
     print(f"  Filings: {report.get('filings')}")
-    total_bytes = int(report.get('total_bytes') or 0)
+    total_bytes = int(report.get("total_bytes") or 0)
     print(f"  Size: {total_bytes / 1024:.1f} KB")
     return 0
 
 
 if __name__ == "__main__":
     app()
-

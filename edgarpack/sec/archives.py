@@ -29,12 +29,14 @@ async def fetch_filing_index(meta: FilingMeta, force: bool = False) -> dict[str,
         cached = cache.get(url, max_age_seconds=86400)
         if cached is not None:
             import json
+
             return json.loads(cached)
 
     client = await get_client()
     data, headers = await client.fetch_json(url)
 
     import json
+
     cache.put(url, json.dumps(data).encode(), headers)
 
     return data
@@ -115,10 +117,7 @@ def identify_html_files(index: dict[str, Any], primary_doc: str) -> list[str]:
                 r"Financial_Report\.xlsx",
             ]
 
-            should_skip = any(
-                re.match(pattern, name, re.IGNORECASE)
-                for pattern in skip_patterns
-            )
+            should_skip = any(re.match(pattern, name, re.IGNORECASE) for pattern in skip_patterns)
 
             if not should_skip:
                 additional_files.append(name)
@@ -149,7 +148,9 @@ async def fetch_filing_html(
     results: list[tuple[str, bytes]] = []
 
     # Fetch in parallel; SEC rate limiter still governs request pacing.
-    tasks = [asyncio.create_task(fetch_file(meta, filename, force=force)) for filename in html_files]
+    tasks = [
+        asyncio.create_task(fetch_file(meta, filename, force=force)) for filename in html_files
+    ]
 
     for filename, task in zip(html_files, tasks, strict=False):
         try:
@@ -157,6 +158,7 @@ async def fetch_filing_html(
         except Exception as e:
             # Log warning but continue - some files may be missing
             import warnings
+
             warnings.warn(f"Failed to fetch {filename}: {e}")
             continue
         results.append((filename, content))

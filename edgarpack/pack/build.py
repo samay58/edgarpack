@@ -11,11 +11,11 @@ from ..config import SEC_ARCHIVES_BASE
 from ..parse.html_clean import clean_html
 from ..parse.ixbrl_strip import strip_ixbrl
 from ..parse.md_render import render_markdown
+from ..parse.sectionize import sectionize
 from ..parse.semantic_html import reduce_to_semantic
-from ..parse.sectionize import Section, sectionize
 from ..parse.tokenize import count_tokens, has_tiktoken
 from ..sec.archives import fetch_filing_html
-from ..sec.submissions import FilingMeta, get_filing_by_accession, get_latest_filing
+from ..sec.submissions import get_filing_by_accession, get_latest_filing
 from ..sec.xbrl import fetch_xbrl_facts
 from .chunks import generate_chunks, write_chunks_ndjson
 from .llms_txt import generate_llms_txt, write_llms_txt

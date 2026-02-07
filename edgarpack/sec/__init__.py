@@ -1,9 +1,9 @@
 """SEC data fetching modules."""
 
+from .archives import fetch_filing_html
 from .cache import DiskCache
 from .client import SECClient
 from .submissions import FilingMeta, get_latest_filing
-from .archives import fetch_filing_html
 from .xbrl import fetch_xbrl_facts
 
 __all__ = [

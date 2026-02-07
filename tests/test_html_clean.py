@@ -16,7 +16,7 @@ class TestCleanHTML(unittest.TestCase):
         self.assertIn("More", result)
 
     def test_removes_style_tags_and_content(self) -> None:
-        html = '<style>.foo { color: red; }</style><p>Content</p>'
+        html = "<style>.foo { color: red; }</style><p>Content</p>"
         result = clean_html(html)
         self.assertNotIn("<style", result.lower())
         self.assertNotIn(".foo", result)
@@ -98,4 +98,3 @@ class TestExtractText(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

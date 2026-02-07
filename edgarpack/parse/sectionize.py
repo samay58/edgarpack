@@ -239,12 +239,16 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             return pm2.group("part").upper()
         return None
 
-    def _match_item_in_cell(cell: str, pattern: re.Pattern[str], item_regex: str) -> re.Match[str] | None:
+    def _match_item_in_cell(
+        cell: str,
+        pattern: re.Pattern[str],
+        item_regex: str,
+    ) -> re.Match[str] | None:
         m = pattern.match(cell)
         if m:
             return m
         for im in re.finditer(item_regex, cell, flags=re.IGNORECASE):
-            tail = cell[im.start():].strip()
+            tail = cell[im.start() :].strip()
             mm = pattern.match(tail)
             if mm:
                 return mm
@@ -303,14 +307,16 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         def _add_item_match(item: str, title: str, part: str | None, char_pos: int) -> None:
             nonlocal matches
             clean_title = _truncate_title(_clean_title(title))
-            matches.append(SectionMatch(
-                line_num=line_num,
-                char_pos=char_pos,
-                part=part,
-                item=item,
-                title=clean_title,
-                form_type=form_type,
-            ))
+            matches.append(
+                SectionMatch(
+                    line_num=line_num,
+                    char_pos=char_pos,
+                    part=part,
+                    item=item,
+                    title=clean_title,
+                    form_type=form_type,
+                )
+            )
 
         if form_upper == "8-K":
             if is_table:
@@ -323,14 +329,24 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                     title = (m.group("title") or "").strip()
                     if not title and idx + 1 < len(cells):
                         title = cells[idx + 1]
-                    _add_item_match(item=item, title=title, part=None, char_pos=char_offsets[line_num])
+                    _add_item_match(
+                        item=item,
+                        title=title,
+                        part=None,
+                        char_pos=char_offsets[line_num],
+                    )
                     break
             else:
                 m = ITEM_PATTERN_8K.match(line_stripped)
                 if m and m.group("item"):
                     item = m.group("item")
                     title = (m.group("title") or "").strip()
-                    _add_item_match(item=item, title=title, part=None, char_pos=char_offsets[line_num])
+                    _add_item_match(
+                        item=item,
+                        title=title,
+                        part=None,
+                        char_pos=char_offsets[line_num],
+                    )
                 # Inline scan (ordered) for concatenated headings that got flattened into one line.
                 # Only consider matches far into the line to avoid duplicating proper headings.
                 for m2 in re.finditer(r"ITEM\s+(?P<item>\d+\.\d+)\b", line, flags=re.IGNORECASE):
@@ -339,7 +355,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                     prev = line[m2.start() - 1]
                     if not (prev.islower() or prev.isdigit() or prev in ".:;)|]"):
                         continue
-                    tail = line[m2.start():].strip()
+                    tail = line[m2.start() :].strip()
                     mm = ITEM_PATTERN_8K.match(tail)
                     title = (mm.group("title") or "").strip() if mm else ""
                     _add_item_match(
@@ -356,25 +372,35 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                     if not m or not m.group("item"):
                         continue
                     item = m.group("item")
-                    part = (m.group("part") or current_part)
+                    part = m.group("part") or current_part
                     if part:
                         part = part.upper()
                         current_part = part
                     title = (m.group("title") or "").strip()
                     if not title and idx + 1 < len(cells):
                         title = cells[idx + 1]
-                    _add_item_match(item=item, title=title, part=part, char_pos=char_offsets[line_num])
+                    _add_item_match(
+                        item=item,
+                        title=title,
+                        part=part,
+                        char_pos=char_offsets[line_num],
+                    )
                     break
             else:
                 m = ITEM_PATTERN_10K.match(line_stripped)
                 if m and m.group("item"):
                     item = m.group("item")
-                    part = (m.group("part") or current_part)
+                    part = m.group("part") or current_part
                     if part:
                         part = part.upper()
                         current_part = part
                     title = (m.group("title") or "").strip()
-                    _add_item_match(item=item, title=title, part=part, char_pos=char_offsets[line_num])
+                    _add_item_match(
+                        item=item,
+                        title=title,
+                        part=part,
+                        char_pos=char_offsets[line_num],
+                    )
                 # Inline scan (ordered) for concatenated PART/ITEM headings that got flattened.
                 events: list[tuple[int, str, re.Match[str]]] = []
                 for pm2 in re.finditer(r"PART\s+(?P<part>[IVX]+)\b", line, flags=re.IGNORECASE):
@@ -410,7 +436,12 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             m = TITLED_SECTION_PATTERN.match(line_stripped)
             if m:
                 title = m.group("title")
-                _add_item_match(item="other", title=title, part=current_part, char_pos=char_offsets[line_num])
+                _add_item_match(
+                    item="other",
+                    title=title,
+                    part=current_part,
+                    char_pos=char_offsets[line_num],
+                )
 
     # Sort and dedupe by char_pos for stability.
     matches.sort(key=lambda m: (m.char_pos, m.line_num))
@@ -439,14 +470,16 @@ def sectionize(markdown: str, form_type: str) -> list[Section]:
 
     if not matches:
         # No sections detected - emit single unknown section
-        return [Section(
-            id="unknown_01",
-            title="Unknown Section",
-            content=markdown,
-            char_start=0,
-            char_end=len(markdown),
-            warnings=["No section headings detected in document"],
-        )]
+        return [
+            Section(
+                id="unknown_01",
+                title="Unknown Section",
+                content=markdown,
+                char_start=0,
+                char_end=len(markdown),
+                warnings=["No section headings detected in document"],
+            )
+        ]
 
     sections: list[Section] = []
     total_len = len(markdown)
@@ -454,16 +487,18 @@ def sectionize(markdown: str, form_type: str) -> list[Section]:
     # Check for content before first section
     first_match = matches[0]
     if first_match.char_pos > 0:
-        preamble = markdown[:first_match.char_pos].strip()
+        preamble = markdown[: first_match.char_pos].strip()
         if preamble and len(preamble) > 100:  # Only if substantial
-            sections.append(Section(
-                id="unknown_00",
-                title="Preamble",
-                content=preamble,
-                char_start=0,
-                char_end=first_match.char_pos,
-                warnings=["Content before first detected section"],
-            ))
+            sections.append(
+                Section(
+                    id="unknown_00",
+                    title="Preamble",
+                    content=preamble,
+                    char_start=0,
+                    char_end=first_match.char_pos,
+                    warnings=["Content before first detected section"],
+                )
+            )
 
     # Create sections from matches
     for i, match in enumerate(matches):
@@ -473,18 +508,20 @@ def sectionize(markdown: str, form_type: str) -> list[Section]:
         else:
             char_end = total_len
 
-        content = markdown[match.char_pos:char_end].strip()
+        content = markdown[match.char_pos : char_end].strip()
 
         sid = section_id(form_type, match.part, match.item, match.title)
 
-        sections.append(Section(
-            id=sid,
-            title=match.title or f"Item {match.item}",
-            content=content,
-            char_start=match.char_pos,
-            char_end=char_end,
-            warnings=[],
-        ))
+        sections.append(
+            Section(
+                id=sid,
+                title=match.title or f"Item {match.item}",
+                content=content,
+                char_start=match.char_pos,
+                char_end=char_end,
+                warnings=[],
+            )
+        )
 
     # Check for duplicate IDs and make unique
     seen_ids: dict[str, int] = {}
