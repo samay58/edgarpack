@@ -71,6 +71,8 @@ TITLED_SECTION_PATTERN = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+BOLD_HEADING_PATTERN = re.compile(r"\*\*(?P<title>[A-Z0-9][A-Z0-9 &/().,'\-–—]+?)\*\*")
+
 
 def normalize_form_type_for_sections(form_type: str) -> str:
     """Normalize form type for section detection and IDs.
@@ -209,6 +211,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         offset += len(line) + 1  # +1 for newline
 
     form_upper = normalize_form_type_for_sections(form_type).upper()
+    is_general_form = form_upper not in {"10-K", "10-Q", "8-K"}
 
     # Track current PART so items without explicit PART still get a stable ID.
     current_part: str | None = None
@@ -266,6 +269,53 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         head = t[:100]
         return head.rsplit(" ", 1)[0] if " " in head else head
 
+    seen_titles: set[str] = set()
+
+    def _title_key(title: str) -> str:
+        return slugify(title, max_len=60)
+
+    def _should_ignore_title(title: str) -> bool:
+        upper = title.upper().strip()
+        if "TABLE OF CONTENTS" in upper:
+            return True
+        if upper in {
+            "PROSPECTUS",
+            "PROSPECTUS SUPPLEMENT",
+            "PRELIMINARY PROSPECTUS",
+            "FINAL PROSPECTUS",
+        }:
+            return True
+        if upper.startswith("PROSPECTUS DATED"):
+            return True
+        return False
+
+    def _is_valid_general_heading(title: str, line: str, start: int) -> bool:
+        if not title or _should_ignore_title(title):
+            return False
+        if line[:start].strip():
+            return False
+        letters = [c for c in title if c.isalpha()]
+        if len(letters) < 4:
+            return False
+        upper_ratio = sum(c.isupper() for c in letters) / len(letters)
+        if upper_ratio < 0.8:
+            return False
+        return True
+
+    def _add_item_match(item: str, title: str, part: str | None, char_pos: int) -> None:
+        nonlocal matches
+        clean_title = _truncate_title(_clean_title(title))
+        matches.append(
+            SectionMatch(
+                line_num=line_num,
+                char_pos=char_pos,
+                part=part,
+                item=item,
+                title=clean_title,
+                form_type=form_type,
+            )
+        )
+
     for line_num, line in enumerate(lines):
         line_stripped = line.strip()
 
@@ -303,21 +353,37 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if pm and pm.group("part"):
                 current_part = pm.group("part").upper()
 
-        # Identify item headings.
-        def _add_item_match(item: str, title: str, part: str | None, char_pos: int) -> None:
-            nonlocal matches
-            clean_title = _truncate_title(_clean_title(title))
-            matches.append(
-                SectionMatch(
-                    line_num=line_num,
-                    char_pos=char_pos,
-                    part=part,
-                    item=item,
-                    title=clean_title,
-                    form_type=form_type,
+        if is_general_form:
+            for m in BOLD_HEADING_PATTERN.finditer(line):
+                title = (m.group("title") or "").strip()
+                if not _is_valid_general_heading(title, line, m.start()):
+                    continue
+                key = _title_key(title)
+                if key in seen_titles:
+                    continue
+                seen_titles.add(key)
+                _add_item_match(
+                    item="other",
+                    title=title,
+                    part=None,
+                    char_pos=char_offsets[line_num] + m.start(),
                 )
-            )
 
+            if line_stripped.startswith("#"):
+                title = line_stripped.lstrip("#").strip()
+                if _is_valid_general_heading(title, line, line.find("#")):
+                    key = _title_key(title)
+                    if key not in seen_titles:
+                        seen_titles.add(key)
+                        _add_item_match(
+                            item="other",
+                            title=title,
+                            part=None,
+                            char_pos=char_offsets[line_num],
+                        )
+            continue
+
+        # Identify item headings.
         if form_upper == "8-K":
             if is_table:
                 cells = _split_table_cells(line_stripped)
@@ -436,12 +502,13 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             m = TITLED_SECTION_PATTERN.match(line_stripped)
             if m:
                 title = m.group("title")
-                _add_item_match(
-                    item="other",
-                    title=title,
-                    part=current_part,
-                    char_pos=char_offsets[line_num],
-                )
+                if not _should_ignore_title(title):
+                    _add_item_match(
+                        item="other",
+                        title=title,
+                        part=current_part,
+                        char_pos=char_offsets[line_num],
+                    )
 
     # Sort and dedupe by char_pos for stability.
     matches.sort(key=lambda m: (m.char_pos, m.line_num))

@@ -96,6 +96,28 @@ class TestFindSections(unittest.TestCase):
         matches = find_sections(md, "8-K/A")
         self.assertTrue(any(m.item == "1.01" for m in matches))
 
+    def test_general_form_uses_bold_headings(self) -> None:
+        md = (
+            "##### Table of Contents\n\n**PROSPECTUS SUMMARY** Text\n\n**RISK FACTORS** More text\n"
+        )
+        sections = sectionize(md, "424B4")
+        titles = [s.title for s in sections]
+        self.assertIn("PROSPECTUS SUMMARY", titles)
+        self.assertIn("RISK FACTORS", titles)
+        self.assertNotIn("Table of Contents", titles)
+
+    def test_general_form_ignores_short_bold(self) -> None:
+        md = "**S.** **Fiedler** has served as our Chief Financial Officer.\n\nMore text."
+        matches = find_sections(md, "424B4")
+        self.assertEqual(matches, [])
+
+    def test_general_form_ignores_prospectus_cover(self) -> None:
+        md = "**PROSPECTUS**\n\n**RISK FACTORS** Text\n"
+        matches = find_sections(md, "424B4")
+        titles = [m.title for m in matches]
+        self.assertIn("RISK FACTORS", titles)
+        self.assertNotIn("PROSPECTUS", titles)
+
 
 class TestSectionize(unittest.TestCase):
     def test_unknown_section_for_no_matches(self) -> None:

@@ -63,7 +63,7 @@ class CompanyRow:
 
 
 def companies_index(rows: Iterable[CompanyRow]) -> str:
-    lines = [h2("COMPANIES"), "<ul>"]
+    lines = [h2("COMPANIES"), '<ul class="list">']
     for r in rows:
         lines.append(
             "<li>"
@@ -87,7 +87,7 @@ def company_index(company_name: str, cik: str, rows: Iterable[FilingRow]) -> str
     lines = [
         h2("FILINGS"),
         f'<div class="muted">{escape(company_name)} ({escape(cik)})</div>',
-        "<ul>",
+        '<ul class="list">',
     ]
     for r in rows:
         lines.append(
@@ -122,7 +122,7 @@ def filing_overview(
 
 
 def artifacts_list(items: Iterable[tuple[str, str]]) -> str:
-    lines = [h2("ARTIFACTS"), "<ul>"]
+    lines = [h2("ARTIFACTS"), '<ul class="list">']
     for text, href in items:
         lines.append(f"<li>{link(href, text)}</li>")
     lines.append("</ul>")
@@ -131,7 +131,7 @@ def artifacts_list(items: Iterable[tuple[str, str]]) -> str:
 
 def sections_list(items: Iterable[tuple[str, str, str | None]]) -> str:
     """Items: (label, href, tokens)."""
-    lines = [h2("SECTIONS"), "<ul>"]
+    lines = [h2("SECTIONS"), '<ul class="list">']
     for label, href, tokens in items:
         tok = f' <span class="muted">{escape(tokens)}</span>' if tokens else ""
         lines.append(f"<li>{link(href, label)}{tok}</li>")
