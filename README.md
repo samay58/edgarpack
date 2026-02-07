@@ -1,10 +1,10 @@
 # EdgarPack
 
-**llms.txt for SEC filings.** Transform SEC EDGAR filings into clean, section-addressable markdown packs optimized for LLM consumption.
+EdgarPack turns SEC EDGAR filings into clean, sectioned markdown packs. It preserves visible text, strips iXBRL noise, and gives you stable section IDs.
 
-## Why This Exists
+## Why
 
-SEC filings aren't PDFs. They're HTML with embedded iXBRL (inline XBRL) markup. Every financial number in a 10-K looks like this:
+SEC filings are HTML with inline XBRL. A revenue number often looks like this.
 
 ```html
 <ix:nonFraction contextRef="c-1" decimals="-6"
@@ -12,26 +12,19 @@ SEC filings aren't PDFs. They're HTML with embedded iXBRL (inline XBRL) markup. 
   scale="6" unitRef="usd">130,497</ix:nonFraction>
 ```
 
-When what you actually want is: `Revenue: $130,497 million`
+That markup burns tokens and hides the number. EdgarPack removes the noise and keeps the text you read.
 
-If you're building an LLM app that needs to understand SEC filings, you have two options:
+Typical 10-K differences show up in these ranges.
 
-1. Feed the raw HTML to your model and burn tokens on thousands of iXBRL tags, hidden elements, and formatting noise
-2. Use EdgarPack and get clean markdown with 3x fewer tokens
-
-The math is simple:
-
-| What you get | Raw SEC HTML | EdgarPack |
+| Metric | Raw SEC HTML | EdgarPack |
 |--------------|--------------|-----------|
 | File size | ~2-3 MB | ~400 KB |
 | Tokens | ~300K+ | ~107K |
 | Sections | 1 blob | 27 files |
-| RAG chunks | DIY | Ready to go |
+| RAG chunks | DIY | Ready |
 | API cost | 3x more | 3x less |
 
-For RAG specifically: instead of chunking a 300K token blob yourself and dealing with table formatting hell, you get 27 semantic sections (Item 1, Item 1A, Item 7, etc.) plus pre-chunked pieces with token counts already calculated.
-
-The real win is section-level addressing. Instead of "find the risk factors somewhere in this massive filing", you just load `10k_parti_item1a_risk_factors.md` directly. That's what [llms.txt](https://llmstxt.org/) is about. Give LLMs a table of contents they can navigate.
+Section-level addressing is the real win. You can load `10k_parti_item1a_risk_factors.md` directly instead of hunting inside a giant blob.
 
 ## Installation
 
@@ -67,29 +60,29 @@ edgarpack site --packs ./packs --out ./site
 
 ```
 packs/0000320193/0000320193-24-000123/
-├── llms.txt              # Entry point for LLMs
-├── manifest.json         # Metadata + section index + hashes
-├── filing.full.md        # Complete filing as markdown
+├── llms.txt
+├── manifest.json
+├── filing.full.md
 ├── sections/
 │   ├── 10k_parti_item1_business.md
 │   ├── 10k_parti_item1a_risk_factors.md
 │   ├── 10k_partii_item7_mdna.md
 │   └── ...
 └── optional/
-    ├── chunks.ndjson     # RAG-ready chunks (with --with-chunks)
-    └── xbrl.json         # Financial data (with --with-xbrl)
+    ├── chunks.ndjson
+    └── xbrl.json
 ```
 
 ## Pack Format
 
 ### llms.txt
 
-Entry point following the [llms.txt specification](https://llmstxt.org/). Lists all artifacts with brief descriptions:
+`llms.txt` is the entry point. It follows the llms.txt spec and lists artifacts with short descriptions.
 
 ```markdown
 # Apple Inc. 10-K (2024-01-15)
 
-> CIK: 0000320193 | Accession: 0000320193-24-000123
+> CIK 0000320193 | Accession 0000320193-24-000123
 
 ## Filing Pack
 
@@ -105,72 +98,63 @@ Entry point following the [llms.txt specification](https://llmstxt.org/). Lists 
 
 ### manifest.json
 
-Everything you need to verify and process the pack:
-- Schema and parser versions (for determinism)
-- Filing metadata (CIK, accession, dates, company name)
-- Section index with character offsets and token counts
-- SHA256 hashes of all artifacts
-- Warnings from processing
+`manifest.json` holds metadata and integrity details. It includes the schema and parser versions, filing metadata, section index with offsets and token counts, hashes, and warnings.
 
 ### Sections
 
-Individual markdown files for each detected section (ITEM 1, ITEM 1A, etc.). Section IDs follow a consistent pattern:
-- 10-K: `10k_part{I/II}_item{N}_{slug}`
-- 10-Q: `10q_part{I/II}_item{N}_{slug}`
-- 8-K: `8k_item_{N.NN}_{slug}`
+Each section is a markdown file with a stable ID.
 
-### chunks.ndjson (Optional)
+- 10-K uses `10k_part{I/II}_item{N}_{slug}`
+- 10-Q uses `10q_part{I/II}_item{N}_{slug}`
+- 8-K uses `8k_item_{N.NN}_{slug}`
 
-Semantic chunks suitable for RAG pipelines:
+### chunks.ndjson
+
+`chunks.ndjson` stores semantic chunks with token counts. Generate it with `--with-chunks`.
 
 ```json
 {"chunk_id": "abc123...", "section_id": "10k_parti_item1a_risk_factors", "chunk_index": 0, "text": "...", "tokens": 892}
 {"chunk_id": "def456...", "section_id": "10k_parti_item1a_risk_factors", "chunk_index": 1, "text": "...", "tokens": 1047}
 ```
 
-### xbrl.json (Optional)
+### xbrl.json
 
-Structured financial data from SEC's companyfacts API, filtered to the specific filing.
+`xbrl.json` holds structured financial data from the SEC companyfacts API. Generate it with `--with-xbrl`.
 
 ## SEC Compliance
 
-EdgarPack respects SEC EDGAR fair access policies:
-
-- **User-Agent**: Declared with contact info (configurable via `EDGARPACK_USER_AGENT`)
-- **Rate Limiting**: 10 requests/second (enforced internally)
-- **Caching**: Aggressive caching to minimize redundant requests
-
-Configure your contact info:
-```bash
-export EDGARPACK_USER_AGENT="MyApp/1.0 (me@example.com)"
-```
+- Set `EDGARPACK_USER_AGENT` with contact info.
+- EdgarPack caps requests at 10 per second.
+- EdgarPack caches SEC responses to cut repeat calls.
 
 ## Cache
 
-EdgarPack caches SEC responses in `~/.edgarpack/cache/` to avoid redundant requests. Manage cache with:
+The default cache lives at `~/.edgarpack/cache/`. Use these commands.
 
 ```bash
-edgarpack cache           # Show cache info
-edgarpack cache --clear   # Clear cache
+edgarpack cache
+edgarpack cache --clear
 ```
 
-Or set a custom location:
+Set a custom cache location with this command.
+
 ```bash
 export EDGARPACK_CACHE_DIR=/path/to/cache
 ```
 
 ## Static Site
 
-EdgarPack can generate a minimal, offline-friendly static filing browser from a packs directory:
+Generate a minimal offline site from a packs directory.
 
 ```bash
 edgarpack site --packs ./packs --out ./site
 ```
 
-Hosting options (any static host works):
-- **GitHub Pages**: publish the `site/` directory via the `gh-pages` branch (or `/docs`).
-- **Netlify**: set the publish directory to `site/`.
-- **S3**: sync `site/` to a bucket and enable static website hosting.
+Hosting options follow here.
+
+- GitHub Pages. Publish the `site/` directory via `gh-pages` or `/docs`.
+- Netlify. Set the publish directory to `site/`.
+- S3. Sync `site/` to a bucket and enable static website hosting.
 
 ## Development
 
@@ -182,37 +166,19 @@ uv pip install -e ".[dev]"
 # Run tests
 python3 -m unittest discover -s tests
 
-# Lint + format
+# Lint and format
 ruff check . && ruff format .
 ```
 
 ## Design Principles
 
-- **Determinism**: Same input + version = byte-identical output
-- **Fidelity**: Preserve all visible text, remove only noise
-- **Best-effort**: Never silently fail. Emit warnings, create `unknown_XX.md` for unmatched content
-- **SEC-compliant**: Respect rate limits, declare User-Agent, cache aggressively
+- EdgarPack produces byte identical output for the same input and version.
+- EdgarPack preserves visible text and removes noise.
+- EdgarPack emits warnings and creates `unknown_XX.md` for unmatched content.
+- EdgarPack enforces rate limits, declares a User-Agent, and caches aggressively.
 
 ## Supported Forms
 
-- **10-K**: Annual reports (Item 1-15 detection)
-- **10-Q**: Quarterly reports (Item 1-4 detection)
-- **8-K**: Current reports (Item X.XX detection)
-
-## Tested On
-
-We've run EdgarPack on gnarly filings from AI-native public companies:
-
-| Company | Form | Tokens | Sections | Chunks |
-|---------|------|--------|----------|--------|
-| BigBear.ai | 10-K | 222,462 | 77 | 225 |
-| SoundHound AI | 10-K | 143,352 | 27 | 139 |
-| Palantir | 10-K | 137,684 | 27 | 140 |
-| C3.ai | 10-K | 135,146 | 55 | 145 |
-| NVIDIA | 10-K | 106,870 | 27 | 115 |
-
-BigBear.ai's 10-K is a monster. 222K tokens, 77 sections (lots of financial notes that get split out), and it processes cleanly. If your filing is weirder than that, open an issue.
-
-## License
-
-MIT
+- 10-K. Annual reports with Item 1-15 detection.
+- 10-Q. Quarterly reports with Item 1-4 detection.
+- 8-K. Current reports with Item X.XX detection.
