@@ -26,6 +26,25 @@ class FilingMeta(BaseModel):
         return self.accession.replace("-", "")
 
 
+def normalize_form_type(form_type: str) -> str:
+    """Normalize form type for matching SEC submissions."""
+    if not form_type:
+        return ""
+    form = form_type.strip().upper().replace(" ", "")
+    amended = form.endswith("/A")
+    if amended:
+        form = form[:-2]
+    if form in {"10K", "10-K"}:
+        base = "10-K"
+    elif form in {"10Q", "10-Q"}:
+        base = "10-Q"
+    elif form in {"8K", "8-K"}:
+        base = "8-K"
+    else:
+        base = form
+    return f"{base}/A" if amended else base
+
+
 def normalize_cik(cik: str) -> str:
     """Normalize CIK to 10-digit zero-padded format."""
     return cik.lstrip("0").zfill(10)
@@ -94,12 +113,13 @@ async def get_latest_filing(
     docs = filings.get("primaryDocument", [])
 
     # Find matching filings
+    target_form = normalize_form_type(form_type)
     for i, form in enumerate(forms):
-        if form == form_type:
+        if normalize_form_type(form) == target_form:
             return FilingMeta(
                 cik=cik,
                 accession=accessions[i],
-                form_type=form_type,
+                form_type=form,
                 filing_date=date.fromisoformat(dates[i]),
                 primary_document=docs[i],
                 company_name=company_name,
@@ -188,8 +208,9 @@ async def list_filings(
     docs = filings.get("primaryDocument", [])
 
     results: list[FilingMeta] = []
+    target_form = normalize_form_type(form_type) if form_type else None
     for i, form in enumerate(forms):
-        if form_type is None or form == form_type:
+        if target_form is None or normalize_form_type(form) == target_form:
             results.append(FilingMeta(
                 cik=cik,
                 accession=accessions[i],

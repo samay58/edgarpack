@@ -57,6 +57,16 @@ class TestStripIXBRL(unittest.TestCase):
         self.assertIn("10-K", result)
         self.assertIn("100", result)
 
+    def test_strips_declared_xbrl_prefixes(self) -> None:
+        html = (
+            '<html xmlns:foo="http://xbrl.org/2003/instance">'
+            "<foo:bar>123</foo:bar>"
+            "</html>"
+        )
+        result = strip_ixbrl(html)
+        self.assertNotIn("foo:", result)
+        self.assertIn("123", result)
+
 
 class TestHasIXBRL(unittest.TestCase):
     def test_detects_ix_prefix(self) -> None:
@@ -68,10 +78,12 @@ class TestHasIXBRL(unittest.TestCase):
     def test_detects_xmlns_declaration(self) -> None:
         self.assertTrue(has_ixbrl('<html xmlns:ix="http://www.xbrl.org/2013/inlineXBRL">'))
 
+    def test_detects_generic_xbrl_xmlns(self) -> None:
+        self.assertTrue(has_ixbrl('<html xmlns:foo="http://xbrl.org/2003/instance">'))
+
     def test_no_false_positive(self) -> None:
         self.assertFalse(has_ixbrl("<html><body><p>Normal content</p></body></html>"))
 
 
 if __name__ == "__main__":
     unittest.main()
-

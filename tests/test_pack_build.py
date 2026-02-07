@@ -110,6 +110,18 @@ class TestChunkSection(unittest.TestCase):
             self.assertGreater(c.char_end, c.char_start)
             self.assertLessEqual(c.char_end, len(content))
 
+    def test_prefers_chunk_meeting_min_tokens(self) -> None:
+        para = ("word " * 120).strip()
+        content = f"{para}\n\n{para}\n\n{para}"
+        single_tokens = chunk_section("tmp", para, min_tokens=1, max_tokens=10_000)[0].tokens
+        double_tokens = chunk_section("tmp", f"{para}\n\n{para}", min_tokens=1, max_tokens=10_000)[0].tokens
+        min_tokens = single_tokens + 1
+        max_tokens = double_tokens
+        chunks = chunk_section("sec1", content, min_tokens=min_tokens, max_tokens=max_tokens)
+        self.assertTrue(chunks)
+        self.assertGreaterEqual(chunks[0].tokens, min_tokens)
+        self.assertLessEqual(chunks[0].tokens, max_tokens)
+
 
 class TestBuildPackDeterminism(unittest.IsolatedAsyncioTestCase):
     async def test_build_pack_deterministic_files(self) -> None:
@@ -169,4 +181,3 @@ class TestBuildPackDeterminism(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

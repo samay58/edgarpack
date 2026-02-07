@@ -18,17 +18,22 @@ IXBRL_PREFIXES = [
     "country:",
 ]
 
-# Pattern to match iXBRL tags
-IXBRL_TAG_PATTERN = re.compile(
-    r"</?(" + "|".join(re.escape(p) for p in IXBRL_PREFIXES) + r")[^>]*>",
-    re.IGNORECASE | re.DOTALL,
-)
-
 # Pattern to match xmlns declarations for iXBRL
 XMLNS_PATTERN = re.compile(
     r'\s+xmlns(?::[a-zA-Z0-9_-]+)?="[^"]*(?:xbrl|ixbrl|fasb|sec\.gov)[^"]*"',
     re.IGNORECASE,
 )
+
+# Pattern to capture namespace prefixes tied to XBRL-style URIs
+XMLNS_PREFIX_PATTERN = re.compile(
+    r'xmlns:([a-zA-Z0-9_-]+)="[^"]*(?:xbrl|ixbrl|fasb|sec\.gov)[^"]*"',
+    re.IGNORECASE,
+)
+
+
+def _build_ixbrl_tag_pattern(prefixes: set[str]) -> re.Pattern[str]:
+    escaped = [re.escape(p) for p in sorted(prefixes)]
+    return re.compile(r"</?(?:" + "|".join(escaped) + r")[^>]*>", re.IGNORECASE | re.DOTALL)
 
 
 def strip_ixbrl(html: str) -> str:
@@ -43,9 +48,16 @@ def strip_ixbrl(html: str) -> str:
     Returns:
         HTML with iXBRL elements removed
     """
-    # First pass: use regex to remove iXBRL tags while preserving content
-    # This handles nested iXBRL tags correctly
-    result = IXBRL_TAG_PATTERN.sub("", html)
+    prefixes = set(IXBRL_PREFIXES)
+    for match in XMLNS_PREFIX_PATTERN.finditer(html):
+        prefixes.add(f"{match.group(1)}:")
+    if prefixes:
+        pattern = _build_ixbrl_tag_pattern(prefixes)
+        # First pass: use regex to remove iXBRL tags while preserving content
+        # This handles nested iXBRL tags correctly
+        result = pattern.sub("", html)
+    else:
+        result = html
 
     # Remove xmlns declarations for iXBRL namespaces
     result = XMLNS_PATTERN.sub("", result)
@@ -81,4 +93,5 @@ def has_ixbrl(html: str) -> bool:
         "xbrli:" in html_lower,
         "inline xbrl" in html_lower,
         'xmlns:ix="' in html_lower,
+        XMLNS_PATTERN.search(html) is not None,
     ])

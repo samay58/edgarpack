@@ -38,8 +38,10 @@ Thumbs.db
 # Test output
 test-packs/
 test-site/
-packs/
-site/
+/packs/
+/site/
+site_test/
+test_packs/
 
 # Cache
 .edgarpack/
@@ -53,3 +55,8 @@ site/
 .coverage
 htmlcov/
 .pytest_cache/
+AGENTS.md
+CODEX_PROMPTS.md
+NVIDIA_RESULTS.md
+subway-map.html
+tools/codebase-map/

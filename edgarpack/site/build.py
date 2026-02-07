@@ -431,13 +431,14 @@ def _inline(text: str) -> str:
 
     text = _re_sub(r"`([^`]+)`", text, lambda m: stash(f"<code>{_escape_block(m.group(1))}</code>"))
     # Links
-    text = _re_sub(
-        r"\[([^\]]+)\]\(([^)]+)\)",
-        text,
-        lambda m: stash(
-            f"<a href=\"{_escape_attr(m.group(2))}\">{_escape_block(m.group(1))}</a>"
-        ),
-    )
+    def _link_repl(match) -> str:
+        href = _safe_href(match.group(2))
+        label = match.group(1)
+        if not href:
+            return label
+        return stash(f"<a href=\"{_escape_attr(href)}\">{_escape_block(label)}</a>")
+
+    text = _re_sub(r"\[([^\]]+)\]\(([^)]+)\)", text, _link_repl)
     # Bold
     text = _re_sub(
         r"\*\*([^*]+)\*\*",
@@ -458,6 +459,18 @@ def _escape_attr(text: str) -> str:
         .replace(">", "&gt;")
         .replace('"', "&quot;")
     )
+
+
+def _safe_href(href: str) -> str | None:
+    if href is None:
+        return None
+    cleaned = href.strip()
+    if not cleaned:
+        return None
+    lowered = cleaned.lower()
+    if lowered.startswith(("javascript:", "data:", "vbscript:")):
+        return None
+    return cleaned
 
 
 def _re_sub(pattern: str, text: str, fn) -> str:

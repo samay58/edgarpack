@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ..config import DEFAULT_CHUNK_MAX_TOKENS, DEFAULT_CHUNK_MIN_TOKENS
-from ..parse.tokenize import count_tokens
+from ..parse.tokenize import count_tokens, has_tiktoken, truncate_to_tokens
 
 
 class Chunk(BaseModel):
@@ -98,6 +98,11 @@ def chunk_section(
     if not content:
         return chunks
 
+    min_tokens = max(1, int(min_tokens))
+    max_tokens = max(1, int(max_tokens))
+    if min_tokens > max_tokens:
+        min_tokens = max_tokens
+
     # If content is small enough, return as single chunk
     total_tokens = count_tokens(content)
     if total_tokens <= max_tokens:
@@ -125,6 +130,8 @@ def chunk_section(
     while start < n:
         best_end: int | None = None
         best_tokens: int | None = None
+        fallback_end: int | None = None
+        fallback_tokens: int | None = None
 
         for end in all_boundaries:
             if end <= start:
@@ -132,15 +139,30 @@ def chunk_section(
             candidate = content[start:end]
             candidate_tokens = count_tokens(candidate)
             if candidate_tokens <= max_tokens:
-                best_end = end
-                best_tokens = candidate_tokens
+                if candidate_tokens >= min_tokens:
+                    best_end = end
+                    best_tokens = candidate_tokens
+                else:
+                    fallback_end = end
+                    fallback_tokens = candidate_tokens
                 continue
             break
 
         if best_end is None or best_end <= start:
-            # No boundary within max_tokens; hard split by a conservative char heuristic.
-            best_end = min(n, start + max_tokens * 4)
-            best_tokens = count_tokens(content[start:best_end])
+            if fallback_end is not None and fallback_end > start:
+                best_end = fallback_end
+                best_tokens = fallback_tokens
+            else:
+                # No boundary within max_tokens; hard split.
+                if has_tiktoken():
+                    truncated = truncate_to_tokens(content[start:], max_tokens)
+                    if not truncated:
+                        break
+                    best_end = start + len(truncated)
+                    best_tokens = count_tokens(truncated)
+                else:
+                    best_end = min(n, start + max_tokens * 4)
+                    best_tokens = count_tokens(content[start:best_end])
 
         text = content[start:best_end]
         if not text:

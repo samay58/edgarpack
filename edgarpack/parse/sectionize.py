@@ -72,6 +72,29 @@ TITLED_SECTION_PATTERN = re.compile(
 )
 
 
+def normalize_form_type_for_sections(form_type: str) -> str:
+    """Normalize form type for section detection and IDs.
+
+    - Makes comparison case-insensitive
+    - Treats amendments ("/A") as base form for IDs
+    """
+    if not form_type:
+        return ""
+    form = form_type.strip().upper().replace(" ", "")
+    amended = form.endswith("/A")
+    if amended:
+        form = form[:-2]
+    if form in {"10K", "10-K"}:
+        base = "10-K"
+    elif form in {"10Q", "10-Q"}:
+        base = "10-Q"
+    elif form in {"8K", "8-K"}:
+        base = "8-K"
+    else:
+        base = form
+    return base
+
+
 def slugify(text: str, max_len: int = 30) -> str:
     """Convert text to a URL-safe slug.
 
@@ -124,10 +147,11 @@ def section_id(form: str, part: str | None, item: str, title: str) -> str:
     Returns:
         Section ID string
     """
-    form_lower = form.lower().replace("-", "")
+    normalized_form = normalize_form_type_for_sections(form)
+    form_lower = re.sub(r"[^a-z0-9]+", "", normalized_form.lower())
     slug = slugify(title) if title else ""
 
-    if form in ("10-K", "10-k"):
+    if normalized_form == "10-K":
         parts = ["10k"]
         if part:
             parts.append(f"part{part.lower()}")
@@ -136,7 +160,7 @@ def section_id(form: str, part: str | None, item: str, title: str) -> str:
             parts.append(slug)
         return "_".join(parts)
 
-    elif form in ("10-Q", "10-q"):
+    elif normalized_form == "10-Q":
         parts = ["10q"]
         if part:
             parts.append(f"part{part.lower()}")
@@ -145,7 +169,7 @@ def section_id(form: str, part: str | None, item: str, title: str) -> str:
             parts.append(slug)
         return "_".join(parts)
 
-    elif form in ("8-K", "8-k"):
+    elif normalized_form == "8-K":
         item_clean = item.replace(".", "_")
         parts = [f"8k_item_{item_clean}"]
         if slug:
@@ -184,7 +208,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         char_offsets.append(offset)
         offset += len(line) + 1  # +1 for newline
 
-    form_upper = form_type.upper()
+    form_upper = normalize_form_type_for_sections(form_type).upper()
 
     # Track current PART so items without explicit PART still get a stable ID.
     current_part: str | None = None

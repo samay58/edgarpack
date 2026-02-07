@@ -32,6 +32,10 @@ class TestSectionId(unittest.TestCase):
         sid = section_id("8-K", None, "2.02", "Results of Operations")
         self.assertTrue(sid.startswith("8k_item_2_02"))
 
+    def test_amended_form_section_id(self) -> None:
+        sid = section_id("10-K/A", "I", "1", "Business")
+        self.assertEqual(sid, "10k_parti_item1_business")
+
 
 class TestFindSections(unittest.TestCase):
     def test_skips_toc_table_and_finds_inline_headings(self) -> None:
@@ -79,6 +83,11 @@ class TestFindSections(unittest.TestCase):
         matches = find_sections(md, "10-K")
         self.assertTrue(matches)
         self.assertLessEqual(len(matches[0].title), 100)
+
+    def test_amended_8k_uses_8k_pattern(self) -> None:
+        md = "ITEM 1.01 Entry into a Material Definitive Agreement\nBody\n"
+        matches = find_sections(md, "8-K/A")
+        self.assertTrue(any(m.item == "1.01" for m in matches))
 
 
 class TestSectionize(unittest.TestCase):

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from edgarpack.site.build import build_site
+from edgarpack.site.build import _markdown_to_html, build_site
 
 
 class TestSiteBuild(unittest.TestCase):
@@ -64,7 +64,12 @@ class TestSiteBuild(unittest.TestCase):
             self.assertTrue((out / cik / accession / "full.html").exists())
             self.assertTrue((out / cik / accession / "sections" / "sec1.html").exists())
 
+    def test_markdown_to_html_sanitizes_links(self) -> None:
+        md = "Click [bad](javascript:alert(1)) and [ok](https://example.com)."
+        html = _markdown_to_html(md)
+        self.assertNotIn("javascript:", html.lower())
+        self.assertIn("https://example.com", html)
+
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -11,6 +11,7 @@ from ..config import SEC_ARCHIVES_BASE
 from ..parse.html_clean import clean_html
 from ..parse.ixbrl_strip import strip_ixbrl
 from ..parse.md_render import render_markdown
+from ..parse.semantic_html import reduce_to_semantic
 from ..parse.sectionize import Section, sectionize
 from ..parse.tokenize import count_tokens, has_tiktoken
 from ..sec.archives import fetch_filing_html
@@ -116,18 +117,21 @@ async def build_pack(
 
     # Step 4: Process HTML to markdown
     # Concatenate all HTML files (primary first)
-    combined_html = ""
+    combined_parts: list[str] = []
     for filename, content in html_files:
         try:
             decoded = content.decode("utf-8")
         except UnicodeDecodeError:
             decoded = content.decode("latin-1")
-        combined_html += decoded + "\n"
+        combined_parts.append(decoded)
+    combined_html = "\n".join(combined_parts)
 
     # Pipeline: strip iXBRL -> clean HTML -> render markdown
     html_stripped = strip_ixbrl(combined_html)
     html_cleaned = clean_html(html_stripped)
-    markdown = render_markdown(html_cleaned)
+    base_url = f"{SEC_ARCHIVES_BASE}/{meta.cik}/{meta.accession_nodash}/"
+    html_semantic = reduce_to_semantic(html_cleaned, base_url=base_url)
+    markdown = render_markdown(html_semantic)
 
     # Step 5: Sectionize
     sections = sectionize(markdown, meta.form_type)
