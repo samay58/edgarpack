@@ -150,7 +150,7 @@ Generate a minimal offline site from a packs directory.
 edgarpack site --packs ./packs --out ./site
 ```
 
-Hosting options follow here.
+Any static host works.
 
 - GitHub Pages. Publish the `site/` directory via `gh-pages` or `/docs`.
 - Netlify. Set the publish directory to `site/`.
