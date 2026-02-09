@@ -152,9 +152,10 @@ Generate a minimal offline site from a packs directory.
 edgarpack site --packs ./packs --out ./site
 ```
 
-Any static host works.
+This repo ships a GitHub Actions workflow that builds packs for a curated set of companies and deploys the site automatically on every push to `main`. Edit the CIK list in `.github/workflows/deploy-site.yml` to change the showcase.
 
-- GitHub Pages. Publish the `site/` directory via `gh-pages` or `/docs`.
+Any static host works for self-hosting.
+
 - Netlify. Set the publish directory to `site/`.
 - S3. Sync `site/` to a bucket and enable static website hosting.
 
