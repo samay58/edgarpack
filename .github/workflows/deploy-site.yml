@@ -1,0 +1,60 @@
+name: Deploy showcase site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install edgarpack
+        run: pip install .
+
+      - name: Build showcase packs
+        run: |
+          # Well-known companies so visitors see recognizable filings.
+          # SEC EDGAR is public; no API key needed.
+          edgarpack build --cik 320193  --form 10-K --out ./packs   # Apple
+          edgarpack build --cik 789019  --form 10-K --out ./packs   # Microsoft
+          edgarpack build --cik 1018724 --form 10-K --out ./packs   # Amazon
+          edgarpack build --cik 1045810 --form 10-K --out ./packs   # NVIDIA
+          edgarpack build --cik 1652044 --form 10-K --out ./packs   # Alphabet
+        env:
+          EDGARPACK_USER_AGENT: "EdgarPack/CI admin@edgarpack.dev"
+
+      - name: Generate site
+        run: edgarpack site --packs ./packs --out ./site
+
+      - name: Prepare for GitHub Pages
+        run: touch ./site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
