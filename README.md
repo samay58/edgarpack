@@ -2,6 +2,8 @@
 
 EdgarPack turns SEC EDGAR filings into clean, sectioned markdown packs. It preserves visible text, strips iXBRL noise, and gives you stable section IDs.
 
+**[Browse the live showcase](https://samay58.github.io/edgarpack/)** to see cleaned filings for Apple, Microsoft, Amazon, NVIDIA, and Alphabet.
+
 ## Why
 
 SEC filings are HTML with inline XBRL. A revenue number often looks like this.
