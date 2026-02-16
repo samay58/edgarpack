@@ -64,11 +64,14 @@ At moderate scale (1000 queries/day, mostly cache hits): a few GB/month at most.
 
 Current cache for ~4 companies + associated filings: 46MB. At S&P 500 scale: ~1.9GB. At full SEC coverage (~10K active filers): ~38GB. Trivial by modern standards.
 
-### Downstream LLM tokens: the actual cost
+### Downstream token processing: the variable cost
 
-This is where the real money is. A single `QueryResult` with 5 metrics is ~500-1000 tokens in JSON format. A 4-company comps table with 5 metrics is ~2000-4000 tokens. That's the input to whatever LLM consumes this data.
+If you feed query output into any token-priced text system, this is where variable cost appears.
+A single `QueryResult` with 5 metrics is ~500-1000 tokens in JSON format.
+A 4-company comps table with 5 metrics is ~2000-4000 tokens.
 
-At Claude Sonnet rates ($3/M input tokens): a 4-company comps query costs ~$0.006-0.012 in downstream LLM consumption. The EdgarPack query itself is free.
+At a reference price of $3 per million input tokens, a 4-company comps query costs about $0.006-0.012 downstream.
+The EdgarPack query itself is free.
 
 ## Rate Limit: The Hard Constraint
 
@@ -149,9 +152,10 @@ This is the single biggest production gap.
 | Cache storage | ~$1-5/month | Redis or S3, <2GB for S&P 500 |
 | Bandwidth | ~$1-5/month | Mostly cache hits in steady state |
 | **Total infrastructure** | **~$25-60/month** | |
-| Downstream LLM tokens | $0.006-0.012/query | The real variable cost |
+| Downstream token processing | $0.006-0.012/query | Variable cost if routed into token-priced systems |
 
-The infrastructure cost is essentially fixed. The marginal cost of an additional query is $0 (cache hit) to $0.012 (LLM tokens for a comps table). SEC data is free. The only scaling cost is whatever LLM you feed the output into.
+Infrastructure cost is mostly fixed. The marginal cost of an extra query is $0 on cache hit, then rises only if downstream systems charge by token.
+SEC data is free.
 
 ## Capabilities and Limitations
 
@@ -186,7 +190,7 @@ An honest assessment of what the query layer can and cannot do for investment ba
 
 These are fundamental constraints of the SEC companyfacts API, not bugs.
 
-**Non-GAAP metrics: not available.** SEC companyfacts contains only GAAP-tagged XBRL data. Adjusted EBITDA, Non-GAAP EPS, Adjusted Operating Income, and stock-based compensation add-backs appear in the narrative text of earnings releases (8-K Item 2.02) and supplemental tables, not in structured XBRL. This is the single biggest gap for IB-grade comps: every banker's comps table uses Non-GAAP numbers. The data IS in the filing markdown that EdgarPack's core pipeline produces, and an LLM could extract it from there, but the query layer has no programmatic access to it.
+**Non-GAAP metrics: not available.** SEC companyfacts contains only GAAP-tagged XBRL data. Adjusted EBITDA, Non-GAAP EPS, Adjusted Operating Income, and stock-based compensation add-backs appear in narrative filing text and supplemental tables, not in structured companyfacts data. This is the biggest gap for IB-grade comps. The data is present in filing markdown, but the query layer does not expose a programmatic extractor for it.
 
 **Market data: not available.** SEC provides no share prices. Without price data, you cannot compute market cap, enterprise value, EV/Revenue, EV/EBITDA, P/E ratio, or any valuation multiple. These are table stakes for comps.
 

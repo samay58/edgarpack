@@ -6,6 +6,16 @@ EdgarPack turns SEC EDGAR filings into clean markdown with stable section IDs an
 
 Use NVIDIA's 10-K (`CIK 0001045810`) as the concrete example. EdgarPack fetches the filing files, converts the HTML into clean markdown, builds a pack directory, and optionally queries XBRL facts for metrics.
 
+## Design Decisions and Tradeoffs
+
+We made a few deliberate choices to keep this project practical.
+
+- We use stdlib HTTP instead of a heavier client so deployment is predictable and rate-limit behavior is fully visible in our code.
+- We use regex plus `html.parser` instead of a DOM parser so we control exactly how filing noise is stripped and section text is preserved.
+- We keep the artifact set deterministic so reruns are diffable and hash-addressed manifests stay stable.
+- We treat citations as part of the data model, not formatting, so numbers are auditable by default.
+- We fail soft on missing facts and return `None` instead of guessing values, because silent imputation is worse than explicit gaps in financial work.
+
 ### Stage 1: Fetch from SEC EDGAR
 
 EdgarPack first resolves filing metadata from SEC submissions data, then fetches filing files from the SEC Archives path. The HTTP client enforces SEC-friendly pacing with a token-bucket rate limiter and retry handling for throttling or transient server errors.

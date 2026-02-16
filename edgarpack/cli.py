@@ -24,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     """Parse CLI arguments and dispatch to the selected subcommand."""
     parser = argparse.ArgumentParser(
         prog="edgarpack",
-        description="llms.txt for SEC filings — build deterministic markdown packs.",
+        description="llms.txt for SEC filings - build deterministic markdown packs.",
     )
     parser.add_argument(
         "--version",

@@ -15,6 +15,13 @@ Ticker/CIK
 
 Single-company queries go through `financials()`. Multi-company comparisons use `comps()`, which runs queries in parallel via `asyncio.gather`.
 
+## Design Choices We Made
+
+- We keep metric concept mappings in code so changes are reviewed with the rest of query logic.
+- We return `None` for missing or invalid inputs instead of guessing values.
+- We keep period math explicit, especially LTM, so every component can be cited and checked.
+- We include filing metadata on value objects by default so audit trails are not optional.
+
 ## CLI Reference
 
 ### Single company
@@ -110,7 +117,7 @@ Recursive derivation: EBITDA resolves its components (operating_income, deprecia
 
 ### Lean (`--format json`)
 
-Optimized for LLM consumption. Deduplicates filings, auto-includes component metrics for derived values, and includes a permalink for reproducibility.
+Compact output format. It deduplicates filing metadata, auto-includes component metrics for derived values, and includes a permalink for reproducibility.
 
 ```json
 {
@@ -214,6 +221,6 @@ The `document_url` uses Chrome/Edge text fragment scrolling (`#:~:text=Net%20Inc
 
 **Cross-company normalization**: handles the XBRL concept zoo (20+ revenue tags across filers) so you can compare Apple and NVIDIA without knowing their specific tags.
 
-**LLM-friendly output**: lean JSON avoids repeating filing metadata across metrics, auto-includes component values, and keeps token counts low.
+**Compact output**: lean JSON avoids repeating filing metadata across metrics, auto-includes component values, and keeps token counts low.
 
 **Zero external dependencies**: uses only stdlib HTTP, pydantic for validation, and tiktoken for counting. Runs in sandboxed/serverless environments.
