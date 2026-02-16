@@ -108,6 +108,60 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_site.add_argument("--base-url", default=None, help="Optional base URL (reserved)")
 
+    # --- query subcommand ---
+    p_query = sub.add_parser(
+        "query",
+        help="Query financial metrics for a company (cited from SEC filings)",
+    )
+    p_query.add_argument("company", help="Ticker symbol (NVDA) or CIK number")
+    p_query.add_argument(
+        "metrics",
+        nargs="?",
+        default=None,
+        help="Comma-separated metric names (e.g. revenue,net_income). Omit for all.",
+    )
+    p_query.add_argument(
+        "--period",
+        "-p",
+        default="lfy",
+        help="Period: lfy, mrq, ltm, mrp, annual:N, quarterly:N (default: lfy)",
+    )
+    p_query.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    p_query.add_argument("--force", action="store_true", help="Bypass cache")
+
+    # --- comps subcommand ---
+    p_comps = sub.add_parser(
+        "comps",
+        help="Compare financial metrics across companies",
+    )
+    p_comps.add_argument("companies", nargs="+", help="Ticker symbols or CIK numbers")
+    p_comps.add_argument(
+        "--metrics",
+        "-m",
+        required=True,
+        help="Comma-separated metric names",
+    )
+    p_comps.add_argument(
+        "--period",
+        "-p",
+        default="lfy",
+        help="Period: lfy, mrq, ltm, mrp (default: lfy)",
+    )
+    p_comps.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    p_comps.add_argument("--force", action="store_true", help="Bypass cache")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "build":
@@ -120,6 +174,10 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_cache(args)
     if args.cmd == "site":
         return _cmd_site(args)
+    if args.cmd == "query":
+        return _cmd_query(args)
+    if args.cmd == "comps":
+        return _cmd_comps(args)
 
     parser.print_help()
     return 2
@@ -252,6 +310,92 @@ def _cmd_site(args: Any) -> int:
     total_bytes = int(report.get("total_bytes") or 0)
     print(f"  Size: {total_bytes / 1024:.1f} KB")
     return 0
+
+
+def _cmd_query(args: Any) -> int:
+    async def _run() -> int:
+        from .query.comps import _format_value
+        from .query.financials import financials
+
+        try:
+            result = await financials(
+                company=args.company,
+                metrics=args.metrics,
+                period=args.period,
+                force=bool(args.force),
+            )
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+
+        if args.output_format == "json":
+            import json
+
+            print(json.dumps(result.to_cited_dict(), indent=2, default=str))
+            return 0
+
+        # Table format
+        print(f"{result.company} (CIK: {result.cik})\n")
+        citations: list[str] = []
+        for metric_name, cited in result.metrics.items():
+            label = metric_name.replace("_", " ").title()
+            if cited is None:
+                print(f"  {label}: N/A")
+            elif isinstance(cited, list):
+                print(f"  {label}:")
+                for item in cited:
+                    if item.value is None:
+                        continue
+                    formatted = _format_value(item)
+                    period_label = f"{item.fiscal_period}{item.fiscal_year}"
+                    print(f"    {period_label}: {formatted}")
+                    cite = item.citation
+                    if cite not in citations:
+                        citations.append(cite)
+            elif cited.value is None:
+                print(f"  {label}: N/A")
+            else:
+                formatted = _format_value(cited)
+                print(f"  {label}: {formatted}")
+                cite = cited.citation
+                if cite not in citations:
+                    citations.append(cite)
+
+        if citations:
+            print("\nSources:")
+            for c in citations:
+                print(f"  - {c}")
+
+        return 0
+
+    return asyncio.run(_run())
+
+
+def _cmd_comps(args: Any) -> int:
+    async def _run() -> int:
+        from .query.comps import comps, comps_to_json, format_comps_table
+
+        metric_list = [m.strip() for m in args.metrics.split(",")]
+
+        try:
+            results = await comps(
+                companies=args.companies,
+                metrics=metric_list,
+                period=args.period,
+                force=bool(args.force),
+            )
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+
+        if args.output_format == "json":
+            print(comps_to_json(results))
+        else:
+            print(format_comps_table(results, metric_list))
+
+        return 0
+
+    return asyncio.run(_run())
 
 
 if __name__ == "__main__":
