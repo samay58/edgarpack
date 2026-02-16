@@ -32,6 +32,13 @@ edgarpack build --cik 320193 --form 10-K --out ./packs --with-chunks --with-xbrl
 
 # Generate static site from packs
 edgarpack site --packs ./packs --out ./site
+
+# Query financial metrics (single company)
+edgarpack query NVDA revenue,net_income --period lfy
+edgarpack query NVDA revenue --format json
+
+# Compare across companies
+edgarpack comps NVDA AAPL MSFT --metrics revenue,gross_margin --format table
 ```
 
 ## Architecture
@@ -53,6 +60,9 @@ Orchestrator in `build.py` wires the pipeline. Outputs: `llms.txt` (entry point)
 
 ### `edgarpack/site/` — Static HTML site generator
 Minimal, zero-JS static site. Inline CSS, monospace typography, < 10KB per page. Has its own markdown-to-HTML converter in `build.py` (doesn't depend on external markdown libs).
+
+### `edgarpack/query/` — Financial data queries
+Single-company (`financials()`) and multi-company (`comps()`) financial queries against SEC XBRL data. Concept resolver maps normalized metric names (e.g. "revenue") to company-specific GAAP/IFRS tags, scored by recency. Period selectors handle LFY, MRQ, LTM, series. Every value is a `CitedValue` with full provenance: filing URL, XBRL Viewer deep link, and concept API URL. Derived metrics (margins, ratios) are computed from components with cross-year validation.
 
 ## Key Design Decisions
 

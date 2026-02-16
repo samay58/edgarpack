@@ -124,7 +124,8 @@ Optimized for LLM consumption. Deduplicates filings, auto-includes component met
       "filed": "2025-02-18",
       "fiscal_year": 2025,
       "fiscal_period": "FY",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000001/0001045810-25-000001-index.htm"
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/...-index.htm",
+      "viewer_url": "https://www.sec.gov/ix?doc=/Archives/edgar/data/1045810/.../nvda-20250126.htm"
     }
   },
   "metrics": {
@@ -133,7 +134,8 @@ Optimized for LLM consumption. Deduplicates filings, auto-includes component met
       "unit": "USD",
       "concept": "Revenues",
       "period": "2024-01-29/2025-01-26",
-      "accession": "0001045810-25-000001"
+      "accession": "0001045810-25-000001",
+      "concept_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001045810/us-gaap/Revenues.json"
     },
     "gross_margin": {
       "value": 0.7355,
@@ -165,9 +167,24 @@ Companies filing on form 20-F (non-US filers) typically use IFRS taxonomy instea
 
 ## Deep Linking
 
-Filing URLs point to the SEC EDGAR filing detail page (`{accession}-index.htm`), which shows company name, form type, filing date, and links to all filing documents. This is more useful than the raw directory listing.
+Every value carries up to four URLs for tracing back to the source. Each tier gives progressively more targeted access to the underlying data.
+
+| URL | What It Points To | Extra API Calls |
+|-----|-------------------|-----------------|
+| `filing_url` | SEC EDGAR filing detail page (`-index.htm`) | 0 |
+| `concept_url` | SEC XBRL companyconcept API (full concept history as JSON) | 0 |
+| `viewer_url` | SEC Inline XBRL Viewer with highlighted/clickable tags | 1 (submissions, cached 1hr) |
+| `document_url` | Filing HTML scrolled to the concept via `#:~:text=` fragment | 1 (submissions, cached 1hr) |
+
+`filing_url` is always present. `concept_url` is present for direct XBRL metrics but `None` for derived metrics (formulas like `gross_profit / revenue` have no single concept). `viewer_url` and `document_url` require the filing's `primaryDocument` filename from the SEC submissions API; they degrade to `None` if the submissions call fails.
 
 The `permalink` field in JSON output provides the exact CLI command to reproduce the query.
+
+### How It Works
+
+The submissions API (`data.sec.gov/submissions/CIK{cik}.json`) returns `primaryDocument` filenames for all recent filings. `financials()` calls this once per query, builds a `{accession: primaryDocument}` lookup, and threads it through all period selectors. The call is cached for 1 hour by the same disk cache the rest of the SEC client uses. If it fails, all values still resolve; they just lack `viewer_url` and `document_url`.
+
+The `document_url` uses Chrome/Edge text fragment scrolling (`#:~:text=Net%20Income%20Loss`) by converting the camelCase XBRL concept to a space-separated label.
 
 ## Metric Reference
 
