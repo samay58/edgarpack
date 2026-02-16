@@ -4,11 +4,33 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..sec.submissions import fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from .concepts import ALL_METRICS, METRIC_MAP, resolve_concept
 from .models import CitedValue, DerivedValue, QueryResult
 from .periods import select_period
+
+
+async def _build_doc_map(cik: str, force: bool = False) -> dict[str, str]:
+    """Build {accession: primaryDocument} from submissions (cached 1hr).
+
+    Returns empty dict on failure so callers degrade gracefully.
+    """
+    try:
+        data = await fetch_submissions(cik, force=force)
+    except Exception:
+        return {}
+
+    filings = data.get("filings", {}).get("recent", {})
+    accessions = filings.get("accessionNumber", [])
+    docs = filings.get("primaryDocument", [])
+
+    doc_map: dict[str, str] = {}
+    for acc, doc in zip(accessions, docs):
+        if acc and doc:
+            doc_map[acc] = doc
+    return doc_map
 
 
 async def financials(
@@ -35,6 +57,8 @@ async def financials(
     facts_data = await fetch_company_facts(cik, force=force)
     facts = facts_data.get("facts", {})
 
+    doc_map = await _build_doc_map(cik, force=force)
+
     if metrics is None:
         metric_list = list(ALL_METRICS)
     elif isinstance(metrics, str):
@@ -51,7 +75,7 @@ async def financials(
             continue
 
         if meta.derived:
-            cited = _compute_derived(facts, metric, meta, company_name, cik, period)
+            cited = _compute_derived(facts, metric, meta, company_name, cik, period, doc_map)
             result_metrics[metric] = cited
         else:
             resolved = resolve_concept(metric, facts)
@@ -61,7 +85,15 @@ async def financials(
 
             concept, taxonomy = resolved
             value = select_period(
-                facts, concept, metric, meta, company_name, cik, period, taxonomy=taxonomy
+                facts,
+                concept,
+                metric,
+                meta,
+                company_name,
+                cik,
+                period,
+                taxonomy=taxonomy,
+                doc_map=doc_map,
             )
 
             if isinstance(value, list):
@@ -79,6 +111,7 @@ def _compute_derived(
     company: str,
     cik: str,
     period: str,
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue | None:
     """Compute a derived metric from its components."""
     if not meta.components or not meta.formula:
@@ -93,14 +126,24 @@ def _compute_derived(
 
         if comp_meta.derived:
             # Recursive derived metric (e.g., ebitda needs operating_income + d&a)
-            comp_value = _compute_derived(facts, comp_name, comp_meta, company, cik, period)
+            comp_value = _compute_derived(
+                facts, comp_name, comp_meta, company, cik, period, doc_map
+            )
         else:
             resolved = resolve_concept(comp_name, facts)
             if resolved is None:
                 return None
             concept, taxonomy = resolved
             value = select_period(
-                facts, concept, comp_name, comp_meta, company, cik, period, taxonomy=taxonomy
+                facts,
+                concept,
+                comp_name,
+                comp_meta,
+                company,
+                cik,
+                period,
+                taxonomy=taxonomy,
+                doc_map=doc_map,
             )
             if isinstance(value, list):
                 comp_value = value[0] if value else None
@@ -142,6 +185,8 @@ def _compute_derived(
         accession=first_comp.accession,
         cik=cik,
         company=company,
+        taxonomy=first_comp.taxonomy,
+        primary_document=first_comp.primary_document,
         derived=True,
         components=components,
     )
@@ -191,6 +236,8 @@ def _derived_unit(metric: str, components: dict[str, CitedValue]) -> str:
         "gross_margin",
         "operating_margin",
         "net_margin",
+        "ebitda_margin",
+        "fcf_margin",
         "roe",
         "roa",
         "current_ratio",

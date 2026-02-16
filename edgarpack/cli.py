@@ -342,7 +342,8 @@ def _cmd_query(args: Any) -> int:
 
         # Table format
         print(f"{result.company} (CIK: {result.cik})\n")
-        citations: list[str] = []
+        citations: list[tuple[str, str | None]] = []
+        seen_citations: set[str] = set()
         for metric_name, cited in result.metrics.items():
             label = metric_name.replace("_", " ").title()
             if cited is None:
@@ -356,21 +357,25 @@ def _cmd_query(args: Any) -> int:
                     period_label = f"{item.fiscal_period}{item.fiscal_year}"
                     print(f"    {period_label}: {formatted}")
                     cite = item.citation
-                    if cite not in citations:
-                        citations.append(cite)
+                    if cite not in seen_citations:
+                        seen_citations.add(cite)
+                        citations.append((cite, item.viewer_url))
             elif cited.value is None:
                 print(f"  {label}: N/A")
             else:
                 formatted = _format_value(cited)
                 print(f"  {label}: {formatted}")
                 cite = cited.citation
-                if cite not in citations:
-                    citations.append(cite)
+                if cite not in seen_citations:
+                    seen_citations.add(cite)
+                    citations.append((cite, cited.viewer_url))
 
         if citations:
             print("\nSources:")
-            for c in citations:
-                print(f"  - {c}")
+            for cite_text, viewer in citations:
+                print(f"  - {cite_text}")
+                if viewer:
+                    print(f"    {viewer}")
 
         return 0
 

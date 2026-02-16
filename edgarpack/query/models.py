@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
+from urllib.parse import quote
 
 from pydantic import BaseModel
 
-from ..config import SEC_ARCHIVES_BASE
+from ..config import SEC_ARCHIVES_BASE, SEC_DATA_BASE
+
+
+def _concept_to_label(concept: str) -> str:
+    """Convert a camelCase XBRL tag to a space-separated label.
+
+    Example: "NetIncomeLoss" -> "Net Income Loss"
+    """
+    return re.sub(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ", concept)
 
 
 class CitedValue(BaseModel):
@@ -30,11 +40,57 @@ class CitedValue(BaseModel):
     cik: str
     company: str
 
+    # Deep linking
+    taxonomy: str = "us-gaap"
+    primary_document: str = ""
+
     @property
     def filing_url(self) -> str:
         """SEC EDGAR filing URL."""
         acc_nodash = self.accession.replace("-", "")
         return f"{SEC_ARCHIVES_BASE}/{self.cik.lstrip('0')}/{acc_nodash}/{self.accession}-index.htm"
+
+    @property
+    def concept_url(self) -> str | None:
+        """SEC XBRL companyconcept API URL for this concept's full history.
+
+        Returns None for derived metrics (concept contains spaces or formula operators).
+        """
+        if " " in self.concept or "/" in self.concept:
+            return None
+        cik_padded = self.cik.lstrip("0").zfill(10)
+        return (
+            f"{SEC_DATA_BASE}/api/xbrl/companyconcept"
+            f"/CIK{cik_padded}/{self.taxonomy}/{self.concept}.json"
+        )
+
+    @property
+    def viewer_url(self) -> str | None:
+        """SEC Inline XBRL Viewer URL with highlighted tags.
+
+        Returns None if no primary_document is available.
+        """
+        if not self.primary_document:
+            return None
+        acc_nodash = self.accession.replace("-", "")
+        cik_bare = self.cik.lstrip("0")
+        doc_path = f"/Archives/edgar/data/{cik_bare}/{acc_nodash}/{self.primary_document}"
+        return f"https://www.sec.gov/ix?doc={doc_path}"
+
+    @property
+    def document_url(self) -> str | None:
+        """Direct filing HTML URL with text fragment scroll.
+
+        Uses Chrome/Edge #:~:text= to scroll to the concept label.
+        Returns None if no primary_document is available.
+        """
+        if not self.primary_document:
+            return None
+        acc_nodash = self.accession.replace("-", "")
+        cik_bare = self.cik.lstrip("0")
+        base = f"{SEC_ARCHIVES_BASE}/{cik_bare}/{acc_nodash}/{self.primary_document}"
+        label = _concept_to_label(self.concept)
+        return f"{base}#:~:text={quote(label)}"
 
     @property
     def citation(self) -> str:
@@ -47,6 +103,12 @@ class CitedValue(BaseModel):
         d = self.model_dump(mode="json")
         d["filing_url"] = self.filing_url
         d["citation"] = self.citation
+        if self.concept_url:
+            d["concept_url"] = self.concept_url
+        if self.viewer_url:
+            d["viewer_url"] = self.viewer_url
+        if self.document_url:
+            d["document_url"] = self.document_url
         return d
 
     def _period_str(self) -> str:
@@ -64,6 +126,8 @@ class CitedValue(BaseModel):
             "period": self._period_str(),
             "accession": self.accession,
         }
+        if self.concept_url:
+            d["concept_url"] = self.concept_url
         return d
 
 
@@ -159,13 +223,16 @@ class QueryResult(BaseModel):
         """Add a filing entry if not already present."""
         acc = cited.accession
         if acc and acc not in filings:
-            filings[acc] = {
+            entry: dict[str, object] = {
                 "form_type": cited.form_type,
                 "filed": str(cited.filed),
                 "fiscal_year": cited.fiscal_year,
                 "fiscal_period": cited.fiscal_period,
                 "url": cited.filing_url,
             }
+            if cited.viewer_url:
+                entry["viewer_url"] = cited.viewer_url
+            filings[acc] = entry
 
     def to_lean_dict(self) -> dict[str, object]:
         """Lean JSON with filing deduplication and component auto-inclusion."""

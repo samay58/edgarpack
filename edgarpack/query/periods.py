@@ -77,8 +77,14 @@ def _value_to_cited(
     unit: str,
     company: str,
     cik: str,
+    taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue:
     """Convert a raw SEC value dict to a CitedValue."""
+    accn = str(v.get("accn", ""))
+    primary_doc = ""
+    if doc_map and accn:
+        primary_doc = doc_map.get(accn, "")
     return CitedValue(
         value=v.get("val"),
         unit=unit,
@@ -90,9 +96,11 @@ def _value_to_cited(
         fiscal_period=str(v.get("fp", "")),
         form_type=str(v.get("form", "")),
         filed=_parse_date(v.get("filed", "")) or date.min,
-        accession=str(v.get("accn", "")),
+        accession=accn,
         cik=cik,
         company=company,
+        taxonomy=taxonomy,
+        primary_document=primary_doc,
     )
 
 
@@ -162,6 +170,7 @@ def select_lfy(
     company: str,
     cik: str,
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue | None:
     """Select the last fiscal year value (most recent 10-K/20-F annual)."""
     values = _extract_values(facts, concept, taxonomy=taxonomy)
@@ -173,7 +182,9 @@ def select_lfy(
         if not annual:
             return None
         annual.sort(key=lambda v: (int(v.get("fy") or 0), v.get("end", "")), reverse=True)
-        return _value_to_cited(annual[0], metric, concept, unit, company, cik)
+        return _value_to_cited(
+            annual[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
     else:
         # For balance sheet: pick most recent 10-K instant
         annual = [
@@ -185,7 +196,9 @@ def select_lfy(
         if not annual:
             return None
         annual.sort(key=lambda v: (int(v.get("fy") or 0), v.get("end", "")), reverse=True)
-        return _value_to_cited(annual[0], metric, concept, unit, company, cik)
+        return _value_to_cited(
+            annual[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
 
 def select_mrq(
@@ -196,6 +209,7 @@ def select_mrq(
     company: str,
     cik: str,
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue | None:
     """Select the most recent quarter value.
 
@@ -223,14 +237,18 @@ def select_mrq(
             key=lambda v: (v.get("end", ""), _parse_date(v.get("filed", "")) or date.min),
             reverse=True,
         )
-        return _value_to_cited(quarterly[0], metric, concept, unit, company, cik)
+        return _value_to_cited(
+            quarterly[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
     else:
         # For balance sheet: most recent quarterly instant
         quarterly = [v for v in values if _is_quarterly(v) and v.get("val") is not None]
         if not quarterly:
             return None
         quarterly.sort(key=lambda v: v.get("end", ""), reverse=True)
-        return _value_to_cited(quarterly[0], metric, concept, unit, company, cik)
+        return _value_to_cited(
+            quarterly[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
 
 def select_mrp(
@@ -241,6 +259,7 @@ def select_mrp(
     company: str,
     cik: str,
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue | None:
     """Select the most recent period (whatever was filed last)."""
     values = _extract_values(facts, concept, taxonomy=taxonomy)
@@ -253,7 +272,9 @@ def select_mrp(
         key=lambda v: (_parse_date(v.get("filed", "")) or date.min, v.get("end", "")),
         reverse=True,
     )
-    return _value_to_cited(valid[0], metric, concept, unit, company, cik)
+    return _value_to_cited(
+        valid[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
 
 
 def select_ltm(
@@ -264,6 +285,7 @@ def select_ltm(
     company: str,
     cik: str,
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue | DerivedValue | None:
     """Compute last twelve months value.
 
@@ -275,7 +297,9 @@ def select_ltm(
     """
     if not meta.duration:
         # Balance sheet: just return the most recent value
-        return select_mrp(facts, concept, metric, meta, company, cik, taxonomy=taxonomy)
+        return select_mrp(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     values = _extract_values(facts, concept, taxonomy=taxonomy)
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
@@ -294,7 +318,9 @@ def select_ltm(
     ]
     if not quarterly:
         # No quarterly data; fall back to last annual
-        return select_lfy(facts, concept, metric, meta, company, cik, taxonomy=taxonomy)
+        return select_lfy(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     # Sort by end date (most recent first), then by duration descending (longest = cumulative)
     quarterly.sort(
@@ -308,12 +334,16 @@ def select_ltm(
 
     # If MRP is Q4/FY equivalent, no LTM calc needed
     if mrp_fp in ("FY", "Q4"):
-        return _value_to_cited(mrp, metric, concept, unit, company, cik)
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     # Find the LFY (annual value for the prior fiscal year)
     annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
     if not annual:
-        return _value_to_cited(mrp, metric, concept, unit, company, cik)
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     annual.sort(key=lambda v: int(v.get("fy") or 0), reverse=True)
 
@@ -326,7 +356,9 @@ def select_ltm(
             break
 
     if lfy is None:
-        return _value_to_cited(mrp, metric, concept, unit, company, cik)
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     lfy_fy = int(lfy.get("fy", 0))
 
@@ -343,7 +375,9 @@ def select_ltm(
 
     if not prior_year:
         # Can't compute LTM without prior year comparable
-        return _value_to_cited(mrp, metric, concept, unit, company, cik)
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     # Pick the cumulative (longest duration) entry
     prior_year.sort(key=lambda v: _duration_days(v) or 0, reverse=True)
@@ -355,9 +389,15 @@ def select_ltm(
     prior_val = float(mrp_prior.get("val") or 0)
     ltm_val = mrp_val + lfy_val - prior_val
 
-    mrp_cited = _value_to_cited(mrp, metric, concept, unit, company, cik)
-    lfy_cited = _value_to_cited(lfy, metric, concept, unit, company, cik)
-    prior_cited = _value_to_cited(mrp_prior, metric, concept, unit, company, cik)
+    mrp_cited = _value_to_cited(
+        mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
+    lfy_cited = _value_to_cited(
+        lfy, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
+    prior_cited = _value_to_cited(
+        mrp_prior, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
 
     return DerivedValue(
         value=ltm_val,
@@ -373,6 +413,8 @@ def select_ltm(
         accession=mrp_cited.accession,
         cik=cik,
         company=company,
+        taxonomy=taxonomy,
+        primary_document=mrp_cited.primary_document,
         derived=True,
         components={
             "mrp": mrp_cited,
@@ -391,6 +433,7 @@ def select_annual_series(
     cik: str,
     n: int = 3,
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> list[CitedValue]:
     """Select the last N fiscal year values."""
     values = _extract_values(facts, concept, taxonomy=taxonomy)
@@ -406,7 +449,11 @@ def select_annual_series(
         if fy in seen_fy:
             continue
         seen_fy.add(fy)
-        results.append(_value_to_cited(v, metric, concept, unit, company, cik))
+        results.append(
+            _value_to_cited(
+                v, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+        )
         if len(results) >= n:
             break
 
@@ -422,6 +469,7 @@ def select_quarterly_series(
     cik: str,
     n: int = 4,
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> list[CitedValue]:
     """Select the last N quarterly values.
 
@@ -454,7 +502,11 @@ def select_quarterly_series(
         if key in seen:
             continue
         seen.add(key)
-        results.append(_value_to_cited(v, metric, concept, unit, company, cik))
+        results.append(
+            _value_to_cited(
+                v, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+        )
         if len(results) >= n:
             break
 
@@ -470,6 +522,7 @@ def select_period(
     cik: str,
     period: str = "lfy",
     taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
 ) -> CitedValue | DerivedValue | list[CitedValue] | None:
     """Route to the appropriate period selector.
 
@@ -482,6 +535,7 @@ def select_period(
         cik: CIK number.
         period: Period selector string.
         taxonomy: XBRL taxonomy ("us-gaap" or "ifrs-full").
+        doc_map: Optional mapping of accession -> primaryDocument filename.
 
     Returns:
         CitedValue, list of CitedValues (for series), or None.
@@ -489,22 +543,30 @@ def select_period(
     period = period.strip().lower()
 
     if period == "lfy":
-        return select_lfy(facts, concept, metric, meta, company, cik, taxonomy=taxonomy)
+        return select_lfy(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
     elif period == "mrq":
-        return select_mrq(facts, concept, metric, meta, company, cik, taxonomy=taxonomy)
+        return select_mrq(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
     elif period == "mrp":
-        return select_mrp(facts, concept, metric, meta, company, cik, taxonomy=taxonomy)
+        return select_mrp(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
     elif period == "ltm":
-        return select_ltm(facts, concept, metric, meta, company, cik, taxonomy=taxonomy)
+        return select_ltm(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
     elif period.startswith("annual:"):
         n = int(period.split(":")[1])
         return select_annual_series(
-            facts, concept, metric, meta, company, cik, n=n, taxonomy=taxonomy
+            facts, concept, metric, meta, company, cik, n=n, taxonomy=taxonomy, doc_map=doc_map
         )
     elif period.startswith("quarterly:"):
         n = int(period.split(":")[1])
         return select_quarterly_series(
-            facts, concept, metric, meta, company, cik, n=n, taxonomy=taxonomy
+            facts, concept, metric, meta, company, cik, n=n, taxonomy=taxonomy, doc_map=doc_map
         )
     else:
         raise ValueError(f"Unknown period selector: {period}")

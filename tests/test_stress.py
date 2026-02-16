@@ -9,11 +9,32 @@ from __future__ import annotations
 import json
 import unittest
 from datetime import date
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from edgarpack.query.comps import _format_currency, _format_value
 from edgarpack.query.financials import financials
 from edgarpack.query.models import CitedValue, DerivedValue
+
+_P = "edgarpack.query.financials"
+
+# Empty submissions mock (stress tests use custom CIKs with no real submissions)
+EMPTY_SUBMISSIONS = {
+    "cik": 0,
+    "name": "MOCK",
+    "filings": {
+        "recent": {
+            "accessionNumber": [],
+            "primaryDocument": [],
+            "form": [],
+            "filingDate": [],
+        }
+    },
+}
+
+
+def _mock_empty_submissions(*args, **kwargs):
+    return EMPTY_SUBMISSIONS
+
 
 # ---------------------------------------------------------------------------
 # Helpers: build minimal companyfacts fixtures
@@ -72,9 +93,10 @@ def _concept_block(entries: list[dict], unit: str = "USD") -> dict:
 
 
 class TestCascadingNullsLtm(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ltm_all_nulls_returns_none(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_all_nulls_returns_none(self, mock_resolve, mock_facts, mock_subs) -> None:
         """LTM with no quarterly data at all should return None, not crash."""
         mock_resolve.return_value = ("0009999999", "NULL CORP")
         mock_facts.return_value = _facts(9999999, "NULL CORP", gaap={})
@@ -82,9 +104,10 @@ class TestCascadingNullsLtm(unittest.IsolatedAsyncioTestCase):
         result = await financials("NULL", "revenue", period="ltm")
         self.assertIsNone(result.metrics["revenue"])
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ltm_only_annual_falls_back(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_only_annual_falls_back(self, mock_resolve, mock_facts, mock_subs) -> None:
         """LTM with only annual data should fall back to LFY."""
         mock_resolve.return_value = ("0009999999", "ANNUAL ONLY CORP")
         mock_facts.return_value = _facts(
@@ -121,9 +144,10 @@ class TestCascadingNullsLtm(unittest.IsolatedAsyncioTestCase):
 
 
 class TestMixedTaxonomy(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_revenue_gaap_assets_ifrs(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_revenue_gaap_assets_ifrs(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Revenue from us-gaap, total_assets from ifrs-full, same company."""
         mock_resolve.return_value = ("0008888888", "MIXED TAX CORP")
         mock_facts.return_value = _facts(
@@ -176,9 +200,10 @@ class TestMixedTaxonomy(unittest.IsolatedAsyncioTestCase):
 
 
 class TestEmptyFacts(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_empty_facts_all_none(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_empty_facts_all_none(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Empty facts dict should return all None, no crash."""
         mock_resolve.return_value = ("0007777777", "EMPTY CORP")
         mock_facts.return_value = {"cik": 7777777, "entityName": "EMPTY CORP", "facts": {}}
@@ -187,9 +212,10 @@ class TestEmptyFacts(unittest.IsolatedAsyncioTestCase):
         for metric_name in ["revenue", "net_income", "gross_margin"]:
             self.assertIsNone(result.metrics[metric_name])
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_empty_facts_lean_json_valid(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_empty_facts_lean_json_valid(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Lean JSON output with all-None metrics should be valid JSON."""
         mock_resolve.return_value = ("0007777777", "EMPTY CORP")
         mock_facts.return_value = {"cik": 7777777, "entityName": "EMPTY CORP", "facts": {}}
@@ -208,9 +234,10 @@ class TestEmptyFacts(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLtmWithQ1(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ltm_q1_mrp(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_q1_mrp(self, mock_resolve, mock_facts, mock_subs) -> None:
         """LTM with Q1 as MRP: Q1 cumulative = standalone, formula still works."""
         mock_resolve.return_value = ("0006666666", "Q1 CORP")
         mock_facts.return_value = _facts(
@@ -272,9 +299,10 @@ class TestLtmWithQ1(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLtmQ4ShortCircuit(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ltm_q4_returns_directly(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_q4_returns_directly(self, mock_resolve, mock_facts, mock_subs) -> None:
         """When MRP is Q4/FY, LTM should return it directly without DerivedValue."""
         mock_resolve.return_value = ("0005555555", "Q4 CORP")
         mock_facts.return_value = _facts(
@@ -323,9 +351,10 @@ class TestLtmQ4ShortCircuit(unittest.IsolatedAsyncioTestCase):
 
 
 class TestEbitda(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ebitda_sum(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ebitda_sum(self, mock_resolve, mock_facts, mock_subs) -> None:
         """EBITDA = operating_income + depreciation_amortization."""
         mock_resolve.return_value = ("0004444444", "EBITDA CORP")
         mock_facts.return_value = _facts(
@@ -376,9 +405,10 @@ class TestEbitda(unittest.IsolatedAsyncioTestCase):
 
 
 class TestDivisionByZero(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_gross_margin_zero_revenue(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_gross_margin_zero_revenue(self, mock_resolve, mock_facts, mock_subs) -> None:
         """gross_margin with revenue=0 should return None, not crash."""
         mock_resolve.return_value = ("0003333333", "ZERO REV CORP")
         mock_facts.return_value = _facts(
@@ -478,9 +508,10 @@ class TestNegativeFormatting(unittest.TestCase):
 
 
 class TestLeanJsonLtm(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ltm_lean_has_components_and_formula(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_lean_has_components_and_formula(self, mock_resolve, mock_facts, _ms) -> None:
         """LTM lean JSON should inline components and show formula."""
         mock_resolve.return_value = ("0002222222", "LTM LEAN CORP")
         mock_facts.return_value = _facts(
@@ -540,9 +571,10 @@ class TestLeanJsonLtm(unittest.IsolatedAsyncioTestCase):
 
 
 class TestMixedCurrencyComps(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_usd_and_eur_side_by_side(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_usd_and_eur_side_by_side(self, mock_resolve, mock_facts, mock_subs) -> None:
         """USD and EUR companies in comps should each format with correct symbol."""
         # For this test, we test the formatting function directly
         usd_cited = CitedValue(
@@ -587,9 +619,10 @@ class TestMixedCurrencyComps(unittest.IsolatedAsyncioTestCase):
 
 
 class TestAnnualSeriesGaps(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_annual_gap_returns_available(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_annual_gap_returns_available(self, mock_resolve, mock_facts, mock_subs) -> None:
         """annual:3 with FY2020 and FY2022 (no 2021) should return 2, not 3."""
         mock_resolve.return_value = ("0001010101", "GAP CORP")
         mock_facts.return_value = _facts(
@@ -637,9 +670,10 @@ class TestAnnualSeriesGaps(unittest.IsolatedAsyncioTestCase):
 
 
 class TestIfrsFull(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_20f_ifrs_revenue(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_20f_ifrs_revenue(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Non-US filer (20-F) with ifrs-full data should resolve correctly."""
         mock_resolve.return_value = ("0000123456", "FOREIGN CORP")
         mock_facts.return_value = _facts(
@@ -679,9 +713,10 @@ class TestIfrsFull(unittest.IsolatedAsyncioTestCase):
 
 
 class TestFilingDeduplication(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_five_metrics_one_filing(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_empty_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_five_metrics_one_filing(self, mock_resolve, mock_facts, mock_subs) -> None:
         """5 metrics from 1 accession: filings table should have exactly 1 entry."""
         accn = "0001234567-25-000001"
         mock_resolve.return_value = ("0001234567", "DEDUP CORP")

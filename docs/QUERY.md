@@ -175,7 +175,10 @@ The `permalink` field in JSON output provides the exact CLI command to reproduce
 `revenue`, `cost_of_revenue`, `gross_profit`, `operating_income`, `net_income`, `eps_basic`, `eps_diluted`, `rd_expense`, `sga_expense`, `ebitda`*, `depreciation_amortization`
 
 ### Balance Sheet
-`total_assets`, `current_assets`, `total_liabilities`, `current_liabilities`, `stockholders_equity`, `cash`, `total_debt`, `inventory`, `accounts_receivable`, `accounts_payable`, `working_capital`*
+`total_assets`, `current_assets`, `total_liabilities`, `current_liabilities`, `stockholders_equity`, `cash`, `total_debt`, `short_term_debt`, `marketable_securities`, `inventory`, `accounts_receivable`, `accounts_payable`, `working_capital`*
+
+### EV Bridge
+`short_term_debt`, `marketable_securities`, `operating_lease_liabilities`, `noncontrolling_interests`, `preferred_stock`, `equity_method_investments`
 
 ### Cash Flow
 `operating_cash_flow`, `capex`, `free_cash_flow`*
@@ -184,7 +187,7 @@ The `permalink` field in JSON output provides the exact CLI command to reproduce
 `shares_outstanding`, `shares_diluted`, `dividends_per_share`
 
 ### Ratios
-`gross_margin`*, `operating_margin`*, `net_margin`*, `roe`*, `roa`*, `current_ratio`*, `debt_to_equity`*
+`gross_margin`*, `operating_margin`*, `net_margin`*, `ebitda_margin`*, `fcf_margin`*, `roe`*, `roa`*, `current_ratio`*, `debt_to_equity`*
 
 \* = derived metric (computed from components)
 

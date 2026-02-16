@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from edgarpack.query.comps import comps, comps_to_json, format_comps_table
 from edgarpack.query.models import CitedValue, QueryResult
+
+_P = "edgarpack.query.financials"
 
 # Minimal mock data for two companies
 NVDA_FACTS = {
@@ -97,6 +99,33 @@ TICKER_MAP = {
     "AMD": ("0000002488", "ADVANCED MICRO DEVICES INC"),
 }
 
+COMPS_SUBMISSIONS = {
+    "0001045810": {
+        "cik": 1045810,
+        "name": "NVIDIA CORP",
+        "filings": {
+            "recent": {
+                "accessionNumber": ["0001045810-25-000001"],
+                "primaryDocument": ["nvda-20250126.htm"],
+                "form": ["10-K"],
+                "filingDate": ["2025-02-18"],
+            }
+        },
+    },
+    "0000002488": {
+        "cik": 2488,
+        "name": "ADVANCED MICRO DEVICES INC",
+        "filings": {
+            "recent": {
+                "accessionNumber": ["0000002488-25-000001"],
+                "primaryDocument": ["amd-20241228.htm"],
+                "form": ["10-K"],
+                "filingDate": ["2025-02-05"],
+            }
+        },
+    },
+}
+
 
 async def mock_resolve_ticker(company, force=False):
     key = company.upper()
@@ -113,10 +142,25 @@ async def mock_fetch_facts(cik, force=False):
     return {}
 
 
+async def mock_fetch_submissions(cik, force=False):
+    empty = {
+        "filings": {
+            "recent": {
+                "accessionNumber": [],
+                "primaryDocument": [],
+                "form": [],
+                "filingDate": [],
+            }
+        }
+    }
+    return COMPS_SUBMISSIONS.get(cik, empty)
+
+
 class TestComps(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts", side_effect=mock_fetch_facts)
-    @patch("edgarpack.query.financials.resolve_ticker", side_effect=mock_resolve_ticker)
-    async def test_multi_company_parallel(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=mock_fetch_submissions)
+    @patch(f"{_P}.fetch_company_facts", side_effect=mock_fetch_facts)
+    @patch(f"{_P}.resolve_ticker", side_effect=mock_resolve_ticker)
+    async def test_multi_company_parallel(self, mock_resolve, mock_facts, mock_subs) -> None:
         results = await comps(
             companies=["NVDA", "AMD"],
             metrics=["revenue", "net_income"],
@@ -136,9 +180,10 @@ class TestComps(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(amd.metrics["revenue"])
         self.assertEqual(amd.metrics["revenue"].value, 22_680_000_000)
 
-    @patch("edgarpack.query.financials.fetch_company_facts", side_effect=mock_fetch_facts)
-    @patch("edgarpack.query.financials.resolve_ticker", side_effect=mock_resolve_ticker)
-    async def test_failed_company_returns_empty(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=mock_fetch_submissions)
+    @patch(f"{_P}.fetch_company_facts", side_effect=mock_fetch_facts)
+    @patch(f"{_P}.resolve_ticker", side_effect=mock_resolve_ticker)
+    async def test_failed_company_returns_empty(self, mock_resolve, mock_facts, mock_subs) -> None:
         # Make AMD fail
         mock_resolve.side_effect = lambda c, force=False: (
             mock_resolve_ticker(c, force)

@@ -180,6 +180,54 @@ METRIC_MAP: dict[str, MetricMeta] = {
         ),
         duration=False,
     ),
+    # ---------------------------------------------------------------------------
+    # EV Bridge (balance sheet items for enterprise value construction)
+    # ---------------------------------------------------------------------------
+    "short_term_debt": MetricMeta(
+        concepts=(
+            "DebtCurrent",
+            "ShortTermBorrowings",
+            "LongTermDebtCurrent",
+        ),
+        duration=False,
+    ),
+    "marketable_securities": MetricMeta(
+        concepts=(
+            "MarketableSecuritiesCurrent",
+            "ShortTermInvestments",
+            "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
+            "MarketableSecurities",
+        ),
+        duration=False,
+    ),
+    "operating_lease_liabilities": MetricMeta(
+        concepts=(
+            "OperatingLeaseLiability",
+            "OperatingLeaseLiabilityNoncurrent",
+        ),
+        duration=False,
+    ),
+    "noncontrolling_interests": MetricMeta(
+        concepts=(
+            "MinorityInterest",
+            "RedeemableNoncontrollingInterestEquityCarryingAmount",
+        ),
+        duration=False,
+    ),
+    "preferred_stock": MetricMeta(
+        concepts=(
+            "PreferredStockValue",
+            "RedeemablePreferredStockCarryingAmountOrRedemptionPrice",
+        ),
+        duration=False,
+    ),
+    "equity_method_investments": MetricMeta(
+        concepts=(
+            "EquityMethodInvestments",
+            "InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures",
+        ),
+        duration=False,
+    ),
     # Working capital: derived
     "working_capital": MetricMeta(
         concepts=(),
@@ -286,6 +334,20 @@ METRIC_MAP: dict[str, MetricMeta] = {
         derived=True,
         formula="total_debt / stockholders_equity",
         components=("total_debt", "stockholders_equity"),
+    ),
+    "ebitda_margin": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="ebitda / revenue",
+        components=("ebitda", "revenue"),
+    ),
+    "fcf_margin": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="free_cash_flow / revenue",
+        components=("free_cash_flow", "revenue"),
     ),
 }
 

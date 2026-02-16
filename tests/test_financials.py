@@ -3,10 +3,55 @@
 from __future__ import annotations
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from edgarpack.query.financials import financials
 from edgarpack.query.models import DerivedValue
+
+_P = "edgarpack.query.financials"
+
+# Mock submissions response for deep linking
+MOCK_SUBMISSIONS = {
+    "cik": 1045810,
+    "name": "NVIDIA CORP",
+    "filings": {
+        "recent": {
+            "accessionNumber": [
+                "0001045810-25-000001",
+                "0001045810-25-000020",
+                "0001045810-25-000003",
+                "0001045810-25-000002",
+                "0001045810-24-000010",
+                "0001045810-24-000001",
+                "0001045810-26-000001",
+            ],
+            "primaryDocument": [
+                "nvda-20250126.htm",
+                "nvda-20250427.htm",
+                "nvda-20251026.htm",
+                "nvda-20250727.htm",
+                "nvda-20240428.htm",
+                "nvda-20240128.htm",
+                "nvda-20260125.htm",
+            ],
+            "form": ["10-K", "10-Q", "10-Q", "10-Q", "10-Q", "10-K", "10-K"],
+            "filingDate": [
+                "2025-02-18",
+                "2025-06-01",
+                "2025-11-20",
+                "2025-08-20",
+                "2024-06-01",
+                "2024-02-21",
+                "2026-02-18",
+            ],
+        }
+    },
+}
+
+
+def _mock_submissions(*args, **kwargs):
+    return MOCK_SUBMISSIONS
+
 
 # Mock companyfacts response
 MOCK_COMPANY_FACTS = {
@@ -98,9 +143,10 @@ MOCK_COMPANY_FACTS = {
 
 
 class TestFinancials(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_single_metric(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_single_metric(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -116,9 +162,10 @@ class TestFinancials(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(revenue.fiscal_year, 2025)
         self.assertEqual(revenue.concept, "Revenues")
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_multiple_metrics(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_multiple_metrics(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -130,9 +177,10 @@ class TestFinancials(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(result.metrics["eps_diluted"])
         self.assertAlmostEqual(result.metrics["eps_diluted"].value, 1.19)
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_derived_metric_gross_margin(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_derived_metric_gross_margin(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -145,9 +193,10 @@ class TestFinancials(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(gm.value, 44_803_000_000 / 60_922_000_000, places=4)
         self.assertEqual(gm.unit, "pure")
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_missing_metric_returns_none(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_missing_metric_returns_none(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -155,9 +204,10 @@ class TestFinancials(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNone(result.metrics["inventory"])
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_unknown_metric_returns_none(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_unknown_metric_returns_none(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -276,10 +326,11 @@ MOCK_QUARTERLY_SERIES_FACTS = {
 
 
 class TestCrossYearValidation(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
     async def test_derived_returns_none_when_components_differ_year(
-        self, mock_resolve, mock_facts
+        self, mock_resolve, mock_facts, mock_subs
     ) -> None:
         """gross_margin should be None when gross_profit is FY2025 but revenue is FY2018."""
         mock_resolve.return_value = ("0001234567", "CROSS YEAR CORP")
@@ -302,9 +353,10 @@ class TestCrossYearValidation(unittest.IsolatedAsyncioTestCase):
 
 
 class TestSeriesOutput(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_series_returns_list(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_series_returns_list(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_QUARTERLY_SERIES_FACTS
 
@@ -316,9 +368,10 @@ class TestSeriesOutput(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(revenue[1].value, 30_000_000_000)
         self.assertEqual(revenue[2].value, 26_000_000_000)
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_series_to_cited_dict_preserves_list(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_series_to_cited_dict_preserves_list(self, mock_resolve, mock_facts, _ms) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_QUARTERLY_SERIES_FACTS
 
@@ -329,9 +382,10 @@ class TestSeriesOutput(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(revenue_data), 3)
         self.assertIn("citation", revenue_data[0])
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_annual_series_returns_list(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_annual_series_returns_list(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -344,9 +398,10 @@ class TestSeriesOutput(unittest.IsolatedAsyncioTestCase):
 
 
 class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_citation_string(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_citation_string(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -356,9 +411,10 @@ class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
         self.assertIn("10-K", revenue.citation)
         self.assertIn("FY2025", revenue.citation)
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_filing_url(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_filing_url(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -368,9 +424,10 @@ class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
         self.assertIn("1045810", revenue.filing_url)
         self.assertTrue(revenue.filing_url.endswith("-index.htm"))
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_permalink(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_permalink(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -379,9 +436,10 @@ class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
         self.assertIn("permalink", result.to_cited_dict())
         self.assertEqual(result.permalink, "edgarpack query 0001045810 revenue --period lfy")
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_to_cited_dict(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_to_cited_dict(self, mock_resolve, mock_facts, mock_subs) -> None:
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
@@ -395,9 +453,12 @@ class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_ltm_citation_references_real_filings(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_citation_references_real_filings(
+        self, mock_resolve, mock_facts, _ms
+    ) -> None:
         """LTM citation should reference the underlying real filings, not 'LTM (LTM2025)'."""
         # Build facts with quarterly + annual data for LTM computation
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
@@ -465,9 +526,10 @@ class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLeanJson(unittest.IsolatedAsyncioTestCase):
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_lean_dict_structure(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_dict_structure(self, mock_resolve, mock_facts, mock_subs) -> None:
         """to_lean_dict should have company, cik, filings, and metrics at top level."""
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
@@ -488,9 +550,10 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
         self.assertIn("period", revenue)
         self.assertIn("accession", revenue)
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_lean_filings_deduplication(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_filings_deduplication(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Filings table should deduplicate by accession."""
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
@@ -504,9 +567,12 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
         acc = list(filings.keys())[0]
         self.assertEqual(acc, "0001045810-25-000001")
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_lean_derived_auto_includes_components(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_derived_auto_includes_components(
+        self, mock_resolve, mock_facts, _ms
+    ) -> None:
         """Querying gross_margin should auto-include gross_profit and revenue."""
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
@@ -522,9 +588,10 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(metrics["gross_profit"]["_component"])
         self.assertTrue(metrics["revenue"]["_component"])
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_lean_derived_has_formula(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_derived_has_formula(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Derived metrics should include formula and component references."""
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
@@ -537,9 +604,12 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
         self.assertIn("formula", gm)
         self.assertIn("components", gm)
 
-    @patch("edgarpack.query.financials.fetch_company_facts")
-    @patch("edgarpack.query.financials.resolve_ticker")
-    async def test_lean_no_component_for_explicit_metrics(self, mock_resolve, mock_facts) -> None:
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_no_component_for_explicit_metrics(
+        self, mock_resolve, mock_facts, _ms
+    ) -> None:
         """When user explicitly requests components, they should not be tagged."""
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
@@ -549,6 +619,143 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
 
         # revenue was explicitly requested, should NOT have _component tag
         self.assertNotIn("_component", d["metrics"]["revenue"])
+
+
+class TestDeepLinking(unittest.IsolatedAsyncioTestCase):
+    """Tests for multi-tier deep linking URLs (concept, viewer, document)."""
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_concept_url(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """concept_url should point to the companyconcept API endpoint."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        revenue = result.metrics["revenue"]
+        url = revenue.concept_url
+        self.assertIsNotNone(url)
+        self.assertIn("/api/xbrl/companyconcept/", url)
+        self.assertIn("CIK0001045810", url)
+        self.assertIn("us-gaap", url)
+        self.assertIn("Revenues.json", url)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_viewer_url(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """viewer_url should point to the SEC Inline XBRL Viewer."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        revenue = result.metrics["revenue"]
+        url = revenue.viewer_url
+        self.assertIsNotNone(url)
+        self.assertIn("/ix?doc=", url)
+        self.assertIn("nvda-20250126.htm", url)
+        self.assertIn("1045810", url)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_document_url_text_fragment(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """document_url should include #:~:text= with concept label."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "net_income", period="lfy")
+        ni = result.metrics["net_income"]
+        url = ni.document_url
+        self.assertIsNotNone(url)
+        self.assertIn("#:~:text=", url)
+        # NetIncomeLoss -> "Net Income Loss"
+        self.assertIn("Net%20Income%20Loss", url)
+        self.assertIn("nvda-20250126.htm", url)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_derived_no_concept_url(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """Derived metrics (formula in concept field) should have no concept_url."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "gross_margin", period="lfy")
+        gm = result.metrics["gross_margin"]
+        self.assertIsNotNone(gm)
+        # concept = "gross_profit / revenue" (has spaces) -> concept_url should be None
+        self.assertIsNone(gm.concept_url)
+        # viewer_url should still work (uses primary_document)
+        self.assertIsNotNone(gm.viewer_url)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_filings_has_viewer_url(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """Lean JSON filings table should include viewer_url when available."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        d = result.to_lean_dict()
+        filings = d["filings"]
+        acc = "0001045810-25-000001"
+        self.assertIn(acc, filings)
+        self.assertIn("viewer_url", filings[acc])
+        self.assertIn("/ix?doc=", filings[acc]["viewer_url"])
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_cited_dict_has_deep_links(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """to_cited_dict should include concept_url, viewer_url, document_url."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        d = result.to_cited_dict()
+        revenue_dict = d["metrics"]["revenue"]
+        self.assertIn("concept_url", revenue_dict)
+        self.assertIn("viewer_url", revenue_dict)
+        self.assertIn("document_url", revenue_dict)
+
+    @patch(
+        f"{_P}.fetch_submissions",
+        new_callable=AsyncMock,
+        side_effect=Exception("network error"),
+    )
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_submissions_failure_graceful(self, mock_resolve, mock_facts, _ms) -> None:
+        """When fetch_submissions fails, data should still return without viewer/document URLs."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        revenue = result.metrics["revenue"]
+        self.assertIsNotNone(revenue)
+        self.assertEqual(revenue.value, 60_922_000_000)
+        # concept_url should still work (no submissions needed)
+        self.assertIsNotNone(revenue.concept_url)
+        # viewer_url and document_url need primary_document, which needs submissions
+        self.assertIsNone(revenue.viewer_url)
+        self.assertIsNone(revenue.document_url)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lean_metric_has_concept_url(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """Lean metric dict should include concept_url for non-derived metrics."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        d = result.to_lean_dict()
+        revenue = d["metrics"]["revenue"]
+        self.assertIn("concept_url", revenue)
+        self.assertIn("Revenues.json", revenue["concept_url"])
 
 
 if __name__ == "__main__":
