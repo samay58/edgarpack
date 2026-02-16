@@ -185,11 +185,12 @@ class TestComps(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.resolve_ticker", side_effect=mock_resolve_ticker)
     async def test_failed_company_returns_empty(self, mock_resolve, mock_facts, mock_subs) -> None:
         # Make AMD fail
-        mock_resolve.side_effect = lambda c, force=False: (
-            mock_resolve_ticker(c, force)
-            if c.upper() != "AMD"
-            else (_ for _ in ()).throw(ValueError("fail"))
-        )
+        async def _resolve_with_amd_failure(c: str, force: bool = False):
+            if c.upper() == "AMD":
+                raise ValueError("fail")
+            return await mock_resolve_ticker(c, force)
+
+        mock_resolve.side_effect = _resolve_with_amd_failure
 
         results = await comps(
             companies=["NVDA", "AMD"],

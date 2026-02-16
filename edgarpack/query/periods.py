@@ -106,7 +106,8 @@ def _value_to_cited(
 
 def _is_annual(v: dict[str, Any]) -> bool:
     """Check if a value is from an annual filing."""
-    return str(v.get("fp", "")).upper() == "FY" or str(v.get("form", "")) in ("10-K", "20-F")
+    form = str(v.get("form", "")).upper()
+    return str(v.get("fp", "")).upper() == "FY" or form in ("10-K", "10-K/A", "20-F", "20-F/A")
 
 
 def _is_quarterly(v: dict[str, Any]) -> bool:
@@ -160,6 +161,29 @@ def _is_cumulative_quarter(v: dict[str, Any]) -> bool:
 def _quarter_months(fp: str) -> int:
     """Return the cumulative months for a fiscal period (Q1=3, Q2=6, Q3=9)."""
     return {"Q1": 3, "Q2": 6, "Q3": 9, "Q4": 12, "FY": 12}.get(fp.upper(), 0)
+
+
+def _quarter_recency_key(v: dict[str, Any]) -> tuple[date, int, int, date]:
+    """Sort quarterly entries by period recency and filing recency."""
+    return (
+        _parse_date(v.get("end", "")) or date.min,
+        int(v.get("fy") or 0),
+        _quarter_months(str(v.get("fp", ""))),
+        _parse_date(v.get("filed", "")) or date.min,
+    )
+
+
+def _pick_cumulative_quarter(values: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Pick the best cumulative quarter entry from a single fiscal period."""
+    if not values:
+        return None
+    cumulative = [v for v in values if _is_cumulative_quarter(v)]
+    candidates = cumulative if cumulative else values
+    candidates.sort(
+        key=lambda v: (_duration_days(v) or -1, _parse_date(v.get("filed", "")) or date.min),
+        reverse=True,
+    )
+    return candidates[0] if candidates else None
 
 
 def select_lfy(
@@ -287,13 +311,11 @@ def select_ltm(
     taxonomy: str = "us-gaap",
     doc_map: dict[str, str] | None = None,
 ) -> CitedValue | DerivedValue | None:
-    """Compute last twelve months value.
+    """Compute trailing twelve months for a metric.
 
-    For duration concepts (P&L, CF):
-        LTM = MRP_value + LFY_value - MRP_prior_year_value
-
-    For instant concepts (balance sheet):
-        LTM = most recent reported value.
+    Duration metrics use ``MRP + LFY - same-quarter-prior-year`` with cumulative
+    quarter matching based on duration (Q2+ entries >100 days). Instant metrics
+    degrade to the latest reported value.
     """
     if not meta.duration:
         # Balance sheet: just return the most recent value
@@ -304,14 +326,12 @@ def select_ltm(
     values = _extract_values(facts, concept, taxonomy=taxonomy)
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
 
-    # Find the most recent 10-Q cumulative value (MRP).
-    # The LTM formula requires cumulative YTD values. When multiple entries exist
-    # for the same quarter end date (cumulative + standalone), pick the longest
-    # duration (the cumulative one).
+    # Find the most recent 10-Q period.
     quarterly = [
         v
         for v in values
-        if str(v.get("form", "")) == "10-Q"
+        if str(v.get("form", "")).upper().startswith("10-Q")
+        and _is_quarterly(v)
         and v.get("val") is not None
         and v.get("start")
         and v.get("end")
@@ -322,18 +342,35 @@ def select_ltm(
             facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
 
-    # Sort by end date (most recent first), then by duration descending (longest = cumulative)
-    quarterly.sort(
-        key=lambda v: (v.get("end", ""), _duration_days(v) or 0),
-        reverse=True,
+    quarterly.sort(key=_quarter_recency_key, reverse=True)
+    newest = quarterly[0]
+    newest_key = (
+        int(newest.get("fy") or 0),
+        str(newest.get("fp", "")).upper(),
+        _parse_date(newest.get("end", "")) or date.min,
     )
-    mrp = quarterly[0]
+    mrp_candidates = [
+        v
+        for v in quarterly
+        if (
+            int(v.get("fy") or 0),
+            str(v.get("fp", "")).upper(),
+            _parse_date(v.get("end", "")) or date.min,
+        )
+        == newest_key
+    ]
+    mrp = _pick_cumulative_quarter(mrp_candidates) or newest
 
     mrp_fp = str(mrp.get("fp", "")).upper()
     mrp_fy = int(mrp.get("fy", 0))
 
-    # If MRP is Q4/FY equivalent, no LTM calc needed
+    # If MRP is Q4/FY equivalent, use the annual value when available.
     if mrp_fp in ("FY", "Q4"):
+        annual_value = select_lfy(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+        if annual_value is not None:
+            return annual_value
         return _value_to_cited(
             mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
@@ -345,15 +382,20 @@ def select_ltm(
             mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
 
-    annual.sort(key=lambda v: int(v.get("fy") or 0), reverse=True)
+    annual.sort(
+        key=lambda v: (
+            int(v.get("fy") or 0),
+            _parse_date(v.get("filed", "")) or date.min,
+            _parse_date(v.get("end", "")) or date.min,
+        ),
+        reverse=True,
+    )
 
-    # LFY should be the fiscal year before or equal to the MRP's fiscal year
-    lfy = None
-    for v in annual:
-        fy = int(v.get("fy") or 0)
-        if fy <= mrp_fy:
-            lfy = v
-            break
+    # LFY should be the fiscal year immediately prior to MRP.
+    target_prior_fy = mrp_fy - 1
+    lfy = next((v for v in annual if int(v.get("fy") or 0) == target_prior_fy), None)
+    if lfy is None:
+        lfy = next((v for v in annual if int(v.get("fy") or 0) < mrp_fy), None)
 
     if lfy is None:
         return _value_to_cited(
@@ -363,12 +405,10 @@ def select_ltm(
     lfy_fy = int(lfy.get("fy", 0))
 
     # Find MRP_prior: same fiscal period, one year earlier.
-    # Must also be cumulative (longest duration) to match the MRP we picked.
     prior_year = [
         v
-        for v in values
-        if str(v.get("form", "")) == "10-Q"
-        and str(v.get("fp", "")).upper() == mrp_fp
+        for v in quarterly
+        if str(v.get("fp", "")).upper() == mrp_fp
         and int(v.get("fy") or 0) == lfy_fy
         and v.get("val") is not None
     ]
@@ -379,9 +419,11 @@ def select_ltm(
             mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
 
-    # Pick the cumulative (longest duration) entry
-    prior_year.sort(key=lambda v: _duration_days(v) or 0, reverse=True)
-    mrp_prior = prior_year[0]
+    mrp_prior = _pick_cumulative_quarter(prior_year)
+    if mrp_prior is None:
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
 
     # LTM = MRP + LFY - MRP_prior
     mrp_val = float(mrp.get("val") or 0)

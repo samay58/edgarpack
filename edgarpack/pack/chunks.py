@@ -71,6 +71,38 @@ def find_sentence_boundaries(text: str) -> list[int]:
     return boundaries
 
 
+def _safe_hard_boundary(
+    text: str,
+    start: int,
+    max_end: int,
+    *,
+    allow_forward: bool,
+) -> int:
+    """Choose a hard-split index while avoiding mid-sentence or mid-word cuts."""
+    n = len(text)
+    max_end = min(n, max(start + 1, max_end))
+
+    # Prefer a sentence boundary before max_end.
+    segment = text[start:max_end]
+    sentence_matches = list(re.finditer(r"[.!?]\s+", segment))
+    if sentence_matches:
+        return start + sentence_matches[-1].end()
+
+    # Fall back to whitespace before max_end.
+    for idx in range(max_end, start, -1):
+        if text[idx - 1].isspace():
+            return idx
+
+    if allow_forward:
+        # As a last resort, look slightly ahead for whitespace.
+        search_limit = min(n, max_end + 80)
+        for idx in range(max_end + 1, search_limit + 1):
+            if text[idx - 1].isspace():
+                return idx
+
+    return max_end
+
+
 def chunk_section(
     section_id: str,
     content: str,
@@ -142,7 +174,7 @@ def chunk_section(
             if idx >= 0 and all_boundaries[idx] > start:
                 best_end = all_boundaries[idx]
             else:
-                best_end = max_end
+                best_end = _safe_hard_boundary(content, start, max_end, allow_forward=False)
             text = content[start:best_end]
             if not text:
                 break
@@ -168,8 +200,18 @@ def chunk_section(
                     best_end = fallback_end
                     best_tokens = fallback_tokens
                 else:
-                    best_end = min(n, start + max_tokens * 4)
+                    best_end = _safe_hard_boundary(
+                        content,
+                        start,
+                        min(n, start + max_tokens * 4),
+                        allow_forward=True,
+                    )
                     best_tokens = count_tokens(content[start:best_end])
+
+        if best_end is None or best_end <= start:
+            best_end = min(n, start + max(1, max_tokens * 4))
+            best_end = max(best_end, start + 1)
+            best_tokens = count_tokens(content[start:best_end])
 
         text = content[start:best_end]
         if not text:

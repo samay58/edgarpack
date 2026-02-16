@@ -334,6 +334,104 @@ class TestSelectLtm(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 100_000_000_000)
 
+    def test_ltm_non_calendar_fiscal_year_uses_prior_year_same_quarter(self) -> None:
+        """LTM should match the prior fiscal year's same quarter for non-calendar filers."""
+        values = [
+            # FY2024 annual (fiscal year ends in June)
+            {
+                "val": 100_000_000_000,
+                "start": "2023-07-01",
+                "end": "2024-06-30",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-08-15",
+            },
+            # Q3 FY2024 cumulative (prior-year comparable, 9 months)
+            {
+                "val": 70_000_000_000,
+                "start": "2023-07-01",
+                "end": "2024-03-31",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000003",
+                "filed": "2024-05-15",
+            },
+            # Q3 FY2024 standalone (3 months, should not be used for LTM)
+            {
+                "val": 25_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-03-31",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000003",
+                "filed": "2024-05-15",
+            },
+            # Q3 FY2025 cumulative (MRP, 9 months)
+            {
+                "val": 90_000_000_000,
+                "start": "2024-07-01",
+                "end": "2025-03-31",
+                "fy": 2025,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-25-000003",
+                "filed": "2025-05-15",
+            },
+            # Q3 FY2025 standalone (3 months, should not be used for LTM)
+            {
+                "val": 35_000_000_000,
+                "start": "2025-01-01",
+                "end": "2025-03-31",
+                "fy": 2025,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-25-000003",
+                "filed": "2025-05-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, DerivedValue)
+        # LTM = 90 + 100 - 70 = 120
+        self.assertEqual(result.value, 120_000_000_000)
+        self.assertEqual(result.components["mrp_prior"].fiscal_year, 2024)
+        self.assertEqual(result.components["mrp_prior"].fiscal_period, "Q3")
+
+    def test_ltm_missing_prior_year_quarter_returns_mrp(self) -> None:
+        """Missing prior-year comparable should return MRP rather than crashing."""
+        values = [
+            {
+                "val": 100_000_000_000,
+                "start": "2023-07-01",
+                "end": "2024-06-30",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-08-15",
+            },
+            {
+                "val": 90_000_000_000,
+                "start": "2024-07-01",
+                "end": "2025-03-31",
+                "fy": 2025,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-25-000003",
+                "filed": "2025-05-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertNotIsInstance(result, DerivedValue)
+        self.assertEqual(result.value, 90_000_000_000)
+
 
 class TestAnnualSeries(unittest.TestCase):
     def test_returns_n_years(self) -> None:

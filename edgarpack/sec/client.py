@@ -14,7 +14,11 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
+from threading import Lock
 from typing import Any
+from weakref import WeakKeyDictionary
 
 from ..config import CONNECT_TIMEOUT, MAX_RETRIES, RATE_LIMIT, READ_TIMEOUT, USER_AGENT
 
@@ -104,7 +108,7 @@ class SECClient:
             await self._rate_limiter.acquire()
             try:
                 content, headers, status = await asyncio.to_thread(self._fetch_sync, url)
-            except Exception:
+            except (TimeoutError, OSError, urllib.error.URLError):
                 if attempt >= self._max_retries:
                     raise
                 await asyncio.sleep(backoff)
@@ -116,7 +120,8 @@ class SECClient:
                 if attempt >= self._max_retries:
                     raise HTTPError(url=url, status_code=status, headers=headers, content=content)
                 retry_after = _parse_retry_after(headers)
-                await asyncio.sleep(retry_after if retry_after is not None else backoff)
+                delay = max(backoff, retry_after if retry_after is not None else 0.0)
+                await asyncio.sleep(delay)
                 backoff = min(backoff * 2.0, 10.0)
                 continue
 
@@ -166,24 +171,35 @@ def _maybe_gunzip(content: bytes, headers: dict[str, str]) -> bytes:
 
 
 def _parse_retry_after(headers: dict[str, str]) -> float | None:
+    """Parse Retry-After in seconds or HTTP-date and clamp to [0, 60]."""
     value = headers.get("Retry-After")
     if not value:
         return None
     try:
         seconds = float(value.strip())
     except ValueError:
-        return None
+        try:
+            dt = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        seconds = (dt - datetime.now(UTC)).total_seconds()
     # SEC wants us well under 10 req/s; clamp to sane bounds.
     return max(0.0, min(seconds, 60.0))
 
 
-# Global client instance for reuse
-_global_client: SECClient | None = None
+# Per-event-loop clients for safe reuse in async code that may span threads.
+_clients_by_loop: WeakKeyDictionary[asyncio.AbstractEventLoop, SECClient] = WeakKeyDictionary()
+_clients_lock = Lock()
 
 
 async def get_client() -> SECClient:
-    """Get the global SEC client instance."""
-    global _global_client
-    if _global_client is None:
-        _global_client = SECClient()
-    return _global_client
+    """Get the SEC client singleton for the current event loop."""
+    loop = asyncio.get_running_loop()
+    with _clients_lock:
+        client = _clients_by_loop.get(loop)
+        if client is None:
+            client = SECClient()
+            _clients_by_loop[loop] = client
+        return client

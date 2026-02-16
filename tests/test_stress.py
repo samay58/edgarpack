@@ -303,7 +303,7 @@ class TestLtmQ4ShortCircuit(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_company_facts")
     @patch(f"{_P}.resolve_ticker")
     async def test_ltm_q4_returns_directly(self, mock_resolve, mock_facts, mock_subs) -> None:
-        """When MRP is Q4/FY, LTM should return it directly without DerivedValue."""
+        """When MRP is Q4/FY, LTM should resolve to the annual value."""
         mock_resolve.return_value = ("0005555555", "Q4 CORP")
         mock_facts.return_value = _facts(
             5555555,
@@ -340,9 +340,9 @@ class TestLtmQ4ShortCircuit(unittest.IsolatedAsyncioTestCase):
         result = await financials("Q4C", "revenue", period="ltm")
         revenue = result.metrics["revenue"]
         self.assertIsNotNone(revenue)
-        # Should NOT be a DerivedValue since Q4 short-circuits
+        # Should NOT be a DerivedValue since Q4/FY does not need formula math.
         self.assertNotIsInstance(revenue, DerivedValue)
-        self.assertEqual(revenue.value, 15_000_000_000)
+        self.assertEqual(revenue.value, 50_000_000_000)
 
 
 # ---------------------------------------------------------------------------

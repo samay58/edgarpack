@@ -24,6 +24,8 @@ from .templates import (
 
 @dataclass(frozen=True)
 class PackInfo:
+    """Metadata for a pack discovered on disk."""
+
     cik: str
     accession: str
     company_name: str

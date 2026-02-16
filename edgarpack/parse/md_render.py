@@ -13,11 +13,12 @@ def render_markdown(html: str) -> str:
     Returns:
         CommonMark-compliant markdown string
     """
-    # Process the HTML step by step with regex replacements.
+    # Order matters. We render block structures first (tables/headings/pre/lists),
+    # then inline tags (links/strong/em/code), then paragraphs and remaining tags.
+    # Reordering these passes can re-wrap table content or collapse section text.
     #
-    # Important: SEC filings often use lots of block-level tags (<div>, <tr>, etc.)
-    # without meaningful whitespace between them. Before stripping unknown tags we
-    # insert minimal separators so visible text doesn't get concatenated.
+    # SEC filings often use dense block tags (<div>, <tr>, etc.) with no spacing.
+    # Before stripping unknown tags we insert minimal separators to avoid text joins.
 
     result = html
 

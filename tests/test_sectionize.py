@@ -77,6 +77,29 @@ class TestFindSections(unittest.TestCase):
         first = next(m for m in matches if m.item != "other")
         self.assertGreater(first.char_pos, md.find("\n\n") + 2)
 
+    def test_detects_item_headings_inside_table_cells_after_toc(self) -> None:
+        md = (
+            "TABLE OF CONTENTS\n\n"
+            "| Item | Description | Page |\n"
+            "| --- | --- | --- |\n"
+            "| Item 1. | Financial Statements | 3 |\n"
+            "| Item 2. | Management's Discussion and Analysis | 25 |\n"
+            "\n"
+            "PART I. FINANCIAL INFORMATION\n"
+            "| Heading | Details |\n"
+            "| --- | --- |\n"
+            "| **Item 1.** Financial Statements | Condensed Consolidated Balance Sheets |\n"
+            "| **Item 2.** Management's Discussion and Analysis | Results of Operations |\n"
+        )
+
+        matches = find_sections(md, "10-Q")
+        items = [(m.item, m.part) for m in matches if m.item != "other"]
+        self.assertIn(("1", "I"), items)
+        self.assertIn(("2", "I"), items)
+        # Ensure the detected sections come from content after the TOC block.
+        first = next(m for m in matches if m.item in {"1", "2"})
+        self.assertGreater(first.char_pos, md.find("PART I. FINANCIAL INFORMATION"))
+
     def test_title_truncation(self) -> None:
         long_title = "A" * 200
         md = f"ITEM 1. {long_title}\nBody\n"

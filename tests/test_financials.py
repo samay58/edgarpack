@@ -5,7 +5,8 @@ from __future__ import annotations
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from edgarpack.query.financials import financials
+from edgarpack.query.concepts import MetricMeta
+from edgarpack.query.financials import _compute_derived, financials
 from edgarpack.query.models import DerivedValue
 
 _P = "edgarpack.query.financials"
@@ -756,6 +757,39 @@ class TestDeepLinking(unittest.IsolatedAsyncioTestCase):
         revenue = d["metrics"]["revenue"]
         self.assertIn("concept_url", revenue)
         self.assertIn("Revenues.json", revenue["concept_url"])
+
+
+class TestDerivedCycleProtection(unittest.TestCase):
+    def test_cycle_returns_none_instead_of_recursing_forever(self) -> None:
+        cycle_a = MetricMeta(
+            concepts=(),
+            duration=True,
+            derived=True,
+            formula="cycle_b + cycle_b",
+            components=("cycle_b",),
+        )
+        cycle_b = MetricMeta(
+            concepts=(),
+            duration=True,
+            derived=True,
+            formula="cycle_a + cycle_a",
+            components=("cycle_a",),
+        )
+
+        with patch.dict(
+            "edgarpack.query.financials.METRIC_MAP",
+            {"cycle_a": cycle_a, "cycle_b": cycle_b},
+            clear=False,
+        ):
+            result = _compute_derived(
+                facts={},
+                metric="cycle_a",
+                meta=cycle_a,
+                company="TEST",
+                cik="0000000000",
+                period="lfy",
+            )
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":

@@ -7,9 +7,11 @@ from typing import Any
 from ..sec.submissions import fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
-from .concepts import ALL_METRICS, METRIC_MAP, resolve_concept
+from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, resolve_concept
 from .models import CitedValue, DerivedValue, QueryResult
 from .periods import select_period
+
+_DerivedCache = dict[str, CitedValue | None]
 
 
 async def _build_doc_map(cik: str, force: bool = False) -> dict[str, str]:
@@ -67,6 +69,7 @@ async def financials(
         metric_list = list(metrics)
 
     result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
+    derived_cache: _DerivedCache = {}
 
     for metric in metric_list:
         meta = METRIC_MAP.get(metric)
@@ -75,7 +78,17 @@ async def financials(
             continue
 
         if meta.derived:
-            cited = _compute_derived(facts, metric, meta, company_name, cik, period, doc_map)
+            cited = _compute_derived(
+                facts,
+                metric,
+                meta,
+                company_name,
+                cik,
+                period,
+                doc_map,
+                cache=derived_cache,
+                in_progress=set(),
+            )
             result_metrics[metric] = cited
         else:
             resolved = resolve_concept(metric, facts)
@@ -107,31 +120,58 @@ async def financials(
 def _compute_derived(
     facts: dict[str, Any],
     metric: str,
-    meta: Any,
+    meta: MetricMeta,
     company: str,
     cik: str,
     period: str,
     doc_map: dict[str, str] | None = None,
+    cache: _DerivedCache | None = None,
+    in_progress: set[str] | None = None,
 ) -> CitedValue | None:
-    """Compute a derived metric from its components."""
-    if not meta.components or not meta.formula:
+    """Compute a derived metric from its components with cycle protection."""
+    if cache is None:
+        cache = {}
+    if in_progress is None:
+        in_progress = set()
+
+    if metric in cache:
+        return cache[metric]
+    if metric in in_progress:
+        cache[metric] = None
         return None
 
+    if not meta.components or not meta.formula:
+        cache[metric] = None
+        return None
+
+    in_progress.add(metric)
     components: dict[str, CitedValue] = {}
 
     for comp_name in meta.components:
         comp_meta = METRIC_MAP.get(comp_name)
         if comp_meta is None:
+            in_progress.discard(metric)
+            cache[metric] = None
             return None
 
         if comp_meta.derived:
             # Recursive derived metric (e.g., ebitda needs operating_income + d&a)
             comp_value = _compute_derived(
-                facts, comp_name, comp_meta, company, cik, period, doc_map
+                facts,
+                comp_name,
+                comp_meta,
+                company,
+                cik,
+                period,
+                doc_map,
+                cache=cache,
+                in_progress=in_progress,
             )
         else:
             resolved = resolve_concept(comp_name, facts)
             if resolved is None:
+                in_progress.discard(metric)
+                cache[metric] = None
                 return None
             concept, taxonomy = resolved
             value = select_period(
@@ -151,6 +191,8 @@ def _compute_derived(
                 comp_value = value
 
         if comp_value is None or comp_value.value is None:
+            in_progress.discard(metric)
+            cache[metric] = None
             return None
 
         components[comp_name] = comp_value
@@ -158,11 +200,15 @@ def _compute_derived(
     # Cross-year validation: all components must share the same fiscal year
     fiscal_years = {comp.fiscal_year for comp in components.values()}
     if len(fiscal_years) > 1:
+        in_progress.discard(metric)
+        cache[metric] = None
         return None
 
     # Evaluate formula
     result_value = _eval_formula(meta.formula, components)
     if result_value is None:
+        in_progress.discard(metric)
+        cache[metric] = None
         return None
 
     # Use the first component's provenance for the derived value
@@ -171,7 +217,7 @@ def _compute_derived(
     # Determine unit for derived metrics
     unit = _derived_unit(metric, components)
 
-    return DerivedValue(
+    derived = DerivedValue(
         value=result_value,
         unit=unit,
         metric=metric,
@@ -190,6 +236,9 @@ def _compute_derived(
         derived=True,
         components=components,
     )
+    in_progress.discard(metric)
+    cache[metric] = derived
+    return derived
 
 
 def _eval_formula(formula: str, components: dict[str, CitedValue]) -> float | None:

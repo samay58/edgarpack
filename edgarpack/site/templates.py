@@ -10,6 +10,7 @@ from .styles import CSS
 
 
 def html_doc(title: str, header_left: str, header_right: str, body: str) -> str:
+    """Render a complete HTML document with shared styles and header."""
     return (
         "<!doctype html>\n"
         '<html lang="en">\n'
@@ -31,31 +32,39 @@ def html_doc(title: str, header_left: str, header_right: str, body: str) -> str:
 
 
 def link(href: str, text: str) -> str:
+    """Render an escaped anchor tag."""
     return f'<a href="{escape(href, quote=True)}">{escape(text)}</a>'
 
 
 def monospace(text: str) -> str:
+    """Render escaped text in the monospace style span."""
     return f'<span class="mono">{escape(text)}</span>'
 
 
 def h1(text: str) -> str:
+    """Render an H1 heading."""
     return f"<h1>{escape(text)}</h1>"
 
 
 def h2(text: str) -> str:
+    """Render an H2 heading."""
     return f"<h2>{escape(text)}</h2>"
 
 
 def para(text: str) -> str:
+    """Render a paragraph with escaped content."""
     return f"<p>{escape(text)}</p>"
 
 
 def rule() -> str:
+    """Render the standard horizontal divider block."""
     return '<div class="rule"></div>'
 
 
 @dataclass(frozen=True)
 class CompanyRow:
+    """Row model for the root companies index."""
+
     name: str
     cik: str
     filings_summary: str
@@ -63,6 +72,7 @@ class CompanyRow:
 
 
 def companies_index(rows: Iterable[CompanyRow]) -> str:
+    """Render the companies index list."""
     lines = [h2("COMPANIES"), '<ul class="list">']
     for r in rows:
         lines.append(
@@ -77,6 +87,8 @@ def companies_index(rows: Iterable[CompanyRow]) -> str:
 
 @dataclass(frozen=True)
 class FilingRow:
+    """Row model for a single company filing entry."""
+
     form_type: str
     filing_date: str
     accession: str
@@ -84,6 +96,7 @@ class FilingRow:
 
 
 def company_index(company_name: str, cik: str, rows: Iterable[FilingRow]) -> str:
+    """Render the filing list page for one company."""
     lines = [
         h2("FILINGS"),
         f'<div class="muted">{escape(company_name)} ({escape(cik)})</div>',
@@ -107,6 +120,7 @@ def filing_overview(
     artifacts_html: str,
     source_url: str | None,
 ) -> str:
+    """Render the filing overview page body from manifest data."""
     lines = [h1(heading)]
     for m in meta_lines:
         lines.append(f'<div class="muted">{escape(m)}</div>')
@@ -122,6 +136,7 @@ def filing_overview(
 
 
 def artifacts_list(items: Iterable[tuple[str, str]]) -> str:
+    """Render a list of downloadable artifact links."""
     lines = [h2("ARTIFACTS"), '<ul class="list">']
     for text, href in items:
         lines.append(f"<li>{link(href, text)}</li>")
@@ -130,7 +145,7 @@ def artifacts_list(items: Iterable[tuple[str, str]]) -> str:
 
 
 def sections_list(items: Iterable[tuple[str, str, str | None]]) -> str:
-    """Items: (label, href, tokens)."""
+    """Render section links with optional token counts."""
     lines = [h2("SECTIONS"), '<ul class="list">']
     for label, href, tokens in items:
         tok = f' <span class="muted">{escape(tokens)}</span>' if tokens else ""
@@ -140,6 +155,7 @@ def sections_list(items: Iterable[tuple[str, str, str | None]]) -> str:
 
 
 def content_page(title: str, stats: list[str], html: str) -> str:
+    """Render a content page block with title, stats, and body HTML."""
     lines = [h1(title)]
     for s in stats:
         lines.append(f'<div class="muted">{escape(s)}</div>')

@@ -1,5 +1,6 @@
 """Split filings into sections based on form-specific patterns."""
 
+import hashlib
 import re
 from typing import NamedTuple
 
@@ -152,6 +153,9 @@ def section_id(form: str, part: str | None, item: str, title: str) -> str:
     normalized_form = normalize_form_type_for_sections(form)
     form_lower = re.sub(r"[^a-z0-9]+", "", normalized_form.lower())
     slug = slugify(title) if title else ""
+    if title and not slug:
+        digest = hashlib.sha1(title.strip().lower().encode("utf-8")).hexdigest()[:8]
+        slug = f"s{digest}"
 
     if normalized_form == "10-K":
         parts = ["10k"]
@@ -191,14 +195,10 @@ def section_id(form: str, part: str | None, item: str, title: str) -> str:
 
 
 def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
-    """Find all section headings in markdown.
+    """Find section headings in markdown while skipping TOC noise.
 
-    Args:
-        markdown: Markdown content
-        form_type: Form type for pattern selection
-
-    Returns:
-        List of section matches in order
+    Handles headings that appear as plain lines, inline flattened text, or
+    markdown table cells. TOC tables are skipped so they do not create sections.
     """
     matches: list[SectionMatch] = []
     lines = markdown.split("\n")
@@ -216,10 +216,12 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
     # Track current PART so items without explicit PART still get a stable ID.
     current_part: str | None = None
 
-    # Heuristic: skip the first markdown table after a "Table of Contents" header to
-    # avoid splitting on TOC entries (they often include many "Item X." rows).
+    # TOC state machine.
+    # A TOC heading can be followed by multiple tables (often separated by blank lines),
+    # so we keep the TOC armed until we see real non-table content.
     toc_armed = False
     in_toc_table = False
+    toc_tables_seen = False
 
     def _is_table_row(s: str) -> bool:
         return s.startswith("|") and s.count("|") >= 2
@@ -233,11 +235,58 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             parts = parts[:-1]
         return [p.strip() for p in parts]
 
+    def _normalize_heading_text(text: str) -> str:
+        # Keep visible words and remove lightweight markdown/html wrappers.
+        normalized = re.sub(r"<[^>]+>", " ", text)
+        normalized = re.sub(r"\[(.*?)\]\((?:.*?)\)", r"\1", normalized)
+        normalized = re.sub(r"[*_`]+", "", normalized)
+        normalized = normalized.replace("&nbsp;", " ")
+        return re.sub(r"\s+", " ", normalized).strip()
+
+    def _is_table_separator_row(row: str) -> bool:
+        cells = _split_table_cells(row)
+        if not cells:
+            return False
+        return all(re.fullmatch(r":?-{3,}:?", c.replace(" ", "")) for c in cells)
+
+    def _looks_like_toc_row(row: str) -> bool:
+        if _is_table_separator_row(row):
+            return True
+        cells = _split_table_cells(row)
+        if not cells:
+            return False
+        cell_text = _normalize_heading_text(" ".join(cells))
+        if not cell_text:
+            return False
+        has_item_or_part = bool(
+            re.search(r"\b(?:item\s+\d+[A-Z]?|part\s+[IVX]+)\b", cell_text, re.I)
+        )
+        nonempty = [c for c in cells if c.strip()]
+        last_cell = _normalize_heading_text(nonempty[-1]) if nonempty else ""
+        has_page = bool(re.fullmatch(r"(?:page\s*)?\d{1,4}", last_cell, re.I))
+        has_page = has_page or last_cell.upper() == "PAGE"
+        has_leader = "..." in row
+        return has_item_or_part and (has_page or has_leader)
+
+    def _is_inline_heading_boundary(text: str, start: int) -> bool:
+        if start <= 0:
+            return False
+        prev = text[start - 1]
+        if prev.isspace() or prev.islower() or prev.isdigit():
+            return True
+        if prev in ".:;)|]>*_/":
+            return True
+        if prev in "IVX":
+            tail = text[max(0, start - 16) : start]
+            return bool(re.search(r"PART\s+[IVX]+$", tail, flags=re.IGNORECASE))
+        return False
+
     def _extract_part(cell: str) -> str | None:
-        pm = PART_HEADING_PATTERN.match(cell)
+        cleaned = _normalize_heading_text(cell)
+        pm = PART_HEADING_PATTERN.match(cleaned)
         if pm and pm.group("part"):
             return pm.group("part").upper()
-        pm2 = re.search(r"\bPART\s+(?P<part>[IVX]+)\b", cell, flags=re.IGNORECASE)
+        pm2 = re.search(r"\bPART\s+(?P<part>[IVX]+)\b", cleaned, flags=re.IGNORECASE)
         if pm2 and pm2.group("part"):
             return pm2.group("part").upper()
         return None
@@ -247,18 +296,19 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         pattern: re.Pattern[str],
         item_regex: str,
     ) -> re.Match[str] | None:
-        m = pattern.match(cell)
+        cleaned = _normalize_heading_text(cell)
+        m = pattern.match(cleaned)
         if m:
             return m
-        for im in re.finditer(item_regex, cell, flags=re.IGNORECASE):
-            tail = cell[im.start() :].strip()
+        for im in re.finditer(item_regex, cleaned, flags=re.IGNORECASE):
+            tail = cleaned[im.start() :].strip()
             mm = pattern.match(tail)
             if mm:
                 return mm
         return None
 
     def _clean_title(raw: str) -> str:
-        t = re.sub(r"\s+", " ", raw).strip()
+        t = _normalize_heading_text(raw)
         # Fix common flattening artifacts where words get concatenated when HTML tags are stripped.
         t = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", t)
         return t
@@ -320,26 +370,38 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         line_stripped = line.strip()
 
         if not line_stripped:
-            if in_toc_table:
-                in_toc_table = False
-                toc_armed = False
+            # Keep TOC state through blank lines so split TOC tables are still ignored.
             continue
 
         # Arm TOC skipping when we see a TOC header.
         if re.search(r"\btable\s+of\s+contents\b", line_stripped, flags=re.IGNORECASE):
             toc_armed = True
+            in_toc_table = False
+            toc_tables_seen = False
 
         is_table = _is_table_row(line_stripped)
-        if in_toc_table and not is_table:
+
+        if toc_armed and is_table:
+            if _looks_like_toc_row(line_stripped):
+                in_toc_table = True
+                toc_tables_seen = True
+                continue
+            if in_toc_table:
+                in_toc_table = False
+                toc_armed = False
+            elif toc_tables_seen:
+                toc_armed = False
+        elif toc_armed and not is_table and toc_tables_seen:
             in_toc_table = False
             toc_armed = False
-
-        if is_table and toc_armed and not in_toc_table:
-            in_toc_table = True
-
-        # If this is a TOC table row, skip item detection to avoid false section starts.
-        if in_toc_table and is_table:
-            continue
+        elif (
+            toc_armed
+            and not is_table
+            and not toc_tables_seen
+            and not re.search(r"\btable\s+of\s+contents\b", line_stripped, flags=re.IGNORECASE)
+        ):
+            # TOC heading was not followed by TOC-like rows. Do not skip later tables.
+            toc_armed = False
 
         # Update current_part if we see a PART heading (line or table cell).
         if is_table:
@@ -418,8 +480,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                 for m2 in re.finditer(r"ITEM\s+(?P<item>\d+\.\d+)\b", line, flags=re.IGNORECASE):
                     if m2.start() < 20:
                         continue
-                    prev = line[m2.start() - 1]
-                    if not (prev.islower() or prev.isdigit() or prev in ".:;)|]"):
+                    if not _is_inline_heading_boundary(line, m2.start()):
                         continue
                     tail = line[m2.start() :].strip()
                     mm = ITEM_PATTERN_8K.match(tail)
@@ -472,14 +533,12 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                 for pm2 in re.finditer(r"PART\s+(?P<part>[IVX]+)\b", line, flags=re.IGNORECASE):
                     if pm2.start() < 20:
                         continue
-                    prev = line[pm2.start() - 1]
-                    if prev.islower() or prev.isdigit() or prev in ".:;)|]":
+                    if _is_inline_heading_boundary(line, pm2.start()):
                         events.append((pm2.start(), "part", pm2))
                 for im2 in re.finditer(r"ITEM\s*(?P<item>\d+[A-Z]?)\b", line, flags=re.IGNORECASE):
                     if im2.start() < 20:
                         continue
-                    prev = line[im2.start() - 1]
-                    if prev.islower() or prev.isdigit() or prev in ".:;)|]":
+                    if _is_inline_heading_boundary(line, im2.start()):
                         events.append((im2.start(), "item", im2))
 
                 events.sort(key=lambda e: e[0])

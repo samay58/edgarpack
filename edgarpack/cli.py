@@ -21,6 +21,7 @@ def app(argv: list[str] | None = None) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Parse CLI arguments and dispatch to the selected subcommand."""
     parser = argparse.ArgumentParser(
         prog="edgarpack",
         description="llms.txt for SEC filings — build deterministic markdown packs.",

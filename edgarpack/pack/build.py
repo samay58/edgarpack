@@ -35,6 +35,23 @@ class PackResult(BaseModel):
     artifacts: list[str]
 
 
+def _decode_html_blob(content: bytes) -> str:
+    """Decode SEC filing bytes with utf-8 fallback to latin-1."""
+    try:
+        return content.decode("utf-8")
+    except UnicodeDecodeError:
+        return content.decode("latin-1")
+
+
+def _process_html_files(html_files: list[tuple[str, bytes]], base_url: str) -> str:
+    """Run the parse pipeline and return a single markdown string."""
+    combined_html = "\n".join(_decode_html_blob(content) for _, content in html_files)
+    html_stripped = strip_ixbrl(combined_html)
+    html_cleaned = clean_html(html_stripped)
+    html_semantic = reduce_to_semantic(html_cleaned, base_url=base_url)
+    return render_markdown(html_semantic)
+
+
 async def build_pack(
     cik: str,
     accession: str | None = None,
@@ -116,22 +133,8 @@ async def build_pack(
         raise ValueError(f"No HTML files found for filing {meta.accession}")
 
     # Step 4: Process HTML to markdown
-    # Concatenate all HTML files (primary first)
-    combined_parts: list[str] = []
-    for filename, content in html_files:
-        try:
-            decoded = content.decode("utf-8")
-        except UnicodeDecodeError:
-            decoded = content.decode("latin-1")
-        combined_parts.append(decoded)
-    combined_html = "\n".join(combined_parts)
-
-    # Pipeline: strip iXBRL -> clean HTML -> render markdown
-    html_stripped = strip_ixbrl(combined_html)
-    html_cleaned = clean_html(html_stripped)
     base_url = f"{SEC_ARCHIVES_BASE}/{meta.cik}/{meta.accession_nodash}/"
-    html_semantic = reduce_to_semantic(html_cleaned, base_url=base_url)
-    markdown = render_markdown(html_semantic)
+    markdown = _process_html_files(html_files, base_url=base_url)
 
     # Step 5: Sectionize
     sections = sectionize(markdown, meta.form_type)

@@ -87,6 +87,42 @@ class TestResolveConceptFallback(unittest.TestCase):
         result = resolve_concept("nonexistent_metric", facts)
         self.assertIsNone(result)
 
+    def test_total_debt_prefers_non_lease_concept(self) -> None:
+        """total_debt should prefer debt tags that do not include lease liabilities."""
+        facts = {
+            "us-gaap": {
+                "LongTermDebt": {"units": {"USD": [{"val": 100, "fy": 2025, "fp": "FY"}]}},
+                "LongTermDebtAndCapitalLeaseObligations": {
+                    "units": {"USD": [{"val": 140, "fy": 2025, "fp": "FY"}]}
+                },
+                "OperatingLeaseLiability": {
+                    "units": {"USD": [{"val": 40, "fy": 2025, "fp": "FY"}]}
+                },
+            }
+        }
+        result = resolve_concept("total_debt", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(concept, "LongTermDebt")
+        self.assertEqual(taxonomy, "us-gaap")
+
+    def test_cash_prefers_cash_only_tag(self) -> None:
+        """cash should prioritize cash-only tags over cash-plus-investments tags."""
+        facts = {
+            "us-gaap": {
+                "CashAndCashEquivalentsAtCarryingValue": {
+                    "units": {"USD": [{"val": 80, "fy": 2025, "fp": "FY"}]}
+                },
+                "CashCashEquivalentsAndShortTermInvestments": {
+                    "units": {"USD": [{"val": 140, "fy": 2025, "fp": "FY"}]}
+                },
+            }
+        }
+        result = resolve_concept("cash", facts)
+        self.assertIsNotNone(result)
+        concept, _taxonomy = result
+        self.assertEqual(concept, "CashAndCashEquivalentsAtCarryingValue")
+
 
 class TestResolveConceptRecency(unittest.TestCase):
     def test_prefers_concept_with_newer_annual_data(self) -> None:

@@ -105,11 +105,17 @@ METRIC_MAP: dict[str, MetricMeta] = {
     ),
     "depreciation_amortization": MetricMeta(
         concepts=(
-            "DepreciationDepletionAndAmortization",
             "DepreciationAndAmortization",
+            "DepreciationDepletionAndAmortization",
+            "DepreciationAmortizationAndAccretionNet",
             "Depreciation",
         ),
         duration=True,
+        ifrs_concepts=(
+            "DepreciationAndAmortisationExpense",
+            "DepreciationAmortisationAndImpairmentExpense",
+            "DepreciationAndAmortizationExpense",
+        ),
     ),
     # ---------------------------------------------------------------------------
     # Balance Sheet
@@ -149,15 +155,23 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "Cash",
         ),
         duration=False,
+        ifrs_concepts=(
+            "CashAndCashEquivalents",
+            "CashAndCashEquivalentsAndShortTermInvestments",
+            "Cash",
+        ),
     ),
     "total_debt": MetricMeta(
         concepts=(
-            "LongTermDebt",
-            "LongTermDebtAndCapitalLeaseObligations",
             "DebtInstrumentCarryingAmount",
+            "LongTermDebt",
             "LongTermDebtNoncurrent",
+            # Keep lease-inclusive tags as a fallback to avoid double counting when
+            # lease liabilities are queried as a separate metric.
+            "LongTermDebtAndCapitalLeaseObligations",
         ),
         duration=False,
+        ifrs_concepts=("Borrowings", "BorrowingsNoncurrent", "BorrowingsCurrent"),
     ),
     "inventory": MetricMeta(
         concepts=(
