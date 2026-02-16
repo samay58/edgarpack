@@ -20,6 +20,7 @@ class MetricMeta:
     derived: bool = False  # True = computed from other metrics
     formula: str | None = None  # e.g. "gross_profit / revenue"
     components: tuple[str, ...] = ()  # metric names needed for derived calc
+    ifrs_concepts: tuple[str, ...] = ()  # IFRS concept names (fallback for non-US filers)
 
 
 # ---------------------------------------------------------------------------
@@ -37,6 +38,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "SalesRevenueServicesNet",
         ),
         duration=True,
+        ifrs_concepts=("Revenue", "RevenueFromContractsWithCustomers"),
     ),
     "cost_of_revenue": MetricMeta(
         concepts=(
@@ -46,6 +48,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization",
         ),
         duration=True,
+        ifrs_concepts=("CostOfSales",),
     ),
     "gross_profit": MetricMeta(
         concepts=("GrossProfit",),
@@ -57,6 +60,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
         ),
         duration=True,
+        ifrs_concepts=("ProfitLossFromOperatingActivities", "OperatingProfit"),
     ),
     "net_income": MetricMeta(
         concepts=(
@@ -65,14 +69,17 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "NetIncomeLossAvailableToCommonStockholdersBasic",
         ),
         duration=True,
+        ifrs_concepts=("ProfitLoss", "ProfitLossAttributableToOwnersOfParent"),
     ),
     "eps_basic": MetricMeta(
         concepts=("EarningsPerShareBasic",),
         duration=True,
+        ifrs_concepts=("BasicEarningsLossPerShare",),
     ),
     "eps_diluted": MetricMeta(
         concepts=("EarningsPerShareDiluted",),
         duration=True,
+        ifrs_concepts=("DilutedEarningsLossPerShare",),
     ),
     "rd_expense": MetricMeta(
         concepts=(
@@ -110,6 +117,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
     "total_assets": MetricMeta(
         concepts=("Assets",),
         duration=False,
+        ifrs_concepts=("Assets",),
     ),
     "current_assets": MetricMeta(
         concepts=("AssetsCurrent",),
@@ -132,6 +140,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
         ),
         duration=False,
+        ifrs_concepts=("Equity", "EquityAttributableToOwnersOfParent"),
     ),
     "cash": MetricMeta(
         concepts=(
@@ -188,6 +197,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
         ),
         duration=True,
+        ifrs_concepts=("CashFlowsFromUsedInOperatingActivities",),
     ),
     "capex": MetricMeta(
         concepts=(
@@ -288,7 +298,7 @@ def _max_annual_fy(units: dict[str, list[dict[str, Any]]]) -> int | None:
     for entries in units.values():
         for e in entries:
             if str(e.get("fp", "")).upper() == "FY":
-                fy = int(e.get("fy", 0))
+                fy = int(e.get("fy") or 0)
                 if best is None or fy > best:
                     best = fy
     return best
@@ -299,48 +309,27 @@ def _max_any_fy(units: dict[str, list[dict[str, Any]]]) -> int | None:
     best: int | None = None
     for entries in units.values():
         for e in entries:
-            fy = int(e.get("fy", 0))
+            fy = int(e.get("fy") or 0)
             if fy and (best is None or fy > best):
                 best = fy
     return best
 
 
-def resolve_concept(
-    metric: str,
-    facts: dict[str, Any],
-    taxonomy: str = "us-gaap",
-) -> str | None:
-    """Find the best matching GAAP concept for a metric in a companyfacts blob.
-
-    Picks the concept with the most recent annual data. When two concepts share
-    the same max fiscal year, priority order from the METRIC_MAP breaks the tie.
-
-    Args:
-        metric: Normalized metric name (e.g. "revenue").
-        facts: The ``facts`` dict from SEC companyfacts JSON.
-        taxonomy: XBRL taxonomy to search (default "us-gaap").
-
-    Returns:
-        The concept name that has data, or None if no concept matched.
-    """
-    meta = METRIC_MAP.get(metric)
-    if meta is None or meta.derived:
-        return None
-
-    tax_data = facts.get(taxonomy, {})
-
+def _find_best_concept(
+    concepts: tuple[str, ...],
+    tax_data: dict[str, Any],
+) -> tuple[str | None, tuple[int, int]]:
+    """Find the best concept among candidates within a taxonomy's data."""
     best_concept: str | None = None
     best_score: tuple[int, int] = (-1, -1)
 
-    for concept in meta.concepts:
+    for concept in concepts:
         if concept not in tax_data:
             continue
         units = tax_data[concept].get("units", {})
         if not units:
             continue
 
-        # Score: (max annual FY, max any FY). Annual FY is the primary key,
-        # so a concept with FY2024 annual data beats one with only Q1 2025 quarterly.
         annual_fy = _max_annual_fy(units) or 0
         any_fy = _max_any_fy(units) or 0
         score = (annual_fy, any_fy)
@@ -349,10 +338,58 @@ def resolve_concept(
             best_score = score
             best_concept = concept
         elif score == best_score and best_concept is None:
-            # Same score but first candidate seen wins (priority order)
             best_concept = concept
 
-    return best_concept
+    return best_concept, best_score
+
+
+def resolve_concept(
+    metric: str,
+    facts: dict[str, Any],
+    taxonomy: str = "us-gaap",
+) -> tuple[str, str] | None:
+    """Find the best matching concept for a metric in a companyfacts blob.
+
+    Tries us-gaap first, then ifrs-full as fallback for non-US filers.
+    Picks the concept with the most recent annual data. When two concepts share
+    the same max fiscal year, priority order from the METRIC_MAP breaks the tie.
+
+    Args:
+        metric: Normalized metric name (e.g. "revenue").
+        facts: The ``facts`` dict from SEC companyfacts JSON.
+        taxonomy: XBRL taxonomy to search first (default "us-gaap").
+
+    Returns:
+        (concept_name, taxonomy) tuple, or None if no concept matched.
+    """
+    meta = METRIC_MAP.get(metric)
+    if meta is None or meta.derived:
+        return None
+
+    # Try primary taxonomy (us-gaap)
+    tax_data = facts.get(taxonomy, {})
+    gaap_concept, gaap_score = _find_best_concept(meta.concepts, tax_data)
+
+    if gaap_concept is not None and gaap_score > (0, 0):
+        return (gaap_concept, taxonomy)
+
+    # Try ifrs-full as fallback
+    ifrs_data = facts.get("ifrs-full", {})
+    if ifrs_data:
+        # Try IFRS-specific concepts first, then fall back to shared names
+        ifrs_candidates = (
+            meta.ifrs_concepts + meta.concepts if meta.ifrs_concepts else meta.concepts
+        )
+        ifrs_concept, ifrs_score = _find_best_concept(ifrs_candidates, ifrs_data)
+        if ifrs_concept is not None:
+            if gaap_concept is None or ifrs_score > gaap_score:
+                return (ifrs_concept, "ifrs-full")
+
+    # Return GAAP result even with score (0, 0) if it's all we have
+    if gaap_concept is not None:
+        return (gaap_concept, taxonomy)
+
+    return None
 
 
 def get_metric_meta(metric: str) -> MetricMeta | None:

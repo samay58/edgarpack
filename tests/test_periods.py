@@ -397,5 +397,76 @@ class TestQuarterlySeries(unittest.TestCase):
         self.assertEqual(results[0].value, 650_000_000_000)
 
 
+class TestNullSafety(unittest.TestCase):
+    def test_fy_null_in_annual(self) -> None:
+        """SEC data with "fy": null should not crash."""
+        values = [
+            {
+                "val": 50_000_000_000,
+                "start": "2023-01-01",
+                "end": "2024-01-01",
+                "fy": None,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 100_000_000_000,
+                "start": "2024-01-01",
+                "end": "2025-01-01",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_lfy(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 100_000_000_000)
+
+    def test_val_null_skipped(self) -> None:
+        """Entries with val=None should be filtered out."""
+        values = [
+            {
+                "val": None,
+                "start": "2024-01-01",
+                "end": "2025-01-01",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_lfy(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNone(result)
+
+
+class TestAnnualFormDetection(unittest.TestCase):
+    def test_20f_recognized_as_annual(self) -> None:
+        """20-F filings (foreign private issuers) should be treated as annual."""
+        values = [
+            {
+                "val": 28_262_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-02-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_lfy(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 28_262_000_000)
+        self.assertEqual(result.form_type, "20-F")
+
+
 if __name__ == "__main__":
     unittest.main()

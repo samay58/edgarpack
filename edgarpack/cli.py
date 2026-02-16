@@ -129,9 +129,9 @@ def main(argv: list[str] | None = None) -> int:
     p_query.add_argument(
         "--format",
         dest="output_format",
-        choices=["table", "json"],
+        choices=["table", "json", "json-full"],
         default="table",
-        help="Output format (default: table)",
+        help="Output format: table, json (lean), json-full (verbose). Default: table",
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
 
@@ -156,9 +156,9 @@ def main(argv: list[str] | None = None) -> int:
     p_comps.add_argument(
         "--format",
         dest="output_format",
-        choices=["table", "json"],
+        choices=["table", "json", "json-full"],
         default="table",
-        help="Output format (default: table)",
+        help="Output format: table, json (lean), json-full (verbose). Default: table",
     )
     p_comps.add_argument("--force", action="store_true", help="Bypass cache")
 
@@ -331,6 +331,12 @@ def _cmd_query(args: Any) -> int:
         if args.output_format == "json":
             import json
 
+            print(json.dumps(result.to_lean_dict(), indent=2, default=str))
+            return 0
+
+        if args.output_format == "json-full":
+            import json
+
             print(json.dumps(result.to_cited_dict(), indent=2, default=str))
             return 0
 
@@ -373,7 +379,7 @@ def _cmd_query(args: Any) -> int:
 
 def _cmd_comps(args: Any) -> int:
     async def _run() -> int:
-        from .query.comps import comps, comps_to_json, format_comps_table
+        from .query.comps import comps, comps_to_json, comps_to_lean_json, format_comps_table
 
         metric_list = [m.strip() for m in args.metrics.split(",")]
 
@@ -389,6 +395,8 @@ def _cmd_comps(args: Any) -> int:
             return 1
 
         if args.output_format == "json":
+            print(comps_to_lean_json(results, metric_list, args.period))
+        elif args.output_format == "json-full":
             print(comps_to_json(results))
         else:
             print(format_comps_table(results, metric_list))

@@ -224,5 +224,116 @@ class TestCompsToJson(unittest.TestCase):
         self.assertIn("citation", parsed["NVDA"]["metrics"]["revenue"])
 
 
+class TestCurrencyFormatting(unittest.TestCase):
+    def test_eur_formatting(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=28_262_000_000,
+            unit="EUR",
+            metric="revenue",
+            concept="Revenue",
+            period_end=date(2024, 12, 31),
+            fiscal_year=2024,
+            fiscal_period="FY",
+            form_type="20-F",
+            filed=date(2025, 2, 15),
+            accession="0000000001-25-000001",
+            cik="0000000001",
+            company="ASML HOLDING NV",
+        )
+        formatted = _format_value(cited)
+        self.assertIn("\u20ac", formatted)
+        self.assertIn("B", formatted)
+
+    def test_gbp_formatting(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=5_000_000_000,
+            unit="GBP",
+            metric="revenue",
+            concept="Revenue",
+            period_end=date(2024, 12, 31),
+            fiscal_year=2024,
+            fiscal_period="FY",
+            form_type="20-F",
+            filed=date(2025, 2, 15),
+            accession="0000000001-25-000001",
+            cik="0000000001",
+            company="TEST CO",
+        )
+        formatted = _format_value(cited)
+        self.assertIn("\u00a3", formatted)
+
+    def test_unknown_currency_uses_prefix(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=1_000_000_000,
+            unit="CHF",
+            metric="revenue",
+            concept="Revenue",
+            period_end=date(2024, 12, 31),
+            fiscal_year=2024,
+            fiscal_period="FY",
+            form_type="20-F",
+            filed=date(2025, 2, 15),
+            accession="0000000001-25-000001",
+            cik="0000000001",
+            company="TEST CO",
+        )
+        formatted = _format_value(cited)
+        self.assertIn("CHF", formatted)
+        self.assertIn("B", formatted)
+
+
+class TestCompsLeanJson(unittest.TestCase):
+    def test_lean_json_structure(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import comps_to_lean_json
+
+        cited = CitedValue(
+            value=60_922_000_000,
+            unit="USD",
+            metric="revenue",
+            concept="Revenues",
+            period_end=date(2025, 1, 26),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2025, 2, 18),
+            accession="0001045810-25-000001",
+            cik="0001045810",
+            company="NVIDIA CORP",
+        )
+
+        results = {
+            "NVDA": QueryResult(
+                company="NVIDIA CORP",
+                cik="0001045810",
+                period="lfy",
+                metrics={"revenue": cited},
+            ),
+        }
+
+        json_str = comps_to_lean_json(results, ["revenue"], "lfy")
+        parsed = json.loads(json_str)
+        self.assertIn("period", parsed)
+        self.assertIn("requested_metrics", parsed)
+        self.assertIn("companies", parsed)
+        self.assertIn("NVDA", parsed["companies"])
+        nvda = parsed["companies"]["NVDA"]
+        self.assertIn("filings", nvda)
+        self.assertIn("metrics", nvda)
+
+
 if __name__ == "__main__":
     unittest.main()

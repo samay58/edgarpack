@@ -366,6 +366,18 @@ class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
         revenue = result.metrics["revenue"]
         self.assertIn("sec.gov", revenue.filing_url)
         self.assertIn("1045810", revenue.filing_url)
+        self.assertTrue(revenue.filing_url.endswith("-index.htm"))
+
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_permalink(self, mock_resolve, mock_facts) -> None:
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        self.assertIn("permalink", result.to_lean_dict())
+        self.assertIn("permalink", result.to_cited_dict())
+        self.assertEqual(result.permalink, "edgarpack query 0001045810 revenue --period lfy")
 
     @patch("edgarpack.query.financials.fetch_company_facts")
     @patch("edgarpack.query.financials.resolve_ticker")
@@ -380,6 +392,163 @@ class TestCitationFormat(unittest.IsolatedAsyncioTestCase):
         revenue_dict = d["metrics"]["revenue"]
         self.assertIn("citation", revenue_dict)
         self.assertIn("filing_url", revenue_dict)
+
+
+class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_ltm_citation_references_real_filings(self, mock_resolve, mock_facts) -> None:
+        """LTM citation should reference the underlying real filings, not 'LTM (LTM2025)'."""
+        # Build facts with quarterly + annual data for LTM computation
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = {
+            "cik": 1045810,
+            "entityName": "NVIDIA CORP",
+            "facts": {
+                "us-gaap": {
+                    "Revenues": {
+                        "units": {
+                            "USD": [
+                                # FY2025 annual
+                                {
+                                    "val": 60_922_000_000,
+                                    "start": "2024-01-29",
+                                    "end": "2025-01-26",
+                                    "fy": 2025,
+                                    "fp": "FY",
+                                    "form": "10-K",
+                                    "accn": "0001045810-25-000001",
+                                    "filed": "2025-02-18",
+                                },
+                                # Q1 FY2025 (prior year MRP)
+                                {
+                                    "val": 26_000_000_000,
+                                    "start": "2024-01-29",
+                                    "end": "2024-04-28",
+                                    "fy": 2025,
+                                    "fp": "Q1",
+                                    "form": "10-Q",
+                                    "accn": "0001045810-24-000010",
+                                    "filed": "2024-06-01",
+                                },
+                                # Q1 FY2026 (MRP)
+                                {
+                                    "val": 35_100_000_000,
+                                    "start": "2025-01-27",
+                                    "end": "2025-04-27",
+                                    "fy": 2026,
+                                    "fp": "Q1",
+                                    "form": "10-Q",
+                                    "accn": "0001045810-25-000020",
+                                    "filed": "2025-06-01",
+                                },
+                            ]
+                        }
+                    },
+                }
+            },
+        }
+
+        result = await financials("NVDA", "revenue", period="ltm")
+        revenue = result.metrics["revenue"]
+        self.assertIsNotNone(revenue)
+        self.assertIsInstance(revenue, DerivedValue)
+        # Citation should NOT contain "LTM (LTM"
+        self.assertNotIn("LTM (LTM", revenue.citation)
+        # Citation should reference the underlying filings
+        self.assertIn("LTM computed from:", revenue.citation)
+        self.assertIn("10-Q", revenue.citation)
+        self.assertIn("10-K", revenue.citation)
+        # form_type should be the MRP's form, not "LTM"
+        self.assertNotEqual(revenue.form_type, "LTM")
+        self.assertEqual(revenue.form_type, "10-Q")
+
+
+class TestLeanJson(unittest.IsolatedAsyncioTestCase):
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_lean_dict_structure(self, mock_resolve, mock_facts) -> None:
+        """to_lean_dict should have company, cik, filings, and metrics at top level."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+        d = result.to_lean_dict()
+
+        self.assertEqual(d["company"], "NVIDIA CORP")
+        self.assertEqual(d["cik"], "0001045810")
+        self.assertEqual(d["period"], "lfy")
+        self.assertIn("filings", d)
+        self.assertIn("metrics", d)
+        # Revenue metric should have value, unit, concept, period, accession
+        revenue = d["metrics"]["revenue"]
+        self.assertIn("value", revenue)
+        self.assertIn("unit", revenue)
+        self.assertIn("concept", revenue)
+        self.assertIn("period", revenue)
+        self.assertIn("accession", revenue)
+
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_lean_filings_deduplication(self, mock_resolve, mock_facts) -> None:
+        """Filings table should deduplicate by accession."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", ["revenue", "net_income"], period="lfy")
+        d = result.to_lean_dict()
+
+        # Both metrics come from same filing, should only appear once
+        filings = d["filings"]
+        self.assertEqual(len(filings), 1)
+        acc = list(filings.keys())[0]
+        self.assertEqual(acc, "0001045810-25-000001")
+
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_lean_derived_auto_includes_components(self, mock_resolve, mock_facts) -> None:
+        """Querying gross_margin should auto-include gross_profit and revenue."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "gross_margin", period="lfy")
+        d = result.to_lean_dict()
+
+        metrics = d["metrics"]
+        self.assertIn("gross_margin", metrics)
+        self.assertIn("gross_profit", metrics)
+        self.assertIn("revenue", metrics)
+        # Components should be tagged
+        self.assertTrue(metrics["gross_profit"]["_component"])
+        self.assertTrue(metrics["revenue"]["_component"])
+
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_lean_derived_has_formula(self, mock_resolve, mock_facts) -> None:
+        """Derived metrics should include formula and component references."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "gross_margin", period="lfy")
+        d = result.to_lean_dict()
+
+        gm = d["metrics"]["gross_margin"]
+        self.assertTrue(gm["derived"])
+        self.assertIn("formula", gm)
+        self.assertIn("components", gm)
+
+    @patch("edgarpack.query.financials.fetch_company_facts")
+    @patch("edgarpack.query.financials.resolve_ticker")
+    async def test_lean_no_component_for_explicit_metrics(self, mock_resolve, mock_facts) -> None:
+        """When user explicitly requests components, they should not be tagged."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", ["gross_margin", "revenue"], period="lfy")
+        d = result.to_lean_dict()
+
+        # revenue was explicitly requested, should NOT have _component tag
+        self.assertNotIn("_component", d["metrics"]["revenue"])
 
 
 if __name__ == "__main__":

@@ -117,6 +117,47 @@ def comps_to_json(results: dict[str, QueryResult]) -> str:
     return json.dumps(output, indent=2, sort_keys=True, default=str)
 
 
+def comps_to_lean_json(
+    results: dict[str, QueryResult],
+    metrics: list[str],
+    period: str = "lfy",
+) -> str:
+    """Serialize comparison results to lean JSON format."""
+    companies: dict[str, object] = {}
+    for company, qr in results.items():
+        companies[company] = qr.to_lean_dict()
+
+    output: dict[str, object] = {
+        "period": period,
+        "requested_metrics": metrics,
+        "companies": companies,
+    }
+    return json.dumps(output, indent=2, sort_keys=True, default=str)
+
+
+_CURRENCY_SYMBOLS: dict[str, str] = {
+    "USD": "$",
+    "EUR": "\u20ac",
+    "GBP": "\u00a3",
+    "JPY": "\u00a5",
+}
+
+
+def _format_currency(val: float, unit: str) -> str:
+    """Format a monetary value with currency symbol and B/M/K scaling."""
+    symbol = _CURRENCY_SYMBOLS.get(unit, "")
+    prefix = f"{symbol}" if symbol else f"{unit} "
+    abs_val = abs(val)
+    if abs_val >= 1_000_000_000:
+        return f"{prefix}{val / 1_000_000_000:,.1f}B"
+    elif abs_val >= 1_000_000:
+        return f"{prefix}{val / 1_000_000:,.0f}M"
+    elif abs_val >= 1_000:
+        return f"{prefix}{val / 1_000:,.0f}K"
+    else:
+        return f"{prefix}{val:,.0f}"
+
+
 def _format_value(cited: CitedValue) -> str:
     """Format a CitedValue for human display."""
     if cited.value is None:
@@ -129,17 +170,8 @@ def _format_value(cited: CitedValue) -> str:
         return f"{val * 100:.1f}%"
     elif cited.unit == "USD/shares":
         return f"${val:.2f}"
-    elif cited.unit == "USD":
-        # Large USD values in millions
-        abs_val = abs(val)
-        if abs_val >= 1_000_000_000:
-            return f"${val / 1_000_000_000:,.1f}B"
-        elif abs_val >= 1_000_000:
-            return f"${val / 1_000_000:,.0f}M"
-        elif abs_val >= 1_000:
-            return f"${val / 1_000:,.0f}K"
-        else:
-            return f"${val:,.0f}"
+    elif cited.unit in _CURRENCY_SYMBOLS or cited.unit == "USD":
+        return _format_currency(val, cited.unit)
     elif cited.unit == "shares":
         abs_val = abs(val)
         if abs_val >= 1_000_000_000:
@@ -149,4 +181,7 @@ def _format_value(cited: CitedValue) -> str:
         else:
             return f"{val:,.0f}"
     else:
+        # Unknown currency: treat as monetary with unit prefix
+        if len(cited.unit) == 3 and cited.unit.isalpha():
+            return _format_currency(val, cited.unit)
         return f"{val:,.2f}"

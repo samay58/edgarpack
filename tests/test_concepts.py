@@ -52,8 +52,11 @@ class TestResolveConceptFallback(unittest.TestCase):
                 "SalesRevenueNet": {"units": {"USD": [{"val": 99}]}},
             }
         }
-        concept = resolve_concept("revenue", facts)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
         self.assertEqual(concept, "Revenues")
+        self.assertEqual(taxonomy, "us-gaap")
 
     def test_fallback_to_second_concept(self) -> None:
         facts = {
@@ -63,23 +66,26 @@ class TestResolveConceptFallback(unittest.TestCase):
                 },
             }
         }
-        concept = resolve_concept("revenue", facts)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
         self.assertEqual(concept, "RevenueFromContractWithCustomerExcludingAssessedTax")
+        self.assertEqual(taxonomy, "us-gaap")
 
     def test_no_concept_found(self) -> None:
         facts = {"us-gaap": {"SomeOtherConcept": {"units": {"USD": [{"val": 1}]}}}}
-        concept = resolve_concept("revenue", facts)
-        self.assertIsNone(concept)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNone(result)
 
     def test_derived_metric_returns_none(self) -> None:
         facts = {"us-gaap": {}}
-        concept = resolve_concept("gross_margin", facts)
-        self.assertIsNone(concept)
+        result = resolve_concept("gross_margin", facts)
+        self.assertIsNone(result)
 
     def test_unknown_metric_returns_none(self) -> None:
         facts = {"us-gaap": {}}
-        concept = resolve_concept("nonexistent_metric", facts)
-        self.assertIsNone(concept)
+        result = resolve_concept("nonexistent_metric", facts)
+        self.assertIsNone(result)
 
 
 class TestResolveConceptRecency(unittest.TestCase):
@@ -99,7 +105,9 @@ class TestResolveConceptRecency(unittest.TestCase):
                 },
             }
         }
-        concept = resolve_concept("revenue", facts)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, _ = result
         self.assertEqual(concept, "RevenueFromContractWithCustomerExcludingAssessedTax")
 
     def test_same_year_prefers_priority_order(self) -> None:
@@ -118,7 +126,9 @@ class TestResolveConceptRecency(unittest.TestCase):
                 },
             }
         }
-        concept = resolve_concept("revenue", facts)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, _ = result
         self.assertEqual(concept, "Revenues")
 
     def test_concept_with_only_quarterly_data(self) -> None:
@@ -137,7 +147,9 @@ class TestResolveConceptRecency(unittest.TestCase):
                 },
             }
         }
-        concept = resolve_concept("revenue", facts)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, _ = result
         self.assertEqual(concept, "RevenueFromContractWithCustomerExcludingAssessedTax")
 
     def test_quarterly_only_beats_nothing(self) -> None:
@@ -151,8 +163,86 @@ class TestResolveConceptRecency(unittest.TestCase):
                 },
             }
         }
-        concept = resolve_concept("revenue", facts)
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, _ = result
         self.assertEqual(concept, "SalesRevenueNet")
+
+
+class TestNullSafety(unittest.TestCase):
+    def test_max_annual_fy_with_null(self) -> None:
+        """_max_annual_fy should handle fy=None entries without crashing."""
+        from edgarpack.query.concepts import _max_annual_fy
+
+        units = {
+            "USD": [
+                {"val": 100, "fy": None, "fp": "FY"},
+                {"val": 200, "fy": 2024, "fp": "FY"},
+            ]
+        }
+        result = _max_annual_fy(units)
+        self.assertEqual(result, 2024)
+
+    def test_max_any_fy_with_null(self) -> None:
+        """_max_any_fy should handle fy=None entries without crashing."""
+        from edgarpack.query.concepts import _max_any_fy
+
+        units = {
+            "USD": [
+                {"val": 100, "fy": None, "fp": "Q1"},
+                {"val": 200, "fy": 2025, "fp": "Q1"},
+            ]
+        }
+        result = _max_any_fy(units)
+        self.assertEqual(result, 2025)
+
+
+class TestIfrsFallback(unittest.TestCase):
+    def test_ifrs_fallback_when_no_gaap(self) -> None:
+        """resolve_concept should fall back to ifrs-full when us-gaap has no data."""
+        facts = {
+            "us-gaap": {},
+            "ifrs-full": {
+                "Revenue": {"units": {"EUR": [{"val": 28_000_000_000, "fy": 2024, "fp": "FY"}]}},
+            },
+        }
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(concept, "Revenue")
+        self.assertEqual(taxonomy, "ifrs-full")
+
+    def test_gaap_preferred_over_ifrs(self) -> None:
+        """When both taxonomies have data, us-gaap with recent data wins."""
+        facts = {
+            "us-gaap": {
+                "Revenues": {"units": {"USD": [{"val": 100, "fy": 2025, "fp": "FY"}]}},
+            },
+            "ifrs-full": {
+                "Revenue": {"units": {"EUR": [{"val": 200, "fy": 2025, "fp": "FY"}]}},
+            },
+        }
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(concept, "Revenues")
+        self.assertEqual(taxonomy, "us-gaap")
+
+    def test_ifrs_wins_when_gaap_stale(self) -> None:
+        """IFRS with FY2025 should beat us-gaap with only FY=0 (no annual data)."""
+        facts = {
+            "us-gaap": {
+                "Revenues": {"units": {"USD": [{"val": 10, "fy": 0, "fp": "Q1"}]}},
+            },
+            "ifrs-full": {
+                "Revenue": {"units": {"EUR": [{"val": 200, "fy": 2025, "fp": "FY"}]}},
+            },
+        }
+        result = resolve_concept("revenue", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(concept, "Revenue")
+        self.assertEqual(taxonomy, "ifrs-full")
 
 
 class TestGetMetricMeta(unittest.TestCase):

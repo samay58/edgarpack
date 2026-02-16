@@ -54,19 +54,22 @@ async def financials(
             cited = _compute_derived(facts, metric, meta, company_name, cik, period)
             result_metrics[metric] = cited
         else:
-            concept = resolve_concept(metric, facts)
-            if concept is None:
+            resolved = resolve_concept(metric, facts)
+            if resolved is None:
                 result_metrics[metric] = None
                 continue
 
-            value = select_period(facts, concept, metric, meta, company_name, cik, period)
+            concept, taxonomy = resolved
+            value = select_period(
+                facts, concept, metric, meta, company_name, cik, period, taxonomy=taxonomy
+            )
 
             if isinstance(value, list):
                 result_metrics[metric] = value if value else None
             else:
                 result_metrics[metric] = value
 
-    return QueryResult(company=company_name, cik=cik, metrics=result_metrics)
+    return QueryResult(company=company_name, cik=cik, period=period, metrics=result_metrics)
 
 
 def _compute_derived(
@@ -92,10 +95,13 @@ def _compute_derived(
             # Recursive derived metric (e.g., ebitda needs operating_income + d&a)
             comp_value = _compute_derived(facts, comp_name, comp_meta, company, cik, period)
         else:
-            concept = resolve_concept(comp_name, facts)
-            if concept is None:
+            resolved = resolve_concept(comp_name, facts)
+            if resolved is None:
                 return None
-            value = select_period(facts, concept, comp_name, comp_meta, company, cik, period)
+            concept, taxonomy = resolved
+            value = select_period(
+                facts, concept, comp_name, comp_meta, company, cik, period, taxonomy=taxonomy
+            )
             if isinstance(value, list):
                 comp_value = value[0] if value else None
             else:
