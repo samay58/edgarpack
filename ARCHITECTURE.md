@@ -8,13 +8,17 @@ Use NVIDIA's 10-K (`CIK 0001045810`) as the concrete example. EdgarPack fetches 
 
 ## Design Decisions and Tradeoffs
 
-We made a few deliberate choices to keep this project practical.
+A few choices shaped how this project works.
 
-- We use stdlib HTTP instead of a heavier client so deployment is predictable and rate-limit behavior is fully visible in our code.
-- We use regex plus `html.parser` instead of a DOM parser so we control exactly how filing noise is stripped and section text is preserved.
-- We keep the artifact set deterministic so reruns are diffable and hash-addressed manifests stay stable.
-- We treat citations as part of the data model, not formatting, so numbers are auditable by default.
-- We fail soft on missing facts and return `None` instead of guessing values, because silent imputation is worse than explicit gaps in financial work.
+Stdlib HTTP keeps deployment predictable. The rate-limit behavior is fully visible in our code, not buried in a third-party client.
+
+Regex plus `html.parser` for the parsing stack means we control exactly how filing noise gets stripped and section text gets preserved. A DOM parser would add a dependency and hide behavior behind tree traversal.
+
+Artifacts are deterministic. Reruns produce the same output, so diffs are meaningful and hash-addressed manifests stay stable across builds.
+
+Citations live in the data model, not in formatting or side metadata. Every returned value carries its filing provenance by default, not as an opt-in.
+
+Missing facts return `None` instead of guesses. Silent imputation is worse than explicit gaps in financial work.
 
 ### Stage 1: Fetch from SEC EDGAR
 
@@ -26,9 +30,9 @@ Responses are stored in a SHA256-keyed disk cache so repeat runs do not re-downl
 
 The parser runs five steps in strict order:
 
-- `ixbrl_strip`: removes inline XBRL tags while keeping visible values. This strips annotation noise but keeps the number text.
-- `html_clean`: removes scripts, hidden blocks, and unsafe attributes. This keeps only visible structural HTML.
-- `semantic_html`: normalizes tag shapes (`<b>` to `<strong>`, safe link normalization, unwraps presentational tags). This reduces rendering edge cases before markdown conversion.
+- `ixbrl_strip`: removes inline XBRL tags while keeping visible values. The annotation noise goes away; the number text stays.
+- `html_clean`: removes scripts, hidden blocks, and unsafe attributes. Only visible structural HTML survives.
+- `semantic_html`: normalizes tag shapes (`<b>` to `<strong>`, safe link normalization, unwraps presentational tags). Fewer rendering edge cases before markdown conversion.
 - `md_render`: converts semantic HTML into markdown using deterministic regex passes. The order is fixed so table and heading structure does not get flattened.
 - `sectionize`: detects form-specific headings (`10-K`, `10-Q`, `8-K`) and splits output into section-addressable chunks.
 

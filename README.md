@@ -13,14 +13,14 @@ EdgarPack turns one large filing blob into:
 - A manifest with hashes and offsets
 - Optional chunk and XBRL artifacts
 
-## Why We Built It This Way
+## Why It Works This Way
 
-We kept the stack small on purpose.
+The stack is small on purpose.
 
-- We use stdlib HTTP so deployments stay simple and dependency drift stays low.
-- We use regex and `html.parser` instead of a DOM dependency so behavior stays explicit and easy to debug.
-- We enforce deterministic output so diffs are meaningful and downstream caches stay valid.
-- We keep citation fields on query values so every number can be traced back to a filing.
+- Stdlib HTTP. Deployments stay simple and dependency drift stays low.
+- Regex and `html.parser` for parsing. Behavior stays explicit and easy to debug without a DOM dependency.
+- Deterministic output. Diffs are meaningful and downstream caches stay valid.
+- Citation fields on every query value. Every number traces back to a filing.
 
 ## Install
 

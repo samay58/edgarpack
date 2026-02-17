@@ -15,12 +15,11 @@ Ticker/CIK
 
 Single-company queries go through `financials()`. Multi-company comparisons use `comps()`, which runs queries in parallel via `asyncio.gather`.
 
-## Design Choices We Made
+## Design Choices
 
-- We keep metric concept mappings in code so changes are reviewed with the rest of query logic.
-- We return `None` for missing or invalid inputs instead of guessing values.
-- We keep period math explicit, especially LTM, so every component can be cited and checked.
-- We include filing metadata on value objects by default so audit trails are not optional.
+Metric concept mappings live in code, not config files, so changes get reviewed with the rest of query logic.
+
+Missing or invalid inputs return `None` instead of guesses. Period math is explicit (especially LTM) so every component can be cited and checked. Filing metadata ships on every value object by default. Audit trails are not optional.
 
 ## CLI Reference
 
