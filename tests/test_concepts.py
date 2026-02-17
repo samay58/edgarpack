@@ -291,9 +291,7 @@ class TestDebtConceptPriority(unittest.TestCase):
                 "DebtLongTermAndShortTermCombinedAmount": {
                     "units": {"USD": [{"val": 160_000_000_000, "fy": 2025, "fp": "FY"}]}
                 },
-                "LongTermDebt": {
-                    "units": {"USD": [{"val": 291_000_000, "fy": 2025, "fp": "FY"}]}
-                },
+                "LongTermDebt": {"units": {"USD": [{"val": 291_000_000, "fy": 2025, "fp": "FY"}]}},
             }
         }
         result = resolve_concept("total_debt", facts)

@@ -70,9 +70,10 @@ Pack assembly and artifact generation.
 
 Financial query layer over SEC companyfacts.
 
-- Concept resolution from metric names to GAAP/IFRS tags.
-- Period selection (`lfy`, `mrq`, `mrp`, `ltm`, series selectors).
+- Concept resolution from metric names to GAAP/IFRS tags. `total_debt` includes broader tags (`DebtLongTermAndShortTermCombinedAmount`, `LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities`) for captive-finance companies like Ford.
+- Period selection (`lfy`, `mrq`, `mrp`, `ltm`, `ltm-1`, series selectors). LTM-1 for annual-only filers (20-F) returns the prior fiscal year instead of the same year.
 - Derived metrics with component-level provenance and recursion guards.
+- `CitedValue` carries an optional `warnings` field. Per-share metrics get a stock split contamination warning when the LTM-derived value differs from the latest annual filing by more than 5x.
 
 ### `edgarpack/site/`
 

@@ -914,9 +914,7 @@ class TestStockSplitWarning(unittest.TestCase):
             },
         ]
         facts = _make_facts("EarningsPerShareDiluted", values)
-        result = select_ltm(
-            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
-        )
+        result = select_ltm(facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         self.assertAlmostEqual(result.value, 9.5)
