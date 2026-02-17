@@ -528,7 +528,6 @@ def select_mrq(
 
     if meta.duration:
         # For P&L/CF: want standalone (3-month) values, not cumulative YTD.
-        # Filter by duration <= 100 days to exclude cumulative entries.
         quarterly = [
             v
             for v in values
@@ -694,14 +693,12 @@ def select_quarterly_series(
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
 
     if meta.duration:
-        # Duration concepts: filter to standalone quarters only
         quarterly = [
             v
             for v in values
             if _is_quarterly(v) and v.get("val") is not None and _is_standalone_quarter(v)
         ]
     else:
-        # Instant concepts: no duration filtering needed
         quarterly = [v for v in values if _is_quarterly(v) and v.get("val") is not None]
 
     quarterly.sort(
