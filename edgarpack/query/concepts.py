@@ -95,6 +95,13 @@ METRIC_MAP: dict[str, MetricMeta] = {
         ),
         duration=True,
     ),
+    "stock_based_compensation": MetricMeta(
+        concepts=(
+            "ShareBasedCompensation",
+            "AllocatedShareBasedCompensationExpense",
+        ),
+        duration=True,
+    ),
     # EBITDA: derived
     "ebitda": MetricMeta(
         concepts=(),
