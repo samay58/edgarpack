@@ -2,7 +2,7 @@
 
 Different companies use different XBRL tags for the same economic concept. Apple reports
 revenue as ``RevenueFromContractWithCustomerExcludingAssessedTax`` while NVIDIA uses
-``Revenues``. This module maps ~30 normalized metric names to prioritized concept lists.
+``Revenues``. Maps normalized metric names to prioritized concept lists.
 """
 
 from __future__ import annotations

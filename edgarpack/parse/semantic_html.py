@@ -1,7 +1,7 @@
 """Reduce HTML to a simpler, more semantic subset.
 
 EdgarPack's markdown renderer is regex-based and intentionally lightweight.
-This module provides a minimal pre-pass that:
+Runs a minimal pre-pass that:
 
 - Normalizes common presentational tags (b/i/u -> strong/em)
 - Normalizes inline code-like tags to <code>

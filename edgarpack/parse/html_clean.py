@@ -1,7 +1,7 @@
 """HTML cleaning and sanitization.
 
-This module avoids heavy HTML/DOM dependencies so it can run in constrained
-environments while still preserving visible text deterministically.
+Avoids heavy HTML/DOM dependencies so parsing stays portable while preserving
+visible text deterministically.
 """
 
 from __future__ import annotations
