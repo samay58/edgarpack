@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import unittest
 
-from edgarpack.query.concepts import ALL_METRICS, METRIC_MAP, get_metric_meta, resolve_concept
+from edgarpack.query.concepts import (
+    ALL_METRICS,
+    CONCEPT_SCOPE_WARNINGS,
+    METRIC_MAP,
+    get_metric_meta,
+    get_scope_warning,
+    resolve_concept,
+)
 
 
 class TestMetricMap(unittest.TestCase):
@@ -345,6 +352,33 @@ class TestGetMetricMeta(unittest.TestCase):
 
     def test_unknown_metric(self) -> None:
         self.assertIsNone(get_metric_meta("bogus"))
+
+
+class TestScopeWarnings(unittest.TestCase):
+    def test_known_scope_warning_returned(self) -> None:
+        warning = get_scope_warning("CostOfGoodsAndServicesSold")
+        self.assertIsNotNone(warning)
+        self.assertIn("CostOfGoodsAndServicesSold", warning)
+
+    def test_no_warning_for_clean_concept(self) -> None:
+        self.assertIsNone(get_scope_warning("Revenues"))
+        self.assertIsNone(get_scope_warning("CostOfRevenue"))
+        self.assertIsNone(get_scope_warning("NetIncomeLoss"))
+
+    def test_all_warned_concepts_are_strings(self) -> None:
+        for concept, warning in CONCEPT_SCOPE_WARNINGS.items():
+            self.assertIsInstance(concept, str)
+            self.assertIsInstance(warning, str)
+            self.assertTrue(len(warning) > 10, f"Warning for {concept} is too short")
+
+    def test_lease_debt_warning(self) -> None:
+        warning = get_scope_warning("LongTermDebtAndCapitalLeaseObligations")
+        self.assertIsNotNone(warning)
+        self.assertIn("lease", warning.lower())
+
+    def test_liabilities_equity_warning(self) -> None:
+        warning = get_scope_warning("LiabilitiesAndStockholdersEquity")
+        self.assertIsNotNone(warning)
 
 
 if __name__ == "__main__":

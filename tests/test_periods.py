@@ -1045,5 +1045,167 @@ class TestEdgeCaseBoundary(unittest.TestCase):
         self.assertEqual(result.value, 650_000_000_000)
 
 
+class TestSegmentFiltering(unittest.TestCase):
+    """Segment-level entries should be filtered when consolidated values exist."""
+
+    def test_framed_entry_preferred_over_unframed(self) -> None:
+        """When both framed (consolidated) and unframed (segment) entries exist,
+        only the framed one should survive filtering."""
+        values = [
+            # Consolidated entry (has frame)
+            {
+                "val": 100_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+                "frame": "CY2024",
+            },
+            # Segment entry (no frame, same context)
+            {
+                "val": 30_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("GrossProfit", values)
+        result = select_lfy(facts, "GrossProfit", "gross_profit", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 100_000_000_000)
+
+    def test_no_frame_keeps_largest_value(self) -> None:
+        """When no entries have frame data, the largest absolute value wins
+        (consolidated totals > segment breakdowns)."""
+        values = [
+            # Consolidated (larger, no frame)
+            {
+                "val": 100_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+            # Segment (smaller, no frame, same context)
+            {
+                "val": 30_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("GrossProfit", values)
+        result = select_lfy(facts, "GrossProfit", "gross_profit", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 100_000_000_000)
+
+    def test_different_start_dates_not_collapsed(self) -> None:
+        """Cumulative and standalone entries (different start dates) should both survive."""
+        values = [
+            # 6-month cumulative Q2
+            {
+                "val": 65_000_000_000,
+                "start": "2024-01-29",
+                "end": "2024-07-28",
+                "fy": 2024,
+                "fp": "Q2",
+                "form": "10-Q",
+                "accn": "0000000001-24-000003",
+                "filed": "2024-09-01",
+            },
+            # 3-month standalone Q2
+            {
+                "val": 35_000_000_000,
+                "start": "2024-04-28",
+                "end": "2024-07-28",
+                "fy": 2024,
+                "fp": "Q2",
+                "form": "10-Q",
+                "accn": "0000000001-24-000003",
+                "filed": "2024-09-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        # MRQ picks standalone; LTM picks cumulative -- both need to be available
+        from edgarpack.query.periods import _extract_values
+
+        extracted = _extract_values(facts, "Revenues")
+        self.assertEqual(len(extracted), 2)
+
+    def test_single_entry_passes_through(self) -> None:
+        """A lone entry without frame should not be filtered out."""
+        values = [
+            {
+                "val": 50_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_lfy(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 50_000_000_000)
+
+    def test_multiple_segments_collapsed_to_largest(self) -> None:
+        """Three segment entries without frame: keep only the largest (consolidated)."""
+        values = [
+            {
+                "val": 100_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+            {
+                "val": 40_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+            {
+                "val": 60_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        from edgarpack.query.periods import _extract_values
+
+        facts = _make_facts("GrossProfit", values)
+        extracted = _extract_values(facts, "GrossProfit")
+        self.assertEqual(len(extracted), 1)
+        self.assertEqual(extracted[0]["val"], 100_000_000_000)
+
+
 if __name__ == "__main__":
     unittest.main()

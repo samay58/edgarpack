@@ -23,12 +23,54 @@ def _parse_date(s: str) -> date | None:
         return None
 
 
+def _filter_segment_entries(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Prefer consolidated entries over segment-level breakouts.
+
+    SEC companyfacts includes both consolidated and dimensional/segment values
+    for the same concept. Consolidated entries carry a ``frame`` field (e.g.
+    ``CY2024Q4I``); segment breakouts do not. When multiple entries share the
+    same filing context (accession, fiscal year/period, date span), entries
+    with ``frame`` are kept and unframed duplicates are dropped.
+    """
+    by_context: dict[tuple, list[dict[str, Any]]] = {}
+    for v in values:
+        key = (
+            v.get("accn", ""),
+            v.get("fy"),
+            v.get("fp", ""),
+            v.get("start", ""),
+            v.get("end", ""),
+        )
+        by_context.setdefault(key, []).append(v)
+
+    result: list[dict[str, Any]] = []
+    for group in by_context.values():
+        if len(group) == 1:
+            result.append(group[0])
+            continue
+
+        framed = [v for v in group if v.get("frame")]
+        if framed:
+            result.extend(framed)
+        else:
+            # No frame data: keep entry with largest absolute value
+            # (consolidated totals are larger than segment breakdowns).
+            group.sort(key=lambda v: abs(v.get("val") or 0), reverse=True)
+            result.append(group[0])
+
+    return result
+
+
 def _extract_values(
     facts: dict[str, Any],
     concept: str,
     taxonomy: str = "us-gaap",
 ) -> list[dict[str, Any]]:
     """Pull all reported values for a concept across all units.
+
+    Prefers consolidated values over segment-level breakouts. SEC companyfacts
+    tags consolidated entries with a ``frame`` field; segment disclosures lack
+    it. When multiple entries share the same filing context, framed entries win.
 
     Returns list of raw SEC value dicts with keys:
         val, start, end, fy, fp, form, accn, filed
@@ -37,18 +79,23 @@ def _extract_values(
     concept_data = tax.get(concept, {})
     units = concept_data.get("units", {})
 
-    # Collect from all unit types, but prefer USD > shares > pure
+    raw: list[dict[str, Any]] = []
     for unit_key in ("USD", "shares", "USD/shares", "pure"):
         values = units.get(unit_key)
         if values:
-            return list(values)
+            raw = list(values)
+            break
 
-    # Fallback: first available unit
-    for values in units.values():
-        if values:
-            return list(values)
+    if not raw:
+        for values in units.values():
+            if values:
+                raw = list(values)
+                break
 
-    return []
+    if not raw:
+        return []
+
+    return _filter_segment_entries(raw)
 
 
 def _unit_for_concept(

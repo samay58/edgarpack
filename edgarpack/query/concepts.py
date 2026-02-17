@@ -481,3 +481,29 @@ def resolve_concept(
 def get_metric_meta(metric: str) -> MetricMeta | None:
     """Look up metadata for a normalized metric name."""
     return METRIC_MAP.get(metric)
+
+
+# Known concept scope caveats that may cause divergence between a reported
+# concept and the economic quantity a metric name implies.
+CONCEPT_SCOPE_WARNINGS: dict[str, str] = {
+    "CostOfGoodsAndServicesSold": (
+        "CostOfGoodsAndServicesSold may be broader than CostOfRevenue for "
+        "companies with significant service revenue. Computed gross profit "
+        "may diverge from the company's reported figure."
+    ),
+    "CashCashEquivalentsAndShortTermInvestments": (
+        "Includes short-term investments alongside cash equivalents. "
+        "May overstate pure cash position."
+    ),
+    "LongTermDebtAndCapitalLeaseObligations": (
+        "Includes capital lease obligations alongside financial debt."
+    ),
+    "LiabilitiesAndStockholdersEquity": (
+        "Reports total liabilities + equity combined, not pure liabilities."
+    ),
+}
+
+
+def get_scope_warning(concept: str) -> str | None:
+    """Return a scope caveat for a resolved concept, or None."""
+    return CONCEPT_SCOPE_WARNINGS.get(concept)

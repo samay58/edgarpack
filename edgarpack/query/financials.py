@@ -2,16 +2,39 @@
 
 from __future__ import annotations
 
+from datetime import date as _date
 from typing import Any
 
 from ..sec.submissions import fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
-from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, resolve_concept
+from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
 from .models import CitedValue, DerivedValue, QueryResult
 from .periods import select_period
 
 _DerivedCache = dict[str, CitedValue | None]
+
+# Staleness thresholds: max fiscal-year gap (current_year - fy) before
+# a value is rejected as stale.  Series queries ("annual:N", "quarterly:N")
+# skip the check entirely since the caller explicitly asks for history.
+_STALENESS_YEARS: dict[str, int] = {"ltm-1": 3}
+_STALENESS_DEFAULT = 2
+
+
+def _staleness_limit(period: str) -> int:
+    """Max fiscal-year age before a value is rejected as stale."""
+    p = period.strip().lower()
+    if p.startswith("annual:") or p.startswith("quarterly:"):
+        return 999
+    return _STALENESS_YEARS.get(p, _STALENESS_DEFAULT)
+
+
+def _is_stale(cited: CitedValue, period: str) -> bool:
+    """True when a CitedValue's fiscal year is too far behind the current year."""
+    limit = _staleness_limit(period)
+    if limit >= 999:
+        return False
+    return cited.fiscal_year < _date.today().year - limit
 
 
 async def _build_doc_map(cik: str, force: bool = False) -> dict[str, str]:
@@ -89,6 +112,8 @@ async def financials(
                 cache=derived_cache,
                 in_progress=set(),
             )
+            if cited is not None and _is_stale(cited, period):
+                cited = None
             result_metrics[metric] = cited
         else:
             resolved = resolve_concept(metric, facts)
@@ -110,8 +135,19 @@ async def financials(
             )
 
             if isinstance(value, list):
+                scope_warn = get_scope_warning(concept)
+                if scope_warn:
+                    for v in value:
+                        v.warnings.append(scope_warn)
                 result_metrics[metric] = value if value else None
             else:
+                if value is not None and _is_stale(value, period):
+                    result_metrics[metric] = None
+                    continue
+                if value is not None:
+                    scope_warn = get_scope_warning(concept)
+                    if scope_warn:
+                        value.warnings.append(scope_warn)
                 result_metrics[metric] = value
 
     # Post-resolution sanity check: flag anomalously low total_debt relative
@@ -247,6 +283,18 @@ def _compute_derived(
                 comp_value = value[0] if value else None
             else:
                 comp_value = value
+
+            # Staleness guard on components
+            if comp_value is not None and _is_stale(comp_value, period):
+                in_progress.discard(metric)
+                cache[metric] = None
+                return None
+
+            # Scope warning on component
+            if comp_value is not None:
+                scope_warn = get_scope_warning(concept)
+                if scope_warn:
+                    comp_value.warnings.append(scope_warn)
 
         if comp_value is None or comp_value.value is None:
             in_progress.discard(metric)
