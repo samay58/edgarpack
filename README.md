@@ -70,6 +70,18 @@ edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
 edgarpack comps NVDA AMD INTC --metrics revenue --period ltm-1
 ```
 
+### Query Periods At A Glance
+
+- `lfy`: last fiscal year
+- `mrq`: most recent quarter (standalone 3-month value for duration metrics)
+- `mrp`: most recent reported period
+- `ltm`: trailing twelve months
+- `ltm-1`: prior-year trailing twelve months (same formula, one fiscal-year-shifted anchor)
+- `annual:N`: last `N` fiscal years
+- `quarterly:N`: last `N` quarters
+
+For complete query behavior, JSON format details, and citation model notes, see `docs/QUERY.md`.
+
 ## Output Layout
 
 ```text

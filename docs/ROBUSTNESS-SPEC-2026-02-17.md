@@ -1,5 +1,7 @@
 # EdgarPack Robustness Spec (2026-02-17)
 
+Status: Implemented in `main` on 2026-02-17 (`ltm-1` support, docs, and regression coverage).
+
 ## Context
 Production testing surfaced follow-up work tracked in beads, with `edgarpack-jfm` (`P1`) as the primary correctness gap. The goal is to improve reliability without adding abstraction bloat.
 

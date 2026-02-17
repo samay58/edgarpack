@@ -1,6 +1,6 @@
 # Cost Model and Production Readiness Analysis
 
-Last updated: 2026-02-15
+Last updated: 2026-02-17
 
 ## Request Flow Per Query Type
 
@@ -171,6 +171,7 @@ An honest assessment of what the query layer can and cannot do for investment ba
 | `mrq` | Most Recent Quarter (standalone 3-month value) | Works (fixed: now filters by duration to avoid cumulative YTD) |
 | `mrp` | Most Recent Period (whatever was filed last) | Works |
 | `ltm` | Last Twelve Months (MRP_cumulative + LFY - MRP_prior_cumulative) | Works (fixed: now picks cumulative values for the formula) |
+| `ltm-1` | Prior-Year Last Twelve Months (same formula, one-year-shifted anchor) | Works (with graceful fallback to anchored reported value when shifted history is incomplete) |
 | `annual:N` | Last N fiscal years | Works |
 | `quarterly:N` | Last N standalone quarters | Works (fixed: same duration filtering as MRQ) |
 
@@ -212,5 +213,5 @@ SEC companyfacts frequently contains both cumulative YTD and standalone 3-month 
 Both carry `fp=Q3, form=10-Q`. The query layer handles this by filtering on duration:
 
 - **MRQ / quarterly:N**: Picks entries with duration <= 100 days (standalone). The 100-day threshold accommodates fiscal quarters that aren't exactly 90 days (4-4-5 calendars, etc.).
-- **LTM**: Picks entries with the longest duration (cumulative YTD), since the LTM formula `MRP + LFY - MRP_prior` requires cumulative values.
+- **LTM / LTM-1**: Picks entries with the longest duration (cumulative YTD), since the formula `MRP + LFY - MRP_prior` requires cumulative values.
 - **Q1 values**: Cumulative and standalone are identical for Q1 (both ~90 days from fiscal year start), so no ambiguity exists.

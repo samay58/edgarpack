@@ -9,7 +9,7 @@ Ticker/CIK
   -> resolve_ticker()          # SEC company search
   -> fetch_company_facts()     # XBRL companyfacts JSON
   -> resolve_concept()         # Map "revenue" to the GAAP tag this company uses
-  -> select_period()           # Pick LFY, MRQ, LTM, or series
+  -> select_period()           # Pick LFY, MRQ, MRP, LTM/LTM-1, or series
   -> CitedValue / DerivedValue # Every value carries its provenance
 ```
 
@@ -83,7 +83,11 @@ Where MRP is the most recent quarterly cumulative value, LFY is the last full fi
 
 `ltm-1` uses the same formula, but shifts the quarter anchor one fiscal year back before computing the window.
 
-For instant metrics (balance sheet): LTM returns the most recent reported value.
+For instant metrics (balance sheet): both `ltm` and `ltm-1` return the most recent reported value.
+
+### LTM-1 Fallback Behavior
+
+`ltm-1` is anchored one fiscal year behind the latest quarter. If SEC history is missing required prior-year components for the full formula window, the selector degrades gracefully to the best anchored reported value instead of raising an error or fabricating values.
 
 ## Concept Resolution
 
