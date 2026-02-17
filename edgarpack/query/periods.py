@@ -159,6 +159,12 @@ def _is_cumulative_quarter(v: dict[str, Any]) -> bool:
     return days > 100
 
 
+def _is_per_share_metric(metric: str) -> bool:
+    """Check if a metric is per-share (sensitive to stock splits)."""
+    m = metric.lower()
+    return "per_share" in m or "eps" in m
+
+
 def _quarter_months(fp: str) -> int:
     """Return the cumulative months for a fiscal period (Q1=3, Q2=6, Q3=9)."""
     return {"Q1": 3, "Q2": 6, "Q3": 9, "Q4": 12, "FY": 12}.get(fp.upper(), 0)
@@ -274,8 +280,23 @@ def _select_ltm_like(
         and v.get("end")
     ]
     if not quarterly:
-        return select_lfy(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        if years_back == 0:
+            return select_lfy(
+                facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+        # Annual-only filer (e.g. 20-F): return the (years_back+1)th most recent annual value
+        annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
+        if not annual:
+            return None
+        annual.sort(
+            key=lambda v: (int(v.get("fy") or 0), v.get("end", "")),
+            reverse=True,
+        )
+        if len(annual) <= years_back:
+            return None  # Not enough history
+        target = annual[years_back]
+        return _value_to_cited(
+            target, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
 
     quarterly.sort(key=_quarter_recency_key, reverse=True)
@@ -364,6 +385,16 @@ def _select_ltm_like(
         mrp_prior, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
     )
 
+    # Stock split contamination check for per-share metrics
+    split_warnings: list[str] = []
+    if _is_per_share_metric(metric) and lfy_cited.value and lfy_cited.value != 0:
+        ratio = abs(ltm_val / lfy_cited.value)
+        if ratio > 5.0 or ratio < 0.2:
+            split_warnings.append(
+                f"Possible stock split contamination: LTM-derived value differs "
+                f"from annual by {ratio:.1f}x"
+            )
+
     return DerivedValue(
         value=ltm_val,
         unit=unit,
@@ -386,6 +417,7 @@ def _select_ltm_like(
             "lfy": lfy_cited,
             "mrp_prior": prior_cited,
         },
+        warnings=split_warnings,
     )
 
 

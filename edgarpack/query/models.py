@@ -6,7 +6,7 @@ import re
 from datetime import date
 from urllib.parse import quote
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..config import SEC_ARCHIVES_BASE, SEC_DATA_BASE
 
@@ -43,6 +43,7 @@ class CitedValue(BaseModel):
     # Deep linking
     taxonomy: str = "us-gaap"
     primary_document: str = ""
+    warnings: list[str] = Field(default_factory=list)
 
     @property
     def filing_url(self) -> str:

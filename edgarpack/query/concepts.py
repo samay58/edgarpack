@@ -170,6 +170,9 @@ METRIC_MAP: dict[str, MetricMeta] = {
     ),
     "total_debt": MetricMeta(
         concepts=(
+            "LongTermDebtAndCapitalLeaseObligationsCurrent",
+            "DebtLongTermAndShortTermCombinedAmount",
+            "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
             "DebtInstrumentCarryingAmount",
             "LongTermDebt",
             "LongTermDebtNoncurrent",

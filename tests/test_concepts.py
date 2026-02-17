@@ -281,6 +281,58 @@ class TestIfrsFallback(unittest.TestCase):
         self.assertEqual(taxonomy, "ifrs-full")
 
 
+class TestDebtConceptPriority(unittest.TestCase):
+    """Broader debt tags should resolve before narrow ones when both exist."""
+
+    def test_broad_debt_tag_resolves_first(self) -> None:
+        """When a company reports under a combined debt tag, it should win over narrow tags."""
+        facts = {
+            "us-gaap": {
+                "DebtLongTermAndShortTermCombinedAmount": {
+                    "units": {"USD": [{"val": 160_000_000_000, "fy": 2025, "fp": "FY"}]}
+                },
+                "LongTermDebt": {
+                    "units": {"USD": [{"val": 291_000_000, "fy": 2025, "fp": "FY"}]}
+                },
+            }
+        }
+        result = resolve_concept("total_debt", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(concept, "DebtLongTermAndShortTermCombinedAmount")
+        self.assertEqual(taxonomy, "us-gaap")
+
+    def test_narrow_debt_fallback_when_broad_missing(self) -> None:
+        """Company without broad debt tags falls through to narrow tags."""
+        facts = {
+            "us-gaap": {
+                "LongTermDebt": {
+                    "units": {"USD": [{"val": 5_000_000_000, "fy": 2025, "fp": "FY"}]}
+                },
+            }
+        }
+        result = resolve_concept("total_debt", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(concept, "LongTermDebt")
+        self.assertEqual(taxonomy, "us-gaap")
+
+    def test_inclusive_current_maturities_tag(self) -> None:
+        """The including-current-maturities tag should also be checked."""
+        facts = {
+            "us-gaap": {
+                "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities": {
+                    "units": {"USD": [{"val": 120_000_000_000, "fy": 2025, "fp": "FY"}]}
+                },
+            }
+        }
+        result = resolve_concept("total_debt", facts)
+        self.assertIsNotNone(result)
+        concept, _ = result
+        expected = "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities"
+        self.assertEqual(concept, expected)
+
+
 class TestGetMetricMeta(unittest.TestCase):
     def test_known_metric(self) -> None:
         meta = get_metric_meta("revenue")

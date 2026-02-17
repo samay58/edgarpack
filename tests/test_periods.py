@@ -513,13 +513,15 @@ class TestSelectLtmMinus1(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 650_000_000_000)
 
-    def test_ltm_minus_1_annual_only_fallback(self) -> None:
-        """With only annual data, LTM-1 should fall back to LFY."""
+    def test_ltm_minus_1_annual_only_returns_prior_year(self) -> None:
+        """With only annual data, LTM-1 should return the second most recent annual (prior FY)."""
         annual_only = [v for v in REVENUE_VALUES if v["fp"] == "FY"]
         facts = _make_facts("Revenues", annual_only)
         result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
-        self.assertEqual(result.value, 100_000_000_000)
+        # FY2023=$100B is most recent, FY2022=$80B is prior -> LTM-1 returns $80B
+        self.assertEqual(result.value, 80_000_000_000)
+        self.assertEqual(result.fiscal_year, 2022)
 
     def test_ltm_minus_1_missing_prior_returns_anchor_quarter(self) -> None:
         """If LTM-1 prior-year comparable is missing, return anchored quarter value."""
@@ -816,6 +818,233 @@ class TestAnnualFormDetection(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 28_262_000_000)
         self.assertEqual(result.form_type, "20-F")
+
+
+class TestAnnualOnlyFilerGrowth(unittest.TestCase):
+    """20-F / annual-only filers: LTM-1 should return the prior fiscal year, not the same one."""
+
+    def test_ltm_minus_1_annual_only_returns_prior_year(self) -> None:
+        """With two annual entries and no quarterly data, LTM-1 should pick FY2023 (not FY2024)."""
+        values = [
+            {
+                "val": 70_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-04-01",
+            },
+            {
+                "val": 90_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-04-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 70_000_000_000)
+        self.assertEqual(result.fiscal_year, 2023)
+
+    def test_ltm_minus_1_annual_only_insufficient_history(self) -> None:
+        """With only one annual entry, LTM-1 should return None (not enough data)."""
+        values = [
+            {
+                "val": 90_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-04-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNone(result)
+
+
+class TestStockSplitWarning(unittest.TestCase):
+    """Per-share metrics should carry a warning when values jump suspiciously (stock split)."""
+
+    def test_per_share_split_warning(self) -> None:
+        """EPS with extreme ratio between LTM-derived and annual should trigger a warning."""
+        eps_meta = MetricMeta(concepts=("EarningsPerShareDiluted",), duration=True)
+        # Simulate a large split: FY annual is pre-split ($50), Q3 prior is pre-split ($41),
+        # but Q3 current is post-split ($0.5). LTM = 0.5 + 50 - 41 = 9.5.
+        # ratio = |9.5 / 50| = 0.19 < 0.2 threshold => warning triggered.
+        values = [
+            {
+                "val": 50.0,
+                "start": "2023-01-30",
+                "end": "2024-01-28",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 41.0,
+                "start": "2023-01-30",
+                "end": "2023-10-29",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-12-01",
+            },
+            {
+                "val": 0.5,
+                "start": "2024-01-29",
+                "end": "2024-10-27",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-12-01",
+            },
+        ]
+        facts = _make_facts("EarningsPerShareDiluted", values)
+        result = select_ltm(
+            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
+        )
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, DerivedValue)
+        self.assertAlmostEqual(result.value, 9.5)
+        self.assertTrue(
+            any("stock split contamination" in w.lower() for w in result.warnings),
+            f"Expected split warning, got: {result.warnings}",
+        )
+
+    def test_non_per_share_no_warning(self) -> None:
+        """Revenue should never get a split warning regardless of value jumps."""
+        facts = _make_facts("Revenues", REVENUE_VALUES)
+        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, DerivedValue)
+        self.assertEqual(result.warnings, [])
+
+
+class TestEdgeCaseBoundary(unittest.TestCase):
+    """Additional edge cases for boundary conditions in period selection."""
+
+    def test_ltm_single_quarter_available(self) -> None:
+        """Only Q1 exists; LTM should degrade to LFY when no full window can be built."""
+        values = [
+            {
+                "val": 100_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 28_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-03-31",
+                "fy": 2024,
+                "fp": "Q1",
+                "form": "10-Q",
+                "accn": "0000000001-24-000002",
+                "filed": "2024-05-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        # Q1 anchor with no prior-year Q1 should degrade gracefully
+        # (either returns a partial value or the MRP itself)
+
+    def test_ltm_minus_1_only_two_years_data(self) -> None:
+        """Exactly 2 annual values; LTM-1 should pick the older one for annual-only filer."""
+        values = [
+            {
+                "val": 50_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-04-01",
+            },
+            {
+                "val": 65_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-04-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 50_000_000_000)
+        self.assertEqual(result.fiscal_year, 2022)
+
+    def test_fiscal_year_boundary_crossing(self) -> None:
+        """Company with Jan FY end; verify LTM works across calendar-year boundary."""
+        values = [
+            {
+                "val": 100_000_000_000,
+                "start": "2023-02-01",
+                "end": "2024-01-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-04-01",
+            },
+            {
+                "val": 78_000_000_000,
+                "start": "2023-02-01",
+                "end": "2023-10-31",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-12-15",
+            },
+            {
+                "val": 88_000_000_000,
+                "start": "2024-02-01",
+                "end": "2024-10-31",
+                "fy": 2025,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-12-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, DerivedValue)
+        # LTM = 88 + 100 - 78 = 110
+        self.assertEqual(result.value, 110_000_000_000)
+
+    def test_instant_metric_ltm_minus_1(self) -> None:
+        """Balance sheet metric should return latest value regardless of years_back."""
+        facts = _make_facts("Assets", ASSETS_VALUES)
+        result = select_ltm_minus_1(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        # Instant metrics always return the most recent value
+        self.assertEqual(result.value, 650_000_000_000)
 
 
 if __name__ == "__main__":
