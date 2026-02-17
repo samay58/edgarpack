@@ -125,7 +125,7 @@ ruff check .
 ruff format --check .
 
 # Tests
-python3 -m unittest discover -s tests
+python3 -m pytest tests/ -x -v
 ```
 
 ## SEC Compliance Notes

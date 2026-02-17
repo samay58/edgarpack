@@ -21,7 +21,7 @@ Core properties:
 uv pip install -e ".[dev]"
 
 # Tests
-python3 -m unittest discover -s tests
+python3 -m pytest tests/ -x -v
 
 # Lint and formatting checks
 ruff check .
@@ -70,7 +70,7 @@ Pack assembly and artifact generation.
 
 Financial query layer over SEC companyfacts.
 
-- Concept resolution from metric names to GAAP/IFRS tags. `total_debt` includes broader tags (`DebtLongTermAndShortTermCombinedAmount`, `LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities`) for captive-finance companies like Ford.
+- Concept resolution from metric names to GAAP/IFRS tags. `total_debt` prioritizes non-lease debt concepts first, with lease-inclusive tags as fallback for sparse filers.
 - Period selection (`lfy`, `mrq`, `mrp`, `ltm`, `ltm-1`, series selectors). LTM-1 for annual-only filers (20-F) returns the prior fiscal year instead of the same year.
 - Derived metrics with component-level provenance and recursion guards.
 - Data quality guards: staleness rejection (2-year default, 3 for `ltm-1`, disabled for series), segment-vs-consolidated filtering via SEC `frame` field, and concept scope warnings for known mismatches (COGS breadth, lease-inclusive debt, cash-plus-investments).

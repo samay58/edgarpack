@@ -164,6 +164,12 @@ def _is_quarterly(v: dict[str, Any]) -> bool:
     return fp in ("Q1", "Q2", "Q3", "Q4")
 
 
+def _is_quarter_form_type(form: str) -> bool:
+    """Check if a form type can carry quarterly values."""
+    form_upper = form.strip().upper()
+    return form_upper.startswith("10-Q") or form_upper in ("10-K", "10-K/A", "20-F", "20-F/A")
+
+
 def _duration_days(v: dict[str, Any]) -> int | None:
     """Compute the number of days between start and end dates.
 
@@ -173,7 +179,8 @@ def _duration_days(v: dict[str, Any]) -> int | None:
     end = _parse_date(v.get("end", ""))
     if start is None or end is None:
         return None
-    return (end - start).days
+    days = (end - start).days
+    return days if days >= 0 else None
 
 
 def _is_standalone_quarter(v: dict[str, Any]) -> bool:
@@ -320,7 +327,7 @@ def _select_ltm_like(
     quarterly = [
         v
         for v in values
-        if str(v.get("form", "")).upper().startswith("10-Q")
+        if _is_quarter_form_type(str(v.get("form", "")))
         and _is_quarterly(v)
         and v.get("val") is not None
         and v.get("start")
@@ -533,7 +540,7 @@ def select_mrq(
             for v in values
             if str(v.get("fp", "")).upper() in ("Q1", "Q2", "Q3", "Q4")
             and v.get("val") is not None
-            and str(v.get("form", "")) in ("10-Q", "10-K")
+            and _is_quarter_form_type(str(v.get("form", "")))
             and _is_standalone_quarter(v)
         ]
         if not quarterly:

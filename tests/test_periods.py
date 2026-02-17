@@ -258,6 +258,25 @@ class TestSelectMrq(unittest.TestCase):
         self.assertEqual(result.fiscal_period, "Q1")
         self.assertEqual(result.value, 30_000_000_000)
 
+    def test_mrq_accepts_10q_amendment(self) -> None:
+        """MRQ should treat amended quarterly forms as valid quarter sources."""
+        values = [
+            {
+                "val": 10_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-03-31",
+                "fy": 2024,
+                "fp": "Q1",
+                "form": "10-Q/A",
+                "accn": "0000000001-24-000010",
+                "filed": "2024-05-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_mrq(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 10_000_000_000)
+
     def test_mrq_instant(self) -> None:
         facts = _make_facts("Assets", ASSETS_VALUES)
         result = select_mrq(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
@@ -335,6 +354,57 @@ class TestSelectLtm(unittest.TestCase):
         result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 100_000_000_000)
+
+    def test_ltm_q4_from_10k_short_circuits_to_annual(self) -> None:
+        """Q4 values reported in 10-K should short-circuit LTM to the annual value."""
+        values = [
+            {
+                "val": 100_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 75_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-09-30",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-11-15",
+            },
+            {
+                "val": 120_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+            {
+                "val": 120_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "Q4",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertNotIsInstance(result, DerivedValue)
+        self.assertEqual(result.value, 120_000_000_000)
+        self.assertEqual(result.fiscal_period, "FY")
 
     def test_ltm_non_calendar_fiscal_year_uses_prior_year_same_quarter(self) -> None:
         """LTM should match the prior fiscal year's same quarter for non-calendar filers."""

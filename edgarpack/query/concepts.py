@@ -170,15 +170,18 @@ METRIC_MAP: dict[str, MetricMeta] = {
     ),
     "total_debt": MetricMeta(
         concepts=(
-            "LongTermDebtAndCapitalLeaseObligationsCurrent",
             "DebtLongTermAndShortTermCombinedAmount",
-            "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
             "DebtInstrumentCarryingAmount",
             "LongTermDebt",
             "LongTermDebtNoncurrent",
+            # Lease-inclusive debt tags are intentionally lower priority so
+            # operating leases can be handled separately when requested.
+            "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
             # Keep lease-inclusive tags as a fallback to avoid double counting when
             # lease liabilities are queried as a separate metric.
             "LongTermDebtAndCapitalLeaseObligations",
+            # Current-only debt is a last resort fallback for sparse filers.
+            "LongTermDebtAndCapitalLeaseObligationsCurrent",
         ),
         duration=False,
         ifrs_concepts=("Borrowings", "BorrowingsNoncurrent", "BorrowingsCurrent"),
@@ -212,6 +215,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "DebtCurrent",
             "ShortTermBorrowings",
             "LongTermDebtCurrent",
+            "LongTermDebtAndCapitalLeaseObligationsCurrent",
         ),
         duration=False,
     ),
@@ -494,6 +498,10 @@ CONCEPT_SCOPE_WARNINGS: dict[str, str] = {
     "CashCashEquivalentsAndShortTermInvestments": (
         "Includes short-term investments alongside cash equivalents. "
         "May overstate pure cash position."
+    ),
+    "LongTermDebtAndCapitalLeaseObligationsCurrent": ("Current portion only. Not total debt."),
+    "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities": (
+        "Includes capital lease obligations and current maturities."
     ),
     "LongTermDebtAndCapitalLeaseObligations": (
         "Includes capital lease obligations alongside financial debt."

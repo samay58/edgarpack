@@ -136,7 +136,7 @@ class DerivedValue(CitedValue):
     """For computed metrics (margins, ratios). Carries source components."""
 
     derived: bool = True
-    components: dict[str, CitedValue] = {}
+    components: dict[str, CitedValue] = Field(default_factory=dict)
 
     @property
     def citation(self) -> str:

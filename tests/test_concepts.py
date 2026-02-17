@@ -130,6 +130,23 @@ class TestResolveConceptFallback(unittest.TestCase):
         concept, _taxonomy = result
         self.assertEqual(concept, "CashAndCashEquivalentsAtCarryingValue")
 
+    def test_total_debt_does_not_prefer_current_only_tag(self) -> None:
+        """total_debt should not resolve to a current-only debt tag when broader debt exists."""
+        facts = {
+            "us-gaap": {
+                "LongTermDebtAndCapitalLeaseObligationsCurrent": {
+                    "units": {"USD": [{"val": 8_000_000_000, "fy": 2025, "fp": "FY"}]}
+                },
+                "LongTermDebt": {
+                    "units": {"USD": [{"val": 60_000_000_000, "fy": 2025, "fp": "FY"}]}
+                },
+            }
+        }
+        result = resolve_concept("total_debt", facts)
+        self.assertIsNotNone(result)
+        concept, _taxonomy = result
+        self.assertEqual(concept, "LongTermDebt")
+
 
 class TestResolveConceptRecency(unittest.TestCase):
     def test_prefers_concept_with_newer_annual_data(self) -> None:
@@ -373,6 +390,13 @@ class TestScopeWarnings(unittest.TestCase):
 
     def test_lease_debt_warning(self) -> None:
         warning = get_scope_warning("LongTermDebtAndCapitalLeaseObligations")
+        self.assertIsNotNone(warning)
+        self.assertIn("lease", warning.lower())
+
+    def test_lease_debt_including_current_warning(self) -> None:
+        warning = get_scope_warning(
+            "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities"
+        )
         self.assertIsNotNone(warning)
         self.assertIn("lease", warning.lower())
 

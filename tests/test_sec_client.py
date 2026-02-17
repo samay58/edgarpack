@@ -18,6 +18,9 @@ class TestRetryAfterParsing(unittest.TestCase):
     def test_parse_retry_after_negative_clamps_to_zero(self) -> None:
         self.assertEqual(_parse_retry_after({"Retry-After": "-5"}), 0.0)
 
+    def test_parse_retry_after_header_is_case_insensitive(self) -> None:
+        self.assertEqual(_parse_retry_after({"retry-after": "7"}), 7.0)
+
     def test_parse_retry_after_http_date(self) -> None:
         retry_at = datetime.now(UTC) + timedelta(seconds=120)
         parsed = _parse_retry_after({"Retry-After": format_datetime(retry_at)})

@@ -172,7 +172,7 @@ def _maybe_gunzip(content: bytes, headers: dict[str, str]) -> bytes:
 
 def _parse_retry_after(headers: dict[str, str]) -> float | None:
     """Parse Retry-After in seconds or HTTP-date and clamp to [0, 60]."""
-    value = headers.get("Retry-After")
+    value = next((v for k, v in headers.items() if k.lower() == "retry-after"), None)
     if not value:
         return None
     try:
