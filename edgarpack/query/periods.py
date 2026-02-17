@@ -2,7 +2,8 @@
 
 Handles selecting the right data points from SEC companyfacts JSON based on
 period selectors like ``lfy`` (last fiscal year), ``mrq`` (most recent quarter),
-``ltm`` (last twelve months), ``annual:N``, and ``quarterly:N``.
+``ltm`` / ``ltm-1`` (trailing twelve month windows), ``annual:N``, and
+``quarterly:N``.
 """
 
 from __future__ import annotations
@@ -186,6 +187,208 @@ def _pick_cumulative_quarter(values: list[dict[str, Any]]) -> dict[str, Any] | N
     return candidates[0] if candidates else None
 
 
+def _pick_anchor_quarter(
+    quarterly: list[dict[str, Any]],
+    newest: dict[str, Any],
+    years_back: int,
+) -> dict[str, Any]:
+    """Pick the quarter anchor for LTM-like windows.
+
+    ``years_back=0`` anchors to the newest quarter (LTM).
+    ``years_back=1`` anchors one fiscal year earlier (LTM-1).
+    """
+    newest_fp = str(newest.get("fp", "")).upper()
+    newest_fy = int(newest.get("fy") or 0)
+
+    if years_back <= 0:
+        return newest
+
+    same_period = [
+        v
+        for v in quarterly
+        if str(v.get("fp", "")).upper() == newest_fp and v.get("val") is not None
+    ]
+    target_fy = newest_fy - years_back
+    target = [v for v in same_period if int(v.get("fy") or 0) == target_fy]
+    if target:
+        picked = _pick_cumulative_quarter(target)
+        if picked is not None:
+            return picked
+
+    # Graceful fallback for sparse histories: nearest prior fiscal year same quarter.
+    prior = [v for v in same_period if int(v.get("fy") or 0) < newest_fy]
+    if prior:
+        best_fy = max(int(v.get("fy") or 0) for v in prior)
+        best = [v for v in prior if int(v.get("fy") or 0) == best_fy]
+        picked = _pick_cumulative_quarter(best)
+        if picked is not None:
+            return picked
+
+    return newest
+
+
+def _annual_for_fy(values: list[dict[str, Any]], fiscal_year: int) -> dict[str, Any] | None:
+    """Pick the most recently filed annual value for a specific fiscal year."""
+    annual = [v for v in values if _is_annual(v) and int(v.get("fy") or 0) == fiscal_year]
+    if not annual:
+        return None
+    annual.sort(
+        key=lambda v: (
+            _parse_date(v.get("filed", "")) or date.min,
+            _parse_date(v.get("end", "")) or date.min,
+        ),
+        reverse=True,
+    )
+    return annual[0]
+
+
+def _select_ltm_like(
+    facts: dict[str, Any],
+    concept: str,
+    metric: str,
+    meta: MetricMeta,
+    company: str,
+    cik: str,
+    years_back: int,
+    fiscal_period_label: str,
+    taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
+) -> CitedValue | DerivedValue | None:
+    """Compute LTM-style periods anchored to a shifted quarter."""
+    if not meta.duration:
+        # Balance sheet: just return the most recent value.
+        return select_mrp(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+
+    values = _extract_values(facts, concept, taxonomy=taxonomy)
+    unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+
+    quarterly = [
+        v
+        for v in values
+        if str(v.get("form", "")).upper().startswith("10-Q")
+        and _is_quarterly(v)
+        and v.get("val") is not None
+        and v.get("start")
+        and v.get("end")
+    ]
+    if not quarterly:
+        return select_lfy(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+
+    quarterly.sort(key=_quarter_recency_key, reverse=True)
+    newest = quarterly[0]
+    newest_key = (
+        int(newest.get("fy") or 0),
+        str(newest.get("fp", "")).upper(),
+        _parse_date(newest.get("end", "")) or date.min,
+    )
+    newest_candidates = [
+        v
+        for v in quarterly
+        if (
+            int(v.get("fy") or 0),
+            str(v.get("fp", "")).upper(),
+            _parse_date(v.get("end", "")) or date.min,
+        )
+        == newest_key
+    ]
+    newest_mrp = _pick_cumulative_quarter(newest_candidates) or newest
+    mrp = _pick_anchor_quarter(quarterly, newest_mrp, years_back)
+
+    mrp_fp = str(mrp.get("fp", "")).upper()
+    mrp_fy = int(mrp.get("fy") or 0)
+
+    if mrp_fp in ("FY", "Q4"):
+        annual_mrp = _annual_for_fy(values, mrp_fy)
+        if annual_mrp is not None:
+            return _value_to_cited(
+                annual_mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+
+    annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
+    if not annual:
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+
+    annual.sort(
+        key=lambda v: (
+            int(v.get("fy") or 0),
+            _parse_date(v.get("filed", "")) or date.min,
+            _parse_date(v.get("end", "")) or date.min,
+        ),
+        reverse=True,
+    )
+
+    lfy_target_fy = mrp_fy - 1
+    lfy = next((v for v in annual if int(v.get("fy") or 0) == lfy_target_fy), None)
+    if lfy is None:
+        lfy = next((v for v in annual if int(v.get("fy") or 0) < mrp_fy), None)
+    if lfy is None:
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+
+    lfy_fy = int(lfy.get("fy") or 0)
+    prior_year = [
+        v
+        for v in quarterly
+        if str(v.get("fp", "")).upper() == mrp_fp
+        and int(v.get("fy") or 0) == lfy_fy
+        and v.get("val") is not None
+    ]
+    mrp_prior = _pick_cumulative_quarter(prior_year)
+    if mrp_prior is None:
+        return _value_to_cited(
+            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+
+    mrp_val = float(mrp.get("val") or 0)
+    lfy_val = float(lfy.get("val") or 0)
+    prior_val = float(mrp_prior.get("val") or 0)
+    ltm_val = mrp_val + lfy_val - prior_val
+
+    mrp_cited = _value_to_cited(
+        mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
+    lfy_cited = _value_to_cited(
+        lfy, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
+    prior_cited = _value_to_cited(
+        mrp_prior, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+    )
+
+    return DerivedValue(
+        value=ltm_val,
+        unit=unit,
+        metric=metric,
+        concept=concept,
+        period_start=lfy_cited.period_start,
+        period_end=mrp_cited.period_end,
+        fiscal_year=mrp_cited.fiscal_year,
+        fiscal_period=fiscal_period_label,
+        form_type=mrp_cited.form_type,
+        filed=mrp_cited.filed,
+        accession=mrp_cited.accession,
+        cik=cik,
+        company=company,
+        taxonomy=taxonomy,
+        primary_document=mrp_cited.primary_document,
+        derived=True,
+        components={
+            "mrp": mrp_cited,
+            "lfy": lfy_cited,
+            "mrp_prior": prior_cited,
+        },
+    )
+
+
 def select_lfy(
     facts: dict[str, Any],
     concept: str,
@@ -317,152 +520,42 @@ def select_ltm(
     quarter matching based on duration (Q2+ entries >100 days). Instant metrics
     degrade to the latest reported value.
     """
-    if not meta.duration:
-        # Balance sheet: just return the most recent value
-        return select_mrp(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    values = _extract_values(facts, concept, taxonomy=taxonomy)
-    unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
-
-    # Find the most recent 10-Q period.
-    quarterly = [
-        v
-        for v in values
-        if str(v.get("form", "")).upper().startswith("10-Q")
-        and _is_quarterly(v)
-        and v.get("val") is not None
-        and v.get("start")
-        and v.get("end")
-    ]
-    if not quarterly:
-        # No quarterly data; fall back to last annual
-        return select_lfy(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    quarterly.sort(key=_quarter_recency_key, reverse=True)
-    newest = quarterly[0]
-    newest_key = (
-        int(newest.get("fy") or 0),
-        str(newest.get("fp", "")).upper(),
-        _parse_date(newest.get("end", "")) or date.min,
-    )
-    mrp_candidates = [
-        v
-        for v in quarterly
-        if (
-            int(v.get("fy") or 0),
-            str(v.get("fp", "")).upper(),
-            _parse_date(v.get("end", "")) or date.min,
-        )
-        == newest_key
-    ]
-    mrp = _pick_cumulative_quarter(mrp_candidates) or newest
-
-    mrp_fp = str(mrp.get("fp", "")).upper()
-    mrp_fy = int(mrp.get("fy", 0))
-
-    # If MRP is Q4/FY equivalent, use the annual value when available.
-    if mrp_fp in ("FY", "Q4"):
-        annual_value = select_lfy(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-        if annual_value is not None:
-            return annual_value
-        return _value_to_cited(
-            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    # Find the LFY (annual value for the prior fiscal year)
-    annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
-    if not annual:
-        return _value_to_cited(
-            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    annual.sort(
-        key=lambda v: (
-            int(v.get("fy") or 0),
-            _parse_date(v.get("filed", "")) or date.min,
-            _parse_date(v.get("end", "")) or date.min,
-        ),
-        reverse=True,
-    )
-
-    # LFY should be the fiscal year immediately prior to MRP.
-    target_prior_fy = mrp_fy - 1
-    lfy = next((v for v in annual if int(v.get("fy") or 0) == target_prior_fy), None)
-    if lfy is None:
-        lfy = next((v for v in annual if int(v.get("fy") or 0) < mrp_fy), None)
-
-    if lfy is None:
-        return _value_to_cited(
-            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    lfy_fy = int(lfy.get("fy", 0))
-
-    # Find MRP_prior: same fiscal period, one year earlier.
-    prior_year = [
-        v
-        for v in quarterly
-        if str(v.get("fp", "")).upper() == mrp_fp
-        and int(v.get("fy") or 0) == lfy_fy
-        and v.get("val") is not None
-    ]
-
-    if not prior_year:
-        # Can't compute LTM without prior year comparable
-        return _value_to_cited(
-            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    mrp_prior = _pick_cumulative_quarter(prior_year)
-    if mrp_prior is None:
-        return _value_to_cited(
-            mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-
-    # LTM = MRP + LFY - MRP_prior
-    mrp_val = float(mrp.get("val") or 0)
-    lfy_val = float(lfy.get("val") or 0)
-    prior_val = float(mrp_prior.get("val") or 0)
-    ltm_val = mrp_val + lfy_val - prior_val
-
-    mrp_cited = _value_to_cited(
-        mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-    )
-    lfy_cited = _value_to_cited(
-        lfy, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-    )
-    prior_cited = _value_to_cited(
-        mrp_prior, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-    )
-
-    return DerivedValue(
-        value=ltm_val,
-        unit=unit,
-        metric=metric,
-        concept=concept,
-        period_start=lfy_cited.period_start,
-        period_end=mrp_cited.period_end,
-        fiscal_year=mrp_cited.fiscal_year,
-        fiscal_period="LTM",
-        form_type=mrp_cited.form_type,
-        filed=mrp_cited.filed,
-        accession=mrp_cited.accession,
-        cik=cik,
-        company=company,
+    return _select_ltm_like(
+        facts,
+        concept,
+        metric,
+        meta,
+        company,
+        cik,
+        years_back=0,
+        fiscal_period_label="LTM",
         taxonomy=taxonomy,
-        primary_document=mrp_cited.primary_document,
-        derived=True,
-        components={
-            "mrp": mrp_cited,
-            "lfy": lfy_cited,
-            "mrp_prior": prior_cited,
-        },
+        doc_map=doc_map,
+    )
+
+
+def select_ltm_minus_1(
+    facts: dict[str, Any],
+    concept: str,
+    metric: str,
+    meta: MetricMeta,
+    company: str,
+    cik: str,
+    taxonomy: str = "us-gaap",
+    doc_map: dict[str, str] | None = None,
+) -> CitedValue | DerivedValue | None:
+    """Compute prior-year trailing twelve months (LTM-1)."""
+    return _select_ltm_like(
+        facts,
+        concept,
+        metric,
+        meta,
+        company,
+        cik,
+        years_back=1,
+        fiscal_period_label="LTM-1",
+        taxonomy=taxonomy,
+        doc_map=doc_map,
     )
 
 
@@ -598,6 +691,10 @@ def select_period(
         )
     elif period == "ltm":
         return select_ltm(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+    elif period == "ltm-1":
+        return select_ltm_minus_1(
             facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
     elif period.startswith("annual:"):

@@ -140,7 +140,7 @@ class DerivedValue(CitedValue):
     @property
     def citation(self) -> str:
         """LTM values cite the underlying real filings."""
-        if self.fiscal_period == "LTM" and self.components:
+        if self.fiscal_period.upper().startswith("LTM") and self.components:
             sources = [v.citation for v in self.components.values()]
             return f"LTM computed from: {'; '.join(sources)}"
         return super().citation
@@ -156,7 +156,7 @@ class DerivedValue(CitedValue):
         d["derived"] = True
         d["formula"] = self.concept  # concept holds the formula for derived metrics
 
-        if self.fiscal_period == "LTM" and self.components:
+        if self.fiscal_period.upper().startswith("LTM") and self.components:
             # LTM components are temporal slices, inline them
             d["formula"] = "mrp + lfy - mrp_prior"
             ltm_comps: dict[str, object] = {}

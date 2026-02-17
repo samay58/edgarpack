@@ -38,6 +38,8 @@ edgarpack query MSFT
 
 # LTM with lean JSON output
 edgarpack query NVDA revenue --period ltm --format json
+# Prior-year trailing twelve months
+edgarpack query NVDA revenue --period ltm-1 --format json
 
 # Full JSON with all provenance fields
 edgarpack query NVDA revenue --format json-full
@@ -54,6 +56,7 @@ edgarpack comps NVDA AAPL --metrics revenue,eps_diluted --format json
 
 # Different period
 edgarpack comps NVDA AMD --metrics revenue --period ltm
+edgarpack comps NVDA AMD --metrics revenue --period ltm-1
 ```
 
 ## Period Selectors
@@ -64,6 +67,7 @@ edgarpack comps NVDA AMD --metrics revenue --period ltm
 | `mrq` | Most recent quarter (standalone 3-month) | Latest quarterly performance |
 | `mrp` | Most recent period (whatever was filed last) | Freshest available data point |
 | `ltm` | Last twelve months (trailing) | Apples-to-apples comparison across fiscal calendars |
+| `ltm-1` | Prior-year trailing twelve months | TTM growth baselines and year-back comps |
 | `annual:N` | Last N fiscal years | Revenue trends, multi-year analysis |
 | `quarterly:N` | Last N quarters (standalone) | Quarterly trend analysis |
 
@@ -76,6 +80,8 @@ LTM = MRP_cumulative + LFY_annual - MRP_prior_year_cumulative
 ```
 
 Where MRP is the most recent quarterly cumulative value, LFY is the last full fiscal year, and MRP_prior is the same quarter from the prior fiscal year. When the MRP is Q4/FY, LTM returns it directly (no formula needed). For Q1, cumulative and standalone are identical, so the formula still works.
+
+`ltm-1` uses the same formula, but shifts the quarter anchor one fiscal year back before computing the window.
 
 For instant metrics (balance sheet): LTM returns the most recent reported value.
 

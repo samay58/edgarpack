@@ -12,6 +12,7 @@ from edgarpack.query.periods import (
     select_ltm,
     select_mrp,
     select_mrq,
+    select_period,
     select_quarterly_series,
 )
 
@@ -431,6 +432,126 @@ class TestSelectLtm(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertNotIsInstance(result, DerivedValue)
         self.assertEqual(result.value, 90_000_000_000)
+
+    def test_ltm_minus_1_shifts_anchor_back_one_year(self) -> None:
+        """LTM-1 should compute prior-year equivalent trailing window."""
+        values = [
+            # FY2022 annual
+            {
+                "val": 80_000_000_000,
+                "start": "2022-01-31",
+                "end": "2023-01-29",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
+            },
+            # Q3 FY2022 cumulative (prior for LTM-1)
+            {
+                "val": 60_000_000_000,
+                "start": "2022-01-31",
+                "end": "2022-10-30",
+                "fy": 2022,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-22-000004",
+                "filed": "2022-12-01",
+            },
+            # FY2023 annual
+            {
+                "val": 100_000_000_000,
+                "start": "2023-01-30",
+                "end": "2024-01-28",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            # Q3 FY2023 cumulative (anchor for LTM-1)
+            {
+                "val": 75_000_000_000,
+                "start": "2023-01-30",
+                "end": "2023-10-29",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-12-01",
+            },
+            # Q3 FY2024 cumulative (latest quarter anchor for LTM)
+            {
+                "val": 105_000_000_000,
+                "start": "2024-01-29",
+                "end": "2024-10-27",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-12-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_period(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "ltm-1")
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, DerivedValue)
+        # LTM-1 = 75 + 80 - 60 = 95
+        self.assertEqual(result.value, 95_000_000_000)
+        self.assertEqual(result.fiscal_period, "LTM-1")
+        self.assertEqual(result.components["mrp"].value, 75_000_000_000)
+        self.assertEqual(result.components["lfy"].value, 80_000_000_000)
+        self.assertEqual(result.components["mrp_prior"].value, 60_000_000_000)
+
+    def test_ltm_minus_1_missing_prior_returns_anchor_quarter(self) -> None:
+        """If LTM-1 prior-year comparable is missing, return anchored quarter value."""
+        values = [
+            {
+                "val": 80_000_000_000,
+                "start": "2022-01-31",
+                "end": "2023-01-29",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
+            },
+            {
+                "val": 100_000_000_000,
+                "start": "2023-01-30",
+                "end": "2024-01-28",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 75_000_000_000,
+                "start": "2023-01-30",
+                "end": "2023-10-29",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-12-01",
+            },
+            {
+                "val": 105_000_000_000,
+                "start": "2024-01-29",
+                "end": "2024-10-27",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-12-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_period(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "ltm-1")
+        self.assertIsNotNone(result)
+        self.assertNotIsInstance(result, DerivedValue)
+        self.assertEqual(result.value, 75_000_000_000)
 
 
 class TestAnnualSeries(unittest.TestCase):

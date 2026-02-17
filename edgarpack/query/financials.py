@@ -47,7 +47,7 @@ async def financials(
         company: Ticker symbol ("NVDA") or CIK number ("1045810").
         metrics: Metric name(s). String for single, list for multiple,
                  None for all available metrics.
-        period: Period selector: "lfy", "mrq", "ltm", "mrp",
+        period: Period selector: "lfy", "mrq", "ltm", "ltm-1", "mrp",
                 "annual:N", "quarterly:N".
         force: Bypass cache.
 

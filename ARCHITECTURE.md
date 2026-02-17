@@ -72,6 +72,8 @@ Example: how EdgarPack gets NVIDIA's LTM revenue.
 5. Compute `LTM = MRP + LFY - MRP prior`.
 6. Return a `DerivedValue` with component citations so each number can be traced to an accession and filing URL.
 
+`ltm-1` uses the same formula but shifts the quarter anchor one fiscal year back.
+
 ## The Citation Model
 
 `CitedValue` is a direct SEC fact with provenance fields: company, CIK, accession, form type, filing date, concept tag, and period metadata.
@@ -147,6 +149,7 @@ Query one company's financials:
 ```bash
 EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
   edgarpack query NVDA revenue,net_income --period ltm
+  edgarpack query NVDA revenue --period ltm-1
 ```
 
 Run a comps table:
@@ -154,6 +157,7 @@ Run a comps table:
 ```bash
 EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
   edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
+  edgarpack comps NVDA AMD INTC --metrics revenue --period ltm-1
 ```
 
 Example comps output:

@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
         "--period",
         "-p",
         default="lfy",
-        help="Period: lfy, mrq, ltm, mrp, annual:N, quarterly:N (default: lfy)",
+        help="Period: lfy, mrq, ltm, ltm-1, mrp, annual:N, quarterly:N (default: lfy)",
     )
     p_query.add_argument(
         "--format",
@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         "--period",
         "-p",
         default="lfy",
-        help="Period: lfy, mrq, ltm, mrp (default: lfy)",
+        help="Period: lfy, mrq, ltm, ltm-1, mrp (default: lfy)",
     )
     p_comps.add_argument(
         "--format",

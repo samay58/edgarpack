@@ -525,6 +525,89 @@ class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(revenue.form_type, "LTM")
         self.assertEqual(revenue.form_type, "10-Q")
 
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_minus_1_has_derived_components(self, mock_resolve, mock_facts, _ms) -> None:
+        """LTM-1 should be derived and include component citations in lean output."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = {
+            "cik": 1045810,
+            "entityName": "NVIDIA CORP",
+            "facts": {
+                "us-gaap": {
+                    "Revenues": {
+                        "units": {
+                            "USD": [
+                                {
+                                    "val": 40_000_000_000,
+                                    "start": "2023-01-30",
+                                    "end": "2024-01-28",
+                                    "fy": 2023,
+                                    "fp": "FY",
+                                    "form": "10-K",
+                                    "accn": "0001045810-24-000001",
+                                    "filed": "2024-02-21",
+                                },
+                                {
+                                    "val": 60_922_000_000,
+                                    "start": "2024-01-29",
+                                    "end": "2025-01-26",
+                                    "fy": 2025,
+                                    "fp": "FY",
+                                    "form": "10-K",
+                                    "accn": "0001045810-25-000001",
+                                    "filed": "2025-02-18",
+                                },
+                                {
+                                    "val": 8_000_000_000,
+                                    "start": "2023-01-30",
+                                    "end": "2023-04-30",
+                                    "fy": 2023,
+                                    "fp": "Q1",
+                                    "form": "10-Q",
+                                    "accn": "0001045810-24-000010",
+                                    "filed": "2024-06-01",
+                                },
+                                {
+                                    "val": 26_000_000_000,
+                                    "start": "2024-01-29",
+                                    "end": "2024-04-28",
+                                    "fy": 2025,
+                                    "fp": "Q1",
+                                    "form": "10-Q",
+                                    "accn": "0001045810-24-000010",
+                                    "filed": "2024-06-01",
+                                },
+                                {
+                                    "val": 35_100_000_000,
+                                    "start": "2025-01-27",
+                                    "end": "2025-04-27",
+                                    "fy": 2026,
+                                    "fp": "Q1",
+                                    "form": "10-Q",
+                                    "accn": "0001045810-25-000020",
+                                    "filed": "2025-06-01",
+                                },
+                            ]
+                        }
+                    },
+                }
+            },
+        }
+
+        result = await financials("NVDA", "revenue", period="ltm-1")
+        revenue = result.metrics["revenue"]
+        self.assertIsNotNone(revenue)
+        self.assertIsInstance(revenue, DerivedValue)
+        self.assertEqual(revenue.fiscal_period, "LTM-1")
+        self.assertIn("LTM computed from:", revenue.citation)
+
+        lean = result.to_lean_dict()
+        metric = lean["metrics"]["revenue"]
+        self.assertTrue(metric["derived"])
+        self.assertIn("ltm_components", metric)
+
 
 class TestLeanJson(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)

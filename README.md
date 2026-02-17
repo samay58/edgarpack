@@ -60,12 +60,14 @@ edgarpack build --cik 0001045810 --form 10-K --out ./packs
 
 ```bash
 edgarpack query NVDA revenue,net_income --period ltm
+edgarpack query NVDA revenue --period ltm-1
 ```
 
 ### Run a comps table
 
 ```bash
 edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
+edgarpack comps NVDA AMD INTC --metrics revenue --period ltm-1
 ```
 
 ## Output Layout
