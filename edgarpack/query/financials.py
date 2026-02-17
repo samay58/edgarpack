@@ -114,7 +114,65 @@ async def financials(
             else:
                 result_metrics[metric] = value
 
+    # Post-resolution sanity check: flag anomalously low total_debt relative
+    # to total_liabilities.  Companies with captive finance subsidiaries
+    # (e.g. Ford) may stop tagging consolidated debt in standard XBRL while
+    # total liabilities remain correctly reported.
+    _check_low_debt(result_metrics, facts, company_name, cik, period, doc_map)
+
     return QueryResult(company=company_name, cik=cik, period=period, metrics=result_metrics)
+
+
+def _check_low_debt(
+    result_metrics: dict,
+    facts: dict,
+    company_name: str,
+    cik: str,
+    period: str,
+    doc_map: dict[str, str] | None,
+) -> None:
+    """Attach a warning when total_debt is anomalously low vs total_liabilities."""
+    debt_cv = result_metrics.get("total_debt")
+    if debt_cv is None or isinstance(debt_cv, list):
+        return
+    debt_val = getattr(debt_cv, "value", None)
+    if debt_val is None:
+        return
+
+    # Resolve total_liabilities for the same period
+    liab_meta = METRIC_MAP.get("total_liabilities")
+    if liab_meta is None:
+        return
+    resolved = resolve_concept("total_liabilities", facts)
+    if resolved is None:
+        return
+    concept, taxonomy = resolved
+    liab_cv = select_period(
+        facts,
+        concept,
+        "total_liabilities",
+        liab_meta,
+        company_name,
+        cik,
+        period,
+        taxonomy=taxonomy,
+        doc_map=doc_map,
+    )
+    if liab_cv is None or isinstance(liab_cv, list):
+        return
+    liab_val = getattr(liab_cv, "value", None)
+    if liab_val is None or liab_val <= 0:
+        return
+
+    if debt_val / liab_val < 0.02:
+        warnings = getattr(debt_cv, "warnings", None)
+        if warnings is None:
+            return
+        warnings.append(
+            f"Resolved total debt ({debt_val / 1e9:.1f}B) is less than 2% of "
+            f"total liabilities ({liab_val / 1e9:.1f}B). May be missing "
+            f"captive finance or financial services subsidiary debt."
+        )
 
 
 def _compute_derived(

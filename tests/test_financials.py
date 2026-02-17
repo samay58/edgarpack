@@ -842,6 +842,131 @@ class TestDeepLinking(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Revenues.json", revenue["concept_url"])
 
 
+MOCK_LOW_DEBT_FACTS = {
+    "cik": 37996,
+    "entityName": "FORD MOTOR CO",
+    "facts": {
+        "us-gaap": {
+            "LongTermDebtNoncurrent": {
+                "label": "Long Term Debt Noncurrent",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 291_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0000037996-25-000001",
+                            "filed": "2026-02-05",
+                        },
+                    ]
+                },
+            },
+            "Liabilities": {
+                "label": "Liabilities",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 240_300_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0000037996-25-000001",
+                            "filed": "2026-02-05",
+                        },
+                    ]
+                },
+            },
+        }
+    },
+}
+
+
+class TestLowDebtSanityWarning(unittest.IsolatedAsyncioTestCase):
+    """total_debt << total_liabilities should attach a warning."""
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_low_debt_warning_attached(self, mock_resolve, mock_facts, _ms) -> None:
+        mock_resolve.return_value = ("0000037996", "FORD MOTOR CO")
+        mock_facts.return_value = MOCK_LOW_DEBT_FACTS
+
+        result = await financials("F", "total_debt", period="lfy")
+        debt = result.metrics["total_debt"]
+        self.assertIsNotNone(debt)
+        self.assertEqual(debt.value, 291_000_000)
+        self.assertTrue(
+            any("less than 2%" in w for w in debt.warnings),
+            f"Expected low-debt warning in {debt.warnings}",
+        )
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_normal_debt_no_warning(self, mock_resolve, mock_facts, _ms) -> None:
+        """Company with normal debt/liabilities ratio should NOT get the warning."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        # Reuse NVDA facts but add Liabilities and a debt concept
+        facts_with_debt = {
+            "cik": 1045810,
+            "entityName": "NVIDIA CORP",
+            "facts": {
+                "us-gaap": {
+                    **MOCK_COMPANY_FACTS["facts"]["us-gaap"],
+                    "LongTermDebt": {
+                        "label": "Long Term Debt",
+                        "units": {
+                            "USD": [
+                                {
+                                    "val": 10_000_000_000,
+                                    "start": "2024-01-29",
+                                    "end": "2025-01-26",
+                                    "fy": 2025,
+                                    "fp": "FY",
+                                    "form": "10-K",
+                                    "accn": "0001045810-25-000001",
+                                    "filed": "2025-02-18",
+                                },
+                            ]
+                        },
+                    },
+                    "Liabilities": {
+                        "label": "Liabilities",
+                        "units": {
+                            "USD": [
+                                {
+                                    "val": 30_000_000_000,
+                                    "start": "2024-01-29",
+                                    "end": "2025-01-26",
+                                    "fy": 2025,
+                                    "fp": "FY",
+                                    "form": "10-K",
+                                    "accn": "0001045810-25-000001",
+                                    "filed": "2025-02-18",
+                                },
+                            ]
+                        },
+                    },
+                }
+            },
+        }
+        mock_facts.return_value = facts_with_debt
+
+        result = await financials("NVDA", "total_debt", period="lfy")
+        debt = result.metrics["total_debt"]
+        self.assertIsNotNone(debt)
+        # 10B / 30B = 33% -- well above 2% threshold
+        self.assertFalse(
+            any("less than 2%" in w for w in debt.warnings),
+            f"Did not expect low-debt warning but got {debt.warnings}",
+        )
+
+
 class TestDerivedCycleProtection(unittest.TestCase):
     def test_cycle_returns_none_instead_of_recursing_forever(self) -> None:
         cycle_a = MetricMeta(
