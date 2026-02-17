@@ -73,7 +73,8 @@ Financial query layer over SEC companyfacts.
 - Concept resolution from metric names to GAAP/IFRS tags. `total_debt` includes broader tags (`DebtLongTermAndShortTermCombinedAmount`, `LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities`) for captive-finance companies like Ford.
 - Period selection (`lfy`, `mrq`, `mrp`, `ltm`, `ltm-1`, series selectors). LTM-1 for annual-only filers (20-F) returns the prior fiscal year instead of the same year.
 - Derived metrics with component-level provenance and recursion guards.
-- `CitedValue` carries an optional `warnings` field. Per-share metrics get a stock split contamination warning when the LTM-derived value differs from the latest annual filing by more than 5x.
+- Data quality guards: staleness rejection (2-year default, 3 for `ltm-1`, disabled for series), segment-vs-consolidated filtering via SEC `frame` field, and concept scope warnings for known mismatches (COGS breadth, lease-inclusive debt, cash-plus-investments).
+- `CitedValue` carries an optional `warnings` field. Per-share metrics get a stock split contamination warning when the LTM-derived value differs from the latest annual filing by more than 5x. Scope warnings attach when the resolved concept is broader/narrower than the metric name implies.
 
 ### `edgarpack/site/`
 

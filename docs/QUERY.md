@@ -99,6 +99,33 @@ Different companies use different XBRL tags for the same economic concept. Apple
 
 This means `edgarpack query AAPL revenue` and `edgarpack query NVDA revenue` both work correctly despite the companies using different XBRL tags.
 
+## Data Quality Guards
+
+Three guards run on every metric to filter out misleading values before they reach the caller.
+
+### Staleness Guard
+
+Values whose fiscal year is too far behind the current calendar year are rejected as stale and returned as `None`. The default threshold is 2 fiscal years. `ltm-1` uses 3 years (it naturally references one year back). Series selectors (`annual:N`, `quarterly:N`) skip the check entirely since the caller explicitly requests historical data.
+
+Staleness applies to both direct metrics and derived-metric components. If any component of a derived metric is stale, the whole derived value is `None`.
+
+### Segment Filtering
+
+SEC companyfacts sometimes contains both consolidated and segment-level entries for the same filing period. Without filtering, double-counted segment values can bleed into results.
+
+The filter groups entries by `(accession, fy, fp, start, end)` and, when duplicates exist, prefers entries that carry a `frame` field (SEC's marker for consolidated/aggregated data). When no entry has a frame, the largest absolute value is kept as a conservative fallback.
+
+### Concept Scope Warnings
+
+Some XBRL concepts are broader or narrower than what the metric name implies. When the concept resolver lands on one of these, a scope warning is appended to the value's `warnings` list. Current warnings cover:
+
+- `CostOfGoodsAndServicesSold` (may be broader than cost of revenue, affecting gross profit)
+- `CashCashEquivalentsAndShortTermInvestments` (overstates pure cash position)
+- `LongTermDebtAndCapitalLeaseObligations` (includes lease obligations alongside financial debt)
+- `LiabilitiesAndStockholdersEquity` (combined total, not pure liabilities)
+
+Scope warnings propagate to derived metrics when a flagged concept is used as a component.
+
 ## Derived Metrics
 
 Some metrics are computed from other metrics rather than read directly from XBRL:

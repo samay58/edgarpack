@@ -62,7 +62,7 @@ The manifest hashes content by artifact path. That makes integrity checks and re
 
 ### Stage 4: Query Financial Data
 
-The query layer starts from SEC companyfacts XBRL data. For each metric, it resolves concept tags, selects the requested period, and returns values with filing-level citations.
+The query layer starts from SEC companyfacts XBRL data. For each metric, it resolves concept tags, selects the requested period, and returns values with filing-level citations. Three data quality guards run on every metric: staleness rejection (values too many fiscal years behind get dropped), segment filtering (prefers consolidated entries over segment breakouts using the SEC `frame` field), and concept scope warnings (flags when the resolved XBRL tag is broader or narrower than the metric name implies).
 
 Example: how EdgarPack gets NVIDIA's LTM revenue.
 
