@@ -8,11 +8,115 @@ period selectors like ``lfy`` (last fiscal year), ``mrq`` (most recent quarter),
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Any
 
 from .concepts import MetricMeta
 from .models import CitedValue, DerivedValue
+
+
+# Regex to capture entire ix:nonFraction elements (opening tag + inner text).
+_IX_NONFRACTION_TAG_RE = re.compile(
+    r'<ix:nonFraction\b([^>]*)>([^<]*)</ix:nonFraction>',
+    re.IGNORECASE | re.DOTALL,
+)
+# Attribute extractors (order-independent)
+_ATTR_NAME_RE = re.compile(r'\bname="([^"]+)"', re.IGNORECASE)
+_ATTR_ID_RE = re.compile(r'\bid="([^"]+)"', re.IGNORECASE)
+_ATTR_SCALE_RE = re.compile(r'\bscale="([^"]*)"', re.IGNORECASE)
+_ATTR_SIGN_RE = re.compile(r'\bsign="([^"]*)"', re.IGNORECASE)
+
+
+def _parse_display_value(text: str, scale: str, sign: str) -> float | None:
+    """Parse the displayed value from an ix:nonFraction element.
+
+    Strips formatting (commas, parens, whitespace), applies the XBRL ``scale``
+    multiplier, and the optional ``sign`` attribute. The ``sign`` attribute is
+    authoritative for the value's sign; parentheses in the display text are
+    purely visual formatting.
+    """
+    text = text.strip()
+    if not text:
+        return None
+    # Remove non-breaking spaces
+    text = text.replace("\xa0", "").replace("&nbsp;", "")
+    # Strip parens (display-only formatting; sign attr is authoritative)
+    if text.startswith("(") and text.endswith(")"):
+        text = text[1:-1]
+    text = text.replace(",", "").replace("$", "").replace("%", "").strip()
+    if not text:
+        return None
+    try:
+        val = float(text)
+    except ValueError:
+        return None
+    # sign attribute is the authoritative sign indicator
+    if sign == "-":
+        val = -val
+    if scale:
+        try:
+            val *= 10 ** int(scale)
+        except ValueError:
+            pass
+    return val
+
+
+def parse_fact_ids_from_html(html: str | bytes) -> dict[tuple[str, float], str]:
+    """Extract ``(concept_short, scaled_value) -> fact_id`` from inline XBRL HTML.
+
+    The matching strategy: within a single filing, the same concept at different
+    periods almost always has a different dollar value. So ``(concept, value)``
+    is a reliable composite key. If duplicates exist (rare), the last occurrence
+    wins (typically the notes repeat values from the financial statements, but
+    the financial statement element is the canonical one and appears first).
+    """
+    if isinstance(html, bytes):
+        html = html.decode("utf-8", errors="replace")
+
+    result: dict[tuple[str, float], str] = {}
+
+    for m in _IX_NONFRACTION_TAG_RE.finditer(html):
+        attrs, display_text = m.groups()
+
+        name_m = _ATTR_NAME_RE.search(attrs)
+        id_m = _ATTR_ID_RE.search(attrs)
+        if not name_m or not id_m:
+            continue
+
+        concept_full = name_m.group(1)
+        fact_id = id_m.group(1)
+
+        scale_m = _ATTR_SCALE_RE.search(attrs)
+        sign_m = _ATTR_SIGN_RE.search(attrs)
+        scale = scale_m.group(1) if scale_m else ""
+        sign = sign_m.group(1) if sign_m else ""
+
+        # Strip taxonomy prefix: "us-gaap:Revenues" -> "Revenues"
+        concept_short = concept_full.split(":")[-1] if ":" in concept_full else concept_full
+
+        parsed_val = _parse_display_value(display_text, scale, sign)
+        if parsed_val is not None:
+            key = (concept_short, parsed_val)
+            # First occurrence wins (financial statements appear before notes)
+            if key not in result:
+                result[key] = fact_id
+
+    return result
+
+
+def _lookup_fact_id(
+    fact_id_map: dict[tuple[str, float], str] | None,
+    concept: str,
+    val: float | int | None,
+) -> str:
+    """Look up a fact_id from the parsed map using (concept, value)."""
+    if not fact_id_map or val is None:
+        return ""
+    # Strip taxonomy prefix if present
+    concept_short = concept.split(":")[-1] if ":" in concept else concept
+    fact_id = fact_id_map.get((concept_short, float(val)), "")
+    return fact_id
 
 
 def _parse_date(s: str) -> date | None:

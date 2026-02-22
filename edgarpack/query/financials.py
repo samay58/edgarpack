@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date as _date
 from typing import Any
 
-from ..sec.submissions import fetch_submissions
+from ..sec.archives import fetch_file
+from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
 from .models import CitedValue, DerivedValue, QueryResult
-from .periods import select_period
+from .periods import parse_fact_ids_from_html, select_period
 
 _DerivedCache = dict[str, CitedValue | None]
 
@@ -56,6 +58,83 @@ async def _build_doc_map(cik: str, force: bool = False) -> dict[str, str]:
         if acc and doc:
             doc_map[acc] = doc
     return doc_map
+
+
+async def _fetch_fact_id_maps(
+    cik: str,
+    doc_map: dict[str, str],
+    accessions: set[str],
+) -> dict[str, dict[tuple[str, float], str]]:
+    """Fetch filing HTML and parse fact IDs for each accession.
+
+    Returns ``{accession: {(concept, value): fact_id}}``.
+    One HTTP request per unique accession (cached by ``fetch_file``).
+    """
+    result: dict[str, dict[tuple[str, float], str]] = {}
+    cik_bare = cik.lstrip("0")
+
+    async def _fetch_one(accn: str) -> None:
+        primary_doc = doc_map.get(accn, "")
+        if not primary_doc:
+            return
+        meta = FilingMeta(
+            cik=cik_bare,
+            accession=accn,
+            form_type="",
+            filing_date=_date.min,
+            primary_document=primary_doc,
+            company_name="",
+        )
+        try:
+            html_bytes = await fetch_file(meta, primary_doc)
+            result[accn] = parse_fact_ids_from_html(html_bytes)
+        except Exception:
+            pass  # Degrade gracefully; anchor_url falls back to document_url
+
+    await asyncio.gather(*[_fetch_one(accn) for accn in accessions])
+    return result
+
+
+def _collect_accessions(result: QueryResult) -> set[str]:
+    """Collect all unique accession numbers from a QueryResult."""
+    accessions: set[str] = set()
+    for v in result.metrics.values():
+        if v is None:
+            continue
+        items = v if isinstance(v, list) else [v]
+        for item in items:
+            if item.accession:
+                accessions.add(item.accession)
+            if isinstance(item, DerivedValue):
+                for comp in item.components.values():
+                    if comp.accession:
+                        accessions.add(comp.accession)
+    return accessions
+
+
+def _enrich_fact_ids(
+    result: QueryResult,
+    fact_id_maps: dict[str, dict[tuple[str, float], str]],
+) -> None:
+    """Populate ``fact_id`` on all CitedValues in-place using parsed maps."""
+    from .periods import _lookup_fact_id
+
+    def _enrich_one(cited: CitedValue) -> None:
+        if cited.fact_id:
+            return  # Already set
+        fmap = fact_id_maps.get(cited.accession)
+        if fmap:
+            cited.fact_id = _lookup_fact_id(fmap, cited.concept, cited.value)
+
+    for v in result.metrics.values():
+        if v is None:
+            continue
+        items = v if isinstance(v, list) else [v]
+        for item in items:
+            _enrich_one(item)
+            if isinstance(item, DerivedValue):
+                for comp in item.components.values():
+                    _enrich_one(comp)
 
 
 async def financials(
@@ -156,7 +235,16 @@ async def financials(
     # total liabilities remain correctly reported.
     _check_low_debt(result_metrics, facts, company_name, cik, period, doc_map)
 
-    return QueryResult(company=company_name, cik=cik, period=period, metrics=result_metrics)
+    result = QueryResult(company=company_name, cik=cik, period=period, metrics=result_metrics)
+
+    # Enrich CitedValues with XBRL fact IDs for stable deep-link anchors.
+    # One HTTP fetch per unique accession number (cached).
+    accessions = _collect_accessions(result)
+    if accessions and doc_map:
+        fact_id_maps = await _fetch_fact_id_maps(cik, doc_map, accessions)
+        _enrich_fact_ids(result, fact_id_maps)
+
+    return result
 
 
 def _check_low_debt(

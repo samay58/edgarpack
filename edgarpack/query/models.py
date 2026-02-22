@@ -43,6 +43,7 @@ class CitedValue(BaseModel):
     # Deep linking
     taxonomy: str = "us-gaap"
     primary_document: str = ""
+    fact_id: str = ""
     warnings: list[str] = Field(default_factory=list)
 
     @property
@@ -94,6 +95,21 @@ class CitedValue(BaseModel):
         return f"{base}#:~:text={quote(label)}"
 
     @property
+    def anchor_url(self) -> str | None:
+        """Direct filing HTML URL with stable XBRL fact ID anchor.
+
+        Uses ``#f-NNN`` anchor from inline XBRL ``id`` attributes. Works in all
+        browsers (unlike text fragments). Falls back to ``document_url`` when
+        ``fact_id`` is not populated.
+        """
+        if not self.fact_id or not self.primary_document:
+            return self.document_url
+        acc_nodash = self.accession.replace("-", "")
+        cik_bare = self.cik.lstrip("0")
+        base = f"{SEC_ARCHIVES_BASE}/{cik_bare}/{acc_nodash}/{self.primary_document}"
+        return f"{base}#{self.fact_id}"
+
+    @property
     def citation(self) -> str:
         """Human-readable citation string."""
         period = f"{self.fiscal_period}{self.fiscal_year}"
@@ -110,6 +126,8 @@ class CitedValue(BaseModel):
             d["viewer_url"] = self.viewer_url
         if self.document_url:
             d["document_url"] = self.document_url
+        if self.anchor_url and self.anchor_url != self.document_url:
+            d["anchor_url"] = self.anchor_url
         return d
 
     def _period_str(self) -> str:

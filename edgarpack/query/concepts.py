@@ -174,6 +174,14 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "DebtInstrumentCarryingAmount",
             "LongTermDebt",
             "LongTermDebtNoncurrent",
+            # Convertible notes: some companies (e.g. Snowflake) only tag debt
+            # under convertible-specific concepts, not generic LongTermDebt.
+            # Face value of convertibles belongs in EV bridge as debt per IB
+            # convention. Dilution effect handled separately in TSM schedule.
+            "ConvertibleNotesPayable",
+            "ConvertibleDebtNoncurrent",
+            "ConvertibleLongTermNotesPayable",
+            "ConvertibleDebt",
             # Lease-inclusive debt tags are intentionally lower priority so
             # operating leases can be handled separately when requested.
             "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
@@ -300,8 +308,44 @@ METRIC_MAP: dict[str, MetricMeta] = {
         ),
         duration=False,
     ),
+    "shares_basic_wavg": MetricMeta(
+        concepts=("WeightedAverageNumberOfSharesOutstandingBasic",),
+        duration=True,
+    ),
     "shares_diluted": MetricMeta(
         concepts=("WeightedAverageNumberOfDilutedSharesOutstanding",),
+        duration=True,
+    ),
+    # Dilution schedule inputs (optional; sparse across issuers).
+    "options_itm": MetricMeta(
+        concepts=(
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+            "SharebasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+        ),
+        duration=False,
+    ),
+    "avg_strike": MetricMeta(
+        concepts=(
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsExercisableWeightedAverageExercisePrice",
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionExercisePriceOutstanding",
+            "SharebasedCompensationArrangementByShareBasedPaymentAwardOptionExercisePriceOutstanding",
+        ),
+        duration=False,
+    ),
+    "rsu_psu": MetricMeta(
+        concepts=(
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber",
+            "SharebasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber",
+        ),
+        duration=False,
+    ),
+    "convertible_incremental": MetricMeta(
+        concepts=(
+            "WeightedAverageNumberOfSharesIssuedUponConversionOfConvertibleSecurities",
+            "WeightedAverageNumberOfIncrementalSharesFromAssumedConversionOfConvertibleSecurities",
+            "StockIssuedDuringPeriodSharesConversionOfConvertibleSecurities",
+        ),
         duration=True,
     ),
     "dividends_per_share": MetricMeta(
@@ -498,6 +542,21 @@ CONCEPT_SCOPE_WARNINGS: dict[str, str] = {
     "CashCashEquivalentsAndShortTermInvestments": (
         "Includes short-term investments alongside cash equivalents. "
         "May overstate pure cash position."
+    ),
+    "ConvertibleNotesPayable": (
+        "Convertible debt only. May understate total debt if other "
+        "non-convertible debt instruments exist but are not captured."
+    ),
+    "ConvertibleDebtNoncurrent": (
+        "Noncurrent convertible debt only. Check for current portion and "
+        "other debt instruments."
+    ),
+    "ConvertibleLongTermNotesPayable": (
+        "Convertible long-term notes only. May understate total debt."
+    ),
+    "ConvertibleDebt": (
+        "Convertible debt. Face value included in EV bridge; dilution "
+        "effect handled in TSM schedule."
     ),
     "LongTermDebtAndCapitalLeaseObligationsCurrent": ("Current portion only. Not total debt."),
     "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities": (

@@ -50,6 +50,12 @@ class TestMetricMap(unittest.TestCase):
         # Plan specifies ~30 metrics
         self.assertGreaterEqual(len(ALL_METRICS), 28)
 
+    def test_dilution_schedule_metrics_registered(self) -> None:
+        for metric in ("options_itm", "avg_strike", "rsu_psu", "convertible_incremental"):
+            self.assertIn(metric, METRIC_MAP)
+            self.assertFalse(METRIC_MAP[metric].derived)
+            self.assertGreater(len(METRIC_MAP[metric].concepts), 0)
+
 
 class TestResolveConceptFallback(unittest.TestCase):
     def test_first_concept_matched(self) -> None:
@@ -93,6 +99,40 @@ class TestResolveConceptFallback(unittest.TestCase):
         facts = {"us-gaap": {}}
         result = resolve_concept("nonexistent_metric", facts)
         self.assertIsNone(result)
+
+    def test_options_itm_resolves_when_tag_present(self) -> None:
+        facts = {
+            "us-gaap": {
+                "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber": {
+                    "units": {"shares": [{"val": 100, "fy": 2025, "fp": "FY"}]}
+                }
+            }
+        }
+        result = resolve_concept("options_itm", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(
+            concept,
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+        )
+        self.assertEqual(taxonomy, "us-gaap")
+
+    def test_avg_strike_resolves_when_tag_present(self) -> None:
+        facts = {
+            "us-gaap": {
+                "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice": {
+                    "units": {"USD/shares": [{"val": 28.5, "fy": 2025, "fp": "FY"}]}
+                }
+            }
+        }
+        result = resolve_concept("avg_strike", facts)
+        self.assertIsNotNone(result)
+        concept, taxonomy = result
+        self.assertEqual(
+            concept,
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
+        )
+        self.assertEqual(taxonomy, "us-gaap")
 
     def test_total_debt_prefers_non_lease_concept(self) -> None:
         """total_debt should prefer debt tags that do not include lease liabilities."""
