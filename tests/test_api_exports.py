@@ -24,5 +24,19 @@ class TestPackExports(unittest.TestCase):
         self.assertTrue(issubclass(PackResult, object))
 
 
+class TestChinaExports(unittest.TestCase):
+    def test_china_exports(self) -> None:
+        from edgarpack.china import Company, Pack, SearchEvidenceRequest
+
+        self.assertTrue(issubclass(Company, object))
+        self.assertTrue(issubclass(Pack, object))
+        self.assertTrue(issubclass(SearchEvidenceRequest, object))
+
+    def test_api_create_app_export(self) -> None:
+        from edgarpack.api import create_app
+
+        self.assertTrue(callable(create_app))
+
+
 if __name__ == "__main__":
     unittest.main()

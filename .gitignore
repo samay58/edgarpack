@@ -55,6 +55,8 @@ test_packs/
 .coverage
 htmlcov/
 .pytest_cache/
+web/node_modules/
+web/.next/
 AGENTS.md
 CODEX_PROMPTS.md
 NVIDIA_RESULTS.md

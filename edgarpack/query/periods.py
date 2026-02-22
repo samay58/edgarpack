@@ -15,7 +15,6 @@ from typing import Any
 from .concepts import MetricMeta
 from .models import CitedValue, DerivedValue
 
-
 # Regex to capture entire ix:nonFraction elements (opening tag + inner text).
 _IX_NONFRACTION_TAG_RE = re.compile(
     r'<ix:nonFraction\b([^>]*)>([^<]*)</ix:nonFraction>',

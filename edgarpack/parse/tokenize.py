@@ -45,7 +45,12 @@ def count_tokens(text: str) -> int:
     """
     if tiktoken is None:
         return estimate_tokens(text)
-    return len(get_encoder().encode(text))
+    try:
+        return len(get_encoder().encode(text))
+    except Exception:
+        # Graceful fallback for offline/test environments where tiktoken is
+        # installed but encoding assets are unavailable.
+        return estimate_tokens(text)
 
 
 def estimate_tokens(text: str) -> int:
@@ -78,8 +83,11 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
         # Best-effort heuristic (~4 chars/token).
         return text[: max_tokens * 4]
 
-    encoder = get_encoder()
-    tokens = encoder.encode(text)
-    if len(tokens) <= max_tokens:
-        return text
-    return encoder.decode(tokens[:max_tokens])
+    try:
+        encoder = get_encoder()
+        tokens = encoder.encode(text)
+        if len(tokens) <= max_tokens:
+            return text
+        return encoder.decode(tokens[:max_tokens])
+    except Exception:
+        return text[: max_tokens * 4]

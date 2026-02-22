@@ -109,6 +109,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_site.add_argument("--base-url", default=None, help="Optional base URL (reserved)")
 
+    p_api = sub.add_parser("api", help="Run China Lens FastAPI server (requires extra deps)")
+    p_api.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host interface to bind (default: 127.0.0.1)",
+    )
+    p_api.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to bind (default: 8000)",
+    )
+
     # --- query subcommand ---
     p_query = sub.add_parser(
         "query",
@@ -175,6 +188,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_cache(args)
     if args.cmd == "site":
         return _cmd_site(args)
+    if args.cmd == "api":
+        return _cmd_api(args)
     if args.cmd == "query":
         return _cmd_query(args)
     if args.cmd == "comps":
@@ -310,6 +325,27 @@ def _cmd_site(args: Any) -> int:
     print(f"  Filings: {report.get('filings')}")
     total_bytes = int(report.get("total_bytes") or 0)
     print(f"  Size: {total_bytes / 1024:.1f} KB")
+    return 0
+
+
+def _cmd_api(args: Any) -> int:
+    try:
+        import uvicorn
+    except Exception:
+        print(
+            "Error: uvicorn is not installed. Install with: uv pip install -e '.[china]'",
+            file=sys.stderr,
+        )
+        return 1
+
+    try:
+        from .api.main import create_app
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    app = create_app()
+    uvicorn.run(app, host=str(args.host), port=int(args.port))
     return 0
 
 

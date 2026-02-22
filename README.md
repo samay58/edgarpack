@@ -112,6 +112,10 @@ edgarpack company-llms --cik 0001045810 --out ./packs
 # Build a static site from packs
 edgarpack site --packs ./packs --out ./site
 
+# Run China Lens API (requires china extras)
+uv pip install -e ".[china]"
+edgarpack api --host 127.0.0.1 --port 8000
+
 # Cache inspection / cleanup
 edgarpack cache
 edgarpack cache --clear

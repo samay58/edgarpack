@@ -101,37 +101,34 @@ class TestResolveConceptFallback(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_options_itm_resolves_when_tag_present(self) -> None:
+        options_tag = (
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber"
+        )
         facts = {
             "us-gaap": {
-                "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber": {
-                    "units": {"shares": [{"val": 100, "fy": 2025, "fp": "FY"}]}
-                }
+                options_tag: {"units": {"shares": [{"val": 100, "fy": 2025, "fp": "FY"}]}}
             }
         }
         result = resolve_concept("options_itm", facts)
         self.assertIsNotNone(result)
         concept, taxonomy = result
-        self.assertEqual(
-            concept,
-            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
-        )
+        self.assertEqual(concept, options_tag)
         self.assertEqual(taxonomy, "us-gaap")
 
     def test_avg_strike_resolves_when_tag_present(self) -> None:
+        avg_strike_tag = (
+            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptions"
+            "OutstandingWeightedAverageExercisePrice"
+        )
         facts = {
             "us-gaap": {
-                "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice": {
-                    "units": {"USD/shares": [{"val": 28.5, "fy": 2025, "fp": "FY"}]}
-                }
+                avg_strike_tag: {"units": {"USD/shares": [{"val": 28.5, "fy": 2025, "fp": "FY"}]}}
             }
         }
         result = resolve_concept("avg_strike", facts)
         self.assertIsNotNone(result)
         concept, taxonomy = result
-        self.assertEqual(
-            concept,
-            "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
-        )
+        self.assertEqual(concept, avg_strike_tag)
         self.assertEqual(taxonomy, "us-gaap")
 
     def test_total_debt_prefers_non_lease_concept(self) -> None:

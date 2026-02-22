@@ -6,6 +6,10 @@ Guidance for coding agents working in this repository.
 
 EdgarPack converts SEC EDGAR filings (10-K, 10-Q, 8-K) into deterministic markdown packs with section IDs, manifests, and optional chunk/XBRL artifacts.
 
+China Lens extends this repository with a citation-backed research workspace for
+Chinese primary filings. In China Lens paths, Evidence Explorer and citation
+integrity are the primary product surface.
+
 Core properties:
 
 - Stdlib HTTP stack
@@ -19,6 +23,9 @@ Core properties:
 ```bash
 # Install (editable + dev deps)
 uv pip install -e ".[dev]"
+
+# Install China Lens API extras
+uv pip install -e ".[china]"
 
 # Tests
 python3 -m pytest tests/ -x -v
@@ -35,6 +42,9 @@ edgarpack query NVDA revenue,net_income --period ltm
 
 # Run comps
 edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
+
+# Run China Lens API
+edgarpack api --host 127.0.0.1 --port 8000
 ```
 
 ## Architecture
@@ -96,3 +106,5 @@ Minimal static site generator over pack artifacts.
 
 - Query subpackage exports: `comps`, `financials`, `QueryResult`, `CitedValue`, `DerivedValue`.
 - Pack subpackage exports: `build_pack`, `PackResult`.
+- China Lens package exports domain models in `edgarpack/china/`.
+- China Lens FastAPI app factory: `edgarpack.api.create_app`.
