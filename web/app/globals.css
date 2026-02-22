@@ -9,7 +9,7 @@
   --accent-soft: #dff3ee;
   --warning: #9b4f25;
   --radius: 14px;
-  --shadow: 0 10px 30px rgba(31, 31, 28, 0.08);
+  --shadow: 0 6px 18px rgba(31, 31, 28, 0.06);
 }
 
 * {
@@ -27,6 +27,8 @@ body {
     radial-gradient(800px 400px at 120% 10%, rgba(155, 79, 37, 0.12), transparent),
     linear-gradient(180deg, var(--bg), var(--bg-2));
   min-height: 100%;
+  line-height: 1.35;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -49,6 +51,7 @@ input {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  contain: content;
 }
 
 .topbar {
@@ -253,6 +256,57 @@ input {
   padding-left: 20px;
 }
 
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.control-label {
+  font-size: 0.82rem;
+  margin-right: 2px;
+}
+
+.mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mode-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-soft);
+  padding: 3px 9px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  color: #11453d;
+  background: var(--accent-soft);
+  border-color: rgba(10, 124, 107, 0.3);
+}
+
+.section-jump {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.jump-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  background: #fff;
+  color: var(--ink-soft);
+}
+
 .coverage-strip {
   margin-top: 12px;
   display: flex;
@@ -358,6 +412,7 @@ input {
   display: grid;
   gap: 10px;
   margin-top: 10px;
+  min-height: 84px;
 }
 
 .evidence-grid {
@@ -365,6 +420,7 @@ input {
   gap: 12px;
   grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.5fr) minmax(220px, 1fr);
   padding: 14px;
+  min-height: 340px;
 }
 
 .evidence-doc-list ul {
@@ -410,6 +466,16 @@ input {
   padding: 8px;
   background: #fff;
   margin-bottom: 8px;
+}
+
+.snippet-toggle p {
+  white-space: pre-wrap;
+}
+
+.evidence-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .tag {
@@ -483,6 +549,10 @@ input {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .ask-row {
+    grid-template-columns: 1fr;
   }
 }
 

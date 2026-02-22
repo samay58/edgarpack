@@ -2,12 +2,23 @@
 
 import type { DocumentView, EvidenceTarget } from "@/types/china-lens";
 
+export type ReadingMode = "en" | "bilingual" | "cn";
+
 type EvidenceExplorerProps = {
   documents: DocumentView[];
   evidenceTarget: EvidenceTarget;
+  readingMode: ReadingMode;
+  onReadingModeChange: (mode: ReadingMode) => void;
+  isLoading?: boolean;
 };
 
-export function EvidenceExplorer({ documents, evidenceTarget }: EvidenceExplorerProps) {
+export function EvidenceExplorer({
+  documents,
+  evidenceTarget,
+  readingMode,
+  onReadingModeChange,
+  isLoading = false,
+}: EvidenceExplorerProps) {
   return (
     <div className="evidence-grid panel">
       <aside className="evidence-doc-list">
@@ -24,23 +35,69 @@ export function EvidenceExplorer({ documents, evidenceTarget }: EvidenceExplorer
       <div className="evidence-viewer">
         <h3>PDF View</h3>
         <div className="pdf-placeholder">
-          <span>{evidenceTarget.citation_label}</span>
+          <span>{isLoading ? "Resolving citation..." : evidenceTarget.citation_label}</span>
           <small>Page {evidenceTarget.page}</small>
         </div>
       </div>
       <aside className="evidence-snippet">
-        <h3>Extracted Evidence</h3>
-        <div className="snippet-toggle">
-          <span className="tag">CN</span>
-          <p>{evidenceTarget.text_zh}</p>
+        <div className="row between">
+          <h3>Extracted Evidence</h3>
+          <div className="mode-switch" role="group" aria-label="Evidence reading mode">
+            <button
+              type="button"
+              className={readingMode === "en" ? "mode-btn active" : "mode-btn"}
+              onClick={() => onReadingModeChange("en")}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={readingMode === "bilingual" ? "mode-btn active" : "mode-btn"}
+              onClick={() => onReadingModeChange("bilingual")}
+            >
+              EN+CN
+            </button>
+            <button
+              type="button"
+              className={readingMode === "cn" ? "mode-btn active" : "mode-btn"}
+              onClick={() => onReadingModeChange("cn")}
+            >
+              CN
+            </button>
+          </div>
         </div>
-        <div className="snippet-toggle">
-          <span className="tag">EN</span>
-          <p>{evidenceTarget.text_en}</p>
+        {readingMode !== "cn" ? (
+          <div className="snippet-toggle">
+            <span className="tag">EN</span>
+            <p>{evidenceTarget.text_en}</p>
+          </div>
+        ) : null}
+        {readingMode !== "en" ? (
+          <div className="snippet-toggle">
+            <span className="tag">CN</span>
+            <p>{evidenceTarget.text_zh}</p>
+          </div>
+        ) : null}
+        <div className="evidence-actions">
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => navigator.clipboard.writeText(evidenceTarget.citation_label)}
+          >
+            Copy citation
+          </button>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() =>
+              navigator.clipboard.writeText(
+                readingMode === "cn" ? evidenceTarget.text_zh : evidenceTarget.text_en,
+              )
+            }
+          >
+            Copy snippet
+          </button>
         </div>
-        <button type="button" className="secondary-btn">
-          Copy citation
-        </button>
       </aside>
     </div>
   );

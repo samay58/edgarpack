@@ -1,4 +1,4 @@
-import { EvidenceExplorer } from "@/components/china-lens/evidence-explorer";
+import { EvidencePageShell } from "@/components/china-lens/evidence-page-shell";
 import { getDocuments } from "@/lib/api-client";
 import { demoEvidenceTarget } from "@/lib/sample-data";
 
@@ -16,7 +16,7 @@ export default async function EvidencePage({ params }: PageProps) {
         <h2>Evidence Explorer</h2>
         <p className="muted">Open citations to jump directly to source page and snippet.</p>
       </section>
-      <EvidenceExplorer documents={documents} evidenceTarget={demoEvidenceTarget} />
+      <EvidencePageShell documents={documents} evidenceTarget={demoEvidenceTarget} />
     </div>
   );
 }

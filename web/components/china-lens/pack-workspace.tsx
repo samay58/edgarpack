@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 
-import { EvidenceExplorer } from "@/components/china-lens/evidence-explorer";
+import {
+  EvidenceExplorer,
+  type ReadingMode,
+} from "@/components/china-lens/evidence-explorer";
 import { PackSection } from "@/components/china-lens/pack-section";
 import { askEvidence, resolveCitation } from "@/lib/api-client";
 import { demoAskResponse, demoEvidenceTarget } from "@/lib/sample-data";
@@ -18,7 +21,13 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
   const [activeEvidence, setActiveEvidence] = useState<EvidenceTarget>(demoEvidenceTarget);
   const [askInput, setAskInput] = useState("Top customers, concentration, and whether disclosed by name?");
   const [askResult, setAskResult] = useState<AskResponse>(demoAskResponse);
+  const [readingMode, setReadingMode] = useState<ReadingMode>("en");
+  const [findingFilter, setFindingFilter] = useState<"all" | "supported" | "unsupported">(
+    "supported",
+  );
+  const [evidenceLoading, setEvidenceLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const citationCache = useRef<Record<string, EvidenceTarget>>({});
 
   const coverage = useMemo(() => {
     return {
@@ -31,38 +40,128 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
     };
   }, [pack]);
 
-  const openEvidence = (chunkId: string) => {
-    startTransition(async () => {
-      const resolved = await resolveCitation(chunkId);
-      setActiveEvidence(resolved);
-    });
-  };
+  const sectionLinks = useMemo(
+    () =>
+      pack.sections.map((section) => ({
+        id: section.id,
+        title: section.title,
+      })),
+    [pack.sections],
+  );
 
-  const runAsk = () => {
+  const visibleSections = useMemo(() => {
+    return pack.sections
+      .map((section) => {
+        const findings =
+          findingFilter === "all"
+            ? section.findings
+            : section.findings.filter((finding) =>
+                findingFilter === "supported"
+                  ? finding.status === "supported"
+                  : finding.status === "unsupported",
+              );
+        return {
+          ...section,
+          findings,
+          key_points: findings.map((finding) => finding.claim_text),
+        };
+      })
+      .filter((section) => findingFilter === "all" || section.findings.length > 0);
+  }, [findingFilter, pack.sections]);
+
+  const openEvidence = useCallback((chunkId: string) => {
+    const cached = citationCache.current[chunkId];
+    if (cached) {
+      setActiveEvidence(cached);
+      return;
+    }
+    setEvidenceLoading(true);
+    startTransition(async () => {
+      try {
+        const resolved = await resolveCitation(chunkId);
+        citationCache.current[chunkId] = resolved;
+        setActiveEvidence(resolved);
+      } finally {
+        setEvidenceLoading(false);
+      }
+    });
+  }, []);
+
+  const runAsk = useCallback(() => {
     startTransition(async () => {
       const result = await askEvidence(askInput, companyId);
       setAskResult(result);
     });
-  };
+  }, [askInput, companyId]);
 
   return (
     <div className="page-stack">
       <section className="panel summary-panel">
-        <h2>Pack Overview</h2>
+        <div className="row between">
+          <h2>Pack Overview</h2>
+          <div className="filter-controls">
+            <span className="muted control-label">Read</span>
+            <button
+              type="button"
+              className={readingMode === "en" ? "mode-btn active" : "mode-btn"}
+              onClick={() => setReadingMode("en")}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={readingMode === "bilingual" ? "mode-btn active" : "mode-btn"}
+              onClick={() => setReadingMode("bilingual")}
+            >
+              EN+CN
+            </button>
+          </div>
+        </div>
         <ul>
           <li>Concentration disclosure is present with numeric support.</li>
           <li>Named customer disclosure is not provided in indexed filings.</li>
           <li>Governance composition is explicit and cited.</li>
         </ul>
+        <div className="section-jump" aria-label="Jump to section">
+          {sectionLinks.map((section) => (
+            <a key={section.id} href={`#${section.id}`} className="jump-chip">
+              {section.title}
+            </a>
+          ))}
+        </div>
         <div className="coverage-strip">
           <span>Filings: {coverage.filings}</span>
           <span>Translation: {coverage.translation}</span>
           <span>Tables: {coverage.tables}</span>
           <span>Citations: {coverage.citations}</span>
         </div>
+        <div className="filter-controls">
+          <span className="muted control-label">Findings</span>
+          <button
+            type="button"
+            className={findingFilter === "supported" ? "mode-btn active" : "mode-btn"}
+            onClick={() => setFindingFilter("supported")}
+          >
+            Supported
+          </button>
+          <button
+            type="button"
+            className={findingFilter === "all" ? "mode-btn active" : "mode-btn"}
+            onClick={() => setFindingFilter("all")}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            className={findingFilter === "unsupported" ? "mode-btn active" : "mode-btn"}
+            onClick={() => setFindingFilter("unsupported")}
+          >
+            Unsupported
+          </button>
+        </div>
       </section>
 
-      {pack.sections.map((section) => (
+      {visibleSections.map((section) => (
         <PackSection key={section.id} section={section} onOpenEvidence={openEvidence} />
       ))}
 
@@ -73,6 +172,11 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
             value={askInput}
             onChange={(event) => setAskInput(event.target.value)}
             aria-label="Ask a diligence question"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                runAsk();
+              }
+            }}
           />
           <button type="button" className="primary-btn" onClick={runAsk} disabled={isPending}>
             {isPending ? "Searching..." : "Ask"}
@@ -100,7 +204,13 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
         </div>
       </section>
 
-      <EvidenceExplorer documents={documents} evidenceTarget={activeEvidence} />
+      <EvidenceExplorer
+        documents={documents}
+        evidenceTarget={activeEvidence}
+        readingMode={readingMode}
+        onReadingModeChange={setReadingMode}
+        isLoading={evidenceLoading}
+      />
     </div>
   );
 }
