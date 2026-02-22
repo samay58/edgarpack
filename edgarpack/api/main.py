@@ -22,6 +22,8 @@ def create_app() -> Any:
     """Create and configure the FastAPI app."""
     fastapi_cls = _require_fastapi()
 
+    from fastapi.middleware.cors import CORSMiddleware
+
     from .routes import (
         ask_router,
         citations_router,
@@ -36,6 +38,16 @@ def create_app() -> Any:
         title="Rogo China Lens API",
         version="0.1.0",
         summary="Citation-backed research API for Chinese primary sources.",
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     app.state.china_service = create_default_service()
 
