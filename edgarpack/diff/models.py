@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ChangeType(StrEnum):
@@ -23,6 +23,7 @@ class ParagraphDelta(BaseModel):
     similarity: float = 0.0
     old_word_count: int = 0
     new_word_count: int = 0
+    is_boilerplate: bool = False
 
 
 class SectionDelta(BaseModel):
@@ -31,12 +32,14 @@ class SectionDelta(BaseModel):
     section_id: str
     title: str
     change_type: ChangeType
+    section_type: str = "prose"
     paragraphs_added: int = 0
     paragraphs_removed: int = 0
     paragraphs_modified: int = 0
     paragraphs_unchanged: int = 0
     change_intensity: float = 0.0
-    paragraph_deltas: list[ParagraphDelta] = []
+    interest_score: float = 0.0
+    paragraph_deltas: list[ParagraphDelta] = Field(default_factory=list)
 
 
 class DiffResult(BaseModel):
@@ -53,4 +56,4 @@ class DiffResult(BaseModel):
     sections_added: int = 0
     sections_removed: int = 0
     overall_change_intensity: float = 0.0
-    section_deltas: list[SectionDelta] = []
+    section_deltas: list[SectionDelta] = Field(default_factory=list)

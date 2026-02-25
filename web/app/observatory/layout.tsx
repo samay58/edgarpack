@@ -12,7 +12,7 @@ export default function ObservatoryLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="shell-root">
+    <div className="shell-root observatory-shell">
       <header className="panel topbar">
         <div className="topbar-left">
           <h1 style={{ fontSize: "1.15rem" }}>Filing Observatory</h1>

@@ -61,8 +61,12 @@ def detect_language_shifts(
         for pd in delta.paragraph_deltas:
             w = max(pd.old_word_count, pd.new_word_count)
             words_total += w
-            if pd.change_type != ChangeType.UNCHANGED:
+            if pd.is_boilerplate:
+                continue
+            if pd.change_type in {ChangeType.ADDED, ChangeType.REMOVED}:
                 words_changed += w
+            elif pd.change_type == ChangeType.MODIFIED:
+                words_changed += int(round(w * (1.0 - pd.similarity)))
 
         # Only include non-unchanged deltas to keep payload manageable
         changed_deltas = [

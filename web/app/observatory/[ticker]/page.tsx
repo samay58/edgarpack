@@ -25,7 +25,10 @@ export default async function CompanyPage({
   }
 
   try {
-    diff = await getDiff(ticker);
+    diff = await getDiff(ticker, "10-K", {
+      detail: "sections",
+      sectionTypes: ["prose"],
+    });
   } catch {
     diff = null;
   }

@@ -7,6 +7,7 @@ from pathlib import Path
 from edgarpack.diff.models import ChangeType
 from edgarpack.diff.section_diff import diff_filings
 from edgarpack.diff.text_diff import _jaccard, _split_paragraphs, diff_paragraphs
+from edgarpack.parse.sectionize import find_sections
 
 # --- text_diff tests ---
 
@@ -204,3 +205,102 @@ def test_diff_filings_removed_section():
 
         result = diff_filings(before_dir, after_dir)
         assert result.sections_removed == 1
+
+
+def test_intensity_reflects_similarity():
+    with tempfile.TemporaryDirectory() as tmp:
+        before_text = (
+            "For the fiscal year ended January 28, 2024, we maintained supply chain "
+            "resilience through multi-sourcing and inventory discipline."
+        )
+        after_text = (
+            "For the fiscal year ended January 26, 2025, we maintained supply chain "
+            "resilience through multi-sourcing and inventory discipline."
+        )
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(
+            before_dir,
+            "acc-001",
+            "2024-01-01",
+            "Test Corp",
+            "10-K",
+            {"10k_parti_item1_business": before_text},
+        )
+        _create_pack(
+            after_dir,
+            "acc-002",
+            "2025-01-01",
+            "Test Corp",
+            "10-K",
+            {"10k_parti_item1_business": after_text},
+        )
+
+        result = diff_filings(before_dir, after_dir)
+        modified = next(d for d in result.section_deltas if d.change_type == ChangeType.MODIFIED)
+        assert modified.change_intensity < 0.10
+
+
+def test_boilerplate_date_change():
+    old = (
+        "For the fiscal year ended January 28, 2024, we continued to invest in product "
+        "engineering, customer support, and operational resilience, and we refer to Item 7 "
+        "of our Annual Report for a broader discussion."
+    )
+    new = (
+        "For the fiscal year ended January 26, 2025, we continued to invest in product "
+        "engineering, customer support, and operational resilience, and we refer to Item 7 "
+        "of our Annual Report for a broader discussion."
+    )
+
+    deltas = diff_paragraphs(old, new)
+    modified = [d for d in deltas if d.change_type == ChangeType.MODIFIED]
+    assert len(modified) == 1
+    assert modified[0].is_boilerplate is True
+
+
+def test_interest_score_ranks_substance():
+    with tempfile.TemporaryDirectory() as tmp:
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+
+        before_sections = {
+            "10k_parti_item1_business": (
+                "For the fiscal year ended January 28, 2024, see Item 7 of our Annual Report."
+            ),
+            "10k_parti_item1a_risk_factors": (
+                "We face competition in AI chips.\n\nSupply constraints could impact deliveries."
+            ),
+        }
+        after_sections = {
+            "10k_parti_item1_business": (
+                "For the fiscal year ended January 26, 2025, see Item 7 of our Annual Report."
+            ),
+            "10k_parti_item1a_risk_factors": (
+                "We face heightened competition in AI and accelerated computing chips.\n\n"
+                "New export controls and licensing requirements may materially constrain sales."
+            ),
+        }
+
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        deltas = {d.section_id: d for d in result.section_deltas}
+        assert (
+            deltas["10k_parti_item1a_risk_factors"].interest_score
+            > deltas["10k_parti_item1_business"].interest_score
+        )
+        assert result.section_deltas[0].section_id == "10k_parti_item1a_risk_factors"
+
+
+def test_canonical_title_fallback():
+    md = (
+        "ITEM 1A. RISK FACTORSFor a discussion of this Annual Report on Form 10-K for "
+        "additional information.\n\nBody text."
+    )
+    matches = find_sections(md, "10-K")
+    assert matches
+    assert matches[0].item == "1A"
+    assert matches[0].title == "Risk Factors"

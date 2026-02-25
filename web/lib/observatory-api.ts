@@ -4,6 +4,7 @@ import type {
   CompanySummary,
   CompanyDetail,
   DiffResult,
+  SectionType,
   TimelineEntry,
   SearchResult,
   StatsResponse,
@@ -34,9 +35,17 @@ export async function getCompany(ticker: string): Promise<CompanyDetail> {
 export async function getDiff(
   ticker: string,
   formType = "10-K",
+  opts: { detail?: "full" | "sections"; sectionTypes?: SectionType[] } = {},
 ): Promise<DiffResult> {
+  const params = new URLSearchParams({
+    form_type: formType,
+    detail: opts.detail ?? "full",
+  });
+  if (opts.sectionTypes && opts.sectionTypes.length > 0) {
+    params.set("section_types", opts.sectionTypes.join(","));
+  }
   return fetchJSON<DiffResult>(
-    `/companies/${encodeURIComponent(ticker)}/diff?form_type=${encodeURIComponent(formType)}`,
+    `/companies/${encodeURIComponent(ticker)}/diff?${params.toString()}`,
   );
 }
 

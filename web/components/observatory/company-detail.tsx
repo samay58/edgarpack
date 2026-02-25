@@ -68,19 +68,29 @@ export function CompanyDetail({
           <div className="obs-section-bars" style={{ marginTop: 12 }}>
             {diff.section_deltas
               .filter((d) => d.change_type !== "unchanged")
-              .sort((a, b) => b.change_intensity - a.change_intensity)
+              .sort((a, b) => {
+                if (b.interest_score !== a.interest_score) {
+                  return b.interest_score - a.interest_score;
+                }
+                return b.change_intensity - a.change_intensity;
+              })
               .slice(0, 8)
               .map((d) => (
                 <button
                   key={d.section_id}
-                  className="obs-section-bar"
+                  className={`obs-section-bar ${d.section_type !== "prose" ? "obs-section-bar-muted" : ""}`}
                   onClick={() =>
                     router.push(
                       `/observatory/${company.ticker}/timeline/${encodeURIComponent(d.section_id)}`,
                     )
                   }
                 >
-                  <span className="obs-bar-title">{d.title || d.section_id}</span>
+                  <span className="obs-bar-title">
+                    {d.title || d.section_id}
+                    {d.section_type !== "prose" && (
+                      <span className="obs-bar-type"> {d.section_type.replace(/_/g, " ")}</span>
+                    )}
+                  </span>
                   <span className="obs-bar-fill">
                     <span
                       className={`obs-fill obs-fill-${d.change_type}`}

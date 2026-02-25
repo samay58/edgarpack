@@ -26,6 +26,11 @@ export type CompanyDetail = {
 };
 
 export type ChangeType = "unchanged" | "modified" | "added" | "removed";
+export type SectionType =
+  | "prose"
+  | "financial_statement"
+  | "signature"
+  | "exhibit_index";
 
 export type ParagraphDelta = {
   change_type: ChangeType;
@@ -34,17 +39,20 @@ export type ParagraphDelta = {
   similarity: number;
   old_word_count: number;
   new_word_count: number;
+  is_boilerplate: boolean;
 };
 
 export type SectionDelta = {
   section_id: string;
   title: string;
   change_type: ChangeType;
+  section_type: SectionType;
   paragraphs_added: number;
   paragraphs_removed: number;
   paragraphs_modified: number;
   paragraphs_unchanged: number;
   change_intensity: number;
+  interest_score: number;
   paragraph_deltas: ParagraphDelta[];
 };
 

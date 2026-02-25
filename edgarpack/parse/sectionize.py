@@ -74,6 +74,29 @@ TITLED_SECTION_PATTERN = re.compile(
 
 BOLD_HEADING_PATTERN = re.compile(r"\*\*(?P<title>[A-Z0-9][A-Z0-9 &/().,'\-–—]+?)\*\*")
 
+_CANONICAL_ITEM_TITLES = {
+    "1": "Business",
+    "1A": "Risk Factors",
+    "1B": "Unresolved Staff Comments",
+    "1C": "Cybersecurity",
+    "2": "Properties",
+    "3": "Legal Proceedings",
+    "4": "Mine Safety Disclosures",
+    "5": "Market for Registrant's Common Equity",
+    "6": "Reserved",
+    "7": "Management's Discussion and Analysis",
+    "7A": "Quantitative and Qualitative Disclosures About Market Risk",
+    "8": "Financial Statements and Supplementary Data",
+    "9": "Changes in and Disagreements with Accountants",
+    "9A": "Controls and Procedures",
+    "9B": "Other Information",
+    "10": "Directors, Executive Officers and Corporate Governance",
+    "11": "Executive Compensation",
+    "12": "Security Ownership",
+    "13": "Certain Relationships and Related Transactions",
+    "14": "Principal Accountant Fees and Services",
+}
+
 
 def normalize_form_type_for_sections(form_type: str) -> str:
     """Normalize form type for section detection and IDs.
@@ -311,6 +334,16 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         t = _normalize_heading_text(raw)
         # Fix common flattening artifacts where words get concatenated when HTML tags are stripped.
         t = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", t)
+        # Remove trailing cross-reference boilerplate often concatenated into headings.
+        for pattern in (
+            r"\s+(?:for|see|refer to|please see|as discussed)\s+"
+            r"(?:a\s+)?(?:discussion|details?|information|more|further)\b.*$",
+            r"\s+for\s+(?:a\s+)?discussion\s+of\b.*$",
+            r"\s*(?:the following|this section|information)(?:\s+(?:discussion|table|report)).*$",
+            r"\s*of this annual report.*$",
+            r"\s*of (?:our|the) (?:\d{4}\s+)?(?:annual|quarterly) report.*$",
+        ):
+            t = re.sub(pattern, "", t, flags=re.IGNORECASE)
         return t
 
     def _truncate_title(t: str) -> str:
@@ -318,6 +351,53 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             return t
         head = t[:100]
         return head.rsplit(" ", 1)[0] if " " in head else head
+
+    def _canonical_title(item: str) -> str | None:
+        return _CANONICAL_ITEM_TITLES.get(item.upper())
+
+    def _content_word_count(title: str) -> int:
+        words = re.findall(r"[A-Za-z]{2,}", title)
+        stop = {
+            "of",
+            "the",
+            "this",
+            "that",
+            "for",
+            "to",
+            "and",
+            "our",
+            "report",
+            "annual",
+            "quarterly",
+            "form",
+            "item",
+            "section",
+            "information",
+            "discussion",
+            "see",
+            "refer",
+        }
+        return len([w for w in words if w.lower() not in stop])
+
+    def _starts_with_cross_reference(title: str) -> bool:
+        return bool(
+            re.match(r"^(?:for|see|refer to|please see|as discussed|information)\b", title, re.I)
+        )
+
+    def _normalize_item_title(item: str, title: str) -> str:
+        clean_title = _truncate_title(_clean_title(title)).strip()
+        if item == "other":
+            return clean_title
+
+        canonical = _canonical_title(item)
+        needs_fallback = (
+            not clean_title
+            or _starts_with_cross_reference(clean_title)
+            or _content_word_count(clean_title) < 3
+        )
+        if needs_fallback and canonical:
+            return canonical
+        return clean_title or canonical or f"Item {item}"
 
     seen_titles: set[str] = set()
 
@@ -354,7 +434,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
 
     def _add_item_match(item: str, title: str, part: str | None, char_pos: int) -> None:
         nonlocal matches
-        clean_title = _truncate_title(_clean_title(title))
+        clean_title = _normalize_item_title(item, title)
         matches.append(
             SectionMatch(
                 line_num=line_num,

@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from .models import ChangeType, SectionDelta
-from .section_diff import _compute_section_intensity
+from .section_diff import _classify_section, _compute_section_intensity, compute_interest_score
 from .text_diff import diff_paragraphs
 
 
@@ -103,6 +103,7 @@ def build_timeline(
                 section_id=section_id,
                 title=target_section.get("title", section_id),
                 change_type=change_type,
+                section_type=_classify_section(section_id),
                 paragraphs_added=added,
                 paragraphs_removed=removed,
                 paragraphs_modified=modified,
@@ -110,6 +111,7 @@ def build_timeline(
                 paragraph_deltas=para_deltas,
             )
             delta.change_intensity = _compute_section_intensity(delta)
+            delta.interest_score = compute_interest_score(delta)
 
         entries.append(
             TimelineEntry(

@@ -37,6 +37,41 @@ def _split_paragraphs(text: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
+_BOILERPLATE_TOKEN_PATTERN = re.compile(
+    r"^(?:"
+    r"\d{1,4}"
+    r"|q[1-4]"
+    r"|fy\d{2,4}"
+    r"|f\d{2,4}"
+    r"|january|february|march|april|may|june|july|august|september|october|november|december"
+    r"|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec"
+    r"|fiscal|year|quarter|ended|ending|beginning|begin|through|since"
+    r"|item|form|report|annual|quarterly|page|pages|note|notes|section|see|refer|discussion"
+    r"|st|nd|rd|th"
+    r")$",
+    re.IGNORECASE,
+)
+
+
+def _tokenize_for_change_detection(text: str) -> set[str]:
+    """Tokenize normalized text to alphanumeric words for lightweight heuristics."""
+    return set(re.findall(r"[a-z0-9]+", _normalize(text)))
+
+
+def _is_boilerplate_change(old_text: str, new_text: str, similarity: float) -> bool:
+    """Detect mechanical changes unlikely to be substantive (dates/refs/page numbers)."""
+    if similarity < 0.80:
+        return False
+
+    old_words = _tokenize_for_change_detection(old_text)
+    new_words = _tokenize_for_change_detection(new_text)
+    diff_words = (old_words - new_words) | (new_words - old_words)
+    if not diff_words:
+        return False
+
+    return all(_BOILERPLATE_TOKEN_PATTERN.match(word) for word in diff_words)
+
+
 def diff_paragraphs(
     old_text: str,
     new_text: str,
@@ -121,6 +156,7 @@ def diff_paragraphs(
                 similarity=sim,
                 old_word_count=len(op.split()),
                 new_word_count=len(np_.split()),
+                is_boilerplate=_is_boilerplate_change(op, np_, sim),
             )
         )
 
