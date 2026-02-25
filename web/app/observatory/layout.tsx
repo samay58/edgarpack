@@ -15,12 +15,12 @@ export default function ObservatoryLayout({
     <div className="shell-root observatory-shell">
       <header className="panel topbar">
         <div className="topbar-left">
-          <h1 style={{ fontSize: "1.15rem" }}>Filing Observatory</h1>
-          <span className="muted" style={{ fontSize: "0.85rem" }}>
+          <h1 className="obs-topbar-title">Filing Observatory</h1>
+          <span className="muted obs-topbar-subtitle">
             EdgarPack cross-corpus analysis
           </span>
         </div>
-        <nav className="topbar-actions">
+        <nav className="topbar-actions" aria-label="observatory navigation">
           <Link href="/observatory" className="secondary-btn">
             Companies
           </Link>
@@ -29,7 +29,9 @@ export default function ObservatoryLayout({
           </Link>
         </nav>
       </header>
-      {children}
+      <main id="observatory-main" className="main-content">
+        {children}
+      </main>
     </div>
   );
 }

@@ -618,6 +618,51 @@ input {
   color: #16398f;
 }
 
+.obs-topbar-title {
+  font-size: 1.15rem;
+}
+
+.obs-topbar-subtitle {
+  font-size: 0.85rem;
+}
+
+.obs-panel-padded {
+  padding: 14px;
+}
+
+.obs-page-title {
+  font-size: 1.1rem;
+}
+
+.obs-diff-title {
+  font-size: 1.05rem;
+}
+
+.obs-section-title {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.obs-meta-text {
+  font-size: 0.85rem;
+}
+
+.obs-row-gap-sm {
+  gap: 8px;
+}
+
+.obs-control-spacer {
+  margin-left: 8px;
+}
+
+.obs-stack-md {
+  margin-top: 12px;
+}
+
+.obs-accession {
+  font-size: 0.82rem;
+}
+
 .obs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -801,14 +846,60 @@ input {
   border-color: rgba(164, 176, 205, 0.8);
 }
 
+.obs-section-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 14px 0;
+}
+
 .obs-section-header {
   display: block;
   width: 100%;
   text-align: left;
   background: none;
   border: none;
-  padding: 12px 14px;
+  padding: 4px 0 10px;
   cursor: pointer;
+  flex: 1;
+}
+
+.obs-section-header-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.obs-section-metrics {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.obs-section-score {
+  font-size: 0.78rem;
+}
+
+.obs-section-intensity {
+  font-size: 0.85rem;
+}
+
+.obs-section-toggle {
+  font-size: 0.85rem;
+  width: 10px;
+  text-align: center;
+}
+
+.obs-section-summary {
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.obs-section-timeline-link {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  align-self: center;
 }
 
 .obs-section-header:hover {
@@ -821,6 +912,7 @@ input {
   border-radius: 999px;
   padding: 2px 8px;
   text-transform: uppercase;
+  margin-left: 8px;
 }
 
 .obs-change-unchanged {
@@ -891,6 +983,20 @@ input {
   background: #f6f9ff;
   padding: 2px 8px;
   margin-top: 6px;
+}
+
+.obs-subtle-tag-inline {
+  margin-left: 8px;
+  margin-top: 0;
+}
+
+.obs-similarity {
+  font-size: 0.78rem;
+}
+
+.obs-empty-state {
+  padding: 24px;
+  text-align: center;
 }
 
 .obs-timeline {
@@ -1005,6 +1111,24 @@ input {
 
   .obs-search-form {
     flex-direction: column;
+  }
+
+  .obs-section-header-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .obs-section-header-main {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .obs-section-metrics {
+    justify-content: flex-start;
+  }
+
+  .obs-section-timeline-link {
+    align-self: flex-start;
   }
 }
 

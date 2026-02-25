@@ -21,13 +21,13 @@ export function CompanyDetail({
 
   return (
     <div className="page-stack">
-      <div className="panel" style={{ padding: 14 }}>
+      <div className="panel obs-panel-padded">
         <div className="row between">
           <div>
-            <h2 style={{ fontSize: "1.1rem" }}>
+            <h2 className="obs-page-title">
               {company.ticker} &mdash; {company.company_name}
             </h2>
-            <span className="muted" style={{ fontSize: "0.85rem" }}>
+            <span className="muted obs-meta-text">
               CIK {company.cik} &middot; {company.filing_count} filings
             </span>
           </div>
@@ -47,8 +47,8 @@ export function CompanyDetail({
       </div>
 
       {diff && (
-        <div className="panel" style={{ padding: 14 }}>
-          <h3 style={{ fontSize: "0.95rem", marginBottom: 8 }}>
+        <div className="panel obs-panel-padded">
+          <h3 className="obs-section-title">
             Latest diff: {diff.before_date} vs {diff.after_date}
           </h3>
           <div className="obs-stat-row">
@@ -65,7 +65,7 @@ export function CompanyDetail({
               <strong>{diff.sections_removed}</strong> removed
             </span>
           </div>
-          <div className="obs-section-bars" style={{ marginTop: 12 }}>
+          <div className="obs-section-bars obs-stack-md">
             {diff.section_deltas
               .filter((d) => d.change_type !== "unchanged")
               .sort((a, b) => {
@@ -104,8 +104,8 @@ export function CompanyDetail({
         </div>
       )}
 
-      <div className="panel" style={{ padding: 14 }}>
-        <h3 style={{ fontSize: "0.95rem", marginBottom: 8 }}>Filings</h3>
+      <div className="panel obs-panel-padded">
+        <h3 className="obs-section-title">Filings</h3>
         <table className="obs-table">
           <thead>
             <tr>
@@ -125,7 +125,7 @@ export function CompanyDetail({
                 <td>{f.filing_date}</td>
                 <td>{f.sections_count}</td>
                 <td>{(f.tokens_total / 1000).toFixed(0)}K</td>
-                <td className="muted" style={{ fontSize: "0.82rem" }}>
+                <td className="muted obs-accession">
                   {f.accession}
                 </td>
               </tr>

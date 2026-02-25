@@ -36,7 +36,7 @@ function ParagraphDiff({ delta }: { delta: ParagraphDelta }) {
           {delta.new_text && (
             <div className="obs-para-new">{delta.new_text}</div>
           )}
-          <span className="muted" style={{ fontSize: "0.78rem" }}>
+          <span className="muted obs-similarity">
             {(delta.similarity * 100).toFixed(0)}% similar
           </span>
         </>
@@ -56,6 +56,7 @@ function SectionDetail({
   hideBoilerplate: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const sectionContentId = `section-${delta.section_id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const changedParas = delta.paragraph_deltas.filter(
     (p) => p.change_type !== "unchanged" && (!hideBoilerplate || !p.is_boilerplate),
   );
@@ -64,54 +65,49 @@ function SectionDetail({
     <div
       className={`panel obs-section-detail ${delta.section_type !== "prose" ? "obs-section-detail-muted" : ""}`}
     >
-      <button
-        className="obs-section-header"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="row between" style={{ width: "100%" }}>
-          <div>
-            <strong>{delta.title || delta.section_id}</strong>
-            <span
-              className={`obs-change-badge obs-change-${delta.change_type}`}
-              style={{ marginLeft: 8 }}
-            >
-              {delta.change_type}
-            </span>
-            {delta.section_type !== "prose" && (
-              <span className="obs-subtle-tag" style={{ marginLeft: 8 }}>
-                {sectionTypeLabel(delta.section_type)}
+      <div className="obs-section-header-row">
+        <button
+          className="obs-section-header"
+          onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          aria-controls={sectionContentId}
+        >
+          <div className="obs-section-header-main">
+            <div>
+              <strong>{delta.title || delta.section_id}</strong>
+              <span className={`obs-change-badge obs-change-${delta.change_type}`}>
+                {delta.change_type}
               </span>
-            )}
+              {delta.section_type !== "prose" && (
+                <span className="obs-subtle-tag obs-subtle-tag-inline">
+                  {sectionTypeLabel(delta.section_type)}
+                </span>
+              )}
+            </div>
+            <div className="obs-section-metrics">
+              <span className="muted obs-section-score">
+                score {delta.interest_score.toFixed(1)}
+              </span>
+              <span className="obs-section-intensity">{pct(delta.change_intensity)}</span>
+              <span className="obs-section-toggle">{expanded ? "−" : "+"}</span>
+            </div>
           </div>
-          <div className="row" style={{ gap: 12 }}>
-            <span className="muted" style={{ fontSize: "0.78rem" }}>
-              score {delta.interest_score.toFixed(1)}
-            </span>
-            <span style={{ fontSize: "0.85rem" }}>{pct(delta.change_intensity)}</span>
-            <Link
-              href={`/observatory/${ticker}/timeline/${encodeURIComponent(delta.section_id)}`}
-              className="secondary-btn"
-              style={{ fontSize: "0.8rem", padding: "4px 8px" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              Timeline
-            </Link>
-            <span style={{ fontSize: "0.85rem" }}>{expanded ? "−" : "+"}</span>
-          </div>
-        </div>
-        {delta.change_type === "modified" && (
-          <div
-            className="muted"
-            style={{ fontSize: "0.82rem", marginTop: 4 }}
-          >
-            +{delta.paragraphs_added} added, −{delta.paragraphs_removed}{" "}
-            removed, ~{delta.paragraphs_modified} modified,{" "}
-            {delta.paragraphs_unchanged} unchanged
-          </div>
-        )}
-      </button>
+          {delta.change_type === "modified" && (
+            <div className="muted obs-section-summary">
+              +{delta.paragraphs_added} added, −{delta.paragraphs_removed} removed, ~
+              {delta.paragraphs_modified} modified, {delta.paragraphs_unchanged} unchanged
+            </div>
+          )}
+        </button>
+        <Link
+          href={`/observatory/${ticker}/timeline/${encodeURIComponent(delta.section_id)}`}
+          className="secondary-btn obs-section-timeline-link"
+        >
+          Timeline
+        </Link>
+      </div>
       {expanded && changedParas.length > 0 && (
-        <div className="obs-paras">
+        <div id={sectionContentId} className="obs-paras">
           {changedParas.map((p, i) => (
             <ParagraphDiff key={i} delta={p} />
           ))}
@@ -150,18 +146,18 @@ export function DiffViewer({
 
   return (
     <div className="page-stack">
-      <div className="panel" style={{ padding: 14 }}>
+      <div className="panel obs-panel-padded">
         <div className="row between">
           <div>
-            <h2 style={{ fontSize: "1.05rem" }}>
+            <h2 className="obs-diff-title">
               {diff.company}: {diff.before_date} vs {diff.after_date}
             </h2>
-            <span className="muted" style={{ fontSize: "0.85rem" }}>
+            <span className="muted obs-meta-text">
               {diff.form_type} &middot; Overall change:{" "}
               {pct(diff.overall_change_intensity)}
             </span>
           </div>
-          <div className="row" style={{ gap: 8 }}>
+          <div className="row obs-row-gap-sm">
             <div className="obs-stat-row">
               <span className="obs-stat">
                 <strong>{diff.sections_unchanged}</strong> unchanged
@@ -194,7 +190,7 @@ export function DiffViewer({
           >
             All sections
           </button>
-          <span className="control-label" style={{ marginLeft: 8 }}>
+          <span className="control-label obs-control-spacer">
             Type:
           </span>
           <button
@@ -252,7 +248,7 @@ export function DiffViewer({
       ))}
 
       {sorted.length === 0 && (
-        <div className="panel" style={{ padding: 24, textAlign: "center" }}>
+        <div className="panel obs-empty-state">
           <span className="muted">No changed sections</span>
         </div>
       )}

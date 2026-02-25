@@ -729,38 +729,18 @@ def _filter_toc_stubs(sections: list[Section]) -> list[Section]:
     """
     # Classify each section
     stubs: set[int] = set()
-    real: set[int] = set()
     for i, section in enumerate(sections):
         if section.id == "unknown_00":
-            real.add(i)
             continue
         if _is_toc_stub(section.content):
             stubs.add(i)
-        else:
-            real.add(i)
 
     if not stubs:
         return sections
 
-    # Build base-ID map for collision detection.
-    # A base ID is the ID without any _N suffix from deduplication (which hasn't
-    # happened yet at this point, so IDs are raw).
-    base_ids_real: set[str] = set()
-    for i in real:
-        base_ids_real.add(sections[i].id)
-
-    # Drop stubs. Merge their content into the previous section to avoid
-    # losing text that might sit between the stub heading and the next real heading.
-    filtered: list[Section] = []
-    for i, section in enumerate(sections):
-        if i in stubs:
-            # Merge stub content into previous section (extend char_end).
-            if filtered:
-                filtered[-1].char_end = section.char_end
-            continue
-        filtered.append(section)
-
-    return filtered
+    # Drop stubs outright. By definition they contain TOC table rows only and
+    # no prose, so keeping them only pollutes downstream diffs and IDs.
+    return [section for i, section in enumerate(sections) if i not in stubs]
 
 
 def sectionize(markdown: str, form_type: str) -> list[Section]:

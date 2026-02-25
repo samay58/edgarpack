@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..diff.models import ChangeType, ParagraphDelta
 from ..diff.section_diff import diff_filings
@@ -25,7 +25,7 @@ class LanguageShift(BaseModel):
     form_type: str
     before_date: str
     after_date: str
-    paragraph_deltas: list[ParagraphDelta] = []
+    paragraph_deltas: list[ParagraphDelta] = Field(default_factory=list)
 
 
 def detect_language_shifts(

@@ -121,6 +121,33 @@ edgarpack cache
 edgarpack cache --clear
 ```
 
+## Filing Observatory
+
+The Observatory layer turns filing packs into high-signal diffs, timelines, and
+search results for fast change review.
+
+- Change intensity is similarity-weighted (`1 - similarity`) for modified paragraphs.
+- Mechanical rollovers (dates, page refs, numeric-only boilerplate) are tagged
+  and discounted.
+- Each section includes `interest_score` and `section_type` so clients can rank
+  substantive disclosure changes above expected noise.
+- Diff results are disk-cached by manifest hash pair for warm-cache latency in
+  the single-digit millisecond range.
+
+Key API route:
+
+```text
+GET /api/v1/observatory/companies/{ticker}/diff?form_type=10-K&detail=sections&section_types=prose
+```
+
+Useful query parameters:
+
+- `detail=full|sections`: include full paragraph deltas or section-level payload only
+- `section_types=prose,financial_statement,signature,exhibit_index`: server-side filtering
+
+For full behavior and field semantics, see `docs/OBSERVATORY.md`.
+For onboarding and module-system mapping, see `docs/OBSERVATORY-EXPLAINER.md`.
+
 ## Development
 
 ```bash
@@ -129,7 +156,7 @@ ruff check .
 ruff format --check .
 
 # Tests
-python3 -m pytest tests/ -x -v
+uv run pytest tests/ -x -v
 ```
 
 ## SEC Compliance Notes

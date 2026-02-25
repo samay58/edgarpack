@@ -5,6 +5,7 @@ This Next.js app provides the interactive workspace shell for:
 - pack view rendering with citation pills
 - evidence explorer layout
 - bounded ask panel UX
+- filing observatory views (company grid, diff viewer, timeline, cross-corpus search)
 
 ## Run
 
@@ -21,6 +22,14 @@ export NEXT_PUBLIC_CHINA_LENS_API_BASE="http://127.0.0.1:8000/api/v1"
 ```
 
 If the API is unavailable, the app falls back to deterministic fixture data for local UI iteration.
+
+## Observatory Endpoints Used By The UI
+
+- `GET /observatory/companies`
+- `GET /observatory/companies/{ticker}`
+- `GET /observatory/companies/{ticker}/diff?detail=sections|full&section_types=...`
+- `GET /observatory/companies/{ticker}/timeline/{section_id}`
+- `GET /observatory/search`
 
 ## Test (quick smoke)
 

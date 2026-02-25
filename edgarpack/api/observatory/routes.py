@@ -6,14 +6,13 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from ...diff.models import DiffResult
 from ...diff.section_diff import diff_filings
 from ...diff.timeline import build_timeline
 from ...harvest.registry import PackRegistry
 from ...index.inverted import SearchIndex
 from ...index.search import search_corpus
 
-# Default paths
-_DEFAULT_PACKS_DIR = Path("./packs")
 _registry_local = threading.local()
 _search_index_local = threading.local()
 _VALID_SECTION_TYPES = {"prose", "financial_statement", "signature", "exhibit_index"}
@@ -43,7 +42,7 @@ def _parse_section_types(section_types: str) -> set[str] | None:
     return parsed or None
 
 
-def _filtered_diff_payload(result: Any, section_types: set[str] | None) -> dict:
+def _filtered_diff_payload(result: DiffResult, section_types: set[str] | None) -> dict:
     payload = result.model_dump()
     if section_types is None:
         return payload
