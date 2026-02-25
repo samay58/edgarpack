@@ -548,8 +548,7 @@ CONCEPT_SCOPE_WARNINGS: dict[str, str] = {
         "non-convertible debt instruments exist but are not captured."
     ),
     "ConvertibleDebtNoncurrent": (
-        "Noncurrent convertible debt only. Check for current portion and "
-        "other debt instruments."
+        "Noncurrent convertible debt only. Check for current portion and other debt instruments."
     ),
     "ConvertibleLongTermNotesPayable": (
         "Convertible long-term notes only. May understate total debt."

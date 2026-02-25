@@ -149,6 +149,94 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
 
+    # --- harvest subcommand ---
+    p_harvest = sub.add_parser(
+        "harvest",
+        help="Bulk-download and build filing packs from a universe definition",
+    )
+    p_harvest.add_argument(
+        "--universe",
+        "-u",
+        type=Path,
+        default=Path("universe.toml"),
+        help="Path to universe.toml (default: ./universe.toml)",
+    )
+    p_harvest.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        default=Path("./packs"),
+        help="Output directory for packs",
+    )
+    p_harvest.add_argument(
+        "--plan",
+        action="store_true",
+        help="Dry run: show what would be fetched without downloading",
+    )
+    p_harvest.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Only build filings not yet in registry",
+    )
+    p_harvest.add_argument(
+        "--with-chunks",
+        action="store_true",
+        help="Generate chunks.ndjson for each pack (needed for search index)",
+    )
+    p_harvest.add_argument(
+        "--concurrency",
+        type=int,
+        default=3,
+        help="Maximum concurrent SEC requests (default: 3)",
+    )
+    p_harvest.add_argument("--force", action="store_true", help="Rebuild all packs")
+
+    # --- diff subcommand ---
+    p_diff = sub.add_parser(
+        "diff",
+        help="Diff two filings of the same company (latest vs. prior by default)",
+    )
+    p_diff.add_argument(
+        "--ticker",
+        "-t",
+        help="Company ticker (uses registry to find packs)",
+    )
+    p_diff.add_argument("--form", "-f", default="10-K", help="Form type (default: 10-K)")
+    p_diff.add_argument("--before", help="Accession number or pack dir of earlier filing")
+    p_diff.add_argument("--after", help="Accession number or pack dir of later filing")
+    p_diff.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["summary", "full", "json"],
+        default="summary",
+        help="Output format (default: summary)",
+    )
+
+    # --- timeline subcommand ---
+    p_timeline = sub.add_parser(
+        "timeline",
+        help="Show how a section evolved across filings",
+    )
+    p_timeline.add_argument("--ticker", "-t", required=True, help="Company ticker")
+    p_timeline.add_argument(
+        "--section",
+        "-s",
+        required=True,
+        help="Section ID (e.g. 10k_parti_item1a_risk_factors)",
+    )
+    p_timeline.add_argument("--form", "-f", default="10-K", help="Form type (default: 10-K)")
+
+    # --- search subcommand ---
+    p_search = sub.add_parser(
+        "search",
+        help="Full-text search across the filing corpus",
+    )
+    p_search.add_argument("query", help="Search query")
+    p_search.add_argument("--topic", help="Filter by topic tag (e.g. risk:export_controls)")
+    p_search.add_argument("--ticker", help="Filter by company ticker")
+    p_search.add_argument("--form", help="Filter by form type")
+    p_search.add_argument("--limit", "-n", type=int, default=20, help="Max results (default: 20)")
+
     # --- comps subcommand ---
     p_comps = sub.add_parser(
         "comps",
@@ -194,6 +282,14 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_query(args)
     if args.cmd == "comps":
         return _cmd_comps(args)
+    if args.cmd == "harvest":
+        return _cmd_harvest(args)
+    if args.cmd == "diff":
+        return _cmd_diff(args)
+    if args.cmd == "timeline":
+        return _cmd_timeline(args)
+    if args.cmd == "search":
+        return _cmd_search(args)
 
     parser.print_help()
     return 2
@@ -446,6 +542,203 @@ def _cmd_comps(args: Any) -> int:
         return 0
 
     return asyncio.run(_run())
+
+
+def _cmd_harvest(args: Any) -> int:
+    if not args.universe.exists():
+        print(f"Error: universe file not found: {args.universe}", file=sys.stderr)
+        return 2
+
+    async def _run() -> int:
+        from .harvest.planner import plan_harvest
+        from .harvest.registry import PackRegistry
+        from .harvest.runner import run_harvest
+        from .harvest.universe import load_universe
+
+        universe = load_universe(args.universe)
+        registry = PackRegistry()
+
+        print(
+            f"Universe: {len(universe.companies)} companies from {args.universe}",
+            file=sys.stderr,
+        )
+
+        plan = await plan_harvest(universe, registry, refresh=bool(args.refresh))
+
+        print(
+            f"Plan: {plan.total_filings} total, {plan.new_filings} new, "
+            f"{plan.already_built} already built",
+            file=sys.stderr,
+        )
+
+        if args.plan:
+            # Dry run: print plan and exit
+            for item in plan.items:
+                status = "SKIP" if item.already_built else "NEW"
+                print(f"  [{status}] {item.ticker} {item.form_type} {item.filing_date}")
+            return 0
+
+        summary = await run_harvest(
+            plan,
+            out_dir=args.out,
+            registry=registry,
+            concurrency=int(args.concurrency),
+            with_chunks=bool(args.with_chunks),
+            force=bool(args.force),
+        )
+
+        registry.close()
+        return 1 if summary.get("failed", 0) > 0 else 0
+
+    return asyncio.run(_run())
+
+
+def _cmd_diff(args: Any) -> int:
+    from pathlib import Path
+
+    async def _run() -> int:
+        from .diff.section_diff import diff_filings
+
+        before_dir: Path | None = None
+        after_dir: Path | None = None
+
+        if args.before and args.after:
+            before_dir = Path(args.before)
+            after_dir = Path(args.after)
+        elif args.ticker:
+            from .harvest.registry import PackRegistry
+
+            registry = PackRegistry()
+            packs = registry.list_packs(ticker=args.ticker, form_type=args.form)
+            registry.close()
+
+            if len(packs) < 2:
+                print(
+                    f"Error: need at least 2 {args.form} filings for {args.ticker}, "
+                    f"found {len(packs)}",
+                    file=sys.stderr,
+                )
+                return 1
+
+            after_dir = Path(packs[0].pack_dir)
+            before_dir = Path(packs[1].pack_dir)
+        else:
+            print("Error: provide --ticker or both --before and --after", file=sys.stderr)
+            return 2
+
+        if not before_dir.exists() or not after_dir.exists():
+            print("Error: pack directory not found on disk", file=sys.stderr)
+            return 1
+
+        result = diff_filings(before_dir, after_dir)
+
+        if args.output_format == "json":
+            import json
+
+            print(json.dumps(result.model_dump(), indent=2, default=str))
+            return 0
+
+        # Summary format
+        print(f"{result.company} {result.form_type}")
+        print(f"  Before: {result.before_date} ({result.before_accession})")
+        print(f"  After:  {result.after_date} ({result.after_accession})")
+        print(
+            f"  Sections: {result.sections_unchanged} unchanged, "
+            f"{result.sections_modified} modified, "
+            f"{result.sections_added} added, "
+            f"{result.sections_removed} removed"
+        )
+        print(f"  Overall change intensity: {result.overall_change_intensity:.1%}")
+
+        if args.output_format == "full":
+            print()
+            for delta in result.section_deltas:
+                if delta.change_type.value == "unchanged":
+                    continue
+                print(f"  [{delta.change_type.value.upper()}] {delta.title} ({delta.section_id})")
+                if delta.change_type.value == "modified":
+                    print(
+                        f"    +{delta.paragraphs_added} -{delta.paragraphs_removed} "
+                        f"~{delta.paragraphs_modified} ={delta.paragraphs_unchanged}"
+                    )
+                    print(f"    Change intensity: {delta.change_intensity:.1%}")
+
+        return 0
+
+    return asyncio.run(_run())
+
+
+def _cmd_timeline(args: Any) -> int:
+    async def _run() -> int:
+        from .diff.timeline import build_timeline
+        from .harvest.registry import PackRegistry
+
+        registry = PackRegistry()
+        packs = registry.list_packs(ticker=args.ticker, form_type=args.form)
+        registry.close()
+
+        if not packs:
+            print(f"No {args.form} filings found for {args.ticker}", file=sys.stderr)
+            return 1
+
+        # Sort ascending by filing date
+        packs.sort(key=lambda p: p.filing_date)
+        pack_dirs = [Path(p.pack_dir) for p in packs if Path(p.pack_dir).exists()]
+
+        entries = build_timeline(pack_dirs, args.section)
+
+        print(f"Timeline: {args.ticker} / {args.section} / {args.form}\n")
+        for entry in entries:
+            if not entry.section_found:
+                print(f"  {entry.filing_date} ({entry.accession}): section not found")
+                continue
+
+            if entry.delta is None:
+                print(f"  {entry.filing_date} ({entry.accession}): initial ({entry.tokens} tokens)")
+            elif entry.delta.change_type.value == "unchanged":
+                print(f"  {entry.filing_date} ({entry.accession}): unchanged")
+            else:
+                d = entry.delta
+                print(
+                    f"  {entry.filing_date} ({entry.accession}): "
+                    f"+{d.paragraphs_added} -{d.paragraphs_removed} ~{d.paragraphs_modified} "
+                    f"({d.change_intensity:.0%} changed)"
+                )
+
+        return 0
+
+    return asyncio.run(_run())
+
+
+def _cmd_search(args: Any) -> int:
+    from .index.search import search_corpus
+
+    result = search_corpus(
+        query=args.query,
+        topic=args.topic,
+        ticker=args.ticker,
+        form_type=args.form,
+        limit=int(args.limit),
+    )
+
+    if result.total_hits == 0:
+        print("No results found.")
+        return 0
+
+    print(f"Found {result.total_hits} results across {len(result.companies)} companies\n")
+    if result.topics_found:
+        print(f"Topics: {', '.join(result.topics_found)}\n")
+
+    for hit in result.hits:
+        company = hit.ticker or hit.cik
+        print(f"  [{company}] {hit.form_type} {hit.filing_date} - {hit.section_id}")
+        snippet = hit.snippet.replace("\n", " ").strip()
+        if len(snippet) > 200:
+            snippet = snippet[:200] + "..."
+        print(f"    {snippet}")
+        print()
+
+    return 0
 
 
 if __name__ == "__main__":

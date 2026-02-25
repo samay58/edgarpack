@@ -17,7 +17,7 @@ from .models import CitedValue, DerivedValue
 
 # Regex to capture entire ix:nonFraction elements (opening tag + inner text).
 _IX_NONFRACTION_TAG_RE = re.compile(
-    r'<ix:nonFraction\b([^>]*)>([^<]*)</ix:nonFraction>',
+    r"<ix:nonFraction\b([^>]*)>([^<]*)</ix:nonFraction>",
     re.IGNORECASE | re.DOTALL,
 )
 # Attribute extractors (order-independent)

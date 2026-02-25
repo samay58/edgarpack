@@ -24,6 +24,7 @@ def create_app() -> Any:
 
     from fastapi.middleware.cors import CORSMiddleware
 
+    from .observatory import observatory_router
     from .routes import (
         ask_router,
         citations_router,
@@ -63,6 +64,7 @@ def create_app() -> Any:
     app.include_router(ask_router, prefix=api_prefix)
     app.include_router(citations_router, prefix=api_prefix)
     app.include_router(connectors_router, prefix=api_prefix)
+    app.include_router(observatory_router, prefix=api_prefix)
     return app
 
 

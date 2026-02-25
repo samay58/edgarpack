@@ -105,9 +105,7 @@ class TestResolveConceptFallback(unittest.TestCase):
             "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber"
         )
         facts = {
-            "us-gaap": {
-                options_tag: {"units": {"shares": [{"val": 100, "fy": 2025, "fp": "FY"}]}}
-            }
+            "us-gaap": {options_tag: {"units": {"shares": [{"val": 100, "fy": 2025, "fp": "FY"}]}}}
         }
         result = resolve_concept("options_itm", facts)
         self.assertIsNotNone(result)

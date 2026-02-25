@@ -1,0 +1,261 @@
+# EdgarPack Filing Observatory - Company Universe
+# This file defines which companies and filings to harvest.
+#
+# Usage: edgarpack harvest --universe universe.toml --out ./packs
+#
+# Per-company overrides take precedence over [defaults].
+# Foreign filers (20-F) need explicit CIK and forms_20f.
+
+[defaults]
+forms_10k = 2
+forms_10q = 4
+forms_8k = 5
+
+# --- Semiconductors ---
+
+[[companies]]
+ticker = "NVDA"
+
+[[companies]]
+ticker = "AMD"
+
+[[companies]]
+ticker = "INTC"
+
+[[companies]]
+ticker = "AVGO"
+
+[[companies]]
+ticker = "QCOM"
+
+[[companies]]
+ticker = "TXN"
+
+[[companies]]
+ticker = "MU"
+
+[[companies]]
+ticker = "MRVL"
+
+[[companies]]
+ticker = "ADI"
+
+[[companies]]
+ticker = "NXPI"
+
+[[companies]]
+ticker = "ON"
+
+[[companies]]
+ticker = "MCHP"
+
+[[companies]]
+ticker = "LRCX"
+
+[[companies]]
+ticker = "KLAC"
+
+[[companies]]
+ticker = "AMAT"
+
+[[companies]]
+ticker = "ASML"
+cik = "0000937966"
+forms_10q = 0
+forms_20f = 2
+
+[[companies]]
+ticker = "TSM"
+cik = "0001046179"
+forms_10q = 0
+forms_20f = 2
+
+# --- Hyperscalers / Cloud ---
+
+[[companies]]
+ticker = "MSFT"
+
+[[companies]]
+ticker = "GOOGL"
+
+[[companies]]
+ticker = "AMZN"
+
+[[companies]]
+ticker = "META"
+
+[[companies]]
+ticker = "AAPL"
+
+[[companies]]
+ticker = "ORCL"
+
+# --- Enterprise Software ---
+
+[[companies]]
+ticker = "CRM"
+
+[[companies]]
+ticker = "NOW"
+
+[[companies]]
+ticker = "ADBE"
+
+[[companies]]
+ticker = "INTU"
+
+[[companies]]
+ticker = "WDAY"
+
+[[companies]]
+ticker = "SNOW"
+
+[[companies]]
+ticker = "DDOG"
+
+[[companies]]
+ticker = "NET"
+
+[[companies]]
+ticker = "PANW"
+
+[[companies]]
+ticker = "CRWD"
+
+[[companies]]
+ticker = "ZS"
+
+[[companies]]
+ticker = "FTNT"
+
+[[companies]]
+ticker = "SPLK"
+
+[[companies]]
+ticker = "MDB"
+
+[[companies]]
+ticker = "TEAM"
+
+# --- Fintech ---
+
+[[companies]]
+ticker = "V"
+
+[[companies]]
+ticker = "MA"
+
+[[companies]]
+ticker = "PYPL"
+
+[[companies]]
+ticker = "SQ"
+
+[[companies]]
+ticker = "COIN"
+
+[[companies]]
+ticker = "AFRM"
+
+[[companies]]
+ticker = "HOOD"
+
+# --- Consumer Tech ---
+
+[[companies]]
+ticker = "NFLX"
+
+[[companies]]
+ticker = "UBER"
+
+[[companies]]
+ticker = "ABNB"
+
+[[companies]]
+ticker = "SNAP"
+
+[[companies]]
+ticker = "PINS"
+
+[[companies]]
+ticker = "RBLX"
+
+[[companies]]
+ticker = "SPOT"
+cik = "0001639920"
+forms_10q = 0
+forms_20f = 2
+
+# --- AI / Data Infrastructure ---
+
+[[companies]]
+ticker = "PLTR"
+
+[[companies]]
+ticker = "AI"
+
+[[companies]]
+ticker = "PATH"
+
+[[companies]]
+ticker = "SMCI"
+
+[[companies]]
+ticker = "VRT"
+
+[[companies]]
+ticker = "DELL"
+
+[[companies]]
+ticker = "HPE"
+
+# --- Networking / Telecom ---
+
+[[companies]]
+ticker = "CSCO"
+
+[[companies]]
+ticker = "ANET"
+
+# --- EDA / Design ---
+
+[[companies]]
+ticker = "SNPS"
+
+[[companies]]
+ticker = "CDNS"
+
+# --- Misc Tech ---
+
+[[companies]]
+ticker = "IBM"
+
+[[companies]]
+ticker = "ACN"
+
+[[companies]]
+ticker = "SHOP"
+
+[[companies]]
+ticker = "TTD"
+
+[[companies]]
+ticker = "ZM"
+
+[[companies]]
+ticker = "TWLO"
+
+[[companies]]
+ticker = "ESTC"
+
+[[companies]]
+ticker = "CFLT"
+
+[[companies]]
+ticker = "DOCN"
+
+[[companies]]
+ticker = "GTLB"
+
+[[companies]]
+ticker = "ARM"
