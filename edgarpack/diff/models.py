@@ -21,6 +21,8 @@ class ParagraphDelta(BaseModel):
     old_text: str | None = None
     new_text: str | None = None
     similarity: float = 0.0
+    old_word_count: int = 0
+    new_word_count: int = 0
 
 
 class SectionDelta(BaseModel):

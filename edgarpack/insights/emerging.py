@@ -38,29 +38,37 @@ def detect_emerging_topics(
     """
     conn = index._get_conn()
 
-    # Count topic occurrences in current period
+    # Count topic occurrences in current period.
+    # Use DISTINCT accession to count unique filings, not raw chunks.
+    # This prevents a single verbose filing from inflating topic counts.
     current_rows = conn.execute(
-        "SELECT topics_json, ticker FROM chunks WHERE filing_date >= ?",
+        "SELECT topics_json, ticker, accession FROM chunks WHERE filing_date >= ?",
         (current_cutoff,),
     ).fetchall()
 
-    # Count topic occurrences in prior period
     prior_rows = conn.execute(
-        "SELECT topics_json, ticker FROM chunks WHERE filing_date >= ? AND filing_date < ?",
+        "SELECT topics_json, ticker, accession FROM chunks"
+        " WHERE filing_date >= ? AND filing_date < ?",
         (prior_cutoff, current_cutoff),
     ).fetchall()
 
     def _count_topics(rows: list) -> tuple[dict[str, int], dict[str, set[str]]]:
-        counts: dict[str, int] = {}
+        """Count topics by unique filings (accessions), not chunks."""
+        # Track which (topic, accession) pairs we've seen
+        seen: dict[str, set[str]] = {}
         companies: dict[str, set[str]] = {}
         for row in rows:
             topics = json.loads(row["topics_json"]) if row["topics_json"] else []
             ticker = row["ticker"] or ""
+            accession = row["accession"] or ""
             for t in topics:
-                counts[t] = counts.get(t, 0) + 1
+                if t not in seen:
+                    seen[t] = set()
+                seen[t].add(accession)
                 if t not in companies:
                     companies[t] = set()
                 companies[t].add(ticker)
+        counts = {t: len(accs) for t, accs in seen.items()}
         return counts, companies
 
     current_counts, current_companies = _count_topics(current_rows)

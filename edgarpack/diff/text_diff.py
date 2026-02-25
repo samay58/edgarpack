@@ -81,6 +81,8 @@ def diff_paragraphs(
                         old_text=old_paras[i],
                         new_text=new_paras[j],
                         similarity=1.0,
+                        old_word_count=len(old_paras[i].split()),
+                        new_word_count=len(new_paras[j].split()),
                     )
                 )
                 break
@@ -117,6 +119,8 @@ def diff_paragraphs(
                 old_text=op,
                 new_text=np_,
                 similarity=sim,
+                old_word_count=len(op.split()),
+                new_word_count=len(np_.split()),
             )
         )
 
@@ -128,6 +132,7 @@ def diff_paragraphs(
                     change_type=ChangeType.REMOVED,
                     old_text=old_paras[i],
                     similarity=0.0,
+                    old_word_count=len(old_paras[i].split()),
                 )
             )
 
@@ -138,6 +143,7 @@ def diff_paragraphs(
                     change_type=ChangeType.ADDED,
                     new_text=new_paras[j],
                     similarity=0.0,
+                    new_word_count=len(new_paras[j].split()),
                 )
             )
 

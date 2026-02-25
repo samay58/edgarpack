@@ -26,17 +26,35 @@ def _read_section(pack_dir: Path, section_path: str) -> str:
 
 
 def _compute_section_intensity(delta: SectionDelta) -> float:
-    """Compute change intensity for a section (0.0 = identical, 1.0 = fully rewritten)."""
-    total = (
-        delta.paragraphs_unchanged
-        + delta.paragraphs_modified
-        + delta.paragraphs_added
-        + delta.paragraphs_removed
-    )
-    if total == 0:
+    """Compute change intensity for a section (0.0 = identical, 1.0 = fully rewritten).
+
+    Weighted by word count so a 3-word boilerplate change counts less than a
+    200-word risk factor rewrite. Falls back to paragraph count if word counts
+    are unavailable.
+    """
+    if not delta.paragraph_deltas:
+        total = (
+            delta.paragraphs_unchanged
+            + delta.paragraphs_modified
+            + delta.paragraphs_added
+            + delta.paragraphs_removed
+        )
+        if total == 0:
+            return 0.0
+        changed = delta.paragraphs_modified + delta.paragraphs_added + delta.paragraphs_removed
+        return changed / total
+
+    total_words = 0
+    changed_words = 0
+    for pd in delta.paragraph_deltas:
+        words = max(pd.old_word_count, pd.new_word_count)
+        total_words += words
+        if pd.change_type != ChangeType.UNCHANGED:
+            changed_words += words
+
+    if total_words == 0:
         return 0.0
-    changed = delta.paragraphs_modified + delta.paragraphs_added + delta.paragraphs_removed
-    return changed / total
+    return changed_words / total_words
 
 
 def diff_filings(

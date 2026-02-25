@@ -11,7 +11,9 @@ _RISK_PATTERNS: dict[str, list[re.Pattern]] = {
         re.compile(r"export\s+restriction", re.I),
         re.compile(r"trade\s+sanction", re.I),
         re.compile(r"export\s+licen[sc]e", re.I),
-        re.compile(r"EAR|ITAR", re.I),
+        # EAR/ITAR as whole words only to avoid false matches
+        re.compile(r"\bEAR\b(?!\s+(?:of|for|to)\b)", re.I),
+        re.compile(r"\bITAR\b", re.I),
     ],
     "cybersecurity": [
         re.compile(r"cyber\s*security", re.I),
@@ -34,17 +36,24 @@ _RISK_PATTERNS: dict[str, list[re.Pattern]] = {
         re.compile(r"manufacturing\s+(capacity|constraint)", re.I),
     ],
     "competition": [
-        re.compile(r"competit(ive|ion|or)", re.I),
-        re.compile(r"market\s+share", re.I),
+        # Require risk/threat context to avoid "competitive advantage" positives
+        re.compile(r"competit(ive|ion)\s+(risk|threat|pressure|challenge)", re.I),
+        re.compile(r"(intense|significant|increasing)\s+competit", re.I),
+        re.compile(r"market\s+share\s+(loss|declin|erosion)", re.I),
         re.compile(r"pricing\s+pressure", re.I),
     ],
     "regulatory": [
-        re.compile(r"regulat(ory|ion)", re.I),
+        # Require enough context to distinguish from passing mentions
+        re.compile(r"regulatory\s+(risk|burden|change|requirement|compliance|uncertainty)", re.I),
+        re.compile(r"new\s+regulat(ory|ion)", re.I),
         re.compile(r"compliance\s+requirement", re.I),
         re.compile(r"government\s+regulation", re.I),
     ],
     "china_risk": [
-        re.compile(r"China|Chinese\s+government|PRC", re.I),
+        # Require risk/restriction context; avoid matching "China revenue grew"
+        re.compile(r"China\s+(risk|restriction|regulation|sanction|ban)", re.I),
+        re.compile(r"Chinese\s+government", re.I),
+        re.compile(r"\bPRC\s+(regulat|restrict|government)", re.I),
         re.compile(r"geopolit", re.I),
         re.compile(r"U\.S\.\s*-\s*China", re.I),
     ],

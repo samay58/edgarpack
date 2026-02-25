@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ..diff.models import ChangeType
+from ..diff.models import ChangeType, ParagraphDelta
 from ..diff.section_diff import diff_filings
 
 
@@ -19,10 +19,13 @@ class LanguageShift(BaseModel):
     paragraphs_added: int
     paragraphs_removed: int
     paragraphs_modified: int
+    words_changed: int = 0
+    words_total: int = 0
     company: str
     form_type: str
     before_date: str
     after_date: str
+    paragraph_deltas: list[ParagraphDelta] = []
 
 
 def detect_language_shifts(
@@ -52,6 +55,20 @@ def detect_language_shifts(
         if delta.change_intensity < threshold:
             continue
 
+        # Compute word-level metrics for traceability
+        words_changed = 0
+        words_total = 0
+        for pd in delta.paragraph_deltas:
+            w = max(pd.old_word_count, pd.new_word_count)
+            words_total += w
+            if pd.change_type != ChangeType.UNCHANGED:
+                words_changed += w
+
+        # Only include non-unchanged deltas to keep payload manageable
+        changed_deltas = [
+            pd for pd in delta.paragraph_deltas if pd.change_type != ChangeType.UNCHANGED
+        ]
+
         shifts.append(
             LanguageShift(
                 section_id=delta.section_id,
@@ -60,10 +77,13 @@ def detect_language_shifts(
                 paragraphs_added=delta.paragraphs_added,
                 paragraphs_removed=delta.paragraphs_removed,
                 paragraphs_modified=delta.paragraphs_modified,
+                words_changed=words_changed,
+                words_total=words_total,
                 company=result.company,
                 form_type=result.form_type,
                 before_date=result.before_date,
                 after_date=result.after_date,
+                paragraph_deltas=changed_deltas,
             )
         )
 

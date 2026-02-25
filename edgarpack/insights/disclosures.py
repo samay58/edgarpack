@@ -3,11 +3,27 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from pydantic import BaseModel
 
 from ..diff.text_diff import _jaccard, _split_paragraphs
+
+
+def _is_table_paragraph(text: str) -> bool:
+    """Check if paragraph is just table formatting (no prose content)."""
+    lines = text.strip().split("\n")
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("|") and stripped.count("|") >= 2:
+            continue
+        if re.fullmatch(r"[-|:\s]+", stripped):
+            continue
+        return False
+    return True
 
 
 class NewDisclosure(BaseModel):
@@ -17,6 +33,8 @@ class NewDisclosure(BaseModel):
     section_title: str
     paragraph_text: str
     max_prior_similarity: float
+    closest_prior_text: str | None = None
+    word_count: int = 0
     filing_date: str
     accession: str
 
@@ -79,13 +97,15 @@ def detect_new_disclosures(
         if not prior_section_paras:
             # Entire section is new
             for para in current_paras:
-                if len(para.split()) >= 10:  # Skip very short paragraphs
+                wc = len(para.split())
+                if wc >= 10 and not _is_table_paragraph(para):
                     disclosures.append(
                         NewDisclosure(
                             section_id=sid,
                             section_title=section.get("title", sid),
                             paragraph_text=para,
                             max_prior_similarity=0.0,
+                            word_count=wc,
                             filing_date=filing.get("filing_date", ""),
                             accession=filing.get("accession", ""),
                         )
@@ -93,18 +113,27 @@ def detect_new_disclosures(
             continue
 
         for para in current_paras:
-            if len(para.split()) < 10:
+            wc = len(para.split())
+            if wc < 10 or _is_table_paragraph(para):
                 continue
 
-            max_sim = max(_jaccard(para, pp) for pp in prior_section_paras)
+            best_sim = 0.0
+            best_prior = None
+            for pp in prior_section_paras:
+                sim = _jaccard(para, pp)
+                if sim > best_sim:
+                    best_sim = sim
+                    best_prior = pp
 
-            if max_sim < similarity_threshold:
+            if best_sim < similarity_threshold:
                 disclosures.append(
                     NewDisclosure(
                         section_id=sid,
                         section_title=section.get("title", sid),
                         paragraph_text=para,
-                        max_prior_similarity=max_sim,
+                        max_prior_similarity=best_sim,
+                        closest_prior_text=best_prior,
+                        word_count=wc,
                         filing_date=filing.get("filing_date", ""),
                         accession=filing.get("accession", ""),
                     )

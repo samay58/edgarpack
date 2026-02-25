@@ -374,7 +374,10 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             continue
 
         # Arm TOC skipping when we see a TOC header.
-        if re.search(r"\btable\s+of\s+contents\b", line_stripped, flags=re.IGNORECASE):
+        # Some filings use "INDEX" instead of "Table of Contents".
+        if re.search(r"\btable\s+of\s+contents\b", line_stripped, flags=re.IGNORECASE) or (
+            re.fullmatch(r"\s*INDEX\s*", line_stripped, flags=re.IGNORECASE)
+        ):
             toc_armed = True
             in_toc_table = False
             toc_tables_seen = False
@@ -386,7 +389,21 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                 in_toc_table = True
                 toc_tables_seen = True
                 continue
+            if _is_table_separator_row(line_stripped):
+                # Separator rows (| --- | --- |) are part of the TOC table header.
+                if toc_tables_seen or not in_toc_table:
+                    continue
+            # Check for benign TOC table header rows (empty cells, "Page" header).
+            cells = _split_table_cells(line_stripped)
+            cell_text = " ".join(c.strip() for c in cells).strip()
+            is_benign_header = not cell_text or re.fullmatch(
+                r"[\s|]*(?:page)?[\s|]*", cell_text, re.IGNORECASE
+            )
+            if is_benign_header and not toc_tables_seen:
+                # Tolerate blank/header rows before the first real TOC row.
+                continue
             if in_toc_table:
+                # Non-TOC row after TOC rows: the TOC table has ended.
                 in_toc_table = False
                 toc_armed = False
             elif toc_tables_seen:
@@ -398,7 +415,9 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             toc_armed
             and not is_table
             and not toc_tables_seen
-            and not re.search(r"\btable\s+of\s+contents\b", line_stripped, flags=re.IGNORECASE)
+            and not re.search(
+                r"\btable\s+of\s+contents\b|\bINDEX\b", line_stripped, flags=re.IGNORECASE
+            )
         ):
             # TOC heading was not followed by TOC-like rows. Do not skip later tables.
             toc_armed = False
@@ -582,6 +601,88 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
     return deduped
 
 
+def _is_toc_stub(content: str) -> bool:
+    """Check if section content is just a TOC table row (stub, not real content).
+
+    A TOC stub is a section whose content is entirely or almost entirely table
+    rows that look like TOC entries (ITEM/PART text + page number). These appear
+    when the sectionizer picks up ITEM headings inside a Table of Contents table
+    that the TOC state machine failed to skip.
+
+    Returns False for sections with any meaningful prose, even if short.
+    """
+    lines = content.split("\n")
+    table_lines = 0
+    non_table_lines = 0
+    total_non_heading_chars = 0
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Table rows and separator rows
+        if stripped.startswith("|") and stripped.count("|") >= 2:
+            table_lines += 1
+            continue
+        # Markdown heading that's just the item title (e.g., "Item 1A. Risk Factors")
+        clean = re.sub(r"^#+\s*", "", stripped)
+        if re.match(r"(?:PART\s+[IVX]+\s*[-–—.:]?\s*)?ITEM\s*\d+[A-Z]?\b", clean, re.I):
+            continue
+        non_table_lines += 1
+        total_non_heading_chars += len(stripped)
+
+    # A TOC stub has table rows and essentially no prose content.
+    # If there's any non-table, non-heading text, it's real content.
+    if non_table_lines > 0:
+        return False
+    # Pure table content with no prose: stub if all table lines look like TOC rows.
+    return table_lines > 0
+
+
+def _filter_toc_stubs(sections: list[Section]) -> list[Section]:
+    """Remove TOC stub sections, preferring real content when IDs collide.
+
+    When the sectionizer creates both a stub (from a TOC table row) and a real
+    section with the same base ID, drop the stub so the real section keeps the
+    clean ID. Stubs that don't collide with any real section are also dropped
+    since they carry no useful content.
+    """
+    # Classify each section
+    stubs: set[int] = set()
+    real: set[int] = set()
+    for i, section in enumerate(sections):
+        if section.id == "unknown_00":
+            real.add(i)
+            continue
+        if _is_toc_stub(section.content):
+            stubs.add(i)
+        else:
+            real.add(i)
+
+    if not stubs:
+        return sections
+
+    # Build base-ID map for collision detection.
+    # A base ID is the ID without any _N suffix from deduplication (which hasn't
+    # happened yet at this point, so IDs are raw).
+    base_ids_real: set[str] = set()
+    for i in real:
+        base_ids_real.add(sections[i].id)
+
+    # Drop stubs. Merge their content into the previous section to avoid
+    # losing text that might sit between the stub heading and the next real heading.
+    filtered: list[Section] = []
+    for i, section in enumerate(sections):
+        if i in stubs:
+            # Merge stub content into previous section (extend char_end).
+            if filtered:
+                filtered[-1].char_end = section.char_end
+            continue
+        filtered.append(section)
+
+    return filtered
+
+
 def sectionize(markdown: str, form_type: str) -> list[Section]:
     """Split markdown into sections based on form-specific patterns.
 
@@ -648,6 +749,11 @@ def sectionize(markdown: str, form_type: str) -> list[Section]:
                 warnings=[],
             )
         )
+
+    # Filter out TOC stub sections: sections whose content is just table rows
+    # with page numbers and no substantial prose. When a duplicate ID exists,
+    # the stub should be dropped so the real content keeps the clean ID.
+    sections = _filter_toc_stubs(sections)
 
     # Check for duplicate IDs and make unique
     seen_ids: dict[str, int] = {}

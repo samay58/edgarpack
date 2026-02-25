@@ -1,0 +1,10 @@
+[defaults]
+forms_10k = 2
+forms_10q = 0
+forms_8k = 0
+
+[[companies]]
+ticker = "NVDA"
+
+[[companies]]
+ticker = "AMD"
