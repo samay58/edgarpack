@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=3200">
+  <title>Filing Observatory — Systems Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #F0F0EE;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    /* Utility: allow the poster to scroll horizontally on smaller screens */
+    .poster {
+      background-color: #FAFAF9;
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      font-synthesis: none;
+      gap: 20px;
+      height: fit-content;
+      line-height: 16px;
+      overflow: clip;
+      padding: 48px 56px;
+      width: 3200px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+      border-radius: 4px;
+    }
+    /* ---------- Generated timestamp badge ---------- */
+    .gen-badge {
+      position: absolute;
+      top: 48px;
+      right: 56px;
+      font-family: "Inter", system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #94A3B8;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="poster" style="position:relative;">
+
+  <!-- Generated badge -->
+  <div class="gen-badge">
+    Generated from codebase &middot; <script>document.write(document.lastModified.slice(0,10))</script>
+  </div>
+
+  <!-- ═══════════════════ HEADER ═══════════════════ -->
+  <div style="display:flex; flex-direction:column; gap:8px; padding-bottom:12px;">
+    <div style="display:flex; align-items:baseline; gap:16px;">
+      <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:800; font-size:38px; color:#111827; letter-spacing:-0.03em; line-height:40px;">Filing Observatory</span>
+      <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:300; font-size:38px; color:#9CA3AF; letter-spacing:-0.03em; line-height:40px;">Systems Map</span>
+    </div>
+    <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:14px; color:#6B7280; line-height:20px;">SEC EDGAR filings to structured insights. Nine modules, three phases, one pipeline.</span>
+  </div>
+
+  <!-- ═══════════════════ LEGEND ═══════════════════ -->
+  <div style="display:flex; align-items:center; gap:24px; padding:12px 0 8px 0;">
+    <!-- Pipeline -->
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div style="width:12px; height:12px; border-radius:3px; background-color:#2563EB; flex-shrink:0;"></div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#6B7280; letter-spacing:0.06em; text-transform:uppercase;">Pipeline</span>
+    </div>
+    <!-- Scoring -->
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div style="width:12px; height:12px; border-radius:3px; background-color:#D97706; flex-shrink:0;"></div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#6B7280; letter-spacing:0.06em; text-transform:uppercase;">Scoring</span>
+    </div>
+    <!-- Performance -->
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div style="width:12px; height:12px; border-radius:3px; background-color:#059669; flex-shrink:0;"></div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#6B7280; letter-spacing:0.06em; text-transform:uppercase;">Performance</span>
+    </div>
+    <!-- Noise Filtering -->
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div style="width:12px; height:12px; border-radius:3px; background-color:#9CA3AF; flex-shrink:0;"></div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#6B7280; letter-spacing:0.06em; text-transform:uppercase;">Noise Filtering</span>
+    </div>
+    <!-- Data Flow -->
+    <div style="display:flex; align-items:center; gap:6px;">
+      <svg width="20" height="10" viewBox="0 0 20 10"><line x1="0" y1="5" x2="14" y2="5" stroke="#CBD5E1" stroke-width="1.5"/><polygon points="14,2 20,5 14,8" fill="#CBD5E1"/></svg>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#6B7280; letter-spacing:0.06em; text-transform:uppercase;">Data Flow</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PIPELINE: 3 PHASE ZONES ═══════════════════ -->
+  <div style="display:flex; flex:0 0 auto; gap:20px; padding-top:16px;">
+
+    <!-- ─── PHASE 1: PARSE & PACK ─── -->
+    <div style="display:flex; flex-direction:column; gap:16px; background-color:#F8FAFC; border-radius:8px; padding:24px; flex:1;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:11px; color:#2563EB; letter-spacing:0.1em; text-transform:uppercase; line-height:14px;">Phase 1</span>
+        <div style="flex:1; height:1px; background-color:#E2E8F0;"></div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#94A3B8; letter-spacing:0.04em; text-transform:uppercase; line-height:14px;">Parse &amp; Pack</span>
+      </div>
+      <div style="display:flex; gap:12px; flex:1; align-items:stretch;">
+
+        <!-- SEC Filing HTML -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#2563EB; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">SEC Filing HTML</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Raw EDGAR HTML with iXBRL tags, inline styles, and nested tables</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Source</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">SEC EDGAR full-text archives</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">10-K, 10-Q, 8-K filing documents</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">SHA256-keyed disk cache; never re-fetches</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- sectionize -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#2563EB; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">sectionize</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Parse HTML into canonical sections with stable IDs and titles</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Cleaned markdown from HTML pipeline</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Section[] with stable IDs, canonical titles, markdown content</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Same HTML always yields identical section IDs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- pack artifacts -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#2563EB; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">pack artifacts</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Assemble filing pack with manifest, markdown, and chunks</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Section[] from sectionize</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">manifest.json, sections.md, chunks.ndjson</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Deterministic JSON serialization; byte-identical reruns</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── PHASE 2: DIFF & SCORE ─── -->
+    <div style="display:flex; flex-direction:column; gap:16px; background-color:#FFFCF5; border-radius:8px; padding:24px; flex:1.15;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:11px; color:#D97706; letter-spacing:0.1em; text-transform:uppercase; line-height:14px;">Phase 2</span>
+        <div style="flex:1; height:1px; background-color:#FDE68A;"></div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#B45309; letter-spacing:0.04em; text-transform:uppercase; line-height:14px;">Diff &amp; Score</span>
+      </div>
+      <div style="display:flex; gap:12px; flex:1; align-items:stretch;">
+
+        <!-- text_diff -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#2563EB; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">text_diff</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Paragraph-level diff with fingerprinting and similarity scoring</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Two section texts (before/after)</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#D97706; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">ParagraphDelta[] with Jaccard scores, word counts</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">SHA256 fingerprint short-circuits identical paragraphs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- section_diff -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#D97706; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">section_diff</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Change intensity, interest score, section typing, and cache</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Two filing packs (before + after)</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#D97706; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">SectionDelta with intensity, change type, interest rank</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Word-weighted intensity, not paragraph count</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- timeline + language_shift -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#D97706; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">timeline + language_shift</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Section evolution over time; flag anomalous change rates</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#2563EB; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Ordered filing packs for one company</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#D97706; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Chronological history, anomaly shift flags</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Shares _compute_section_intensity() with section_diff</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── PHASE 3: SERVE & VIEW ─── -->
+    <div style="display:flex; flex-direction:column; gap:16px; background-color:#F0FDF8; border-radius:8px; padding:24px; flex:1.15;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:11px; color:#059669; letter-spacing:0.1em; text-transform:uppercase; line-height:14px;">Phase 3</span>
+        <div style="flex:1; height:1px; background-color:#A7F3D0;"></div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:500; font-size:11px; color:#047857; letter-spacing:0.04em; text-transform:uppercase; line-height:14px;">Serve &amp; View</span>
+      </div>
+      <div style="display:flex; gap:12px; flex:1; align-items:stretch;">
+
+        <!-- observatory API -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#059669; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">observatory API</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">REST endpoints with detail levels and section type filtering</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#059669; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">PackRegistry + SearchIndex (SQLite)</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#059669; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">JSON: detail=full|sections, section_types filter</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">FastAPI routes at /api/v1/observatory/</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- typed web client -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#059669; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">typed web client</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">TypeScript client with full type safety mirroring server models</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#059669; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">API JSON responses</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#059669; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Typed domain objects for all endpoints</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Types mirror server Pydantic models exactly</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- views -->
+        <div style="display:flex; flex-direction:column; background-color:#FFFFFF; border-radius:6px; flex:1; overflow:hidden;">
+          <div style="height:3px; background-color:#059669; flex-shrink:0;"></div>
+          <div style="display:flex; flex-direction:column; padding:16px; gap:10px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:15px; color:#111827; letter-spacing:-0.01em; line-height:18px;">views</span>
+              <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:17px;">Interactive UI surfaces for filing analysis</span>
+            </div>
+            <div style="height:1px; background-color:#F1F5F9; flex-shrink:0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#059669; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Input</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Typed client data</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#059669; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Output</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">Grid, Detail, Diff, Timeline, Search</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#9CA3AF; letter-spacing:0.08em; text-transform:uppercase; line-height:14px;">Invariant</span>
+                <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:11px; color:#4B5563; line-height:16px;">URL-driven state for shareable deep links</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /pipeline -->
+
+  <!-- ═══════════════════ DATA FLOW STRIP ═══════════════════ -->
+  <div style="display:flex; flex-direction:column; gap:12px; padding-top:8px;">
+    <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:10px; color:#94A3B8; letter-spacing:0.12em; text-transform:uppercase; line-height:14px;">Data Flow</span>
+    <div style="display:flex; align-items:center; padding:0 16px;">
+
+      <!-- 1 SEC HTML -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#2563EB; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">1</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">SEC HTML</span>
+      </div>
+      <svg width="32" height="8" viewBox="0 0 32 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="24" y2="4" stroke="#CBD5E1" stroke-width="1.5"/><polygon points="24,1 31,4 24,7" fill="#CBD5E1"/></svg>
+
+      <!-- 2 sectionize -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#2563EB; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">2</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">sectionize</span>
+      </div>
+      <svg width="32" height="8" viewBox="0 0 32 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="24" y2="4" stroke="#CBD5E1" stroke-width="1.5"/><polygon points="24,1 31,4 24,7" fill="#CBD5E1"/></svg>
+
+      <!-- 3 pack -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#2563EB; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">3</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">pack</span>
+      </div>
+      <!-- phase crossing: dashed amber arrow -->
+      <svg width="48" height="8" viewBox="0 0 48 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="40" y2="4" stroke="#D97706" stroke-width="1.5" stroke-dasharray="4 3"/><polygon points="40,1 47,4 40,7" fill="#D97706"/></svg>
+
+      <!-- 4 text_diff -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#D97706; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">4</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">text_diff</span>
+      </div>
+      <svg width="32" height="8" viewBox="0 0 32 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="24" y2="4" stroke="#D97706" stroke-width="1.5"/><polygon points="24,1 31,4 24,7" fill="#D97706"/></svg>
+
+      <!-- 5 section_diff -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#D97706; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">5</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">section_diff</span>
+      </div>
+      <svg width="32" height="8" viewBox="0 0 32 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="24" y2="4" stroke="#D97706" stroke-width="1.5"/><polygon points="24,1 31,4 24,7" fill="#D97706"/></svg>
+
+      <!-- 6 timeline -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#D97706; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">6</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">timeline</span>
+      </div>
+      <!-- phase crossing: dashed green arrow -->
+      <svg width="48" height="8" viewBox="0 0 48 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="40" y2="4" stroke="#059669" stroke-width="1.5" stroke-dasharray="4 3"/><polygon points="40,1 47,4 40,7" fill="#059669"/></svg>
+
+      <!-- 7 API -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#059669; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">7</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">API</span>
+      </div>
+      <svg width="32" height="8" viewBox="0 0 32 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="24" y2="4" stroke="#059669" stroke-width="1.5"/><polygon points="24,1 31,4 24,7" fill="#059669"/></svg>
+
+      <!-- 8 client -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#059669; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">8</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">client</span>
+      </div>
+      <svg width="32" height="8" viewBox="0 0 32 8" style="flex-shrink:0;"><line x1="0" y1="4" x2="24" y2="4" stroke="#059669" stroke-width="1.5"/><polygon points="24,1 31,4 24,7" fill="#059669"/></svg>
+
+      <!-- 9 views -->
+      <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:14px; background-color:#059669; flex-shrink:0;">
+          <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:10px; color:#FFFFFF; line-height:12px;">9</span>
+        </div>
+        <span style="font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:11px; color:#111827; padding:0 6px; line-height:14px;">views</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CALLOUT BUBBLES ═══════════════════ -->
+  <div style="display:flex; gap:32px; padding-top:24px; align-items:flex-start;">
+
+    <!-- Why ranked high? -->
+    <div style="display:flex; flex-direction:column; gap:8px; background-color:#FFFBEB; border-radius:8px; padding:16px 20px; flex:1; border-left:3px solid #D97706;">
+      <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:13px; color:#92400E; line-height:16px;">Why ranked high?</span>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#78350F; line-height:18px;">Interest score is word-weighted: a 200-word rewritten paragraph contributes more than a 3-word boilerplate tweak. The system promotes substantive rewrites and suppresses cosmetic edits automatically.</span>
+      <div style="display:flex; align-items:center; gap:8px; padding-top:4px;">
+        <div style="width:6px; height:6px; border-radius:3px; background-color:#D97706; flex-shrink:0;"></div>
+        <span style="font-family:'JetBrains Mono',monospace; font-weight:400; font-size:10px; color:#B45309; line-height:14px;">section_diff._compute_section_intensity()</span>
+      </div>
+    </div>
+
+    <!-- Cache hit vs miss -->
+    <div style="display:flex; flex-direction:column; gap:8px; background-color:#ECFDF5; border-radius:8px; padding:16px 20px; flex:1; border-left:3px solid #059669;">
+      <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:13px; color:#064E3B; line-height:16px;">Cache hit vs miss</span>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#065F46; line-height:18px;">SHA256 fingerprints at two levels: disk cache skips re-fetching from SEC, paragraph fingerprints short-circuit identical text before expensive Jaccard computation. Two cache layers, zero wasted diff cycles.</span>
+      <div style="display:flex; align-items:center; gap:8px; padding-top:4px;">
+        <div style="width:6px; height:6px; border-radius:3px; background-color:#059669; flex-shrink:0;"></div>
+        <span style="font-family:'JetBrains Mono',monospace; font-weight:400; font-size:10px; color:#047857; line-height:14px;">cache.py + text_diff.py fingerprint fast-path</span>
+      </div>
+    </div>
+
+    <!-- Signal vs Noise toggle -->
+    <div style="display:flex; flex-direction:column; gap:8px; background-color:#F3F4F6; border-radius:8px; padding:16px 20px; flex:1; border-left:3px solid #6B7280;">
+      <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:13px; color:#1F2937; line-height:16px;">Signal vs Noise toggle</span>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#374151; line-height:18px;">Topic patterns require risk/threat context to fire, filtering ambiguous terms like &ldquo;competition&rdquo; or &ldquo;China.&rdquo; Boilerplate paragraphs below the Jaccard 0.5 threshold are tagged, not deleted, so nothing is lost.</span>
+      <div style="display:flex; align-items:center; gap:8px; padding-top:4px;">
+        <div style="width:6px; height:6px; border-radius:3px; background-color:#6B7280; flex-shrink:0;"></div>
+        <span style="font-family:'JetBrains Mono',monospace; font-weight:400; font-size:10px; color:#6B7280; line-height:14px;">topic_extract.py + text_diff.py threshold=0.5</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════ READING GUIDE ═══════════════════ -->
+  <div style="display:flex; gap:40px; padding:24px 32px; background-color:#F8FAFC; border-radius:8px; align-items:flex-start;">
+
+    <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:20px; height:2px; background-color:#2563EB; flex-shrink:0;"></div>
+        <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:12px; color:#111827; line-height:16px;">90-second scan</span>
+      </div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:18px;">Read the numbered flow strip and module names. Each card's first line tells you what it does. Phase colors tell you where you are: blue parses, amber scores, green serves.</span>
+    </div>
+
+    <div style="width:1px; height:48px; background-color:#E2E8F0; flex-shrink:0;"></div>
+
+    <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:20px; height:2px; background-color:#D97706; flex-shrink:0;"></div>
+        <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:12px; color:#111827; line-height:16px;">10-minute deep dive</span>
+      </div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:18px;">Trace Input/Output/Invariant chains across phases. Each module's output is the next module's input. Invariants are the guarantees the system never breaks, no matter the filing.</span>
+    </div>
+
+    <div style="width:1px; height:48px; background-color:#E2E8F0; flex-shrink:0;"></div>
+
+    <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:20px; height:2px; background-color:#059669; flex-shrink:0;"></div>
+        <span style="font-family:'Inter Tight',system-ui,sans-serif; font-weight:700; font-size:12px; color:#111827; line-height:16px;">Why it works</span>
+      </div>
+      <span style="font-family:'Inter',system-ui,sans-serif; font-weight:400; font-size:12px; color:#6B7280; line-height:18px;">No LLM in the loop. Deterministic hashing, pattern-based topics, and word-weighted scoring produce reproducible results. Same filings in, same insights out.</span>
+    </div>
+
+  </div>
+
+</div><!-- /poster -->
+
+</body>
+</html>
