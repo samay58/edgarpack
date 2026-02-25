@@ -59,6 +59,7 @@ web/node_modules/
 web/.next/
 AGENTS.md
 CODEX_PROMPTS.md
+CODEX_HANDOFF.md
 NVIDIA_RESULTS.md
 subway-map.html
 tools/codebase-map/
