@@ -237,6 +237,18 @@ def main(argv: list[str] | None = None) -> int:
     p_search.add_argument("--form", help="Filter by form type")
     p_search.add_argument("--limit", "-n", type=int, default=20, help="Max results (default: 20)")
 
+    # --- index subcommand ---
+    p_index = sub.add_parser(
+        "index",
+        help="Build the search index from harvested packs",
+    )
+    p_index.add_argument(
+        "--packs",
+        type=Path,
+        default=Path("./packs"),
+        help="Packs directory to index (default: ./packs)",
+    )
+
     # --- comps subcommand ---
     p_comps = sub.add_parser(
         "comps",
@@ -290,6 +302,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_timeline(args)
     if args.cmd == "search":
         return _cmd_search(args)
+    if args.cmd == "index":
+        return _cmd_index(args)
 
     parser.print_help()
     return 2
@@ -738,6 +752,43 @@ def _cmd_search(args: Any) -> int:
         print(f"    {snippet}")
         print()
 
+    return 0
+
+
+def _cmd_index(args: Any) -> int:
+    """Build the search index from all packs in a directory."""
+    from .harvest.registry import PackRegistry
+    from .index.inverted import SearchIndex
+
+    packs_dir = Path(args.packs)
+    if not packs_dir.exists():
+        print(f"Error: packs directory not found: {packs_dir}", file=sys.stderr)
+        return 2
+
+    registry = PackRegistry()
+    index = SearchIndex()
+
+    packs = registry.list_packs()
+    if not packs:
+        print("No packs in registry. Run harvest first.", file=sys.stderr)
+        return 1
+
+    total_chunks = 0
+    for i, pack in enumerate(packs, 1):
+        pack_dir = Path(pack.pack_dir)
+        if not pack_dir.exists():
+            label = f"{pack.ticker} {pack.form_type} {pack.filing_date}"
+            print(f"  [{i}/{len(packs)}] {label} ... SKIP (dir missing)")
+            continue
+        count = index.index_pack(pack_dir, ticker=pack.ticker)
+        total_chunks += count
+        label = f"{pack.ticker} {pack.form_type} {pack.filing_date}"
+        print(f"  [{i}/{len(packs)}] {label} ... {count} chunks")
+
+    print(f"\nIndexed {total_chunks} chunks from {len(packs)} packs", file=sys.stderr)
+
+    registry.close()
+    index.close()
     return 0
 
 
