@@ -58,6 +58,9 @@ edgarpack diff --before ./packs/cik/acc1 --after ./packs/cik/acc2
 # Timeline: section evolution across filings (requires registry)
 edgarpack timeline --ticker NVDA --section 10k_parti_item1a_risk_factors --form 10-K
 
+# Index: build search index from harvested packs (required before search)
+edgarpack index --packs ./packs
+
 # Search: full-text search across indexed filing chunks (requires populated search index)
 edgarpack search "export controls" --topic risk:export_controls --ticker NVDA
 ```
@@ -161,8 +164,22 @@ Minimal static site generator over pack artifacts.
 ## Current Parsing Notes
 
 - Section detection supports headings inside markdown table cells and inline concatenations such as `PART IItem 1`.
-- TOC table skipping handles multi-table TOCs and avoids skipping non-TOC content tables.
+- TOC table skipping handles multi-table TOCs ("Table of Contents" and "INDEX" headings) and avoids skipping non-TOC content tables. TOC stub sections (content is entirely table rows) are filtered before deduplication.
 - If no sections are detected, `sectionize()` emits a single `unknown_01` section with warnings.
+
+## Diff Engine Design Notes
+
+- Change intensity is word-weighted: a 200-word rewritten paragraph contributes more than a 3-word boilerplate change. Falls back to paragraph count if word counts are unavailable.
+- `ParagraphDelta` carries `old_word_count`/`new_word_count` for traceability.
+- Both `section_diff.py` and `timeline.py` use the same `_compute_section_intensity()` function.
+- Paragraph matching: exact SHA256 fingerprints first, then greedy Jaccard similarity for fuzzy matches. Threshold = 0.5.
+
+## Insight Pipeline Design Notes
+
+- New disclosure detection filters table-only paragraphs and stores `closest_prior_text` for human verification.
+- Language shift detection includes non-unchanged `paragraph_deltas` for drill-down into what changed.
+- Emerging topics count by unique filings (accessions), not raw chunks, to prevent verbose filings from inflating counts.
+- Topic extraction patterns require risk/threat context for ambiguous terms (competition, regulatory, China) to reduce false positives.
 
 ## Public API Contracts
 

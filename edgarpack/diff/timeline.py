@@ -8,6 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from .models import ChangeType, SectionDelta
+from .section_diff import _compute_section_intensity
 from .text_diff import diff_paragraphs
 
 
@@ -93,9 +94,6 @@ def build_timeline(
             modified = sum(1 for d in para_deltas if d.change_type == ChangeType.MODIFIED)
             unchanged = sum(1 for d in para_deltas if d.change_type == ChangeType.UNCHANGED)
 
-            total = added + removed + modified + unchanged
-            intensity = (added + removed + modified) / total if total > 0 else 0.0
-
             if added == 0 and removed == 0 and modified == 0:
                 change_type = ChangeType.UNCHANGED
             else:
@@ -109,9 +107,9 @@ def build_timeline(
                 paragraphs_removed=removed,
                 paragraphs_modified=modified,
                 paragraphs_unchanged=unchanged,
-                change_intensity=intensity,
                 paragraph_deltas=para_deltas,
             )
+            delta.change_intensity = _compute_section_intensity(delta)
 
         entries.append(
             TimelineEntry(
