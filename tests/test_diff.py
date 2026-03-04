@@ -4,7 +4,10 @@ import json
 import tempfile
 from pathlib import Path
 
-from edgarpack.diff.models import ChangeType
+import pytest
+
+from edgarpack.diff import section_diff as section_diff_module
+from edgarpack.diff.models import ChangeType, ParagraphDelta, SectionDelta
 from edgarpack.diff.section_diff import diff_filings
 from edgarpack.diff.text_diff import _jaccard, _split_paragraphs, diff_paragraphs
 from edgarpack.parse.sectionize import find_sections
@@ -74,6 +77,24 @@ def test_diff_paragraphs_modified():
     modified = [d for d in deltas if d.change_type == ChangeType.MODIFIED]
     assert len(modified) == 1
     assert modified[0].similarity > 0.4
+
+
+def test_diff_paragraphs_high_overlap_expansion_is_modified():
+    old = "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu"
+    new = (
+        "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu "
+        "nu xi omicron pi rho sigma tau upsilon phi chi psi omega"
+    )
+    deltas = diff_paragraphs(old, new)
+
+    modified = [d for d in deltas if d.change_type == ChangeType.MODIFIED]
+    added = [d for d in deltas if d.change_type == ChangeType.ADDED]
+    removed = [d for d in deltas if d.change_type == ChangeType.REMOVED]
+
+    assert len(modified) == 1
+    assert len(added) == 0
+    assert len(removed) == 0
+    assert modified[0].similarity <= 0.5
 
 
 # --- section_diff tests ---
@@ -293,6 +314,76 @@ def test_interest_score_ranks_substance():
             > deltas["10k_parti_item1_business"].interest_score
         )
         assert result.section_deltas[0].section_id == "10k_parti_item1a_risk_factors"
+
+
+def test_boilerplate_is_excluded_from_intensity_denominator():
+    delta = SectionDelta(
+        section_id="10k_parti_item1_business",
+        title="Business",
+        change_type=ChangeType.MODIFIED,
+        paragraph_deltas=[
+            ParagraphDelta(
+                change_type=ChangeType.MODIFIED,
+                old_text="For the fiscal year ended January 28, 2024.",
+                new_text="For the fiscal year ended January 26, 2025.",
+                old_word_count=9,
+                new_word_count=9,
+                similarity=0.95,
+                is_boilerplate=True,
+            ),
+            ParagraphDelta(
+                change_type=ChangeType.MODIFIED,
+                old_text="We expanded into new verticals and signed channel partners.",
+                new_text=(
+                    "We expanded into enterprise verticals and signed global channel partners."
+                ),
+                old_word_count=9,
+                new_word_count=10,
+                similarity=0.5,
+            ),
+        ],
+    )
+
+    intensity = section_diff_module._compute_section_intensity(delta)
+    assert intensity == pytest.approx(0.5)
+
+
+def test_corrupted_diff_cache_recovers(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        monkeypatch.setattr(section_diff_module, "_DIFF_CACHE_DIR", tmp_path / "diff_cache")
+
+        before_dir = tmp_path / "before"
+        after_dir = tmp_path / "after"
+        _create_pack(
+            before_dir,
+            "acc-001",
+            "2024-01-01",
+            "Test Corp",
+            "10-K",
+            {"10k_parti_item1_business": "Old business text."},
+        )
+        _create_pack(
+            after_dir,
+            "acc-002",
+            "2025-01-01",
+            "Test Corp",
+            "10-K",
+            {"10k_parti_item1_business": "New business text with meaningful changes."},
+        )
+
+        first = diff_filings(before_dir, after_dir)
+        key = section_diff_module._cache_key(
+            section_diff_module._load_manifest(before_dir),
+            section_diff_module._load_manifest(after_dir),
+        )
+        cache_file = section_diff_module._DIFF_CACHE_DIR / f"{key}.json"
+        cache_file.write_text("{not-valid-json", encoding="utf-8")
+
+        second = diff_filings(before_dir, after_dir)
+        assert second.sections_modified == 1
+        assert second.section_deltas[0].section_id == first.section_deltas[0].section_id
+        assert second.section_deltas[0].change_type == first.section_deltas[0].change_type
 
 
 def test_canonical_title_fallback():

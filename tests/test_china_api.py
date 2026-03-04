@@ -6,16 +6,25 @@ import importlib.util
 import unittest
 
 FASTAPI_AVAILABLE = importlib.util.find_spec("fastapi") is not None
+TESTCLIENT_AVAILABLE = False
+TestClientType = None
+if FASTAPI_AVAILABLE:
+    try:
+        from fastapi.testclient import TestClient as FastAPITestClient
+    except Exception:
+        FastAPITestClient = None
+    else:
+        TESTCLIENT_AVAILABLE = True
+        TestClientType = FastAPITestClient
 
 
-@unittest.skipUnless(FASTAPI_AVAILABLE, "fastapi not installed")
+@unittest.skipUnless(TESTCLIENT_AVAILABLE, "fastapi testclient stack not installed")
 class TestChinaApi(unittest.TestCase):
     def setUp(self) -> None:
-        from fastapi.testclient import TestClient
-
         from edgarpack.api.main import create_app
 
-        self.client = TestClient(create_app())
+        assert TestClientType is not None
+        self.client = TestClientType(create_app())
 
     def test_health_and_companies(self) -> None:
         health = self.client.get("/healthz")

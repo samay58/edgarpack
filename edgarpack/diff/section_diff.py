@@ -90,7 +90,12 @@ def _get_cached_diff(key: str) -> DiffResult | None:
     path = _DIFF_CACHE_DIR / f"{key}.json"
     if not path.exists():
         return None
-    return DiffResult.model_validate_json(path.read_text(encoding="utf-8"))
+    try:
+        return DiffResult.model_validate_json(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        # Corrupted cache entries should never take down live diff requests.
+        path.unlink(missing_ok=True)
+        return None
 
 
 def _cache_diff(key: str, result: DiffResult) -> None:
@@ -244,9 +249,9 @@ def _compute_section_intensity(delta: SectionDelta) -> float:
     changed_words = 0.0
     for pd in delta.paragraph_deltas:
         words = max(pd.old_word_count, pd.new_word_count)
-        total_words += words
         if words == 0 or pd.is_boilerplate:
             continue
+        total_words += words
 
         paragraph_weight = 1.0
         if delta.section_type == "financial_statement":

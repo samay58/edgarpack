@@ -957,13 +957,26 @@ input {
   word-break: break-word;
 }
 
+.obs-para-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border-top: 1px solid rgba(142, 160, 196, 0.18);
+  background: rgba(247, 250, 255, 0.8);
+  font-size: 0.78rem;
+}
+
 .obs-para-old {
-  background: #fff1f1;
+  background: linear-gradient(90deg, rgba(245, 97, 97, 0.06), rgba(255, 255, 255, 0.75));
   border-bottom: 1px solid rgba(190, 79, 79, 0.18);
+  border-left: 3px solid rgba(196, 96, 96, 0.55);
 }
 
 .obs-para-new {
-  background: #f1fcf8;
+  background: linear-gradient(90deg, rgba(38, 152, 117, 0.08), rgba(255, 255, 255, 0.72));
+  border-left: 3px solid rgba(64, 143, 111, 0.55);
 }
 
 .obs-para-removed .obs-para-old {
@@ -972,6 +985,26 @@ input {
 
 .obs-para-added .obs-para-new {
   background: #eefbf6;
+}
+
+.obs-token-added {
+  background: rgba(18, 176, 123, 0.3);
+  color: #0c3e2f;
+  font-weight: 600;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.obs-token-removed {
+  background: rgba(216, 78, 78, 0.27);
+  color: #4c1717;
+  font-weight: 600;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.obs-token-context {
+  color: #7a8498;
 }
 
 .obs-subtle-tag {
@@ -988,6 +1021,23 @@ input {
 .obs-subtle-tag-inline {
   margin-left: 8px;
   margin-top: 0;
+}
+
+.obs-insight-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.obs-insight-pill {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 74, 147, 0.14);
+  background: rgba(240, 246, 255, 0.88);
+  color: #2b466d;
+  font-size: 0.72rem;
+  padding: 2px 8px;
 }
 
 .obs-similarity {

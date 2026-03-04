@@ -151,6 +151,9 @@ For onboarding and module-system mapping, see `docs/OBSERVATORY-EXPLAINER.md`.
 ## Development
 
 ```bash
+# Optional: install API test stack for full-suite coverage
+uv pip install -e ".[dev,china]"
+
 # Lint
 ruff check .
 ruff format --check .

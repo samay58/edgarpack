@@ -10,7 +10,7 @@ It focuses on one question: what changed in language, not just what changed in b
 - `ADDED` and `REMOVED` paragraphs contribute full weight.
 - `MODIFIED` paragraphs contribute `word_count * (1 - similarity)`.
 - Boilerplate-only edits (`is_boilerplate=true`) contribute zero weight.
-- Section intensity is the ratio of weighted changed words to total section words.
+- Section intensity is the ratio of weighted changed words to total non-boilerplate words.
 
 ### Ranking semantics
 
@@ -50,6 +50,7 @@ Query parameters:
 - Diff results are cached on disk under `~/.edgarpack/diff_cache` (derived from `EDGARPACK_CACHE_DIR` parent).
 - Cache key = SHA256 of `(cache_version, before_manifest_fingerprint, after_manifest_fingerprint)`.
 - Warm cache skips paragraph diff recomputation and returns precomputed `DiffResult`.
+- If a cache file is corrupted, it is discarded and recomputed automatically.
 
 ## Module Responsibilities
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type {
   DiffResult,
@@ -8,6 +9,62 @@ import type {
   SectionDelta,
   SectionType,
 } from "@/types/observatory";
+
+const WORD_SPLIT_PATTERN = /([A-Za-z0-9]+|[^A-Za-z0-9]+)/g;
+const WORD_MATCH_PATTERN = /[a-z0-9]+/g;
+const TERM_STOPWORDS = new Set([
+  "the",
+  "and",
+  "for",
+  "that",
+  "this",
+  "with",
+  "from",
+  "were",
+  "have",
+  "has",
+  "had",
+  "our",
+  "their",
+  "they",
+  "them",
+  "there",
+  "into",
+  "about",
+  "your",
+  "you",
+  "which",
+  "will",
+  "would",
+  "could",
+  "should",
+  "also",
+  "such",
+  "than",
+  "then",
+  "been",
+  "being",
+  "through",
+  "under",
+  "over",
+  "between",
+  "during",
+  "each",
+  "within",
+  "without",
+  "these",
+  "those",
+  "may",
+  "might",
+  "item",
+  "report",
+  "form",
+  "fiscal",
+  "year",
+  "ended",
+  "annual",
+  "quarterly",
+]);
 
 function pct(n: number): string {
   return `${(n * 100).toFixed(1)}%`;
@@ -17,28 +74,187 @@ function sectionTypeLabel(sectionType: SectionType): string {
   return sectionType.replace(/_/g, " ");
 }
 
+function normalizeWord(word: string): string {
+  return word.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function wordsFromText(text: string): string[] {
+  return text.toLowerCase().match(WORD_MATCH_PATTERN) ?? [];
+}
+
+function changedWordSets(
+  oldText: string,
+  newText: string,
+): { oldOnly: Set<string>; newOnly: Set<string> } {
+  const oldWords = new Set(wordsFromText(oldText));
+  const newWords = new Set(wordsFromText(newText));
+  const oldOnly = new Set<string>();
+  const newOnly = new Set<string>();
+
+  for (const w of oldWords) {
+    if (!newWords.has(w)) oldOnly.add(w);
+  }
+  for (const w of newWords) {
+    if (!oldWords.has(w)) newOnly.add(w);
+  }
+  return { oldOnly, newOnly };
+}
+
+function paragraphSignalScore(delta: ParagraphDelta): number {
+  const words = Math.max(delta.old_word_count, delta.new_word_count);
+  if (words <= 0 || delta.is_boilerplate) return 0;
+  if (delta.change_type === "modified") {
+    return words * Math.max(0, 1 - delta.similarity);
+  }
+  return words;
+}
+
+function renderHighlightedText(
+  text: string,
+  changedWords: Set<string>,
+  variant: "old" | "new",
+): ReactNode {
+  const parts = text.match(WORD_SPLIT_PATTERN) ?? [text];
+  return parts.map((part, i) => {
+    const normalized = normalizeWord(part);
+    if (!normalized || !changedWords.has(normalized)) {
+      return (
+        <span key={`${variant}-${i}`} className="obs-token-context">
+          {part}
+        </span>
+      );
+    }
+    return (
+      <mark
+        key={`${variant}-${i}`}
+        className={variant === "old" ? "obs-token-removed" : "obs-token-added"}
+      >
+        {part}
+      </mark>
+    );
+  });
+}
+
+function buildSectionInsights(delta: SectionDelta): string[] {
+  const signalParas = delta.paragraph_deltas.filter(
+    (p) => p.change_type !== "unchanged" && !p.is_boilerplate,
+  );
+  if (!signalParas.length) {
+    return ["No substantive edit signal (boilerplate or cosmetic changes only)."];
+  }
+
+  let wordsAdded = 0;
+  let wordsRemoved = 0;
+  let wordsMateriallyChanged = 0;
+  let substantiveRewrites = 0;
+  const addedTerms = new Map<string, number>();
+  const removedTerms = new Map<string, number>();
+
+  const accumulate = (text: string | null, bucket: Map<string, number>): void => {
+    if (!text) return;
+    for (const word of wordsFromText(text)) {
+      if (word.length < 4 || TERM_STOPWORDS.has(word)) continue;
+      bucket.set(word, (bucket.get(word) ?? 0) + 1);
+    }
+  };
+
+  for (const p of signalParas) {
+    if (p.change_type === "added") {
+      wordsAdded += p.new_word_count;
+      wordsMateriallyChanged += p.new_word_count;
+      accumulate(p.new_text, addedTerms);
+      continue;
+    }
+    if (p.change_type === "removed") {
+      wordsRemoved += p.old_word_count;
+      wordsMateriallyChanged += p.old_word_count;
+      accumulate(p.old_text, removedTerms);
+      continue;
+    }
+    if (p.change_type === "modified") {
+      wordsAdded += p.new_word_count;
+      wordsRemoved += p.old_word_count;
+      wordsMateriallyChanged += Math.round(
+        Math.max(p.old_word_count, p.new_word_count) * (1 - p.similarity),
+      );
+      if (p.similarity < 0.75) substantiveRewrites += 1;
+      accumulate(p.new_text, addedTerms);
+      accumulate(p.old_text, removedTerms);
+    }
+  }
+
+  const insights: string[] = [];
+  const netWords = wordsAdded - wordsRemoved;
+  if (netWords > 80) {
+    insights.push(`Disclosure expanded by ~${netWords} net words.`);
+  } else if (netWords < -80) {
+    insights.push(`Disclosure contracted by ~${Math.abs(netWords)} net words.`);
+  }
+
+  if (substantiveRewrites > 0) {
+    const suffix = substantiveRewrites === 1 ? "" : "s";
+    insights.push(`${substantiveRewrites} substantive rewrite${suffix} (similarity < 75%).`);
+  } else if (wordsMateriallyChanged > 0) {
+    insights.push(`~${wordsMateriallyChanged} words materially changed.`);
+  }
+
+  const emergentTerms = [...addedTerms.entries()]
+    .map(([word, count]) => [word, count - (removedTerms.get(word) ?? 0)] as const)
+    .filter(([, deltaCount]) => deltaCount > 1)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([word]) => word);
+  if (emergentTerms.length > 0) {
+    insights.push(`New emphasis: ${emergentTerms.join(", ")}.`);
+  }
+
+  return insights.slice(0, 3);
+}
+
 function ParagraphDiff({ delta }: { delta: ParagraphDelta }) {
   if (delta.change_type === "unchanged") return null;
+  const oldText = delta.old_text ?? "";
+  const newText = delta.new_text ?? "";
+  const { oldOnly, newOnly } = changedWordSets(oldText, newText);
+  const changedTerms = oldOnly.size + newOnly.size;
 
   return (
     <div className={`obs-para obs-para-${delta.change_type}`}>
       {delta.change_type === "removed" && delta.old_text && (
-        <div className="obs-para-old">{delta.old_text}</div>
+        <>
+          <div className="obs-para-old">{delta.old_text}</div>
+          <div className="obs-para-meta muted">{delta.old_word_count} words removed</div>
+        </>
       )}
       {delta.change_type === "added" && delta.new_text && (
-        <div className="obs-para-new">{delta.new_text}</div>
+        <>
+          <div className="obs-para-new">{delta.new_text}</div>
+          <div className="obs-para-meta muted">{delta.new_word_count} words added</div>
+        </>
       )}
       {delta.change_type === "modified" && (
         <>
           {delta.old_text && (
-            <div className="obs-para-old">{delta.old_text}</div>
+            <div className="obs-para-old">
+              {renderHighlightedText(delta.old_text, oldOnly, "old")}
+            </div>
           )}
           {delta.new_text && (
-            <div className="obs-para-new">{delta.new_text}</div>
+            <div className="obs-para-new">
+              {renderHighlightedText(delta.new_text, newOnly, "new")}
+            </div>
           )}
-          <span className="muted obs-similarity">
-            {(delta.similarity * 100).toFixed(0)}% similar
-          </span>
+          <div className="obs-para-meta">
+            <span className="muted obs-similarity">
+              {(delta.similarity * 100).toFixed(0)}% similar
+            </span>
+            {changedTerms > 0 && (
+              <span className="muted obs-similarity">{changedTerms} changed terms</span>
+            )}
+            {!delta.is_boilerplate && delta.similarity < 0.75 && (
+              <span className="obs-subtle-tag obs-subtle-tag-inline">substantive edit</span>
+            )}
+          </div>
         </>
       )}
       {delta.is_boilerplate && <span className="obs-subtle-tag">boilerplate</span>}
@@ -50,16 +266,24 @@ function SectionDetail({
   delta,
   ticker,
   hideBoilerplate,
+  focusMode,
 }: {
   delta: SectionDelta;
   ticker: string;
   hideBoilerplate: boolean;
+  focusMode: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const sectionContentId = `section-${delta.section_id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const sectionInsights = buildSectionInsights(delta);
   const changedParas = delta.paragraph_deltas.filter(
     (p) => p.change_type !== "unchanged" && (!hideBoilerplate || !p.is_boilerplate),
   );
+  const focusedParas = changedParas.filter((p) => {
+    if (!focusMode || p.change_type !== "modified") return true;
+    return paragraphSignalScore(p) >= 10 || p.similarity < 0.9;
+  });
+  const hiddenLowSignalCount = changedParas.length - focusedParas.length;
 
   return (
     <div
@@ -98,6 +322,13 @@ function SectionDetail({
               {delta.paragraphs_modified} modified, {delta.paragraphs_unchanged} unchanged
             </div>
           )}
+          <div className="obs-insight-row">
+            {sectionInsights.map((insight) => (
+              <span key={insight} className="obs-insight-pill">
+                {insight}
+              </span>
+            ))}
+          </div>
         </button>
         <Link
           href={`/observatory/${ticker}/timeline/${encodeURIComponent(delta.section_id)}`}
@@ -108,11 +339,28 @@ function SectionDetail({
       </div>
       {expanded && changedParas.length > 0 && (
         <div id={sectionContentId} className="obs-paras">
-          {changedParas.map((p, i) => (
+          {focusMode && hiddenLowSignalCount > 0 && (
+            <div className="obs-para">
+              <div className="obs-para-meta muted">
+                Focus mode hidden {hiddenLowSignalCount} low-signal paragraph
+                {hiddenLowSignalCount === 1 ? "" : "s"}.
+              </div>
+            </div>
+          )}
+          {focusedParas.map((p, i) => (
             <ParagraphDiff key={i} delta={p} />
           ))}
         </div>
       )}
+      {expanded && changedParas.length === 0 && (
+        <div id={sectionContentId} className="obs-paras">
+            <div className="obs-para">
+              <div className="obs-para-meta muted">
+                Only boilerplate edits in this section. Toggle Show boilerplate to inspect them.
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
@@ -127,6 +375,7 @@ export function DiffViewer({
   const [filter, setFilter] = useState<"all" | "changed">("changed");
   const [sectionType, setSectionType] = useState<"all" | SectionType>("all");
   const [hideBoilerplate, setHideBoilerplate] = useState(true);
+  const [focusMode, setFocusMode] = useState(true);
 
   let sections =
     filter === "changed"
@@ -235,6 +484,13 @@ export function DiffViewer({
           >
             {hideBoilerplate ? "Hide boilerplate" : "Show boilerplate"}
           </button>
+          <button
+            className={`mode-btn ${focusMode ? "active" : ""}`}
+            onClick={() => setFocusMode((prev) => !prev)}
+            aria-pressed={focusMode}
+          >
+            {focusMode ? "Focus signal" : "Show full context"}
+          </button>
         </div>
       </div>
 
@@ -244,6 +500,7 @@ export function DiffViewer({
           delta={d}
           ticker={ticker}
           hideBoilerplate={hideBoilerplate}
+          focusMode={focusMode}
         />
       ))}
 

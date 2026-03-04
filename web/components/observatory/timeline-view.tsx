@@ -1,11 +1,57 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type { TimelineEntry, ParagraphDelta } from "@/types/observatory";
 
+const WORD_SPLIT_PATTERN = /([A-Za-z0-9]+|[^A-Za-z0-9]+)/g;
+
 function pct(n: number): string {
   return `${(n * 100).toFixed(1)}%`;
+}
+
+function normalizeWord(word: string): string {
+  return word.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function changedWordSets(
+  oldText: string,
+  newText: string,
+): { oldOnly: Set<string>; newOnly: Set<string> } {
+  const oldWords = new Set(oldText.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  const newWords = new Set(newText.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  const oldOnly = new Set<string>();
+  const newOnly = new Set<string>();
+  for (const word of oldWords) {
+    if (!newWords.has(word)) oldOnly.add(word);
+  }
+  for (const word of newWords) {
+    if (!oldWords.has(word)) newOnly.add(word);
+  }
+  return { oldOnly, newOnly };
+}
+
+function renderHighlightedText(
+  text: string,
+  changedWords: Set<string>,
+  variant: "old" | "new",
+): ReactNode {
+  const parts = text.match(WORD_SPLIT_PATTERN) ?? [text];
+  return parts.map((part, i) => {
+    const normalized = normalizeWord(part);
+    if (!normalized || !changedWords.has(normalized)) {
+      return <span key={`${variant}-${i}`}>{part}</span>;
+    }
+    return (
+      <mark
+        key={`${variant}-${i}`}
+        className={variant === "old" ? "obs-token-removed" : "obs-token-added"}
+      >
+        {part}
+      </mark>
+    );
+  });
 }
 
 function EntryCard({
@@ -33,6 +79,11 @@ function EntryCard({
   }
 
   const isFirst = index === 0 || !d;
+  const changedParagraphs = d
+    ? d.paragraph_deltas.filter(
+        (p: ParagraphDelta) => p.change_type !== "unchanged" && !p.is_boilerplate,
+      )
+    : [];
 
   return (
     <div className="panel obs-timeline-entry">
@@ -78,18 +129,38 @@ function EntryCard({
       </button>
       {expanded && d && (
         <div className="obs-paras">
-          {d.paragraph_deltas
-            .filter((p: ParagraphDelta) => p.change_type !== "unchanged")
-            .map((p: ParagraphDelta, i: number) => (
+          {changedParagraphs.map((p: ParagraphDelta, i: number) => {
+            const { oldOnly, newOnly } = changedWordSets(
+              p.old_text ?? "",
+              p.new_text ?? "",
+            );
+            return (
               <div key={i} className={`obs-para obs-para-${p.change_type}`}>
                 {p.old_text && (
-                  <div className="obs-para-old">{p.old_text}</div>
+                  <div className="obs-para-old">
+                    {renderHighlightedText(p.old_text, oldOnly, "old")}
+                  </div>
                 )}
                 {p.new_text && (
-                  <div className="obs-para-new">{p.new_text}</div>
+                  <div className="obs-para-new">
+                    {renderHighlightedText(p.new_text, newOnly, "new")}
+                  </div>
+                )}
+                {p.change_type === "modified" && (
+                  <div className="obs-para-meta muted">
+                    {(p.similarity * 100).toFixed(0)}% similar
+                  </div>
                 )}
               </div>
-            ))}
+            );
+          })}
+          {changedParagraphs.length === 0 && (
+            <div className="obs-para">
+              <div className="obs-para-meta muted">
+                Only boilerplate or cosmetic edits in this filing version.
+              </div>
+            </div>
+          )}
         </div>
       )}
       {expanded && isFirst && entry.content_preview && (
