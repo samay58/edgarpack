@@ -35,6 +35,26 @@ CREATE INDEX IF NOT EXISTS idx_packs_form_type ON packs(form_type);
 CREATE INDEX IF NOT EXISTS idx_packs_filing_date ON packs(filing_date);
 """
 
+_MIGRATIONS = [
+    ("indexed_at", "ALTER TABLE packs ADD COLUMN indexed_at TEXT"),
+    (
+        "harvest_errors",
+        """CREATE TABLE IF NOT EXISTS harvest_errors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT NOT NULL,
+            accession TEXT,
+            form_type TEXT,
+            error TEXT NOT NULL,
+            error_stage TEXT NOT NULL DEFAULT 'build',
+            created_at TEXT NOT NULL
+        )""",
+    ),
+    (
+        "idx_harvest_errors_ticker",
+        "CREATE INDEX IF NOT EXISTS idx_harvest_errors_ticker ON harvest_errors(ticker)",
+    ),
+]
+
 
 class PackRecord(BaseModel):
     """A registered pack in the registry."""
@@ -51,6 +71,7 @@ class PackRecord(BaseModel):
     built_at: str
     manifest_hash: str | None = None
     warnings_json: str | None = None
+    indexed_at: str | None = None
 
 
 class PackRegistry:
@@ -72,7 +93,17 @@ class PackRegistry:
     def _ensure_schema(self) -> None:
         conn = self._get_conn()
         conn.executescript(_SCHEMA)
+        self._run_migrations(conn)
         conn.commit()
+
+    def _run_migrations(self, conn: sqlite3.Connection) -> None:
+        for name, sql in _MIGRATIONS:
+            try:
+                conn.execute(sql)
+            except sqlite3.OperationalError as e:
+                msg = str(e).lower()
+                if "duplicate column" not in msg and "already exists" not in msg:
+                    raise
 
     def register(
         self,
@@ -181,6 +212,60 @@ class PackRegistry:
                FROM packs"""
         ).fetchone()
         return dict(row) if row else {}
+
+    def mark_indexed(self, accession: str) -> None:
+        """Mark a pack as indexed in the search index."""
+        conn = self._get_conn()
+        conn.execute(
+            "UPDATE packs SET indexed_at = ? WHERE accession = ?",
+            (datetime.now(UTC).isoformat(), accession),
+        )
+        conn.commit()
+
+    def mark_indexed_batch(self, accessions: list[str]) -> None:
+        """Mark multiple packs as indexed."""
+        conn = self._get_conn()
+        now = datetime.now(UTC).isoformat()
+        conn.executemany(
+            "UPDATE packs SET indexed_at = ? WHERE accession = ?",
+            [(now, acc) for acc in accessions],
+        )
+        conn.commit()
+
+    def unindexed_packs(self) -> list[PackRecord]:
+        """Return packs that have not yet been indexed."""
+        conn = self._get_conn()
+        rows = conn.execute(
+            "SELECT * FROM packs WHERE indexed_at IS NULL ORDER BY filing_date DESC"
+        ).fetchall()
+        return [PackRecord(**dict(r)) for r in rows]
+
+    def log_error(
+        self,
+        ticker: str,
+        error: str,
+        accession: str | None = None,
+        form_type: str | None = None,
+        error_stage: str = "build",
+    ) -> None:
+        """Log a harvest error for later reporting."""
+        conn = self._get_conn()
+        conn.execute(
+            """INSERT INTO harvest_errors
+            (ticker, accession, form_type, error, error_stage, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (ticker, accession, form_type, error, error_stage, datetime.now(UTC).isoformat()),
+        )
+        conn.commit()
+
+    def get_errors(self, limit: int = 100) -> list[dict]:
+        """Get recent harvest errors."""
+        conn = self._get_conn()
+        rows = conn.execute(
+            "SELECT * FROM harvest_errors ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [dict(r) for r in rows]
 
     def close(self) -> None:
         if self._conn:

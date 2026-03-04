@@ -248,6 +248,11 @@ def main(argv: list[str] | None = None) -> int:
         default=Path("./packs"),
         help="Packs directory to index (default: ./packs)",
     )
+    p_index.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Only index packs not yet marked as indexed in the registry",
+    )
 
     # --- comps subcommand ---
     p_comps = sub.add_parser(
@@ -584,6 +589,14 @@ def _cmd_harvest(args: Any) -> int:
             f"{plan.already_built} already built",
             file=sys.stderr,
         )
+        if plan.errors:
+            print(
+                f"Errors: {len(plan.errors)} companies/forms skipped during planning",
+                file=sys.stderr,
+            )
+            for err in plan.errors:
+                label = f"{err.ticker} {err.form_type}" if err.form_type else err.ticker
+                print(f"  SKIP {label}: {err.error}", file=sys.stderr)
 
         if args.plan:
             # Dry run: print plan and exit
@@ -768,12 +781,24 @@ def _cmd_index(args: Any) -> int:
     registry = PackRegistry()
     index = SearchIndex()
 
-    packs = registry.list_packs()
-    if not packs:
-        print("No packs in registry. Run harvest first.", file=sys.stderr)
-        return 1
+    if args.incremental:
+        packs = registry.unindexed_packs()
+        if not packs:
+            print("All packs already indexed. Nothing to do.", file=sys.stderr)
+            registry.close()
+            index.close()
+            return 0
+        print(f"Incremental: {len(packs)} unindexed packs", file=sys.stderr)
+    else:
+        packs = registry.list_packs()
+        if not packs:
+            print("No packs in registry. Run harvest first.", file=sys.stderr)
+            registry.close()
+            index.close()
+            return 1
 
     total_chunks = 0
+    indexed_accessions: list[str] = []
     for i, pack in enumerate(packs, 1):
         pack_dir = Path(pack.pack_dir)
         if not pack_dir.exists():
@@ -782,8 +807,12 @@ def _cmd_index(args: Any) -> int:
             continue
         count = index.index_pack(pack_dir, ticker=pack.ticker)
         total_chunks += count
+        indexed_accessions.append(pack.accession)
         label = f"{pack.ticker} {pack.form_type} {pack.filing_date}"
         print(f"  [{i}/{len(packs)}] {label} ... {count} chunks")
+
+    if indexed_accessions:
+        registry.mark_indexed_batch(indexed_accessions)
 
     print(f"\nIndexed {total_chunks} chunks from {len(packs)} packs", file=sys.stderr)
 

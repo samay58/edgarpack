@@ -88,7 +88,14 @@ async def _build_one(
             )
 
         except Exception as e:
-            error = str(e)[:100]
+            error = str(e)[:200]
+            registry.log_error(
+                ticker=item.ticker,
+                error=error,
+                accession=item.accession,
+                form_type=item.form_type,
+                error_stage="build",
+            )
 
         progress.report(item, result, error)
         return result
@@ -135,6 +142,16 @@ async def run_harvest(
     skipped = progress.skipped
 
     print(f"\nHarvest complete: {built} built, {failed} failed, {skipped} skipped", file=sys.stderr)
+
+    if failed > 0:
+        errors = registry.get_errors(limit=failed)
+        error_by_type: dict[str, int] = {}
+        for err in errors:
+            short = err["error"][:60]
+            error_by_type[short] = error_by_type.get(short, 0) + 1
+        print("\nError summary:", file=sys.stderr)
+        for msg, count in sorted(error_by_type.items(), key=lambda x: -x[1]):
+            print(f"  [{count}x] {msg}", file=sys.stderr)
 
     return {
         "total": len(items),

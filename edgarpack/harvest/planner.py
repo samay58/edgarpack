@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sys
+
 from pydantic import BaseModel
 
 from ..sec.submissions import FilingMeta, list_filings, normalize_cik
@@ -25,11 +27,20 @@ class HarvestItem(BaseModel):
     already_built: bool = False
 
 
+class PlanError(BaseModel):
+    """A company or form that failed during planning."""
+
+    ticker: str
+    form_type: str | None = None
+    error: str
+
+
 class HarvestPlan(BaseModel):
     """Plan for a harvest run."""
 
     items: list[HarvestItem]
     skipped: list[HarvestItem]
+    errors: list[PlanError] = []
     total_filings: int
     new_filings: int
     already_built: int
@@ -46,29 +57,40 @@ async def plan_harvest(
 ) -> HarvestPlan:
     """Build a delta plan comparing universe spec against registry state.
 
-    Args:
-        universe: Universe configuration with company specs
-        registry: Pack registry to check existing builds
-        refresh: If True, only include filings not yet built
-
-    Returns:
-        HarvestPlan with items to build and items to skip
+    Resilient to individual ticker/filing failures — logs errors and continues.
     """
     items: list[HarvestItem] = []
     skipped: list[HarvestItem] = []
+    errors: list[PlanError] = []
 
     for spec in universe.companies:
-        # Resolve CIK if not provided
         cik = spec.cik
         if cik is None:
-            resolved_cik, _ = await resolve_ticker(spec.ticker)
-            cik = resolved_cik
+            try:
+                resolved_cik, _ = await resolve_ticker(spec.ticker)
+                cik = resolved_cik
+            except Exception as e:
+                msg = str(e)[:120]
+                errors.append(PlanError(ticker=spec.ticker, error=msg))
+                print(f"  SKIP {spec.ticker}: {msg}", file=sys.stderr)
+                continue
         cik = normalize_cik(cik)
 
         form_counts = universe.form_counts(spec)
 
         for form_type, count in form_counts.items():
-            filings: list[FilingMeta] = await list_filings(cik, form_type=form_type, limit=count)
+            try:
+                filings: list[FilingMeta] = await list_filings(
+                    cik, form_type=form_type, limit=count
+                )
+            except Exception as e:
+                msg = str(e)[:120]
+                errors.append(PlanError(ticker=spec.ticker, form_type=form_type, error=msg))
+                print(
+                    f"  SKIP {spec.ticker} {form_type}: {msg}",
+                    file=sys.stderr,
+                )
+                continue
 
             for filing in filings:
                 already_built = registry.has_accession(filing.accession)
@@ -95,6 +117,7 @@ async def plan_harvest(
     return HarvestPlan(
         items=items,
         skipped=skipped,
+        errors=errors,
         total_filings=total,
         new_filings=new,
         already_built=built,

@@ -129,9 +129,6 @@ ticker = "ZS"
 ticker = "FTNT"
 
 [[companies]]
-ticker = "SPLK"
-
-[[companies]]
 ticker = "MDB"
 
 [[companies]]
@@ -149,7 +146,7 @@ ticker = "MA"
 ticker = "PYPL"
 
 [[companies]]
-ticker = "SQ"
+ticker = "XYZ"  # Block (formerly SQ)
 
 [[companies]]
 ticker = "COIN"
