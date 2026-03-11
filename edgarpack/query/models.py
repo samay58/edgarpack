@@ -115,11 +115,90 @@ class CitedValue(BaseModel):
         period = f"{self.fiscal_period}{self.fiscal_year}"
         return f"{self.company} {self.form_type} ({period}), filed {self.filed}"
 
+    @property
+    def fiscal_label(self) -> str:
+        """Human-readable fiscal label."""
+        return f"{self.fiscal_period} FY{self.fiscal_year}"
+
+    @property
+    def primary_link_type(self) -> str:
+        """Preferred deep link type for terminal UX."""
+        if self.fact_id and self.anchor_url:
+            return "anchor_url"
+        if self.viewer_url:
+            return "viewer_url"
+        return "filing_url"
+
+    @property
+    def primary_link(self) -> str:
+        """Preferred deep link for terminal UX."""
+        if self.fact_id and self.anchor_url:
+            return self.anchor_url
+        if self.viewer_url:
+            return self.viewer_url
+        return self.filing_url
+
+    @property
+    def links(self) -> dict[str, str]:
+        """All available deep links."""
+        links: dict[str, str] = {"filing_url": self.filing_url}
+        if self.concept_url:
+            links["concept_url"] = self.concept_url
+        if self.viewer_url:
+            links["viewer_url"] = self.viewer_url
+        if self.document_url:
+            links["document_url"] = self.document_url
+        if self.anchor_url and self.fact_id:
+            links["anchor_url"] = self.anchor_url
+        return links
+
+    @property
+    def citation_key(self) -> str:
+        """Stable identity key for deduplicating citations."""
+        period_start = str(self.period_start) if self.period_start else ""
+        return (
+            f"{self.cik}|{self.accession}|{self.taxonomy}|{self.concept}|"
+            f"{period_start}|{self.period_end}|{self.value}|{self.fact_id}"
+        )
+
+    def to_citation_record(self, citation_id: str) -> dict[str, object]:
+        """Normalized citation record for registry-style outputs."""
+        record: dict[str, object] = {
+            "id": citation_id,
+            "company": self.company,
+            "cik": self.cik,
+            "metric": self.metric,
+            "concept": self.concept,
+            "taxonomy": self.taxonomy,
+            "value": self.value,
+            "unit": self.unit,
+            "period": self._period_str(),
+            "period_start": str(self.period_start) if self.period_start else None,
+            "period_end": str(self.period_end),
+            "fiscal_year": self.fiscal_year,
+            "fiscal_period": self.fiscal_period,
+            "fiscal_label": self.fiscal_label,
+            "form_type": self.form_type,
+            "filed": str(self.filed),
+            "accession": self.accession,
+            "citation": self.citation,
+            "primary_link": self.primary_link,
+            "primary_link_type": self.primary_link_type,
+            "links": self.links,
+        }
+        if self.warnings:
+            record["warnings"] = list(self.warnings)
+        return record
+
     def to_cited_dict(self) -> dict[str, object]:
         """JSON-serializable dict with citation baked in."""
         d = self.model_dump(mode="json")
         d["filing_url"] = self.filing_url
         d["citation"] = self.citation
+        d["fiscal_label"] = self.fiscal_label
+        d["primary_link"] = self.primary_link
+        d["primary_link_type"] = self.primary_link_type
+        d["links"] = self.links
         if self.concept_url:
             d["concept_url"] = self.concept_url
         if self.viewer_url:
@@ -144,9 +223,16 @@ class CitedValue(BaseModel):
             "concept": self.concept,
             "period": self._period_str(),
             "accession": self.accession,
+            "fiscal_year": self.fiscal_year,
+            "fiscal_period": self.fiscal_period,
+            "fiscal_label": self.fiscal_label,
+            "primary_link": self.primary_link,
+            "primary_link_type": self.primary_link_type,
         }
         if self.concept_url:
             d["concept_url"] = self.concept_url
+        if self.warnings:
+            d["warnings"] = list(self.warnings)
         return d
 
 
@@ -156,17 +242,52 @@ class DerivedValue(CitedValue):
     derived: bool = True
     components: dict[str, CitedValue] = Field(default_factory=dict)
 
+    def _is_ltm_like(self) -> bool:
+        """True when this derived value represents an LTM-style window."""
+        return self.fiscal_period.upper().startswith("LTM")
+
+    def _ltm_components_payload(self) -> dict[str, object]:
+        """Expanded metadata for LTM/LTM-1 component windows."""
+        ltm_comps: dict[str, object] = {}
+        for role, component in self.components.items():
+            payload: dict[str, object] = {
+                "role": role,
+                "metric": component.metric,
+                "concept": component.concept,
+                "value": component.value,
+                "unit": component.unit,
+                "accession": component.accession,
+                "form_type": component.form_type,
+                "filed": str(component.filed),
+                "fiscal_year": component.fiscal_year,
+                "fiscal_period": component.fiscal_period,
+                "fiscal_label": component.fiscal_label,
+                "period": component._period_str(),
+                "period_start": str(component.period_start) if component.period_start else None,
+                "period_end": str(component.period_end),
+                "primary_link": component.primary_link,
+                "primary_link_type": component.primary_link_type,
+            }
+            if component.warnings:
+                payload["warnings"] = list(component.warnings)
+            ltm_comps[role] = payload
+        return ltm_comps
+
     @property
     def citation(self) -> str:
         """LTM values cite the underlying real filings."""
-        if self.fiscal_period.upper().startswith("LTM") and self.components:
+        if self._is_ltm_like() and self.components:
             sources = [v.citation for v in self.components.values()]
             return f"LTM computed from: {'; '.join(sources)}"
         return super().citation
 
     def to_cited_dict(self) -> dict[str, object]:
         d = super().to_cited_dict()
+        d["derived"] = True
+        d["formula"] = "mrp + lfy - mrp_prior" if self._is_ltm_like() else self.concept
         d["components"] = {k: v.to_cited_dict() for k, v in self.components.items()}
+        if self._is_ltm_like() and self.components:
+            d["ltm_components"] = self._ltm_components_payload()
         return d
 
     def to_lean_metric(self) -> dict[str, object]:
@@ -175,16 +296,11 @@ class DerivedValue(CitedValue):
         d["derived"] = True
         d["formula"] = self.concept  # concept holds the formula for derived metrics
 
-        if self.fiscal_period.upper().startswith("LTM") and self.components:
+        if self._is_ltm_like() and self.components:
             # LTM components are temporal slices, inline them
             d["formula"] = "mrp + lfy - mrp_prior"
-            ltm_comps: dict[str, object] = {}
-            for k, v in self.components.items():
-                ltm_comps[k] = {
-                    "value": v.value,
-                    "accession": v.accession,
-                }
-            d["ltm_components"] = ltm_comps
+            d["ltm_components"] = self._ltm_components_payload()
+            d["ltm_variant"] = self.fiscal_period.lower()
         else:
             # Standard derived metric (ratio/sum): reference component names
             d["components"] = list(self.components.keys())
@@ -206,21 +322,182 @@ class QueryResult(BaseModel):
         metric_names = ",".join(self.metrics.keys())
         return f"edgarpack query {self.cik} {metric_names} --period {self.period}"
 
+    def _iter_metric_items(
+        self,
+    ) -> list[tuple[str, CitedValue]]:
+        """Flatten metric values into ``(metric_name, cited_value)`` tuples."""
+        items: list[tuple[str, CitedValue]] = []
+        for metric_name, value in self.metrics.items():
+            if value is None:
+                continue
+            if isinstance(value, list):
+                items.extend((metric_name, item) for item in value)
+            else:
+                items.append((metric_name, value))
+        return items
+
+    def _collect_citation_registry(self) -> tuple[dict[str, dict[str, object]], dict[str, str]]:
+        """Build citation registry and lookup map."""
+        citations: dict[str, dict[str, object]] = {}
+        key_to_id: dict[str, str] = {}
+        next_idx = 1
+
+        for _, item in self._iter_metric_items():
+            all_values = [item]
+            if isinstance(item, DerivedValue):
+                all_values.extend(item.components.values())
+            for cited in all_values:
+                key = cited.citation_key
+                if key in key_to_id:
+                    continue
+                citation_id = f"C{next_idx}"
+                next_idx += 1
+                key_to_id[key] = citation_id
+                citations[citation_id] = cited.to_citation_record(citation_id)
+
+        return citations, key_to_id
+
+    @staticmethod
+    def _calculation_record(
+        calc_id: str,
+        metric_name: str,
+        derived: DerivedValue,
+        key_to_id: dict[str, str],
+    ) -> dict[str, object]:
+        """Serialize a derived/LTM value into a normalized calculation record."""
+        result_citation_id = key_to_id.get(derived.citation_key)
+        formula = "mrp + lfy - mrp_prior" if derived._is_ltm_like() else derived.concept
+
+        components: list[dict[str, object]] = []
+        for role, component in derived.components.items():
+            entry: dict[str, object] = {
+                "role": role,
+                "metric": component.metric,
+                "concept": component.concept,
+                "value": component.value,
+                "unit": component.unit,
+                "citation_id": key_to_id.get(component.citation_key),
+                "fiscal_label": component.fiscal_label,
+                "period": component._period_str(),
+                "accession": component.accession,
+                "form_type": component.form_type,
+                "filed": str(component.filed),
+                "primary_link": component.primary_link,
+                "primary_link_type": component.primary_link_type,
+            }
+            if component.warnings:
+                entry["warnings"] = list(component.warnings)
+            components.append(entry)
+
+        record: dict[str, object] = {
+            "id": calc_id,
+            "metric": metric_name,
+            "kind": "ltm" if derived._is_ltm_like() else "derived",
+            "formula": formula,
+            "result": {
+                "value": derived.value,
+                "unit": derived.unit,
+                "citation_id": result_citation_id,
+            },
+            "components": components,
+        }
+        if derived._is_ltm_like():
+            record["ltm_variant"] = derived.fiscal_period.lower()
+            record["window"] = {
+                "start": str(derived.period_start) if derived.period_start else None,
+                "end": str(derived.period_end),
+            }
+            comp_keys = set(derived.components.keys())
+            record["method"] = (
+                "computed" if {"mrp", "lfy", "mrp_prior"}.issubset(comp_keys) else "fallback"
+            )
+        if derived.warnings:
+            record["warnings"] = list(derived.warnings)
+        return record
+
+    def _serialize_metrics(
+        self,
+        *,
+        lean: bool,
+    ) -> tuple[dict[str, object], dict[str, dict[str, object]], dict[str, dict[str, object]]]:
+        """Serialize metrics with additive citation/calculation IDs."""
+        citations, key_to_id = self._collect_citation_registry()
+        calculations: dict[str, dict[str, object]] = {}
+        calc_counts: dict[str, int] = {"D": 1, "L": 1}
+
+        def _serialize_one(metric_name: str, item: CitedValue) -> dict[str, object]:
+            data = item.to_lean_metric() if lean else item.to_cited_dict()
+            citation_id = key_to_id.get(item.citation_key)
+            if citation_id:
+                data["citation_ids"] = [citation_id]
+
+            if isinstance(item, DerivedValue):
+                prefix = "L" if item._is_ltm_like() else "D"
+                calc_id = f"{prefix}{calc_counts[prefix]}"
+                calc_counts[prefix] += 1
+
+                component_citation_ids: dict[str, str] = {}
+                for role, component in item.components.items():
+                    cid = key_to_id.get(component.citation_key)
+                    if cid:
+                        component_citation_ids[role] = cid
+
+                data["calculation_id"] = calc_id
+                if component_citation_ids:
+                    data["component_citation_ids"] = component_citation_ids
+                    ltm_components = data.get("ltm_components")
+                    if isinstance(ltm_components, dict):
+                        for role, cid in component_citation_ids.items():
+                            component_payload = ltm_components.get(role)
+                            if isinstance(component_payload, dict):
+                                component_payload["citation_id"] = cid
+
+                calculations[calc_id] = self._calculation_record(
+                    calc_id, metric_name, item, key_to_id
+                )
+
+            return data
+
+        metrics_out: dict[str, object] = {}
+        component_metrics: dict[str, CitedValue] = {}
+
+        for metric_name, value in self.metrics.items():
+            if value is None:
+                metrics_out[metric_name] = None
+                continue
+            if isinstance(value, list):
+                metrics_out[metric_name] = [_serialize_one(metric_name, item) for item in value]
+                continue
+
+            metrics_out[metric_name] = _serialize_one(metric_name, value)
+            if isinstance(value, DerivedValue) and not value.fiscal_period.upper().startswith(
+                "LTM"
+            ):
+                for comp_name, comp_val in value.components.items():
+                    if comp_name not in self.metrics:
+                        component_metrics[comp_name] = comp_val
+
+        if lean:
+            for comp_name, comp_val in component_metrics.items():
+                if comp_name in metrics_out:
+                    continue
+                payload = _serialize_one(comp_name, comp_val)
+                payload["_component"] = True
+                metrics_out[comp_name] = payload
+
+        return metrics_out, citations, calculations
+
     def to_cited_dict(self) -> dict[str, object]:
+        metrics_out, citations, calculations = self._serialize_metrics(lean=False)
         result: dict[str, object] = {
             "company": self.company,
             "cik": self.cik,
             "permalink": self.permalink,
+            "period": self.period,
         }
-        metrics_out: dict[str, object] = {}
-        for k, v in self.metrics.items():
-            if v is None:
-                metrics_out[k] = None
-            elif isinstance(v, list):
-                metrics_out[k] = [item.to_cited_dict() for item in v]
-            else:
-                metrics_out[k] = v.to_cited_dict()
         result["metrics"] = metrics_out
+        result["citations"] = citations
+        result["calculations"] = calculations
         return result
 
     def _collect_filings(self) -> dict[str, dict[str, object]]:
@@ -241,44 +518,36 @@ class QueryResult(BaseModel):
     def _add_filing(filings: dict[str, dict[str, object]], cited: CitedValue) -> None:
         """Add a filing entry if not already present."""
         acc = cited.accession
+        source = cited
+        if isinstance(cited, DerivedValue):
+            source = next(
+                (
+                    component
+                    for component in cited.components.values()
+                    if component.accession and component.accession == cited.accession
+                ),
+                cited,
+            )
         if acc and acc not in filings:
             entry: dict[str, object] = {
-                "form_type": cited.form_type,
-                "filed": str(cited.filed),
-                "fiscal_year": cited.fiscal_year,
-                "fiscal_period": cited.fiscal_period,
-                "url": cited.filing_url,
+                "form_type": source.form_type,
+                "filed": str(source.filed),
+                "fiscal_year": source.fiscal_year,
+                "fiscal_period": source.fiscal_period,
+                "url": source.filing_url,
+                "primary_link": source.primary_link,
+                "primary_link_type": source.primary_link_type,
             }
-            if cited.viewer_url:
-                entry["viewer_url"] = cited.viewer_url
+            if source.viewer_url:
+                entry["viewer_url"] = source.viewer_url
+            if source.anchor_url and source.fact_id:
+                entry["anchor_url"] = source.anchor_url
             filings[acc] = entry
 
     def to_lean_dict(self) -> dict[str, object]:
         """Lean JSON with filing deduplication and component auto-inclusion."""
         filings = self._collect_filings()
-
-        metrics_out: dict[str, object] = {}
-        component_metrics: dict[str, CitedValue] = {}
-
-        for k, v in self.metrics.items():
-            if v is None:
-                metrics_out[k] = None
-            elif isinstance(v, list):
-                metrics_out[k] = [item.to_lean_metric() for item in v]
-            else:
-                metrics_out[k] = v.to_lean_metric()
-                # Collect component values for auto-inclusion
-                if isinstance(v, DerivedValue) and v.fiscal_period != "LTM":
-                    for comp_name, comp_val in v.components.items():
-                        if comp_name not in self.metrics:
-                            component_metrics[comp_name] = comp_val
-
-        # Auto-include component values not explicitly requested
-        for comp_name, comp_val in component_metrics.items():
-            if comp_name not in metrics_out:
-                d = comp_val.to_lean_metric()
-                d["_component"] = True
-                metrics_out[comp_name] = d
+        metrics_out, citations, calculations = self._serialize_metrics(lean=True)
 
         return {
             "company": self.company,
@@ -287,4 +556,6 @@ class QueryResult(BaseModel):
             "permalink": self.permalink,
             "filings": filings,
             "metrics": metrics_out,
+            "citations": citations,
+            "calculations": calculations,
         }

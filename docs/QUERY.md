@@ -40,6 +40,12 @@ edgarpack query NVDA revenue --period ltm --format json
 # Prior-year trailing twelve months
 edgarpack query NVDA revenue --period ltm-1 --format json
 
+# Structured LTM audit block in table output
+edgarpack query NVDA revenue --period ltm --audit
+
+# Control citation placement and link verbosity
+edgarpack query NVDA revenue --citations inline --show-links primary
+
 # Full JSON with all provenance fields
 edgarpack query NVDA revenue --format json-full
 ```
@@ -56,6 +62,9 @@ edgarpack comps NVDA AAPL --metrics revenue,eps_diluted --format json
 # Different period
 edgarpack comps NVDA AMD --metrics revenue --period ltm
 edgarpack comps NVDA AMD --metrics revenue --period ltm-1
+
+# Table output with explicit audit/citation controls
+edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm --audit
 ```
 
 ## Period Selectors
@@ -155,6 +164,14 @@ Recursive derivation: EBITDA resolves its components (operating_income, deprecia
 
 Compact output format. It deduplicates filing metadata, auto-includes component metrics for derived values, and includes a permalink for reproducibility.
 
+Additive auditability fields:
+
+- top-level `citations` registry (`C#`)
+- top-level `calculations` registry (`D#`, `L#`)
+- metric-level `citation_ids`
+- derived metric `calculation_id` + `component_citation_ids`
+- enriched `ltm_components` metadata (fiscal labels, periods, links, citation IDs)
+
 ```json
 {
   "company": "NVIDIA CORP",
@@ -210,7 +227,7 @@ Companies filing on form 20-F (non-US filers) typically use IFRS taxonomy instea
 
 ## Deep Linking
 
-Every value carries up to four URLs for tracing back to the source. Each tier gives progressively more targeted access to the underlying data.
+Every value carries up to five URLs for tracing back to the source. Each tier gives progressively more targeted access to the underlying data.
 
 | URL | What It Points To | Extra API Calls |
 |-----|-------------------|-----------------|
@@ -218,8 +235,15 @@ Every value carries up to four URLs for tracing back to the source. Each tier gi
 | `concept_url` | SEC XBRL companyconcept API (full concept history as JSON) | 0 |
 | `viewer_url` | SEC Inline XBRL Viewer with highlighted/clickable tags | 1 (submissions, cached 1hr) |
 | `document_url` | Filing HTML scrolled to the concept via `#:~:text=` fragment | 1 (submissions, cached 1hr) |
+| `anchor_url` | Filing HTML anchored to stable inline XBRL fact id (`#f-...`) | 1 (submissions + filing HTML, cached) |
 
 `filing_url` is always present. `concept_url` is present for direct XBRL metrics but `None` for derived metrics (formulas like `gross_profit / revenue` have no single concept). `viewer_url` and `document_url` require the filing's `primaryDocument` filename from the SEC submissions API; they degrade to `None` if the submissions call fails.
+
+CLI primary-link preference is explicit:
+
+1. `anchor_url` when fact IDs are available
+2. else `viewer_url`
+3. else `filing_url`
 
 The `permalink` field in JSON output provides the exact CLI command to reproduce the query.
 

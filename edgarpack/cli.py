@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import shutil
 import sys
+import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -147,6 +149,23 @@ def main(argv: list[str] | None = None) -> int:
         default="table",
         help="Output format: table, json (lean), json-full (verbose). Default: table",
     )
+    p_query.add_argument(
+        "--audit",
+        action="store_true",
+        help="Show structured audit blocks for derived/LTM metrics",
+    )
+    p_query.add_argument(
+        "--show-links",
+        choices=["primary", "all", "none"],
+        default="primary",
+        help="Link verbosity in table output (default: primary)",
+    )
+    p_query.add_argument(
+        "--citations",
+        choices=["inline", "footer", "off"],
+        default="inline",
+        help="Citation placement in table output (default: inline)",
+    )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
 
     # --- harvest subcommand ---
@@ -278,6 +297,23 @@ def main(argv: list[str] | None = None) -> int:
         choices=["table", "json", "json-full"],
         default="table",
         help="Output format: table, json (lean), json-full (verbose). Default: table",
+    )
+    p_comps.add_argument(
+        "--audit",
+        action="store_true",
+        help="Show expanded calculation details under the table",
+    )
+    p_comps.add_argument(
+        "--show-links",
+        choices=["primary", "all", "none"],
+        default="primary",
+        help="Link verbosity in table output (default: primary)",
+    )
+    p_comps.add_argument(
+        "--citations",
+        choices=["inline", "footer", "off"],
+        default="inline",
+        help="Citation placement in table output (default: inline)",
     )
     p_comps.add_argument("--force", action="store_true", help="Bypass cache")
 
@@ -464,9 +500,267 @@ def _cmd_api(args: Any) -> int:
     return 0
 
 
+def _wrap_cli_text(text: str, width: int, indent: str = "      ") -> list[str]:
+    """Wrap CLI text while preserving readable hanging indentation."""
+    wrapped = textwrap.fill(
+        text,
+        width=max(40, width),
+        subsequent_indent=indent,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+    return wrapped.splitlines()
+
+
+def _render_citation_lines(
+    citation_id: str,
+    record: dict[str, object],
+    *,
+    show_links: str,
+    width: int,
+) -> list[str]:
+    """Render one citation record for table/audit output."""
+    lines: list[str] = []
+    form_type = record.get("form_type")
+    fiscal_label = record.get("fiscal_label")
+    period = record.get("period")
+    accession = record.get("accession")
+    filed = record.get("filed")
+    summary = (
+        f"[{citation_id}] {form_type} {fiscal_label} | period {period} | "
+        f"accn {accession} | filed {filed}"
+    )
+    lines.extend(_wrap_cli_text(summary, width, indent="         "))
+
+    if show_links == "primary":
+        link = record.get("primary_link")
+        link_type = record.get("primary_link_type")
+        if isinstance(link, str) and link:
+            lines.extend(
+                _wrap_cli_text(
+                    f"     link({link_type}): {link}",
+                    width,
+                    indent="         ",
+                )
+            )
+    elif show_links == "all":
+        links = record.get("links", {})
+        if isinstance(links, dict):
+            for link_key, link_value in links.items():
+                if isinstance(link_value, str):
+                    lines.extend(
+                        _wrap_cli_text(f"     {link_key}: {link_value}", width, indent="         ")
+                    )
+
+    return lines
+
+
+def _render_query_table(result: Any, args: Any) -> str:
+    """Render single-company query output with inline citation/audit ergonomics."""
+    from .query.comps import _format_value
+
+    lean = result.to_lean_dict()
+    metrics_lean = lean.get("metrics", {})
+    citations = lean.get("citations", {})
+    calculations = lean.get("calculations", {})
+    permalink = lean.get("permalink")
+
+    width = shutil.get_terminal_size((120, 20)).columns
+    lines: list[str] = [f"{result.company} (CIK: {result.cik})", ""]
+
+    for metric_name, raw_value in result.metrics.items():
+        label = metric_name.replace("_", " ").title()
+        lean_value = metrics_lean.get(metric_name)
+
+        if raw_value is None:
+            lines.append(f"{label}: N/A")
+            continue
+
+        if isinstance(raw_value, list):
+            lines.append(f"{label}:")
+            lean_items = lean_value if isinstance(lean_value, list) else []
+            for idx, item in enumerate(raw_value):
+                if item.value is None:
+                    continue
+                payload = lean_items[idx] if idx < len(lean_items) else {}
+                marker = ""
+                if args.citations != "off":
+                    calc_id = payload.get("calculation_id") if isinstance(payload, dict) else None
+                    citation_ids = (
+                        payload.get("citation_ids") if isinstance(payload, dict) else None
+                    )
+                    if isinstance(calc_id, str):
+                        marker = f" [{calc_id}]"
+                    elif isinstance(citation_ids, list) and citation_ids:
+                        marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
+
+                lines.append(f"  {item.fiscal_label}: {_format_value(item)}{marker}")
+                if isinstance(payload, dict):
+                    warnings = payload.get("warnings", [])
+                    if isinstance(warnings, list):
+                        for warning in warnings:
+                            lines.extend(
+                                _wrap_cli_text(
+                                    f"  ! warning: {warning}",
+                                    width,
+                                    indent="             ",
+                                )
+                            )
+            continue
+
+        payload = lean_value if isinstance(lean_value, dict) else {}
+        marker = ""
+        calc_id = payload.get("calculation_id")
+        citation_ids = payload.get("citation_ids", [])
+        if args.citations != "off":
+            if isinstance(calc_id, str):
+                marker = f" [{calc_id}]"
+            elif isinstance(citation_ids, list) and citation_ids:
+                marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
+
+        lines.append(f"{label}: {_format_value(raw_value)}{marker}")
+
+        warnings = payload.get("warnings", []) if isinstance(payload, dict) else []
+        if isinstance(warnings, list):
+            for warning in warnings:
+                lines.extend(
+                    _wrap_cli_text(
+                        f"  ! warning: {warning}",
+                        width,
+                        indent="             ",
+                    )
+                )
+
+        if args.citations == "inline":
+            if isinstance(calc_id, str):
+                calc = calculations.get(calc_id, {})
+                formula = calc.get("formula", "")
+                kind = calc.get("kind", "")
+                if kind == "ltm":
+                    components = calc.get("components", [])
+                    if isinstance(components, list) and components:
+                        comp_map = {
+                            str(comp.get("role")): str(comp.get("citation_id"))
+                            for comp in components
+                            if isinstance(comp, dict)
+                        }
+                        expr = (
+                            f"mrp[{comp_map.get('mrp', '?')}] + "
+                            f"lfy[{comp_map.get('lfy', '?')}] - "
+                            f"mrp_prior[{comp_map.get('mrp_prior', '?')}]"
+                        )
+                        lines.extend(
+                            _wrap_cli_text(f"  [{calc_id}] LTM = {expr}", width, indent="         ")
+                        )
+                    else:
+                        lines.extend(
+                            _wrap_cli_text(
+                                f"  [{calc_id}] formula: {formula}",
+                                width,
+                                indent="         ",
+                            )
+                        )
+                else:
+                    lines.extend(
+                        _wrap_cli_text(
+                            f"  [{calc_id}] formula: {formula}",
+                            width,
+                            indent="         ",
+                        )
+                    )
+
+                if args.audit:
+                    window = calc.get("window")
+                    if isinstance(window, dict):
+                        w_start = window.get("start")
+                        w_end = window.get("end")
+                        lines.extend(
+                            _wrap_cli_text(
+                                f"     window: {w_start}..{w_end}",
+                                width,
+                                indent="             ",
+                            )
+                        )
+
+                    components = calc.get("components", [])
+                    if isinstance(components, list):
+                        for component in components:
+                            if not isinstance(component, dict):
+                                continue
+                            role = component.get("role")
+                            cid = component.get("citation_id")
+                            value = component.get("value")
+                            unit = component.get("unit")
+                            fiscal = component.get("fiscal_label")
+                            comp_line = (
+                                f"     {role}[{cid}] value={value} {unit} | {fiscal}"
+                            )
+                            lines.extend(_wrap_cli_text(comp_line, width, indent="             "))
+                            if isinstance(cid, str):
+                                record = citations.get(cid)
+                                if isinstance(record, dict):
+                                    lines.extend(
+                                        _render_citation_lines(
+                                            cid,
+                                            record,
+                                            show_links=args.show_links,
+                                            width=width,
+                                        )
+                                    )
+            elif isinstance(citation_ids, list):
+                for cid in citation_ids:
+                    record = citations.get(cid)
+                    if isinstance(record, dict):
+                        lines.extend(
+                            _render_citation_lines(
+                                str(cid), record, show_links=args.show_links, width=width
+                            )
+                        )
+
+    if args.citations == "footer":
+        if citations:
+            lines.append("")
+            lines.append("Sources:")
+            for cid in sorted(
+                citations.keys(),
+                key=lambda x: int(x[1:]) if x[1:].isdigit() else 9999,
+            ):
+                record = citations.get(cid)
+                if isinstance(record, dict):
+                    lines.extend(
+                        _render_citation_lines(
+                            cid, record, show_links=args.show_links, width=width
+                        )
+                    )
+        if calculations:
+            lines.append("")
+            lines.append("Calculations:")
+            for calc_id in sorted(
+                calculations.keys(),
+                key=lambda x: (x[:1], int(x[1:]) if x[1:].isdigit() else 9999),
+            ):
+                calc = calculations.get(calc_id)
+                if not isinstance(calc, dict):
+                    continue
+                formula = calc.get("formula", "")
+                metric_name = calc.get("metric", "")
+                lines.extend(
+                    _wrap_cli_text(
+                        f"[{calc_id}] {metric_name} = {formula}",
+                        width,
+                        indent="         ",
+                    )
+                )
+
+    if isinstance(permalink, str) and permalink:
+        lines.append("")
+        lines.extend(_wrap_cli_text(f"Reproduce: {permalink}", width, indent="           "))
+
+    return "\n".join(lines)
+
+
 def _cmd_query(args: Any) -> int:
     async def _run() -> int:
-        from .query.comps import _format_value
         from .query.financials import financials
 
         try:
@@ -493,41 +787,7 @@ def _cmd_query(args: Any) -> int:
             return 0
 
         # Table format
-        print(f"{result.company} (CIK: {result.cik})\n")
-        citations: list[tuple[str, str | None]] = []
-        seen_citations: set[str] = set()
-        for metric_name, cited in result.metrics.items():
-            label = metric_name.replace("_", " ").title()
-            if cited is None:
-                print(f"  {label}: N/A")
-            elif isinstance(cited, list):
-                print(f"  {label}:")
-                for item in cited:
-                    if item.value is None:
-                        continue
-                    formatted = _format_value(item)
-                    period_label = f"{item.fiscal_period}{item.fiscal_year}"
-                    print(f"    {period_label}: {formatted}")
-                    cite = item.citation
-                    if cite not in seen_citations:
-                        seen_citations.add(cite)
-                        citations.append((cite, item.viewer_url))
-            elif cited.value is None:
-                print(f"  {label}: N/A")
-            else:
-                formatted = _format_value(cited)
-                print(f"  {label}: {formatted}")
-                cite = cited.citation
-                if cite not in seen_citations:
-                    seen_citations.add(cite)
-                    citations.append((cite, cited.viewer_url))
-
-        if citations:
-            print("\nSources:")
-            for cite_text, viewer in citations:
-                print(f"  - {cite_text}")
-                if viewer:
-                    print(f"    {viewer}")
+        print(_render_query_table(result, args))
 
         return 0
 
@@ -556,7 +816,17 @@ def _cmd_comps(args: Any) -> int:
         elif args.output_format == "json-full":
             print(comps_to_json(results))
         else:
-            print(format_comps_table(results, metric_list))
+            width = shutil.get_terminal_size((120, 20)).columns
+            print(
+                format_comps_table(
+                    results,
+                    metric_list,
+                    citations_mode=args.citations,
+                    show_links=args.show_links,
+                    audit=bool(args.audit),
+                    terminal_width=width,
+                )
+            )
 
         return 0
 

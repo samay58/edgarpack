@@ -607,6 +607,20 @@ class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
         metric = lean["metrics"]["revenue"]
         self.assertTrue(metric["derived"])
         self.assertIn("ltm_components", metric)
+        self.assertIn("citation_ids", metric)
+        self.assertIn("calculation_id", metric)
+        self.assertIn("component_citation_ids", metric)
+        self.assertNotIn("mrp", lean["metrics"])
+        self.assertNotIn("lfy", lean["metrics"])
+        self.assertNotIn("mrp_prior", lean["metrics"])
+        mrp_component = metric["ltm_components"]["mrp"]
+        self.assertIn("fiscal_label", mrp_component)
+        self.assertIn("period", mrp_component)
+        self.assertIn("primary_link", mrp_component)
+        self.assertIn("citation_id", mrp_component)
+        primary_accession = metric["accession"]
+        primary_filing = lean["filings"][primary_accession]
+        self.assertNotEqual(primary_filing["fiscal_period"], "LTM-1")
 
 
 class TestLeanJson(unittest.IsolatedAsyncioTestCase):
@@ -626,6 +640,8 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(d["period"], "lfy")
         self.assertIn("filings", d)
         self.assertIn("metrics", d)
+        self.assertIn("citations", d)
+        self.assertIn("calculations", d)
         # Revenue metric should have value, unit, concept, period, accession
         revenue = d["metrics"]["revenue"]
         self.assertIn("value", revenue)
@@ -633,6 +649,7 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
         self.assertIn("concept", revenue)
         self.assertIn("period", revenue)
         self.assertIn("accession", revenue)
+        self.assertIn("citation_ids", revenue)
 
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")

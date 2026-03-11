@@ -233,7 +233,8 @@ class TestFormatCompsTable(unittest.TestCase):
         table = format_comps_table(results, ["revenue"])
         self.assertIn("NVIDIA CORP", table)
         self.assertIn("Revenue", table)
-        self.assertIn("Sources:", table)
+        self.assertIn("Citations:", table)
+        self.assertIn("[C1]", table)
 
 
 class TestCompsToJson(unittest.TestCase):

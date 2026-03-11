@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import textwrap
 from typing import Any
 
 from .financials import financials
-from .models import CitedValue, QueryResult
+from .models import CitedValue, DerivedValue, QueryResult
 
 
 async def comps(
@@ -49,62 +50,235 @@ async def comps(
 def format_comps_table(
     results: dict[str, QueryResult],
     metrics: list[str],
+    *,
+    citations_mode: str = "inline",
+    show_links: str = "primary",
+    audit: bool = False,
+    terminal_width: int | None = None,
 ) -> str:
     """Render comparison results as a human-readable table.
 
     Returns:
-        Formatted string with table and citations footer.
+        Formatted string with table and citation/calculation registry.
     """
-    # Build header
+    citations_mode = citations_mode.lower().strip()
+    show_links = show_links.lower().strip()
+
+    def _register_citation(
+        cited: CitedValue,
+        citation_ids: dict[str, str],
+        citation_records: dict[str, dict[str, object]],
+    ) -> str:
+        key = cited.citation_key
+        existing = citation_ids.get(key)
+        if existing:
+            return existing
+        cid = f"C{len(citation_ids) + 1}"
+        citation_ids[key] = cid
+        citation_records[cid] = cited.to_citation_record(cid)
+        return cid
+
+    def _register_calculation(
+        metric_name: str,
+        item: DerivedValue,
+        citation_ids: dict[str, str],
+        citation_records: dict[str, dict[str, object]],
+        calc_ids: dict[str, str],
+        calc_records: dict[str, dict[str, object]],
+    ) -> str:
+        calc_key = f"{metric_name}|{item.citation_key}"
+        existing = calc_ids.get(calc_key)
+        if existing:
+            return existing
+
+        prefix = "L" if item.fiscal_period.upper().startswith("LTM") else "D"
+        next_idx = 1 + sum(1 for cid in calc_records if cid.startswith(prefix))
+        calc_id = f"{prefix}{next_idx}"
+        calc_ids[calc_key] = calc_id
+
+        components: list[dict[str, object]] = []
+        for role, component in item.components.items():
+            comp_cid = _register_citation(component, citation_ids, citation_records)
+            components.append(
+                {
+                    "role": role,
+                    "citation_id": comp_cid,
+                    "value": component.value,
+                    "unit": component.unit,
+                    "fiscal_label": component.fiscal_label,
+                    "period": component._period_str(),
+                    "accession": component.accession,
+                }
+            )
+
+        result_cid = _register_citation(item, citation_ids, citation_records)
+        calc_records[calc_id] = {
+            "id": calc_id,
+            "metric": metric_name,
+            "kind": "ltm" if prefix == "L" else "derived",
+            "formula": "mrp + lfy - mrp_prior" if prefix == "L" else item.concept,
+            "result_citation_id": result_cid,
+            "components": components,
+            "warnings": list(item.warnings),
+        }
+        return calc_id
+
+    def _with_width(text: str, indent: str = "  ") -> list[str]:
+        width = terminal_width or 120
+        wrapped = textwrap.fill(
+            text,
+            width=max(40, width),
+            subsequent_indent=indent,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        return wrapped.splitlines()
+
     header_parts = ["Company"]
     for m in metrics:
         header_parts.append(m.replace("_", " ").title())
 
-    # Calculate column widths
+    citation_ids: dict[str, str] = {}
+    citation_records: dict[str, dict[str, object]] = {}
+    calc_ids: dict[str, str] = {}
+    calc_records: dict[str, dict[str, object]] = {}
+    warnings: list[str] = []
+
+    # Calculate column widths and emit markers
     rows: list[list[str]] = []
-    citations: list[str] = []
-    citation_set: set[str] = set()
 
     for company, qr in results.items():
         row = [qr.company or company]
         for m in metrics:
-            cited = qr.metrics.get(m)
+            raw_value = qr.metrics.get(m)
+            cited = raw_value[0] if isinstance(raw_value, list) and raw_value else raw_value
             if cited is None or cited.value is None:
                 row.append("N/A")
             else:
-                row.append(_format_value(cited))
-                cite = cited.citation
-                if cite not in citation_set:
-                    citation_set.add(cite)
-                    citations.append(cite)
+                formatted = _format_value(cited)
+                marker = ""
+                if isinstance(cited, DerivedValue):
+                    calc_id = _register_calculation(
+                        m, cited, citation_ids, citation_records, calc_ids, calc_records
+                    )
+                    marker = f"[{calc_id}]"
+                else:
+                    cid = _register_citation(cited, citation_ids, citation_records)
+                    marker = f"[{cid}]"
+
+                warn_marker = ""
+                if cited.warnings:
+                    warn_marker = " !"
+                    warnings.extend(f"{qr.company or company} {m}: {w}" for w in cited.warnings)
+
+                if citations_mode == "off":
+                    row.append(f"{formatted}{warn_marker}")
+                else:
+                    row.append(f"{formatted} {marker}{warn_marker}".rstrip())
         rows.append(row)
 
-    # Compute column widths
-    all_rows = [header_parts] + rows
-    col_widths = [max(len(row[i]) for row in all_rows) for i in range(len(header_parts))]
-
-    # Format table
     lines = []
+    width = terminal_width or 120
+    stacked_mode = width < 96 and len(metrics) > 1
 
-    # Header
-    header_line = "  ".join(header_parts[i].ljust(col_widths[i]) for i in range(len(header_parts)))
-    lines.append(header_line)
-    lines.append("  ".join("-" * w for w in col_widths))
-
-    # Rows
-    for row in rows:
-        line = "  ".join(
-            row[i].rjust(col_widths[i]) if i > 0 else row[i].ljust(col_widths[i])
-            for i in range(len(row))
+    if stacked_mode:
+        for row in rows:
+            company_name = row[0]
+            lines.append(company_name)
+            for idx, metric_name in enumerate(metrics, start=1):
+                label = metric_name.replace("_", " ").title()
+                lines.append(f"  {label}: {row[idx]}")
+            lines.append("")
+        if lines and lines[-1] == "":
+            lines.pop()
+    else:
+        all_rows = [header_parts] + rows
+        col_widths = [max(len(row[i]) for row in all_rows) for i in range(len(header_parts))]
+        header_line = "  ".join(
+            header_parts[i].ljust(col_widths[i]) for i in range(len(header_parts))
         )
-        lines.append(line)
+        lines.append(header_line)
+        lines.append("  ".join("-" * w for w in col_widths))
+        for row in rows:
+            line = "  ".join(
+                row[i].rjust(col_widths[i]) if i > 0 else row[i].ljust(col_widths[i])
+                for i in range(len(row))
+            )
+            lines.append(line)
 
-    # Citations footer
-    if citations:
+    if citations_mode == "footer" and citation_records:
         lines.append("")
         lines.append("Sources:")
-        for cite in citations:
-            lines.append(f"  - {cite}")
+        for cid, record in citation_records.items():
+            lines.extend(_with_width(f"{cid}: {record.get('citation', '')}"))
+        return "\n".join(lines)
+
+    if citations_mode != "off":
+        if citation_records:
+            lines.append("")
+            lines.append("Citations:")
+            for cid, record in citation_records.items():
+                period = record.get("period")
+                fiscal = record.get("fiscal_label")
+                accn = record.get("accession")
+                form_type = record.get("form_type")
+                filed = record.get("filed")
+                summary = (
+                    f"[{cid}] {form_type} {fiscal} | period {period} | "
+                    f"accn {accn} | filed {filed}"
+                )
+                lines.extend(_with_width(summary, indent="       "))
+                if show_links == "primary":
+                    link = record.get("primary_link")
+                    link_type = record.get("primary_link_type")
+                    if isinstance(link, str) and link:
+                        lines.extend(
+                            _with_width(
+                                f"     link({link_type}): {link}",
+                                indent="       ",
+                            )
+                        )
+                elif show_links == "all":
+                    links = record.get("links", {})
+                    if isinstance(links, dict):
+                        for link_key, link_value in links.items():
+                            if isinstance(link_value, str):
+                                lines.extend(
+                                    _with_width(
+                                        f"     {link_key}: {link_value}",
+                                        indent="       ",
+                                    )
+                                )
+
+        if calc_records:
+            lines.append("")
+            lines.append("Calculations:")
+            for calc_id, calc in calc_records.items():
+                formula = calc.get("formula", "")
+                metric_name = calc.get("metric", "")
+                line = f"[{calc_id}] {metric_name} = {formula}"
+                lines.extend(_with_width(line, indent="       "))
+                if audit:
+                    components = calc.get("components", [])
+                    if isinstance(components, list):
+                        for comp in components:
+                            if not isinstance(comp, dict):
+                                continue
+                            role = comp.get("role")
+                            cid = comp.get("citation_id")
+                            value = comp.get("value")
+                            unit = comp.get("unit")
+                            fiscal = comp.get("fiscal_label")
+                            comp_line = (
+                                f"     {role}[{cid}] value={value} {unit} | {fiscal}"
+                            )
+                            lines.extend(_with_width(comp_line, indent="       "))
+
+    if warnings:
+        lines.append("")
+        lines.append("Warnings:")
+        for warning in warnings:
+            lines.extend(_with_width(f"- {warning}", indent="  "))
 
     return "\n".join(lines)
 
