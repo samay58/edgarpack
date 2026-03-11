@@ -81,6 +81,7 @@ edgarpack comps NVDA AMD INTC --metrics revenue --period ltm-1
 - `quarterly:N`: last `N` quarters
 
 For complete query behavior, JSON format details, and citation model notes, see `docs/QUERY.md`.
+For practical validation commands, see `docs/TESTING.md`.
 
 ## Output Layout
 
@@ -219,6 +220,8 @@ ruff format --check .
 # Tests
 uv run pytest tests/ -x -v
 ```
+
+For fast/local vs live SEC validation lanes, see `docs/TESTING.md`.
 
 ## SEC Compliance Notes
 

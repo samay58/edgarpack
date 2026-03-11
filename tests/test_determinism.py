@@ -1,7 +1,7 @@
 """Determinism verification: build the same filing twice, compare byte-for-byte.
 
 This test hits the SEC API so it is skipped by default. Run with:
-    pytest tests/test_determinism.py -v --run-slow
+    pytest tests/test_determinism.py -v --run-live-sec --run-slow
 """
 
 from __future__ import annotations
@@ -25,19 +25,7 @@ def _pack_files(pack_dir: Path) -> dict[str, bytes]:
     return result
 
 
-@pytest.fixture
-def _require_slow(request: pytest.FixtureRequest) -> None:
-    if not request.config.getoption("--run-slow", default=False):
-        pytest.skip("slow test: pass --run-slow to run")
-
-
-def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption(
-        "--run-slow", action="store_true", default=False, help="Run slow network tests"
-    )
-
-
-@pytest.mark.usefixtures("_require_slow")
+@pytest.mark.usefixtures("_require_slow", "_require_live_sec")
 class TestDeterminism:
     """Build the same filing twice to separate directories, verify identical output."""
 
