@@ -1,7 +1,7 @@
 # Citation Provenance + CLI Audit UX Spec
 
-Status: Drafted for implementation in `edgarpack-snn`  
-Last updated: 2026-03-10
+Status: reference spec; core CLI and JSON changes have been implemented in phases
+Last updated: 2026-03-11
 
 ## 1. Summary
 
@@ -364,4 +364,3 @@ Revisit only if downstream systems require strict normalized schema with zero le
 - No removals/renames in `json` or `json-full`.
 - New fields are additive.
 - Existing consumers that ignore unknown keys remain unaffected.
-

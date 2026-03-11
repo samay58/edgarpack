@@ -159,13 +159,13 @@ Useful query parameters:
 For full behavior and field semantics, see `docs/OBSERVATORY.md`.
 For onboarding and module-system mapping, see `docs/OBSERVATORY-EXPLAINER.md`.
 
-## China Lens Practical Use
+## China Lens
 
-The current China Lens stack is useful today for three workflows:
+China Lens is the citation-backed research workspace inside this repository. Today it is useful for three concrete workflows:
 
-1. Deterministic citation-backed workspace dev: run the API, use the seeded Tencent fixtures, and exercise `/companies`, `/documents`, `/evidence/search`, `/citations/resolve`, `/packs`, and `/ask`.
-2. Local ingestion from a manifest: point `POST /api/v1/connectors/cninfo/sync` at a JSON manifest containing document metadata plus either page snippets or a local PDF path.
-3. Durable local review loop: set `EDGARPACK_CHINA_STORAGE_BACKEND=json` and `EDGARPACK_CHINA_OBJECT_STORE_DIR` so ingested docs, chunks, packs, and jobs survive process restarts.
+- exercising the API against seeded fixture data
+- ingesting local CNINFO-style document sets from a manifest
+- running a durable local review loop with persisted documents, chunks, packs, and jobs
 
 Minimal manifest example:
 
@@ -204,7 +204,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/packs \
   -d '{"company_id":"cmp_tencent_0700"}'
 ```
 
-If you want a production database instead of local JSON files, set `EDGARPACK_CHINA_STORAGE_BACKEND=postgres` and `EDGARPACK_CHINA_POSTGRES_DSN`. The repository adapter is wired for PostgreSQL JSONB persistence; retrieval still uses the existing lexical ranking path until vector search is added.
+If you want a database backend instead of local JSON files, set `EDGARPACK_CHINA_STORAGE_BACKEND=postgres` and `EDGARPACK_CHINA_POSTGRES_DSN`. The current PostgreSQL adapter handles persistence; evidence retrieval still uses the existing lexical ranking path until database-native search is added.
 
 ## Development
 

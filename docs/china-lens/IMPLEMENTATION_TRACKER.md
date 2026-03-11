@@ -1,7 +1,6 @@
 # China Lens Implementation Tracker
 
-This file is the execution reference for the Rogo China Lens MVP inside `edgarpack`.
-It records scope decisions, issue mapping, and implementation status to keep agent work aligned.
+This file records the shipped vertical slice, the current architecture choices, and the next concrete steps.
 
 ## Mission
 Build a high-trust research workspace that produces investor-grade Packs where each claim has clickable evidence.
@@ -16,7 +15,7 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 
 ## Bead Mapping
 - Epic: `edgarpack-lb1` - China Lens MVP foundation.
-- Child: `edgarpack-lb1.3` - Backend skeleton (in progress).
+- Child: `edgarpack-lb1.3` - Backend skeleton.
 - Child: `edgarpack-lb1.1` - Frontend shell.
 - Child: `edgarpack-lb1.2` - Contracts + QA + docs.
 
@@ -43,7 +42,7 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 - CNINFO sync now supports manifest-driven ingestion via `manifest_path` on `POST /api/v1/connectors/cninfo/sync`.
 - Manifest ingestion upserts documents and indexes evidence chunks from:
   - explicit page snippets (`snippets[]`), or
-  - local PDF extraction (`local_pdf_path`) using embedded text with OCR-placeholder fallback.
+  - local PDF extraction (`local_pdf_path`) using embedded text with OCR-fallback markers.
 - Added date-window filtering (`start_date`, `end_date`) and optional `clear_existing` reset for deterministic reruns.
 - Added input validation path: invalid manifests now return HTTP 400 (instead of silent success).
 - China Lens state now sits behind repository/object-store adapters instead of raw in-memory dicts.
