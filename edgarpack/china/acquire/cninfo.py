@@ -80,6 +80,8 @@ def document_from_cninfo(
     pages: int,
     acquisition_log_id: str,
     file_hash: str | None = None,
+    object_key: str = "",
+    storage_url: str = "",
 ) -> Document:
     """Build a normalized Document model from CNINFO metadata."""
     return Document(
@@ -95,6 +97,8 @@ def document_from_cninfo(
         language="zh",
         acquired_at=utc_now(),
         acquisition_log_id=acquisition_log_id,
+        object_key=object_key,
+        storage_url=storage_url,
     )
 
 

@@ -90,6 +90,8 @@ class Document(BaseModel):
     language: str
     acquired_at: datetime
     acquisition_log_id: str
+    object_key: str = ""
+    storage_url: str = ""
 
 
 class EvidenceChunk(BaseModel):

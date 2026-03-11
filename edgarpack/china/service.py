@@ -1,12 +1,12 @@
-"""In-memory China Lens service for MVP vertical slice.
+"""China Lens service layer.
 
-This service exposes deterministic behavior suitable for local development,
-contract testing, and UI integration before database wiring is introduced.
+The service owns workflow logic, while persistence and binary storage live
+behind repository/object-store adapters.
 """
 
 from __future__ import annotations
 
-from collections import defaultdict
+import os
 from datetime import date
 from threading import RLock
 from uuid import uuid4
@@ -51,6 +51,12 @@ from .models import (
     utc_now,
 )
 from .qa.validators import run_publish_checks
+from .storage import (
+    ChinaLensRepository,
+    ObjectStore,
+    create_default_object_store,
+    create_default_repository,
+)
 from .synthesis.pack_builder import (
     build_empty_sections,
     citation_label,
@@ -62,17 +68,17 @@ from .synthesis.pack_builder import (
 class ChinaLensService:
     """Stateful service that powers API routes for the MVP."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        repository: ChinaLensRepository | None = None,
+        object_store: ObjectStore | None = None,
+        seed_fixtures: bool = True,
+    ) -> None:
         self._lock = RLock()
-        self._companies: dict[str, Company] = {}
-        self._documents: dict[str, Document] = {}
-        self._chunks: dict[str, EvidenceChunk] = {}
-        self._chunks_by_doc: dict[str, list[str]] = defaultdict(list)
-        self._packs: dict[str, Pack] = {}
-        self._jobs: dict[str, PackJob] = {}
-        self._jobs_by_pack: dict[str, str] = {}
-        self._acquisition_events: list = []
-        self._seed_fixtures()
+        self._repository = repository or create_default_repository()
+        self._object_store = object_store or create_default_object_store()
+        if seed_fixtures and not self._repository.list_companies():
+            self._seed_fixtures()
 
     def _seed_fixtures(self) -> None:
         company = Company(
@@ -83,7 +89,7 @@ class ChinaLensService:
             exchange="HKEX",
             aliases=["Tencent", "腾讯"],
         )
-        self._companies[company.id] = company
+        self._repository.upsert_company(company)
 
         evt_id = "acq_seed_2024"
         doc_annual = document_from_cninfo(
@@ -104,8 +110,8 @@ class ChinaLensService:
             pages=104,
             acquisition_log_id=evt_id,
         )
-        self._documents[doc_annual.id] = doc_annual
-        self._documents[doc_interim.id] = doc_interim
+        self._repository.upsert_document(doc_annual)
+        self._repository.upsert_document(doc_interim)
 
         chunks = [
             EvidenceChunk(
@@ -167,8 +173,7 @@ class ChinaLensService:
         ]
 
         for chunk in chunks:
-            self._chunks[chunk.id] = chunk
-            self._chunks_by_doc[chunk.doc_id].append(chunk.id)
+            self._repository.upsert_chunk(chunk)
 
         seed_event = build_acquisition_event(
             event_id=evt_id,
@@ -178,33 +183,32 @@ class ChinaLensService:
             outcome="cached",
             details="Seeded fixture filing metadata for local China Lens development.",
         )
-        self._acquisition_events.append(seed_event)
+        self._repository.append_acquisition_event(seed_event)
 
     def list_companies(self) -> list[Company]:
         with self._lock:
-            return sorted(self._companies.values(), key=lambda company: company.display_name_en)
+            companies = self._repository.list_companies()
+            return sorted(companies, key=lambda company: company.display_name_en)
 
     def list_documents(self, company_id: str | None = None) -> list[Document]:
         with self._lock:
-            docs = list(self._documents.values())
-            if company_id:
-                docs = [doc for doc in docs if doc.company_id == company_id]
+            docs = self._repository.list_documents(company_id=company_id)
             docs.sort(key=lambda doc: doc.filing_date, reverse=True)
             return docs
 
     def get_document(self, doc_id: str) -> Document:
         with self._lock:
-            if doc_id not in self._documents:
+            doc = self._repository.get_document(doc_id)
+            if doc is None:
                 raise KeyError(f"Unknown document: {doc_id}")
-            return self._documents[doc_id]
+            return doc
 
     def get_document_page(self, doc_id: str, page: int) -> DocumentPageResponse:
         with self._lock:
             doc = self.get_document(doc_id)
             snippets = [
                 chunk
-                for chunk_id in self._chunks_by_doc.get(doc_id, [])
-                for chunk in [self._chunks[chunk_id]]
+                for chunk in self._repository.list_chunks(doc_id=doc_id)
                 if chunk.page_start <= page <= chunk.page_end
             ]
             if snippets:
@@ -219,12 +223,12 @@ class ChinaLensService:
                 page=page,
                 snippet_zh=snippet_zh,
                 snippet_en=snippet_en,
-                image_url=f"{doc.source_url}#page={page}",
+                image_url=f"{(doc.storage_url or doc.source_url)}#page={page}",
             )
 
     def create_pack_job(self, req: CreatePackRequest) -> CreatePackResponse:
         with self._lock:
-            if req.company_id not in self._companies:
+            if self._repository.get_company(req.company_id) is None:
                 raise KeyError(f"Unknown company: {req.company_id}")
 
             pack_id = f"pack_{uuid4().hex[:12]}"
@@ -258,9 +262,9 @@ class ChinaLensService:
                 stage_logs=["Downloading filings from CNINFO..."],
             )
 
-            self._packs[pack.id] = pack
-            self._jobs[job.id] = job
-            self._jobs_by_pack[pack.id] = job.id
+            self._repository.upsert_pack(pack)
+            self._repository.upsert_job(job)
+            self._repository.set_job_for_pack(pack.id, job.id)
 
             return CreatePackResponse(pack_id=pack.id, job_id=job.id, status=pack.status)
 
@@ -334,7 +338,8 @@ class ChinaLensService:
         findings = self._build_fixture_findings(pack)
         inject_findings(pack, findings)
 
-        report = run_publish_checks(pack, chunks_by_id=self._chunks, min_citations_per_section=2)
+        chunks_by_id = {chunk.id: chunk for chunk in self._repository.list_chunks()}
+        report = run_publish_checks(pack, chunks_by_id=chunks_by_id, min_citations_per_section=2)
         pack.updated_at = utc_now()
 
         if report.passed:
@@ -352,12 +357,13 @@ class ChinaLensService:
             if section.id == "summary" and not section.unknowns:
                 section.unknowns.append("Not disclosed: named top customers in annual filing")
             section.updated_at = utc_now()
+        self._repository.upsert_pack(pack)
 
     def _get_job_by_pack(self, pack_id: str) -> PackJob:
-        if pack_id not in self._jobs_by_pack:
+        job = self._repository.get_job_by_pack(pack_id)
+        if job is None:
             raise KeyError(f"Unknown pack: {pack_id}")
-        job_id = self._jobs_by_pack[pack_id]
-        return self._jobs[job_id]
+        return job
 
     def tick_pack_job(self, pack_id: str) -> PackJob:
         with self._lock:
@@ -371,6 +377,8 @@ class ChinaLensService:
                 pack.status = PackStatus.CANCELED
                 pack.updated_at = utc_now()
                 pack.build_logs.append("Pack job canceled by user.")
+                self._repository.upsert_job(job)
+                self._repository.upsert_pack(pack)
                 return job
 
             before_stage = job.stage
@@ -384,6 +392,8 @@ class ChinaLensService:
             pack.build_logs.append(
                 f"Pipeline stage {job.stage.value} at {job.stage_progress.get(job.stage, 0)}%."
             )
+            self._repository.upsert_job(job)
+            self._repository.upsert_pack(pack)
 
             if job.status == JobStatus.COMPLETED:
                 self._finalize_pack(pack_id)
@@ -400,12 +410,15 @@ class ChinaLensService:
             pack.status = PackStatus.CANCELED
             pack.updated_at = utc_now()
             pack.build_logs.append("Cancellation requested.")
+            self._repository.upsert_job(job)
+            self._repository.upsert_pack(pack)
             return job
 
     def get_pack(self, pack_id: str) -> Pack:
-        if pack_id not in self._packs:
+        pack = self._repository.get_pack(pack_id)
+        if pack is None:
             raise KeyError(f"Unknown pack: {pack_id}")
-        return self._packs[pack_id]
+        return pack
 
     def get_pack_status(self, pack_id: str, auto_tick: bool = True) -> PackStatusResponse:
         with self._lock:
@@ -425,7 +438,7 @@ class ChinaLensService:
 
     def search_evidence(self, req: SearchEvidenceRequest) -> SearchEvidenceResponse:
         with self._lock:
-            chunks = list(self._chunks.values())
+            chunks = self._repository.list_chunks()
             if req.company_id:
                 doc_ids = {doc.id for doc in self.list_documents(company_id=req.company_id)}
                 chunks = [chunk for chunk in chunks if chunk.doc_id in doc_ids]
@@ -457,9 +470,9 @@ class ChinaLensService:
 
     def resolve_citation(self, chunk_id: str) -> ResolvedCitation:
         with self._lock:
-            if chunk_id not in self._chunks:
+            chunk = self._repository.get_chunk(chunk_id)
+            if chunk is None:
                 raise KeyError(f"Unknown chunk: {chunk_id}")
-            chunk = self._chunks[chunk_id]
             return ResolvedCitation(
                 chunk_id=chunk.id,
                 doc_id=chunk.doc_id,
@@ -551,12 +564,9 @@ class ChinaLensService:
 
     def _remove_company_documents(self, company_id: str) -> None:
         """Delete documents/chunks for one company while preserving packs/jobs."""
-        doc_ids = [doc.id for doc in self._documents.values() if doc.company_id == company_id]
+        doc_ids = self._repository.delete_documents_for_company(company_id)
         for doc_id in doc_ids:
-            chunk_ids = self._chunks_by_doc.pop(doc_id, [])
-            for chunk_id in chunk_ids:
-                self._chunks.pop(chunk_id, None)
-            self._documents.pop(doc_id, None)
+            self._repository.delete_chunks_for_doc(doc_id)
 
     @staticmethod
     def _within_date_window(
@@ -595,6 +605,12 @@ class ChinaLensService:
         acquisition_log_id: str,
     ) -> tuple[Document, int]:
         """Upsert one manifest document and its evidence chunks."""
+        object_key = ""
+        storage_url = ""
+        if manifest_doc.local_pdf_path:
+            object_key = f"documents/{company.id}/{manifest_doc.doc_id}.pdf"
+            storage_url = self._object_store.put_file(manifest_doc.local_pdf_path, object_key)
+
         doc = document_from_cninfo(
             doc_id=manifest_doc.doc_id,
             company=company,
@@ -604,12 +620,11 @@ class ChinaLensService:
             pages=manifest_doc.pages,
             acquisition_log_id=acquisition_log_id,
             file_hash=manifest_doc.file_hash,
+            object_key=object_key,
+            storage_url=storage_url,
         )
-        self._documents[doc.id] = doc
-
-        existing_chunk_ids = self._chunks_by_doc.pop(doc.id, [])
-        for chunk_id in existing_chunk_ids:
-            self._chunks.pop(chunk_id, None)
+        self._repository.upsert_document(doc)
+        self._repository.delete_chunks_for_doc(doc.id)
 
         chunk_count = 0
         if manifest_doc.snippets:
@@ -625,8 +640,7 @@ class ChinaLensService:
                     extraction_method=snippet.extraction_method,
                     confidence=snippet.confidence,
                 )
-                self._chunks[chunk.id] = chunk
-                self._chunks_by_doc[doc.id].append(chunk.id)
+                self._repository.upsert_chunk(chunk)
                 chunk_count += 1
             return doc, chunk_count
 
@@ -646,15 +660,15 @@ class ChinaLensService:
                     extraction_method=page.method,
                     confidence=page.confidence,
                 )
-                self._chunks[chunk.id] = chunk
-                self._chunks_by_doc[doc.id].append(chunk.id)
+                self._repository.upsert_chunk(chunk)
                 chunk_count += 1
 
         return doc, chunk_count
 
     def cninfo_sync(self, req: CninfoSyncRequest) -> CninfoSyncResponse:
         with self._lock:
-            if req.company_id not in self._companies:
+            company = self._repository.get_company(req.company_id)
+            if company is None:
                 raise KeyError(f"Unknown company: {req.company_id}")
 
             if req.clear_existing:
@@ -669,7 +683,6 @@ class ChinaLensService:
             )
 
             if req.manifest_path:
-                company = self._companies[req.company_id]
                 try:
                     manifest_docs = load_cninfo_manifest(
                         req.manifest_path,
@@ -709,7 +722,7 @@ class ChinaLensService:
                 outcome="ok",
                 details=details,
             )
-            self._acquisition_events.append(event)
+            self._repository.append_acquisition_event(event)
             return CninfoSyncResponse(
                 events=[event],
                 documents=docs,
@@ -719,4 +732,8 @@ class ChinaLensService:
 
 def create_default_service() -> ChinaLensService:
     """Factory used by API startup."""
-    return ChinaLensService()
+    seed_fixtures = True
+    seed_env = os.environ.get("EDGARPACK_CHINA_SEED_FIXTURES")
+    if seed_env is not None:
+        seed_fixtures = seed_env.strip().lower() not in {"0", "false", "no"}
+    return ChinaLensService(seed_fixtures=seed_fixtures)

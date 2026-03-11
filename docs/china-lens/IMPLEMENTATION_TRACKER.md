@@ -46,13 +46,24 @@ Build a high-trust research workspace that produces investor-grade Packs where e
   - local PDF extraction (`local_pdf_path`) using embedded text with OCR-placeholder fallback.
 - Added date-window filtering (`start_date`, `end_date`) and optional `clear_existing` reset for deterministic reruns.
 - Added input validation path: invalid manifests now return HTTP 400 (instead of silent success).
+- China Lens state now sits behind repository/object-store adapters instead of raw in-memory dicts.
+- Added durable local backend:
+  - JSON-file repository for companies, documents, chunks, packs, jobs, and acquisition events
+  - local object-store adapter for source PDFs
+- Added environment-based backend selection:
+  - `memory` (default)
+  - `json` via `EDGARPACK_CHINA_STORAGE_DIR`
+  - `postgres` via `EDGARPACK_CHINA_POSTGRES_DSN`
 - Added regression coverage:
   - manifest ingestion populates evidence search corpus
   - date-window filtering behavior
   - invalid manifest API handling
+  - repository persistence across service restarts
+  - local object-store persistence for synced PDFs
 
 ## Next Implementation Steps
-1. Wire persistent storage (PostgreSQL + object store) behind service interfaces.
+1. Add live CNINFO fetch + page-image rendering on top of the new persistence/object-store boundary.
 2. Add production OCR provider behind the existing extraction fallback path.
-3. Integrate frontend `web/` with API and implement Evidence Explorer interactions.
-4. Add end-to-end tests for generate-pack, verify-citation, and bounded ask workflows.
+3. Add vector retrieval and database-native search on top of the PostgreSQL adapter.
+4. Integrate frontend `web/` with API and implement Evidence Explorer interactions.
+5. Add end-to-end tests for generate-pack, verify-citation, and bounded ask workflows.

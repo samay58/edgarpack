@@ -116,6 +116,12 @@ edgarpack site --packs ./packs --out ./site
 uv pip install -e ".[china]"
 edgarpack api --host 127.0.0.1 --port 8000
 
+# Durable local China Lens backend (JSON repo + local object store)
+export EDGARPACK_CHINA_STORAGE_BACKEND=json
+export EDGARPACK_CHINA_STORAGE_DIR="$PWD/.local/china-repo"
+export EDGARPACK_CHINA_OBJECT_STORE_DIR="$PWD/.local/china-objects"
+edgarpack api --host 127.0.0.1 --port 8000
+
 # CNINFO manifest sync (local deterministic ingestion)
 curl -X POST http://127.0.0.1:8000/api/v1/connectors/cninfo/sync \
   -H "content-type: application/json" \
@@ -152,6 +158,53 @@ Useful query parameters:
 
 For full behavior and field semantics, see `docs/OBSERVATORY.md`.
 For onboarding and module-system mapping, see `docs/OBSERVATORY-EXPLAINER.md`.
+
+## China Lens Practical Use
+
+The current China Lens stack is useful today for three workflows:
+
+1. Deterministic citation-backed workspace dev: run the API, use the seeded Tencent fixtures, and exercise `/companies`, `/documents`, `/evidence/search`, `/citations/resolve`, `/packs`, and `/ask`.
+2. Local ingestion from a manifest: point `POST /api/v1/connectors/cninfo/sync` at a JSON manifest containing document metadata plus either page snippets or a local PDF path.
+3. Durable local review loop: set `EDGARPACK_CHINA_STORAGE_BACKEND=json` and `EDGARPACK_CHINA_OBJECT_STORE_DIR` so ingested docs, chunks, packs, and jobs survive process restarts.
+
+Minimal manifest example:
+
+```json
+{
+  "company_id": "cmp_tencent_0700",
+  "documents": [
+    {
+      "doc_id": "doc_tencent_2025_board",
+      "title": "Tencent 2025 Board Update",
+      "filing_date": "2025-04-01",
+      "source_url": "https://www.cninfo.com.cn/mock/tencent-2025-board.pdf",
+      "pages": 12,
+      "local_pdf_path": "./fixtures/tencent-2025-board.pdf",
+      "snippets": [
+        {
+          "page": 3,
+          "text_zh": "董事会成员调整，新增两名独立董事。",
+          "text_en": "Board composition changed with two new independent directors."
+        }
+      ]
+    }
+  ]
+}
+```
+
+Useful inspection calls after sync:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/documents?company_id=cmp_tencent_0700
+curl -X POST http://127.0.0.1:8000/api/v1/evidence/search \
+  -H "content-type: application/json" \
+  -d '{"company_id":"cmp_tencent_0700","query":"independent directors"}'
+curl -X POST http://127.0.0.1:8000/api/v1/packs \
+  -H "content-type: application/json" \
+  -d '{"company_id":"cmp_tencent_0700"}'
+```
+
+If you want a production database instead of local JSON files, set `EDGARPACK_CHINA_STORAGE_BACKEND=postgres` and `EDGARPACK_CHINA_POSTGRES_DSN`. The repository adapter is wired for PostgreSQL JSONB persistence; retrieval still uses the existing lexical ranking path until vector search is added.
 
 ## Development
 

@@ -31,6 +31,13 @@ from .models import (
     SearchEvidenceRequest,
     SearchEvidenceResponse,
 )
+from .storage import (
+    InMemoryChinaLensRepository,
+    JsonFileChinaLensRepository,
+    LocalObjectStore,
+    MemoryObjectStore,
+    PostgresChinaLensRepository,
+)
 
 __all__ = [
     "AcquisitionEvent",
@@ -55,6 +62,7 @@ __all__ = [
     "PackSection",
     "PackStatus",
     "PackStatusResponse",
+    "PostgresChinaLensRepository",
     "PipelineStage",
     "QAReport",
     "QAIssue",
@@ -62,4 +70,8 @@ __all__ = [
     "SearchEvidenceHit",
     "SearchEvidenceRequest",
     "SearchEvidenceResponse",
+    "InMemoryChinaLensRepository",
+    "JsonFileChinaLensRepository",
+    "LocalObjectStore",
+    "MemoryObjectStore",
 ]
