@@ -7,10 +7,19 @@ contract testing, and UI integration before database wiring is introduced.
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import date
 from threading import RLock
 from uuid import uuid4
 
-from .acquire.cninfo import build_acquisition_event, document_from_cninfo
+from pydantic import ValidationError
+
+from .acquire.cninfo import (
+    ManifestDocument,
+    build_acquisition_event,
+    document_from_cninfo,
+    load_cninfo_manifest,
+)
+from .extract.pdf_extract import extract_pdf_pages
 from .index.search import rank_chunks
 from .jobs.runner import cancel_job, create_stage_progress, pack_status_from_job, progress_job
 from .models import (
@@ -534,28 +543,178 @@ class ChinaLensService:
         return AskResponse(
             answer=blocks,
             not_found=False,
-            guidance="Open citations to verify the original Chinese source in Evidence Explorer.",
+            guidance=(
+                "Open citations to verify the original Chinese source "
+                "in Evidence Explorer."
+            ),
         )
+
+    def _remove_company_documents(self, company_id: str) -> None:
+        """Delete documents/chunks for one company while preserving packs/jobs."""
+        doc_ids = [doc.id for doc in self._documents.values() if doc.company_id == company_id]
+        for doc_id in doc_ids:
+            chunk_ids = self._chunks_by_doc.pop(doc_id, [])
+            for chunk_id in chunk_ids:
+                self._chunks.pop(chunk_id, None)
+            self._documents.pop(doc_id, None)
+
+    @staticmethod
+    def _within_date_window(
+        filing_date: str,
+        start_date: str | None,
+        end_date: str | None,
+    ) -> bool:
+        """Check whether a filing date is within optional sync bounds."""
+        try:
+            filing = date.fromisoformat(filing_date)
+        except ValueError:
+            return False
+
+        if start_date:
+            try:
+                start = date.fromisoformat(start_date)
+            except ValueError:
+                start = None
+            if start and filing < start:
+                return False
+
+        if end_date:
+            try:
+                end = date.fromisoformat(end_date)
+            except ValueError:
+                end = None
+            if end and filing > end:
+                return False
+
+        return True
+
+    def _ingest_manifest_document(
+        self,
+        company: Company,
+        manifest_doc: ManifestDocument,
+        acquisition_log_id: str,
+    ) -> tuple[Document, int]:
+        """Upsert one manifest document and its evidence chunks."""
+        doc = document_from_cninfo(
+            doc_id=manifest_doc.doc_id,
+            company=company,
+            title=manifest_doc.title,
+            filing_date=manifest_doc.filing_date,
+            source_url=manifest_doc.source_url,
+            pages=manifest_doc.pages,
+            acquisition_log_id=acquisition_log_id,
+            file_hash=manifest_doc.file_hash,
+        )
+        self._documents[doc.id] = doc
+
+        existing_chunk_ids = self._chunks_by_doc.pop(doc.id, [])
+        for chunk_id in existing_chunk_ids:
+            self._chunks.pop(chunk_id, None)
+
+        chunk_count = 0
+        if manifest_doc.snippets:
+            for snippet in manifest_doc.snippets:
+                chunk = EvidenceChunk(
+                    id=f"chunk_{doc.id}_p{snippet.page:04d}",
+                    doc_id=doc.id,
+                    page_start=snippet.page,
+                    page_end=snippet.page,
+                    text_zh=snippet.text_zh,
+                    text_en=snippet.text_en or snippet.text_zh,
+                    language="zh",
+                    extraction_method=snippet.extraction_method,
+                    confidence=snippet.confidence,
+                )
+                self._chunks[chunk.id] = chunk
+                self._chunks_by_doc[doc.id].append(chunk.id)
+                chunk_count += 1
+            return doc, chunk_count
+
+        if manifest_doc.local_pdf_path:
+            pages = extract_pdf_pages(manifest_doc.local_pdf_path)
+            for page in pages:
+                if not page.text.strip():
+                    continue
+                chunk = EvidenceChunk(
+                    id=f"chunk_{doc.id}_p{page.page:04d}",
+                    doc_id=doc.id,
+                    page_start=page.page,
+                    page_end=page.page,
+                    text_zh=page.text,
+                    text_en=page.text,
+                    language="zh",
+                    extraction_method=page.method,
+                    confidence=page.confidence,
+                )
+                self._chunks[chunk.id] = chunk
+                self._chunks_by_doc[doc.id].append(chunk.id)
+                chunk_count += 1
+
+        return doc, chunk_count
 
     def cninfo_sync(self, req: CninfoSyncRequest) -> CninfoSyncResponse:
         with self._lock:
             if req.company_id not in self._companies:
                 raise KeyError(f"Unknown company: {req.company_id}")
 
+            if req.clear_existing:
+                self._remove_company_documents(req.company_id)
+
             docs = self.list_documents(company_id=req.company_id)
+            ingested_chunks = 0
+            sync_event_id = f"acq_{uuid4().hex[:10]}"
+            details = (
+                "Connector sync completed. "
+                f"Window: {req.start_date or 'open'} to {req.end_date or 'open'}."
+            )
+
+            if req.manifest_path:
+                company = self._companies[req.company_id]
+                try:
+                    manifest_docs = load_cninfo_manifest(
+                        req.manifest_path,
+                        company_id=req.company_id,
+                    )
+                except (FileNotFoundError, ValidationError, ValueError) as exc:
+                    raise ValueError(f"Invalid CNINFO manifest: {exc}") from exc
+
+                ingested_docs = 0
+                for manifest_doc in manifest_docs:
+                    if not self._within_date_window(
+                        manifest_doc.filing_date,
+                        req.start_date,
+                        req.end_date,
+                    ):
+                        continue
+                    _, chunk_count = self._ingest_manifest_document(
+                        company,
+                        manifest_doc,
+                        acquisition_log_id=sync_event_id,
+                    )
+                    ingested_docs += 1
+                    ingested_chunks += chunk_count
+
+                docs = self.list_documents(company_id=req.company_id)
+                details = (
+                    f"Manifest sync completed from {req.manifest_path}. "
+                    f"Ingested {ingested_docs} document(s) and {ingested_chunks} chunk(s). "
+                    f"Window: {req.start_date or 'open'} to {req.end_date or 'open'}."
+                )
+
             event = build_acquisition_event(
-                event_id=f"acq_{uuid4().hex[:10]}",
+                event_id=sync_event_id,
                 company_id=req.company_id,
                 source_url="https://www.cninfo.com.cn",
                 file_hash=docs[0].file_hash if docs else "",
                 outcome="ok",
-                details=(
-                    "Connector sync completed. "
-                    f"Window: {req.start_date or 'open'} to {req.end_date or 'open'}."
-                ),
+                details=details,
             )
             self._acquisition_events.append(event)
-            return CninfoSyncResponse(events=[event], documents=docs)
+            return CninfoSyncResponse(
+                events=[event],
+                documents=docs,
+                ingested_chunks=ingested_chunks,
+            )
 
 
 def create_default_service() -> ChinaLensService:

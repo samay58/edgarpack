@@ -26,6 +26,9 @@ _ATTR_ID_RE = re.compile(r'\bid="([^"]+)"', re.IGNORECASE)
 _ATTR_SCALE_RE = re.compile(r'\bscale="([^"]*)"', re.IGNORECASE)
 _ATTR_SIGN_RE = re.compile(r'\bsign="([^"]*)"', re.IGNORECASE)
 
+_FULL_YEAR_MIN_DAYS = 350
+_FULL_YEAR_MAX_DAYS = 380
+
 
 def _parse_display_value(text: str, scale: str, sign: str) -> float | None:
     """Parse the displayed value from an ix:nonFraction element.
@@ -286,6 +289,69 @@ def _duration_days(v: dict[str, Any]) -> int | None:
     return days if days >= 0 else None
 
 
+def _is_full_fiscal_year(v: dict[str, Any]) -> bool:
+    """Check whether an annual duration spans a full fiscal year."""
+    days = _duration_days(v)
+    if days is None:
+        return False
+    return _FULL_YEAR_MIN_DAYS <= days <= _FULL_YEAR_MAX_DAYS
+
+
+def _annual_sort_key(v: dict[str, Any]) -> tuple[int, date, date]:
+    """Sort annual entries by fiscal year then filing/end recency."""
+    return (
+        int(v.get("fy") or 0),
+        _parse_date(v.get("filed", "")) or date.min,
+        _parse_date(v.get("end", "")) or date.min,
+    )
+
+
+def _best_annual_entry(values: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Pick the best annual entry for one fiscal year.
+
+    Preference order:
+    1. Full-year annual durations (350-380 days)
+    2. Any annual entry (for sparse/no-duration datasets)
+    """
+    if not values:
+        return None
+    full_year = [v for v in values if _is_full_fiscal_year(v)]
+    candidates = full_year if full_year else values
+    candidates.sort(key=_annual_sort_key, reverse=True)
+    return candidates[0] if candidates else None
+
+
+def _annual_history(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Build a de-duplicated annual history with one best entry per FY."""
+    annual_raw: list[dict[str, Any]] = []
+    for v in values:
+        if _is_annual(v) and v.get("val") is not None:
+            annual_raw.append(v)
+
+    has_full_year = any(_is_full_fiscal_year(v) for v in annual_raw)
+
+    by_fy: dict[int, list[dict[str, Any]]] = {}
+    for v in annual_raw:
+        if has_full_year:
+            days = _duration_days(v)
+            if days is not None and not _is_full_fiscal_year(v):
+                # Drop known stub/partial annual windows when full-year entries exist.
+                continue
+        fy = int(v.get("fy") or 0)
+        if fy <= 0:
+            continue
+        by_fy.setdefault(fy, []).append(v)
+
+    annual: list[dict[str, Any]] = []
+    for entries in by_fy.values():
+        best = _best_annual_entry(entries)
+        if best is not None:
+            annual.append(best)
+
+    annual.sort(key=_annual_sort_key, reverse=True)
+    return annual
+
+
 def _is_standalone_quarter(v: dict[str, Any]) -> bool:
     """Check if a duration value is a standalone ~3-month quarter (not cumulative YTD).
 
@@ -392,17 +458,12 @@ def _pick_anchor_quarter(
 
 def _annual_for_fy(values: list[dict[str, Any]], fiscal_year: int) -> dict[str, Any] | None:
     """Pick the most recently filed annual value for a specific fiscal year."""
-    annual = [v for v in values if _is_annual(v) and int(v.get("fy") or 0) == fiscal_year]
-    if not annual:
-        return None
-    annual.sort(
-        key=lambda v: (
-            _parse_date(v.get("filed", "")) or date.min,
-            _parse_date(v.get("end", "")) or date.min,
-        ),
-        reverse=True,
-    )
-    return annual[0]
+    annual = [
+        v
+        for v in values
+        if _is_annual(v) and v.get("val") is not None and int(v.get("fy") or 0) == fiscal_year
+    ]
+    return _best_annual_entry(annual)
 
 
 def _select_ltm_like(
@@ -418,6 +479,25 @@ def _select_ltm_like(
     doc_map: dict[str, str] | None = None,
 ) -> CitedValue | DerivedValue | None:
     """Compute LTM-style periods anchored to a shifted quarter."""
+    if _is_per_share_metric(metric):
+        # EPS/per-share metrics are non-additive; use annual values for LTM-like
+        # selectors so comparisons are mathematically sound.
+        values = _extract_values(facts, concept, taxonomy=taxonomy)
+        unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+        annual = _annual_history(values)
+        if len(annual) <= years_back:
+            return None
+        return _value_to_cited(
+            annual[years_back],
+            metric,
+            concept,
+            unit,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+        )
+
     if not meta.duration:
         # Balance sheet: just return the most recent value.
         return select_mrp(
@@ -441,14 +521,9 @@ def _select_ltm_like(
             return select_lfy(
                 facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
             )
-        # Annual-only filer (e.g. 20-F): return the (years_back+1)th most recent annual value
-        annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
-        if not annual:
-            return None
-        annual.sort(
-            key=lambda v: (int(v.get("fy") or 0), v.get("end", "")),
-            reverse=True,
-        )
+        # Annual-only filer (e.g. 20-F): return the (years_back+1)th most recent
+        # full-year annual value, skipping short stub periods where possible.
+        annual = _annual_history(values)
         if len(annual) <= years_back:
             return None  # Not enough history
         target = annual[years_back]
@@ -479,7 +554,7 @@ def _select_ltm_like(
     mrp_fp = str(mrp.get("fp", "")).upper()
     mrp_fy = int(mrp.get("fy") or 0)
 
-    if mrp_fp in ("FY", "Q4"):
+    if years_back == 0 and mrp_fp in ("FY", "Q4"):
         annual_mrp = _annual_for_fy(values, mrp_fy)
         if annual_mrp is not None:
             return _value_to_cited(
@@ -489,20 +564,11 @@ def _select_ltm_like(
             mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
 
-    annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
+    annual = _annual_history(values)
     if not annual:
         return _value_to_cited(
             mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
-
-    annual.sort(
-        key=lambda v: (
-            int(v.get("fy") or 0),
-            _parse_date(v.get("filed", "")) or date.min,
-            _parse_date(v.get("end", "")) or date.min,
-        ),
-        reverse=True,
-    )
 
     lfy_target_fy = mrp_fy - 1
     lfy = next((v for v in annual if int(v.get("fy") or 0) == lfy_target_fy), None)
@@ -594,10 +660,9 @@ def select_lfy(
 
     if meta.duration:
         # For P&L/CF: pick most recent FY value
-        annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
+        annual = _annual_history(values)
         if not annual:
             return None
-        annual.sort(key=lambda v: (int(v.get("fy") or 0), v.get("end", "")), reverse=True)
         return _value_to_cited(
             annual[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
@@ -762,8 +827,7 @@ def select_annual_series(
     values = _extract_values(facts, concept, taxonomy=taxonomy)
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
 
-    annual = [v for v in values if _is_annual(v) and v.get("val") is not None]
-    annual.sort(key=lambda v: int(v.get("fy") or 0), reverse=True)
+    annual = _annual_history(values)
 
     results = []
     seen_fy: set[int] = set()

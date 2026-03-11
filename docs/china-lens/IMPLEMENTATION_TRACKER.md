@@ -39,8 +39,20 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 - Numeric claims require numeric token overlap with cited evidence.
 - Section coverage states computed from supported citation density.
 
+## Recent Progress (2026-03-11)
+- CNINFO sync now supports manifest-driven ingestion via `manifest_path` on `POST /api/v1/connectors/cninfo/sync`.
+- Manifest ingestion upserts documents and indexes evidence chunks from:
+  - explicit page snippets (`snippets[]`), or
+  - local PDF extraction (`local_pdf_path`) using embedded text with OCR-placeholder fallback.
+- Added date-window filtering (`start_date`, `end_date`) and optional `clear_existing` reset for deterministic reruns.
+- Added input validation path: invalid manifests now return HTTP 400 (instead of silent success).
+- Added regression coverage:
+  - manifest ingestion populates evidence search corpus
+  - date-window filtering behavior
+  - invalid manifest API handling
+
 ## Next Implementation Steps
 1. Wire persistent storage (PostgreSQL + object store) behind service interfaces.
-2. Replace fixture extraction with real PDF extraction/OCR pipeline.
+2. Add production OCR provider behind the existing extraction fallback path.
 3. Integrate frontend `web/` with API and implement Evidence Explorer interactions.
 4. Add end-to-end tests for generate-pack, verify-citation, and bounded ask workflows.

@@ -87,11 +87,13 @@ For duration metrics (P&L, cash flow):
 LTM = MRP_cumulative + LFY_annual - MRP_prior_year_cumulative
 ```
 
-Where MRP is the most recent quarterly cumulative value, LFY is the last full fiscal year, and MRP_prior is the same quarter from the prior fiscal year. When the MRP is Q4/FY, LTM returns it directly (no formula needed). For Q1, cumulative and standalone are identical, so the formula still works.
+Where MRP is the most recent quarterly cumulative value, LFY is the last full fiscal year, and MRP_prior is the same quarter from the prior fiscal year. When the MRP is Q4/FY, `ltm` returns it directly (no formula needed). For Q1, cumulative and standalone are identical, so the formula still works.
 
-`ltm-1` uses the same formula, but shifts the quarter anchor one fiscal year back before computing the window.
+`ltm-1` uses the same formula, but shifts the quarter anchor one fiscal year back before computing the window. Unlike `ltm`, `ltm-1` does not short-circuit on a shifted Q4/FY anchor when full formula components are available.
 
 For instant metrics (balance sheet): both `ltm` and `ltm-1` return the most recent reported value.
+
+For per-share metrics (for example `eps_basic`, `eps_diluted`): `ltm` and `ltm-1` use annual fallbacks (`LFY` / `LFY-1`) instead of additive LTM math, because per-share values are non-additive across periods.
 
 ### LTM-1 Fallback Behavior
 

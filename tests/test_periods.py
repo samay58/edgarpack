@@ -355,6 +355,60 @@ class TestSelectLtm(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 100_000_000_000)
 
+    def test_ltm_per_share_uses_annual_not_additive_formula(self) -> None:
+        """Per-share metrics should use annual fallback for LTM."""
+        eps_meta = MetricMeta(concepts=("EarningsPerShareDiluted",), duration=True)
+        values = [
+            {
+                "val": 4.80,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 1.05,
+                "start": "2024-01-01",
+                "end": "2024-03-31",
+                "fy": 2024,
+                "fp": "Q1",
+                "form": "10-Q",
+                "accn": "0000000001-24-000002",
+                "filed": "2024-05-15",
+            },
+            {
+                "val": 2.10,
+                "start": "2024-01-01",
+                "end": "2024-06-30",
+                "fy": 2024,
+                "fp": "Q2",
+                "form": "10-Q",
+                "accn": "0000000001-24-000003",
+                "filed": "2024-08-15",
+            },
+            {
+                "val": 6.20,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("EarningsPerShareDiluted", values)
+        result = select_ltm(
+            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
+        )
+        self.assertIsNotNone(result)
+        self.assertNotIsInstance(result, DerivedValue)
+        self.assertEqual(result.value, 6.20)
+        self.assertEqual(result.fiscal_year, 2024)
+
     def test_ltm_q4_from_10k_short_circuits_to_annual(self) -> None:
         """Q4 values reported in 10-K should short-circuit LTM to the annual value."""
         values = [
@@ -643,10 +697,29 @@ class TestSelectLtmMinus1(unittest.TestCase):
         self.assertNotIsInstance(result, DerivedValue)
         self.assertEqual(result.value, 75_000_000_000)
 
-    def test_ltm_minus_1_q4_fy_short_circuit(self) -> None:
-        """When LTM-1 anchor is Q4/FY, return prior fiscal year annual value."""
+    def test_ltm_minus_1_q4_anchor_uses_formula_when_prior_available(self) -> None:
+        """LTM-1 should not short-circuit on Q4 anchors when formula inputs exist."""
         values = [
-            # FY2022 annual
+            {
+                "val": 70_000_000_000,
+                "start": "2021-01-01",
+                "end": "2021-12-31",
+                "fy": 2021,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-22-000001",
+                "filed": "2022-03-01",
+            },
+            {
+                "val": 70_000_000_000,
+                "start": "2021-01-01",
+                "end": "2021-12-31",
+                "fy": 2021,
+                "fp": "Q4",
+                "form": "10-K",
+                "accn": "0000000001-22-000001",
+                "filed": "2022-03-01",
+            },
             {
                 "val": 80_000_000_000,
                 "start": "2022-01-01",
@@ -657,18 +730,16 @@ class TestSelectLtmMinus1(unittest.TestCase):
                 "accn": "0000000001-23-000001",
                 "filed": "2023-03-01",
             },
-            # Q4 FY2023 (needed for anchor shift to find)
             {
-                "val": 100_000_000_000,
-                "start": "2023-01-01",
-                "end": "2023-12-31",
-                "fy": 2023,
+                "val": 80_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "fy": 2022,
                 "fp": "Q4",
-                "form": "10-Q",
-                "accn": "0000000001-24-000002",
-                "filed": "2024-02-01",
+                "form": "10-K",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
             },
-            # FY2023 annual
             {
                 "val": 100_000_000_000,
                 "start": "2023-01-01",
@@ -679,24 +750,99 @@ class TestSelectLtmMinus1(unittest.TestCase):
                 "accn": "0000000001-24-000001",
                 "filed": "2024-03-01",
             },
-            # Q4 FY2024 (newest quarter, calendar filer)
             {
-                "val": 30_000_000_000,
-                "start": "2024-01-01",
-                "end": "2024-12-31",
-                "fy": 2024,
+                "val": 100_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
                 "fp": "Q4",
-                "form": "10-Q",
-                "accn": "0000000001-25-000001",
-                "filed": "2025-02-01",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
             },
         ]
         facts = _make_facts("Revenues", values)
         result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
-        # LTM-1 anchor is Q4 FY2023 (shifted back 1yr from Q4 FY2024).
-        # Q4/FY short-circuit returns FY2023 annual = $100B.
-        self.assertEqual(result.value, 100_000_000_000)
+        self.assertIsInstance(result, DerivedValue)
+        # Anchor is Q4 FY2022 -> 80 + 70 - 70 = 80
+        self.assertEqual(result.value, 80_000_000_000)
+        self.assertEqual(result.components["mrp"].fiscal_year, 2022)
+        self.assertEqual(result.components["mrp_prior"].fiscal_year, 2021)
+
+    def test_ltm_minus_1_annual_only_skips_stub_periods(self) -> None:
+        """Annual-only LTM-1 should skip known partial-year annual windows."""
+        values = [
+            {
+                "val": 400_000_000_000,
+                "start": "2023-04-01",
+                "end": "2024-03-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-06-01",
+            },
+            {
+                "val": 120_000_000_000,
+                "start": "2022-04-01",
+                "end": "2022-09-30",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-01-15",
+            },
+            {
+                "val": 320_000_000_000,
+                "start": "2021-04-01",
+                "end": "2022-03-31",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "20-F",
+                "accn": "0000000001-22-000001",
+                "filed": "2022-06-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, 320_000_000_000)
+        self.assertEqual(result.fiscal_year, 2022)
+
+    def test_ltm_minus_1_per_share_uses_prior_annual(self) -> None:
+        """Per-share LTM-1 should use LFY-1 annual data."""
+        eps_meta = MetricMeta(concepts=("EarningsPerShareDiluted",), duration=True)
+        values = [
+            {
+                "val": 4.20,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 5.50,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("EarningsPerShareDiluted", values)
+        result = select_ltm_minus_1(
+            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
+        )
+        self.assertIsNotNone(result)
+        self.assertNotIsInstance(result, DerivedValue)
+        self.assertEqual(result.value, 4.20)
+        self.assertEqual(result.fiscal_year, 2023)
 
     def test_ltm_minus_1_via_select_period(self) -> None:
         """Verify the select_period router handles ltm-1."""
@@ -943,14 +1089,11 @@ class TestAnnualOnlyFilerGrowth(unittest.TestCase):
 
 
 class TestStockSplitWarning(unittest.TestCase):
-    """Per-share metrics should carry a warning when values jump suspiciously (stock split)."""
+    """Per-share LTM paths should avoid additive stock-split contamination."""
 
-    def test_per_share_split_warning(self) -> None:
-        """EPS with extreme ratio between LTM-derived and annual should trigger a warning."""
+    def test_per_share_ltm_uses_annual_fallback(self) -> None:
+        """EPS LTM should return annual value instead of additive derived math."""
         eps_meta = MetricMeta(concepts=("EarningsPerShareDiluted",), duration=True)
-        # Simulate a large split: FY annual is pre-split ($50), Q3 prior is pre-split ($41),
-        # but Q3 current is post-split ($0.5). LTM = 0.5 + 50 - 41 = 9.5.
-        # ratio = |9.5 / 50| = 0.19 < 0.2 threshold => warning triggered.
         values = [
             {
                 "val": 50.0,
@@ -986,12 +1129,9 @@ class TestStockSplitWarning(unittest.TestCase):
         facts = _make_facts("EarningsPerShareDiluted", values)
         result = select_ltm(facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK)
         self.assertIsNotNone(result)
-        self.assertIsInstance(result, DerivedValue)
-        self.assertAlmostEqual(result.value, 9.5)
-        self.assertTrue(
-            any("stock split contamination" in w.lower() for w in result.warnings),
-            f"Expected split warning, got: {result.warnings}",
-        )
+        self.assertNotIsInstance(result, DerivedValue)
+        self.assertEqual(result.value, 50.0)
+        self.assertEqual(result.fiscal_period, "FY")
 
     def test_non_per_share_no_warning(self) -> None:
         """Revenue should never get a split warning regardless of value jumps."""

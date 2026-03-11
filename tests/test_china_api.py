@@ -63,6 +63,16 @@ class TestChinaApi(unittest.TestCase):
         self.assertEqual(resolved.status_code, 200)
         self.assertIn("citation_label", resolved.json())
 
+    def test_cninfo_sync_invalid_manifest_returns_400(self) -> None:
+        response = self.client.post(
+            "/api/v1/connectors/cninfo/sync",
+            json={
+                "company_id": "cmp_tencent_0700",
+                "manifest_path": "/tmp/does-not-exist-cninfo-manifest.json",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()

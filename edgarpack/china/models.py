@@ -262,11 +262,14 @@ class CninfoSyncRequest(BaseModel):
     company_id: str
     start_date: str | None = None
     end_date: str | None = None
+    manifest_path: str | None = None
+    clear_existing: bool = False
 
 
 class CninfoSyncResponse(BaseModel):
     events: list[AcquisitionEvent]
     documents: list[Document]
+    ingested_chunks: int = 0
 
 
 class DocumentPageResponse(BaseModel):

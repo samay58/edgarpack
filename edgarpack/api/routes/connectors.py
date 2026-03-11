@@ -19,5 +19,7 @@ def sync_cninfo(
     """Run CNINFO sync and return logged acquisition events."""
     try:
         return service.cninfo_sync(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

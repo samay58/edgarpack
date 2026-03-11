@@ -116,6 +116,11 @@ edgarpack site --packs ./packs --out ./site
 uv pip install -e ".[china]"
 edgarpack api --host 127.0.0.1 --port 8000
 
+# CNINFO manifest sync (local deterministic ingestion)
+curl -X POST http://127.0.0.1:8000/api/v1/connectors/cninfo/sync \
+  -H "content-type: application/json" \
+  -d '{"company_id":"cmp_tencent_0700","manifest_path":"./cninfo-manifest.json","clear_existing":true}'
+
 # Cache inspection / cleanup
 edgarpack cache
 edgarpack cache --clear
