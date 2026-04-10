@@ -23,9 +23,7 @@ class MetricMeta:
     ifrs_concepts: tuple[str, ...] = ()  # IFRS concept names (fallback for non-US filers)
 
 
-# ---------------------------------------------------------------------------
 # Income Statement
-# ---------------------------------------------------------------------------
 
 METRIC_MAP: dict[str, MetricMeta] = {
     "revenue": MetricMeta(
@@ -124,9 +122,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "DepreciationAndAmortizationExpense",
         ),
     ),
-    # ---------------------------------------------------------------------------
     # Balance Sheet
-    # ---------------------------------------------------------------------------
     "total_assets": MetricMeta(
         concepts=("Assets",),
         duration=False,
@@ -215,9 +211,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
         ),
         duration=False,
     ),
-    # ---------------------------------------------------------------------------
     # EV Bridge (balance sheet items for enterprise value construction)
-    # ---------------------------------------------------------------------------
     "short_term_debt": MetricMeta(
         concepts=(
             "DebtCurrent",
@@ -272,9 +266,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
         formula="current_assets - current_liabilities",
         components=("current_assets", "current_liabilities"),
     ),
-    # ---------------------------------------------------------------------------
     # Cash Flow
-    # ---------------------------------------------------------------------------
     "operating_cash_flow": MetricMeta(
         concepts=(
             "NetCashProvidedByUsedInOperatingActivities",
@@ -298,9 +290,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
         formula="operating_cash_flow - capex",
         components=("operating_cash_flow", "capex"),
     ),
-    # ---------------------------------------------------------------------------
     # Per Share
-    # ---------------------------------------------------------------------------
     "shares_outstanding": MetricMeta(
         concepts=(
             "CommonStockSharesOutstanding",
@@ -355,9 +345,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
         ),
         duration=True,
     ),
-    # ---------------------------------------------------------------------------
     # Derived Ratios
-    # ---------------------------------------------------------------------------
     "gross_margin": MetricMeta(
         concepts=(),
         duration=True,

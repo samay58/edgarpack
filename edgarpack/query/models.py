@@ -20,8 +20,6 @@ def _concept_to_label(concept: str) -> str:
 
 
 class CitedValue(BaseModel):
-    """A single financial data point with full provenance chain."""
-
     value: float | int | None
     unit: str  # "USD", "shares", "USD/shares", "pure"
     metric: str  # normalized name: "revenue", "eps_diluted"
@@ -48,7 +46,6 @@ class CitedValue(BaseModel):
 
     @property
     def filing_url(self) -> str:
-        """SEC EDGAR filing URL."""
         acc_nodash = self.accession.replace("-", "")
         return f"{SEC_ARCHIVES_BASE}/{self.cik.lstrip('0')}/{acc_nodash}/{self.accession}-index.htm"
 

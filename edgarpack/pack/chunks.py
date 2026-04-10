@@ -12,8 +12,6 @@ from ..parse.tokenize import count_tokens, has_tiktoken, truncate_to_tokens
 
 
 class Chunk(BaseModel):
-    """A semantic chunk of a section."""
-
     chunk_id: str
     section_id: str
     chunk_index: int

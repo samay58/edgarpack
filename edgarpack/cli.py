@@ -124,7 +124,6 @@ def main(argv: list[str] | None = None) -> int:
         help="Port to bind (default: 8000)",
     )
 
-    # --- query subcommand ---
     p_query = sub.add_parser(
         "query",
         help="Query financial metrics for a company (cited from SEC filings)",
@@ -168,7 +167,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
 
-    # --- harvest subcommand ---
     p_harvest = sub.add_parser(
         "harvest",
         help="Bulk-download and build filing packs from a universe definition",
@@ -210,7 +208,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_harvest.add_argument("--force", action="store_true", help="Rebuild all packs")
 
-    # --- diff subcommand ---
     p_diff = sub.add_parser(
         "diff",
         help="Diff two filings of the same company (latest vs. prior by default)",
@@ -231,7 +228,6 @@ def main(argv: list[str] | None = None) -> int:
         help="Output format (default: summary)",
     )
 
-    # --- timeline subcommand ---
     p_timeline = sub.add_parser(
         "timeline",
         help="Show how a section evolved across filings",
@@ -245,7 +241,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_timeline.add_argument("--form", "-f", default="10-K", help="Form type (default: 10-K)")
 
-    # --- search subcommand ---
     p_search = sub.add_parser(
         "search",
         help="Full-text search across the filing corpus",
@@ -256,7 +251,6 @@ def main(argv: list[str] | None = None) -> int:
     p_search.add_argument("--form", help="Filter by form type")
     p_search.add_argument("--limit", "-n", type=int, default=20, help="Max results (default: 20)")
 
-    # --- index subcommand ---
     p_index = sub.add_parser(
         "index",
         help="Build the search index from harvested packs",
@@ -273,7 +267,6 @@ def main(argv: list[str] | None = None) -> int:
         help="Only index packs not yet marked as indexed in the registry",
     )
 
-    # --- comps subcommand ---
     p_comps = sub.add_parser(
         "comps",
         help="Compare financial metrics across companies",

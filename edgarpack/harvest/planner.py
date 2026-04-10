@@ -13,8 +13,6 @@ from .universe import UniverseConfig
 
 
 class HarvestItem(BaseModel):
-    """A single filing to be built."""
-
     model_config = {"arbitrary_types_allowed": True}
 
     cik: str
@@ -28,16 +26,12 @@ class HarvestItem(BaseModel):
 
 
 class PlanError(BaseModel):
-    """A company or form that failed during planning."""
-
     ticker: str
     form_type: str | None = None
     error: str
 
 
 class HarvestPlan(BaseModel):
-    """Plan for a harvest run."""
-
     items: list[HarvestItem]
     skipped: list[HarvestItem]
     errors: list[PlanError] = []

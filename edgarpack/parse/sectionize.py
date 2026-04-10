@@ -8,8 +8,6 @@ from pydantic import BaseModel, Field
 
 
 class Section(BaseModel):
-    """A section of a filing."""
-
     id: str
     title: str
     content: str
@@ -19,8 +17,6 @@ class Section(BaseModel):
 
 
 class SectionMatch(NamedTuple):
-    """Internal representation of a section heading match."""
-
     line_num: int
     char_pos: int
     part: str | None
