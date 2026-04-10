@@ -825,7 +825,7 @@ class TestDeepLinking(unittest.IsolatedAsyncioTestCase):
     @patch(
         f"{_P}.fetch_submissions",
         new_callable=AsyncMock,
-        side_effect=Exception("network error"),
+        side_effect=OSError("network error"),
     )
     @patch(f"{_P}.fetch_company_facts")
     @patch(f"{_P}.resolve_ticker")

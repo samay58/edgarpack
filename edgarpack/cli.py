@@ -19,7 +19,11 @@ from . import __version__
 
 def app(argv: list[str] | None = None) -> None:
     """Console script entrypoint (kept as `app` for packaging compatibility)."""
-    raise SystemExit(main(argv))
+    try:
+        raise SystemExit(main(argv))
+    except KeyboardInterrupt:
+        print("\nInterrupted.", file=sys.stderr)
+        raise SystemExit(130) from None
 
 
 def main(argv: list[str] | None = None) -> int:

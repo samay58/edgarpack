@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import date as _date
 from typing import Any
 
 from ..sec.archives import fetch_file
+from ..sec.client import HTTPError
 from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
 from .models import CitedValue, DerivedValue, QueryResult
 from .periods import parse_fact_ids_from_html, select_period
+
+logger = logging.getLogger(__name__)
 
 _DerivedCache = dict[str, CitedValue | None]
 
@@ -42,11 +46,14 @@ def _is_stale(cited: CitedValue, period: str) -> bool:
 async def _build_doc_map(cik: str, force: bool = False) -> dict[str, str]:
     """Build {accession: primaryDocument} from submissions (cached 1hr).
 
-    Returns empty dict on failure so callers degrade gracefully.
+    On known transient failures (network, HTTP, malformed JSON) returns an
+    empty dict and logs a warning so downstream anchor_url falls back to the
+    document URL. Unknown exceptions bubble up.
     """
     try:
         data = await fetch_submissions(cik, force=force)
-    except Exception:
+    except (HTTPError, OSError, ValueError) as e:
+        logger.warning("submissions fetch failed for CIK %s: %s", cik, e)
         return {}
 
     filings = data.get("filings", {}).get("recent", {})
@@ -88,8 +95,9 @@ async def _fetch_fact_id_maps(
         try:
             html_bytes = await fetch_file(meta, primary_doc)
             result[accn] = parse_fact_ids_from_html(html_bytes)
-        except Exception:
-            pass  # Degrade gracefully; anchor_url falls back to document_url
+        except (HTTPError, OSError, ValueError) as e:
+            # anchor_url falls back to document_url; log so the degradation is visible.
+            logger.warning("fact_id map fetch failed for %s: %s", accn, e)
 
     await asyncio.gather(*[_fetch_one(accn) for accn in accessions])
     return result

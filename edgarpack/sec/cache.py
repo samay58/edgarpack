@@ -23,11 +23,11 @@ class DiskCache:
         self.cache_dir = cache_dir
         try:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            # Best-effort fallback (helps in sandboxed environments).
-            fallback = Path(os.getenv("EDGARPACK_CACHE_DIR_FALLBACK", "/tmp/edgarpack-cache"))
-            self.cache_dir = fallback
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise RuntimeError(
+                f"Cannot create cache directory {cache_dir}: {e}. "
+                "Set EDGARPACK_CACHE_DIR to a writable path."
+            ) from e
 
     @staticmethod
     def _cache_key(url: str) -> str:

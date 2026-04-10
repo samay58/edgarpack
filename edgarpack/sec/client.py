@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import gzip
 import json
+import logging
 import time
 import urllib.error
 import urllib.request
@@ -21,6 +22,8 @@ from typing import Any
 from weakref import WeakKeyDictionary
 
 from ..config import CONNECT_TIMEOUT, MAX_RETRIES, RATE_LIMIT, READ_TIMEOUT, USER_AGENT
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -74,6 +77,12 @@ class SECClient:
         rate_limit: float = RATE_LIMIT,
         max_retries: int = MAX_RETRIES,
     ):
+        if not user_agent or not user_agent.strip():
+            raise ValueError(
+                "EDGARPACK_USER_AGENT is not set. SEC requires you to identify "
+                "yourself on every request.\n"
+                'Example: export EDGARPACK_USER_AGENT="Your Name your.email@example.com"'
+            )
         self.user_agent = user_agent
         self._rate_limiter = RateLimiter(rate_limit)
         self._max_retries = max(1, int(max_retries))
@@ -89,6 +98,7 @@ class SECClient:
         try:
             return json.loads(content.decode("utf-8")), headers
         except UnicodeDecodeError:
+            logger.debug("fetch_json UTF-8 decode failed for %s, falling back to latin-1", url)
             return json.loads(content.decode("latin-1")), headers
 
     async def close(self) -> None:

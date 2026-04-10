@@ -3,12 +3,12 @@
 import os
 from pathlib import Path
 
-# User-Agent must be declared per SEC requirements
-# SEC requires format: "Company Name AdminContact@company.com"
-# Override via EDGARPACK_USER_AGENT environment variable
-USER_AGENT = os.getenv("EDGARPACK_USER_AGENT", "EdgarPack admin@edgarpack.dev")
+# SEC requires every request to identify the caller in the format
+# "Name email@example.com". No default is supplied: callers must set
+# EDGARPACK_USER_AGENT before making any network calls. SECClient validates.
+USER_AGENT = os.getenv("EDGARPACK_USER_AGENT", "")
 
-# Cache location - user-level, survives project moves
+# Cache location. User-level so it survives project moves.
 CACHE_DIR = Path(os.getenv("EDGARPACK_CACHE_DIR", Path.home() / ".edgarpack" / "cache"))
 
 # SEC rate limit: 10 requests per second

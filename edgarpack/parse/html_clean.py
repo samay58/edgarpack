@@ -6,10 +6,13 @@ visible text deterministically.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from html import escape
 from html.parser import HTMLParser
+
+logger = logging.getLogger(__name__)
 
 # Tags to completely remove (including content)
 REMOVE_TAGS = {
@@ -84,14 +87,17 @@ def is_hidden_element(attributes: dict[str, str] | None) -> bool:
 
 
 def clean_html(html: str) -> str:
-    """Clean HTML by removing scripts, styles, hidden content, and normalizing."""
+    """Clean HTML by removing scripts, styles, hidden content, and normalizing.
+
+    Catches the parser errors HTMLParser actually raises on malformed filings
+    so cleaning is best-effort. Unexpected exceptions bubble up.
+    """
     parser = _CleaningHTMLParser()
     try:
         parser.feed(html)
         parser.close()
-    except Exception:
-        # Best-effort: even if the parser chokes on malformed HTML, return what we have.
-        pass
+    except (AssertionError, UnicodeDecodeError) as e:
+        logger.warning("clean_html: parser failed on malformed input: %s", e)
 
     result = "".join(parser.out)
     return _normalize_whitespace(result)
