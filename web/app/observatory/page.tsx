@@ -8,12 +8,10 @@ export default async function ObservatoryHome() {
     [companies, stats] = await Promise.all([getCompanies(), getStats()]);
   } catch {
     return (
-      <div className="panel" style={{ padding: 24 }}>
-        <h2>API unavailable</h2>
-        <p className="muted" style={{ marginTop: 8 }}>
-          Start the backend with{" "}
-          <code>edgarpack api --port 8000</code> and ensure packs are
-          harvested.
+      <div className="panel obs-api-unavailable">
+        <h2>Backend isn&apos;t running</h2>
+        <p className="muted">
+          Start it with <code>edgarpack api --port 8000</code>, then reload.
         </p>
       </div>
     );
@@ -23,23 +21,20 @@ export default async function ObservatoryHome() {
 
   return (
     <div className="page-stack">
-      <div className="panel" style={{ padding: 14 }}>
+      <div className="panel obs-stats-bar">
         <div className="row between">
-          <div>
-            <span style={{ fontSize: "0.9rem" }}>
+          <div className="obs-stats-line" role="group" aria-label="Corpus statistics">
+            <span>
               <strong>{reg.companies}</strong> companies
             </span>
-            <span className="muted" style={{ margin: "0 8px" }}>|</span>
-            <span style={{ fontSize: "0.9rem" }}>
+            <span>
               <strong>{reg.total_packs}</strong> filings
             </span>
-            <span className="muted" style={{ margin: "0 8px" }}>|</span>
-            <span style={{ fontSize: "0.9rem" }}>
-              <strong>{stats.index.total_chunks.toLocaleString()}</strong> indexed
-              chunks
+            <span>
+              <strong>{stats.index.total_chunks.toLocaleString()}</strong> indexed chunks
             </span>
           </div>
-          <span className="muted" style={{ fontSize: "0.82rem" }}>
+          <span className="muted obs-stats-range">
             {reg.earliest_filing} to {reg.latest_filing}
           </span>
         </div>

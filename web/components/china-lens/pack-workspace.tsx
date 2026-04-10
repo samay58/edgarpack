@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
+import { CitationPill } from "@/components/china-lens/citation-pill";
 import {
   EvidenceExplorer,
   type ReadingMode,
@@ -11,6 +12,9 @@ import { askEvidence, resolveCitation } from "@/lib/api-client";
 import { demoAskResponse, demoEvidenceTarget } from "@/lib/sample-data";
 import type { AskResponse, DocumentView, EvidenceTarget, PackView } from "@/types/china-lens";
 
+const DEMO_ASK_PLACEHOLDER =
+  "Top customers, concentration, and whether disclosed by name?";
+
 type PackWorkspaceProps = {
   companyId: string;
   pack: PackView;
@@ -19,7 +23,7 @@ type PackWorkspaceProps = {
 
 export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps) {
   const [activeEvidence, setActiveEvidence] = useState<EvidenceTarget>(demoEvidenceTarget);
-  const [askInput, setAskInput] = useState("Top customers, concentration, and whether disclosed by name?");
+  const [askInput, setAskInput] = useState(DEMO_ASK_PLACEHOLDER);
   const [askResult, setAskResult] = useState<AskResponse>(demoAskResponse);
   const [readingMode, setReadingMode] = useState<ReadingMode>("en");
   const [findingFilter, setFindingFilter] = useState<"all" | "supported" | "unsupported">(
@@ -29,47 +33,41 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
   const [isPending, startTransition] = useTransition();
   const citationCache = useRef<Record<string, EvidenceTarget>>({});
 
-  const coverage = useMemo(() => {
-    return {
-      filings: "complete",
-      translation: pack.status === "partial" ? "partial" : "complete",
-      tables: "complete",
-      citations: pack.sections.every((section) => section.findings.some((f) => f.citations.length > 0))
-        ? "complete"
-        : "partial",
-    };
-  }, [pack]);
+  const coverage = {
+    filings: "complete",
+    translation: pack.status === "partial" ? "partial" : "complete",
+    tables: "complete",
+    citations: pack.sections.every((section) =>
+      section.findings.some((f) => f.citations.length > 0),
+    )
+      ? "complete"
+      : "partial",
+  };
 
-  const sectionLinks = useMemo(
-    () =>
-      pack.sections.map((section) => ({
-        id: section.id,
-        title: section.title,
-      })),
-    [pack.sections],
-  );
+  const sectionLinks = pack.sections.map((section) => ({
+    id: section.id,
+    title: section.title,
+  }));
 
-  const visibleSections = useMemo(() => {
-    return pack.sections
-      .map((section) => {
-        const findings =
-          findingFilter === "all"
-            ? section.findings
-            : section.findings.filter((finding) =>
-                findingFilter === "supported"
-                  ? finding.status === "supported"
-                  : finding.status === "unsupported",
-              );
-        return {
-          ...section,
-          findings,
-          key_points: findings.map((finding) => finding.claim_text),
-        };
-      })
-      .filter((section) => findingFilter === "all" || section.findings.length > 0);
-  }, [findingFilter, pack.sections]);
+  const visibleSections = pack.sections
+    .map((section) => {
+      const findings =
+        findingFilter === "all"
+          ? section.findings
+          : section.findings.filter((finding) =>
+              findingFilter === "supported"
+                ? finding.status === "supported"
+                : finding.status === "unsupported",
+            );
+      return {
+        ...section,
+        findings,
+        key_points: findings.map((finding) => finding.claim_text),
+      };
+    })
+    .filter((section) => findingFilter === "all" || section.findings.length > 0);
 
-  const openEvidence = useCallback((chunkId: string) => {
+  const openEvidence = (chunkId: string) => {
     const cached = citationCache.current[chunkId];
     if (cached) {
       setActiveEvidence(cached);
@@ -85,14 +83,14 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
         setEvidenceLoading(false);
       }
     });
-  }, []);
+  };
 
-  const runAsk = useCallback(() => {
+  const runAsk = () => {
     startTransition(async () => {
       const result = await askEvidence(askInput, companyId);
       setAskResult(result);
     });
-  }, [askInput, companyId]);
+  };
 
   return (
     <div className="page-stack">
@@ -182,26 +180,23 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
             {isPending ? "Searching..." : "Ask"}
           </button>
         </div>
-        <div className="ask-results">
+        <section className="ask-results" aria-live="polite">
           {askResult.answer.map((block, idx) => (
             <article key={`${block.text}-${idx}`}>
               <p>{block.text}</p>
               <div className="citation-row">
                 {block.citations.map((citation) => (
-                  <button
+                  <CitationPill
                     key={`${citation.chunk_id}-${citation.page}`}
-                    type="button"
-                    className="citation-pill"
-                    onClick={() => openEvidence(citation.chunk_id)}
-                  >
-                    p.{citation.page}
-                  </button>
+                    citation={citation}
+                    onOpenEvidence={openEvidence}
+                  />
                 ))}
               </div>
             </article>
           ))}
           <p className="muted">{askResult.guidance}</p>
-        </div>
+        </section>
       </section>
 
       <EvidenceExplorer

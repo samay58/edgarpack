@@ -38,10 +38,9 @@ export default async function PacksPage({ params }: PageProps) {
           </label>
         </div>
         <ol className="stage-list">
-          {stages.map((stage, idx) => (
+          {stages.map((stage) => (
             <li key={stage}>
               <span>{stage}</span>
-              <span className="muted">{idx < 3 ? "100%" : idx === 3 ? "75%" : "30%"}</span>
             </li>
           ))}
         </ol>

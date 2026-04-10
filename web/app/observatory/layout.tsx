@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Filing Observatory",
-  description: "Cross-corpus SEC filing analysis",
+  description: "Compare 10-K and 10-Q filings side by side, see what changed, and search the corpus.",
 };
 
 export default function ObservatoryLayout({

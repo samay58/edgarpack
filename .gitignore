@@ -63,3 +63,6 @@ CODEX_HANDOFF.md
 NVIDIA_RESULTS.md
 subway-map.html
 tools/codebase-map/
+
+# Environment secrets
+.env

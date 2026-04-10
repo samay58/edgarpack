@@ -15,11 +15,40 @@ const API_BASE =
   process.env.NEXT_PUBLIC_OBSERVATORY_API_BASE ??
   "http://127.0.0.1:8000/api/v1/observatory";
 
+export type ApiErrorKind = "network" | "client" | "server";
+
+export class ObservatoryApiError extends Error {
+  kind: ApiErrorKind;
+  status?: number;
+  body?: string;
+
+  constructor(kind: ApiErrorKind, message: string, status?: number, body?: string) {
+    super(message);
+    this.name = "ObservatoryApiError";
+    this.kind = kind;
+    this.status = status;
+    this.body = body;
+  }
+}
+
 async function fetchJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  } catch (err) {
+    throw new ObservatoryApiError(
+      "network",
+      "Can't reach the EdgarPack backend. Start it with `edgarpack api --port 8000`.",
+    );
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`${res.status} ${res.statusText}: ${body}`);
+    const kind: ApiErrorKind = res.status >= 500 ? "server" : "client";
+    const message =
+      kind === "server"
+        ? `Backend error (${res.status}). ${res.statusText}.`
+        : `Request rejected (${res.status}). ${body || res.statusText}`;
+    throw new ObservatoryApiError(kind, message, res.status, body);
   }
   return res.json() as Promise<T>;
 }

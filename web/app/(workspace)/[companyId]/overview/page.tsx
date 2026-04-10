@@ -15,7 +15,7 @@ export default async function OverviewPage({ params }: PageProps) {
       <section className="panel">
         <h2>Overview</h2>
         <p className="muted">
-          Primary-source workspace optimized for fast pack generation and evidence verification.
+          Generate a pack from indexed filings, then jump straight to the source pages for any claim you care about.
         </p>
         <div className="quick-actions">
           <Link href={`/${companyId}/packs`} className="primary-btn link-btn">

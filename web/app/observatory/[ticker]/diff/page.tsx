@@ -19,14 +19,10 @@ export default async function DiffPage({
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return (
-      <div className="panel" style={{ padding: 24 }}>
-        <h2>Diff unavailable</h2>
-        <p className="muted" style={{ marginTop: 8 }}>{msg}</p>
-        <Link
-          href={`/observatory/${ticker}`}
-          className="secondary-btn"
-          style={{ display: "inline-block", marginTop: 12 }}
-        >
+      <div className="panel obs-error-page">
+        <h2>Can&apos;t load diff</h2>
+        <p className="muted">{msg}</p>
+        <Link href={`/observatory/${ticker}`} className="secondary-btn obs-back-link">
           Back to {ticker}
         </Link>
       </div>
