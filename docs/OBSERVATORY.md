@@ -1,7 +1,6 @@
 # Filing Observatory
 
-The Observatory provides change intelligence over immutable filing packs.
-It focuses on one question: what changed in language, not just what changed in bytes.
+The Observatory compares filings and shows what actually changed. Not byte diffs. Language diffs, ranked by how much they matter, with mechanical rollovers (dates, page refs, numeric boilerplate) discounted so rewrites rise to the top.
 
 ## Core Behavior
 

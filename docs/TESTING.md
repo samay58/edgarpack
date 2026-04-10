@@ -1,11 +1,11 @@
-# Testing Guide
+# Testing
 
-This repo now has four practical testing lanes:
+Four lanes, in order of how often you'll run them:
 
-- fast local regression
-- live SEC smoke tests
-- expanded live SEC coverage over 30+ filings
-- China Lens deterministic local workflow checks
+- Fast local regression (every commit)
+- Live SEC smoke (before merging query or parse changes)
+- Expanded live SEC coverage (before refactors or releases)
+- China Lens local loop (when touching ingestion, search, or storage)
 
 ## Prerequisites
 

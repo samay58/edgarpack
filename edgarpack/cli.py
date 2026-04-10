@@ -1,7 +1,5 @@
-"""CLI entry point for EdgarPack.
-
-This CLI intentionally avoids third-party CLI frameworks so the project remains
-easy to run in constrained environments.
+"""CLI entry point for EdgarPack. Uses argparse directly (no third-party CLI
+framework) so the project runs in constrained environments without extra deps.
 """
 
 from __future__ import annotations

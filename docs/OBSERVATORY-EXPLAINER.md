@@ -1,13 +1,12 @@
-# Observatory Visual Explainer Blueprint
+# Observatory System Map
 
-This is a narrative-first system map for onboarding engineers quickly without sacrificing depth.
+A module-by-module view of how a filing becomes a diff, a timeline, and a search result. Use this when onboarding to the Observatory pipeline or when tracing an unexpected output back to its source.
 
 ## Design goals
 
-- Show **flow** before details.
-- Make each module clickable in an interactive version.
-- Layer complexity (overview -> implementation -> edge cases).
-- Preserve rigor while keeping visual language approachable.
+- Flow first, details second.
+- Each module is traceable back to a file path and a test.
+- Layered: 90-second overview, 10-minute mental model, deep-debug mode.
 
 ## Module map
 

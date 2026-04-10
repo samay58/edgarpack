@@ -1,89 +1,64 @@
 # EdgarPack
 
-EdgarPack converts SEC EDGAR filings (10-K, 10-Q, 8-K) into clean markdown packs with stable section IDs.
-It keeps visible filing text, removes inline XBRL tags, and writes deterministic artifacts for repeatable analysis.
+SEC filings turned into clean markdown packs and cited financial queries, one command at a time.
 
-## Why It Exists
+## The problem
 
-Raw SEC filing HTML is noisy and hard to work with at section level.
-EdgarPack turns one large filing blob into:
+Public filings are the best primary source for public-company research. 10-Ks and 10-Qs carry the actual numbers, the actual risk factors, the actual management discussion. They're also a pain to work with programmatically. Raw HTML is noisy, inline XBRL tags break most parsers, section boundaries drift between filers, and the tools that do handle this well hand you an answer and hide the source.
 
-- One full filing markdown file
-- One markdown file per detected section
-- A manifest with hashes and offsets
-- Optional chunk and XBRL artifacts
+I built EdgarPack because I do financial research daily and wanted three things the existing tools didn't give me: clean section-level artifacts I could diff, deterministic output so downstream caches stay valid, and citations on every number that point back to the exact line in the exact filing. The last part is the one that really matters. If I pull an ARR figure out of a 10-K, I want the URL that took me there, not a promise that a model got it right.
 
-## Why It Works This Way
+## What you get
 
-The stack is small on purpose.
+Three commands cover most of it.
 
-- Stdlib HTTP. Deployments stay simple and dependency drift stays low.
-- Regex and `html.parser` for parsing. Behavior stays explicit and easy to debug without a DOM dependency.
-- Deterministic output. Diffs are meaningful and downstream caches stay valid.
-- Citation fields on every query value. Every number traces back to a filing.
+**Query one metric from one company:**
+
+```bash
+edgarpack query NVDA revenue,net_income --period ltm
+```
+
+Each value carries a citation reference and a reproducible formula. Revenue for LTM is computed from the most recent 10-Q plus the last 10-K minus the prior-year 10-Q, and the output tells you which three filings it used.
+
+**Compare companies side by side:**
+
+```bash
+edgarpack comps NVDA AMD INTC -m revenue,net_income,ebitda --period ltm
+```
+
+A comps table with inline citations by default. Drop `--citations off` if you want the clean table for a screenshot.
+
+**Build a filing pack:**
+
+```bash
+edgarpack build --cik 0001045810 --form 10-K
+```
+
+One full-filing markdown file, one file per detected section, a manifest with hashes and offsets, optional chunk and XBRL artifacts. Deterministic. Rebuild produces the same bytes.
 
 ## Install
 
 ```bash
 pip install edgarpack
-# or editable install for local development
+# or editable for local dev
 uv pip install -e ".[dev]"
 ```
 
-## Required Environment
-
-Set a SEC-compliant User-Agent before network calls:
+SEC requires a User-Agent on every request in the format `Name email@example.com`. Set it before running anything:
 
 ```bash
 export EDGARPACK_USER_AGENT="Your Name your.email@example.com"
 ```
 
-Optional cache settings:
+Optional cache location:
 
 ```bash
-# Primary cache directory
 export EDGARPACK_CACHE_DIR="$HOME/.edgarpack/cache"
-
-# Fallback cache directory if primary creation fails
-export EDGARPACK_CACHE_DIR_FALLBACK="/tmp/edgarpack-cache"
 ```
 
-## Quickstart
+If `EDGARPACK_USER_AGENT` is missing, the first network call fails with an actionable error. Requests are rate-limited to 10 per second and cached on disk to keep repeated runs polite.
 
-### Build a pack
-
-```bash
-edgarpack build --cik 0001045810 --form 10-K --out ./packs
-```
-
-### Query one company
-
-```bash
-edgarpack query NVDA revenue,net_income --period ltm
-edgarpack query NVDA revenue --period ltm-1
-```
-
-### Run a comps table
-
-```bash
-edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
-edgarpack comps NVDA AMD INTC --metrics revenue --period ltm-1
-```
-
-### Query Periods At A Glance
-
-- `lfy`: last fiscal year
-- `mrq`: most recent quarter (standalone 3-month value for duration metrics)
-- `mrp`: most recent reported period
-- `ltm`: trailing twelve months
-- `ltm-1`: prior-year trailing twelve months (same formula, one fiscal-year-shifted anchor)
-- `annual:N`: last `N` fiscal years
-- `quarterly:N`: last `N` quarters
-
-For complete query behavior, JSON format details, and citation model notes, see `docs/QUERY.md`.
-For practical validation commands, see `docs/TESTING.md`.
-
-## Output Layout
+## Output layout
 
 ```text
 packs/
@@ -101,130 +76,50 @@ packs/
             └── xbrl.json
 ```
 
-## Common Commands
+## Period vocabulary
+
+- `lfy`: last fiscal year
+- `mrq`: most recent quarter (standalone three-month value for duration metrics)
+- `mrp`: most recent reported period
+- `ltm`: trailing twelve months
+- `ltm-1`: prior-year trailing twelve months (same formula, fiscal-year-shifted anchor)
+- `annual:N`: last N fiscal years
+- `quarterly:N`: last N quarters
+
+Full query model, JSON formats, and citation semantics in [`docs/QUERY.md`](docs/QUERY.md).
+
+## Commands
 
 ```bash
-# List recent filings
-edgarpack list --cik 0001045810 --form 10-K --limit 5
-
-# Generate company-level llms.txt index
-edgarpack company-llms --cik 0001045810 --out ./packs
-
-# Build a static site from packs
-edgarpack site --packs ./packs --out ./site
-
-# Run China Lens API (requires china extras)
-uv pip install -e ".[china]"
-edgarpack api --host 127.0.0.1 --port 8000
-
-# Durable local China Lens backend (JSON repo + local object store)
-export EDGARPACK_CHINA_STORAGE_BACKEND=json
-export EDGARPACK_CHINA_STORAGE_DIR="$PWD/.local/china-repo"
-export EDGARPACK_CHINA_OBJECT_STORE_DIR="$PWD/.local/china-objects"
-edgarpack api --host 127.0.0.1 --port 8000
-
-# CNINFO manifest sync (local deterministic ingestion)
-curl -X POST http://127.0.0.1:8000/api/v1/connectors/cninfo/sync \
-  -H "content-type: application/json" \
-  -d '{"company_id":"cmp_tencent_0700","manifest_path":"./cninfo-manifest.json","clear_existing":true}'
-
-# Cache inspection / cleanup
-edgarpack cache
-edgarpack cache --clear
+edgarpack list --cik 0001045810 --form 10-K --limit 5         # recent filings
+edgarpack company-llms --cik 0001045810 --out ./packs         # llms.txt index for a CIK
+edgarpack harvest --universe universe.toml                    # bulk-download from a spec file
+edgarpack diff --ticker NVDA --form 10-K                      # compare latest two filings
+edgarpack timeline --ticker NVDA --section 10k_parti_item1a   # one section over time
+edgarpack search "export controls" --topic risk:export        # full-text search across packs
+edgarpack site --packs ./packs --out ./site                   # static site generator
+edgarpack cache                                               # cache stats or --clear
 ```
 
 ## Filing Observatory
 
-The Observatory layer turns filing packs into high-signal diffs, timelines, and
-search results for fast change review.
+The `diff`, `timeline`, and `search` commands power the Filing Observatory, a web view that stitches packs together into side-by-side diffs, section histories, and cross-corpus search. Change intensity is similarity-weighted so rewrites rank above mechanical rollovers (date rollovers, page refs, numeric-only boilerplate). Every diff and timeline result is disk-cached by manifest hash pair so warm queries return in single-digit milliseconds.
 
-- Change intensity is similarity-weighted (`1 - similarity`) for modified paragraphs.
-- Mechanical rollovers (dates, page refs, numeric-only boilerplate) are tagged
-  and discounted.
-- Each section includes `interest_score` and `section_type` so clients can rank
-  substantive disclosure changes above expected noise.
-- Diff results are disk-cached by manifest hash pair for warm-cache latency in
-  the single-digit millisecond range.
+The API lives at `/api/v1/observatory/...`. See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full data model and [`web/`](web/) for the Next.js frontend.
 
-Key API route:
+## China Lens (experimental)
 
-```text
-GET /api/v1/observatory/companies/{ticker}/diff?form_type=10-K&detail=sections&section_types=prose
-```
-
-Useful query parameters:
-
-- `detail=full|sections`: include full paragraph deltas or section-level payload only
-- `section_types=prose,financial_statement,signature,exhibit_index`: server-side filtering
-
-For full behavior and field semantics, see `docs/OBSERVATORY.md`.
-For onboarding and module-system mapping, see `docs/OBSERVATORY-EXPLAINER.md`.
-
-## China Lens
-
-China Lens is the citation-backed research workspace inside this repository. Today it is useful for three concrete workflows:
-
-- exercising the API against seeded fixture data
-- ingesting local CNINFO-style document sets from a manifest
-- running a durable local review loop with persisted documents, chunks, packs, and jobs
-
-Minimal manifest example:
-
-```json
-{
-  "company_id": "cmp_tencent_0700",
-  "documents": [
-    {
-      "doc_id": "doc_tencent_2025_board",
-      "title": "Tencent 2025 Board Update",
-      "filing_date": "2025-04-01",
-      "source_url": "https://www.cninfo.com.cn/mock/tencent-2025-board.pdf",
-      "pages": 12,
-      "local_pdf_path": "./fixtures/tencent-2025-board.pdf",
-      "snippets": [
-        {
-          "page": 3,
-          "text_zh": "董事会成员调整，新增两名独立董事。",
-          "text_en": "Board composition changed with two new independent directors."
-        }
-      ]
-    }
-  ]
-}
-```
-
-Useful inspection calls after sync:
-
-```bash
-curl http://127.0.0.1:8000/api/v1/documents?company_id=cmp_tencent_0700
-curl -X POST http://127.0.0.1:8000/api/v1/evidence/search \
-  -H "content-type: application/json" \
-  -d '{"company_id":"cmp_tencent_0700","query":"independent directors"}'
-curl -X POST http://127.0.0.1:8000/api/v1/packs \
-  -H "content-type: application/json" \
-  -d '{"company_id":"cmp_tencent_0700"}'
-```
-
-If you want a database backend instead of local JSON files, set `EDGARPACK_CHINA_STORAGE_BACKEND=postgres` and `EDGARPACK_CHINA_POSTGRES_DSN`. The current PostgreSQL adapter handles persistence; evidence retrieval still uses the existing lexical ranking path until database-native search is added.
+An in-progress parallel pipeline for Chinese filings (CNINFO, SSE prospectuses). Different source format, same citation-backed output shape. See [`docs/china-lens/`](docs/china-lens/) for the current state. Not wired into the main CLI yet and living on a feature branch.
 
 ## Development
 
 ```bash
-# Optional: install API test stack for full-suite coverage
-uv pip install -e ".[dev,china]"
-
-# Lint
+uv pip install -e ".[dev]"
 ruff check .
 ruff format --check .
-
-# Tests
-uv run pytest tests/ -x -v
+uv run pytest tests/
 ```
 
-For fast/local vs live SEC validation lanes, see `docs/TESTING.md`.
+The parser and pack layout are versioned (`PARSER_VERSION`, `SCHEMA_VERSION` in `edgarpack/config.py`) so downstream caches know when to invalidate. Tests include a determinism check that rebuilds a pack byte-for-byte. Changes to HTML cleaning, section detection, or chunking will usually require regenerating fixtures.
 
-## SEC Compliance Notes
-
-- EdgarPack sends a User-Agent header on every SEC request.
-- Requests are rate-limited to 10 per second.
-- Responses are cached on disk to reduce repeated SEC traffic.
+Network tests that hit real SEC endpoints are gated on `EDGARPACK_USER_AGENT` being set. See [`docs/TESTING.md`](docs/TESTING.md) for the offline and live lanes.
