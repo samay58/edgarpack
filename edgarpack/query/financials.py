@@ -13,6 +13,7 @@ from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
+from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
 from .models import CitedValue, DerivedValue, QueryResult
 from .periods import parse_fact_ids_from_html, select_period
@@ -181,9 +182,6 @@ async def financials(
         metric_list = list(metrics)
 
     # Layer 0: alias dereferencing + unknown-metric guard
-    # A metric is "known" if it's in METRIC_MAP OR in KPI_CATALOG (Layer B).
-    from .kpi_extract import KPI_CATALOG
-
     resolved_list: list[str] = []
     for m in metric_list:
         resolved = resolve_alias(m)
@@ -200,9 +198,9 @@ async def financials(
     for metric in metric_list:
         meta = METRIC_MAP.get(metric)
         if meta is None:
-            # KPI-only metric (in KPI_CATALOG but not METRIC_MAP).
-            # Task 12 will wire try_extract_kpi here. For now, set to None
-            # so the test passes and the structure is ready.
+            # KPI-only metric: in KPI_CATALOG but has no GAAP concept mapping.
+            # Layer B (try_extract_kpi) extracts these from pack prose.
+            # TODO(layer-b): wire try_extract_kpi here.
             result_metrics[metric] = None
             continue
 

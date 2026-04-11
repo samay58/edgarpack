@@ -1321,13 +1321,14 @@ class TestAliasDereferencing(unittest.TestCase):
         _asyncio.run(_run())
 
     def test_kpi_catalog_name_does_not_raise(self) -> None:
-        """A metric name in KPI_CATALOG but not METRIC_MAP must not raise."""
-        import asyncio as _asyncio
+        """A metric name in KPI_CATALOG but not METRIC_MAP must not raise.
 
-        # Use a mock facts blob with no matching concepts so Layer A fails too.
-        # The test only checks that MetricNotFound is NOT raised — the query
-        # will still return None for the metric because Layer B isn't wired
-        # yet in Task 5. That happens in Task 12.
+        Task 5 ships the guard extension. Task 12 will wire try_extract_kpi
+        so 'arr' actually resolves to a value. For now we pin the
+        'no MetricNotFound' contract and assert the current None return.
+        """
+        import asyncio as _asyncio
+        from edgarpack.query.layer_zero import MetricNotFound
 
         async def _run() -> None:
             with patch(f"{_P}.resolve_ticker",
@@ -1336,11 +1337,14 @@ class TestAliasDereferencing(unittest.TestCase):
                        new=AsyncMock(return_value={"facts": {}})), \
                  patch(f"{_P}._build_doc_map",
                        new=AsyncMock(return_value={})):
-                # 'arr' is in KPI_CATALOG, not in METRIC_MAP.
-                # Before Layer B is wired, the result for 'arr' is None, not a raise.
-                result = await financials("CRWD", metrics="arr", period="lfy")
+                try:
+                    result = await financials("CRWD", metrics="arr", period="lfy")
+                except MetricNotFound:
+                    self.fail(
+                        "KPI_CATALOG name 'arr' must not raise MetricNotFound"
+                    )
                 self.assertIn("arr", result.metrics)
-                # Layer B isn't firing yet (Task 12 does that), so expect None
+                # Task 12 will change this to an extracted CitedValue.
                 self.assertIsNone(result.metrics["arr"])
 
         _asyncio.run(_run())
