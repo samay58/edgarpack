@@ -216,5 +216,135 @@ class TestVerifyOrderOfMagnitude(unittest.TestCase):
         self.assertTrue(verify_order_of_magnitude(100.0, -150.0))
 
 
+import tempfile
+from datetime import date
+from pathlib import Path
+
+from edgarpack.query.concepts import MetricMeta
+from edgarpack.query.learned_registry import LearnedRegistry
+from edgarpack.query.models import CitedValue
+from edgarpack.query.self_heal import try_learn
+
+
+def _prior_year_cited(value: float = 100_000_000_000.0) -> CitedValue:
+    return CitedValue(
+        value=value,
+        unit="USD",
+        metric="revenue",
+        concept="Revenues",
+        period_end=date(2023, 1, 31),
+        fiscal_year=2023,
+        fiscal_period="FY",
+        form_type="10-K",
+        filed=date(2023, 2, 1),
+        accession="0001045810-23-000001",
+        cik="0001045810",
+        company="NVIDIA CORP",
+    )
+
+
+class TestTryLearn(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.db_path = Path(self._tmp.name) / "registry.db"
+
+    def test_registry_hit_short_circuits(self) -> None:
+        reg = LearnedRegistry(db_path=self.db_path)
+        reg.upsert(
+            cik="0001045810", metric="revenue",
+            concept="Revenues", taxonomy="us-gaap",
+            source="fuzzy", verified=True,
+            verif_method="order_of_magnitude",
+            value_sample=130e9,
+        )
+        reg.close()
+
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="revenue",
+            meta=meta,
+            facts=_FAKE_FACTS,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            prior_year_cited=_prior_year_cited(),
+            doc_map={},
+            registry_path=self.db_path,
+        )
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result.concept, "Revenues")
+        self.assertEqual(result.source, "learned:cached")
+
+        # Hit count incremented
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "revenue")
+        assert row is not None
+        self.assertEqual(row.hit_count, 1)
+
+    def test_fuzzy_path_persists_and_returns_learned_fuzzy(self) -> None:
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="operating_cash_flow",
+            meta=meta,
+            facts=_FAKE_FACTS,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            prior_year_cited=_prior_year_cited(value=25e9),
+            doc_map={},
+            registry_path=self.db_path,
+        )
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result.concept, "NetCashProvidedByUsedInOperatingActivities")
+        self.assertEqual(result.source, "learned:fuzzy")
+        self.assertEqual(result.value, 28_000_000_000)
+
+        # Row persisted
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "operating_cash_flow")
+        assert row is not None
+        self.assertTrue(row.verified)
+        self.assertEqual(row.source, "fuzzy")
+
+    def test_returns_none_when_no_fuzzy_or_llm_match(self) -> None:
+        meta = MetricMeta(concepts=(), duration=True)
+        with patch("edgarpack.query.self_heal._LLM_CMD", None):
+            result = try_learn(
+                metric="totally_unknown_xyz",
+                meta=meta,
+                facts=_FAKE_FACTS,
+                cik="0001045810",
+                company="NVIDIA CORP",
+                prior_year_cited=_prior_year_cited(),
+                doc_map={},
+                registry_path=self.db_path,
+            )
+        self.assertIsNone(result)
+
+    def test_unverified_persists_with_warning(self) -> None:
+        # Force verification to fail by giving a prior-year value that's 28x off
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="operating_cash_flow",
+            meta=meta,
+            facts=_FAKE_FACTS,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            prior_year_cited=_prior_year_cited(value=1.0),
+            doc_map={},
+            registry_path=self.db_path,
+        )
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result.source, "learned:fuzzy")
+        self.assertTrue(any("unverified" in w.lower() for w in result.warnings))
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "operating_cash_flow")
+        assert row is not None
+        self.assertFalse(row.verified)
+
+
 if __name__ == "__main__":
     unittest.main()

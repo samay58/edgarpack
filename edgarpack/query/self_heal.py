@@ -296,3 +296,205 @@ def _llm_propose(
         return None
 
     return (concept, taxonomy)
+
+
+from datetime import date
+from pathlib import Path
+
+from .concepts import MetricMeta
+from .learned_registry import LearnedRegistry, LearnedRow
+from .models import CitedValue
+
+
+def try_learn(
+    metric: str,
+    meta: MetricMeta,
+    facts: dict[str, Any],
+    cik: str,
+    company: str,
+    prior_year_cited: CitedValue | None,
+    doc_map: dict[str, str] | None = None,
+    registry_path: Path | None = None,
+) -> CitedValue | None:
+    """Self-heal entry point. Tries registry, fuzzy, LLM, verify, persist.
+
+    Returns a CitedValue with ``source`` set to one of:
+      - 'learned:cached' on registry hit
+      - 'learned:fuzzy' on successful fuzzy resolution
+      - 'learned:llm' on successful LLM resolution
+    or None if no mechanism could produce a value.
+
+    On unverified mappings (order-of-magnitude check failed because no prior
+    year was available, or the proposed value was out of range), the result
+    is still returned with a warning appended and the registry row is
+    persisted with verified=0.
+    """
+    reg = LearnedRegistry(db_path=registry_path)
+    try:
+        # 1. Registry cache hit
+        cached = reg.lookup(cik, metric)
+        if cached is not None:
+            reg.bump_hit_count(cik, metric)
+            cited = _build_cited_from_learned(
+                cached, facts, metric, company, cik, doc_map
+            )
+            if cited is not None:
+                cited.source = "learned:cached"
+                if not cached.verified:
+                    cited.warnings.append(
+                        f"Resolved via unverified learned mapping "
+                        f"(source={cached.source}). Verify manually: "
+                        f"`edgarpack learned verify {cik} {metric}`"
+                    )
+                return cited
+
+        # 2. Build candidate list
+        candidates = _company_concepts(facts)
+        if not candidates:
+            return None
+
+        # 3. Fuzzy match
+        proposed = _fuzzy_match(metric, candidates, facts)
+        source_tag = "fuzzy"
+
+        # 4. LLM fallback
+        if proposed is None and _llm_backend_available():
+            proposed = _llm_propose(metric, company, candidates, facts=facts)
+            source_tag = "llm"
+
+        if proposed is None:
+            return None
+
+        concept, taxonomy = proposed
+
+        # 5. Build CitedValue from the latest reported value for this concept
+        cited = _build_cited_for_concept(
+            concept, taxonomy, facts, metric, company, cik, doc_map
+        )
+        if cited is None:
+            return None
+
+        # 6. Verify
+        prior_value = prior_year_cited.value if prior_year_cited else None
+        cited_value = cited.value if isinstance(cited.value, (int, float)) else None
+        prior_numeric = prior_value if isinstance(prior_value, (int, float)) else None
+        verified = verify_order_of_magnitude(cited_value, prior_numeric)
+
+        # 7. Persist
+        reg.upsert(
+            cik=cik,
+            metric=metric,
+            concept=concept,
+            taxonomy=taxonomy,
+            source=source_tag,
+            verified=verified,
+            verif_method="order_of_magnitude" if prior_year_cited else None,
+            value_sample=float(cited_value) if cited_value is not None else None,
+        )
+
+        cited.source = f"learned:{source_tag}"
+        if not verified:
+            cited.warnings.append(
+                f"Unverified learned mapping ({source_tag}). "
+                f"No prior-year ground truth matched, or value was "
+                f"outside the expected order of magnitude."
+            )
+        return cited
+    finally:
+        reg.close()
+
+
+def _latest_entry_for_concept(
+    facts: dict[str, Any],
+    concept: str,
+    taxonomy: str,
+) -> tuple[dict[str, Any] | None, str]:
+    """Find the most-recent reported entry for a concept. Returns (entry, unit)."""
+    tax_data = facts.get(taxonomy, {})
+    concept_data = tax_data.get(concept, {})
+    units = concept_data.get("units", {}) if isinstance(concept_data, dict) else {}
+    best: dict[str, Any] | None = None
+    best_unit = "USD"
+    best_filed = ""
+    for unit_key in ("USD", "shares", "USD/shares", "pure"):
+        entries = units.get(unit_key)
+        if not entries:
+            continue
+        for v in entries:
+            if not isinstance(v, dict) or v.get("val") is None:
+                continue
+            filed = str(v.get("filed", ""))
+            if filed > best_filed:
+                best = v
+                best_unit = unit_key
+                best_filed = filed
+    if best is None:
+        # Fallback: any unit with any value
+        for unit_key, entries in units.items():
+            if not isinstance(entries, list):
+                continue
+            for v in entries:
+                if isinstance(v, dict) and v.get("val") is not None:
+                    best = v
+                    best_unit = str(unit_key)
+                    break
+            if best is not None:
+                break
+    return best, best_unit
+
+
+def _build_cited_for_concept(
+    concept: str,
+    taxonomy: str,
+    facts: dict[str, Any],
+    metric: str,
+    company: str,
+    cik: str,
+    doc_map: dict[str, str] | None,
+) -> CitedValue | None:
+    entry, unit = _latest_entry_for_concept(facts, concept, taxonomy)
+    if entry is None:
+        return None
+    accn = str(entry.get("accn", ""))
+    primary_doc = ""
+    if doc_map and accn:
+        primary_doc = doc_map.get(accn, "")
+    return CitedValue(
+        value=entry.get("val"),
+        unit=unit,
+        metric=metric,
+        concept=concept,
+        period_start=_parse_iso_date(entry.get("start", "")),
+        period_end=_parse_iso_date(entry.get("end", "")) or date.min,
+        fiscal_year=int(entry.get("fy") or 0),
+        fiscal_period=str(entry.get("fp", "")),
+        form_type=str(entry.get("form", "")),
+        filed=_parse_iso_date(entry.get("filed", "")) or date.min,
+        accession=accn,
+        cik=cik,
+        company=company,
+        taxonomy=taxonomy,
+        primary_document=primary_doc,
+    )
+
+
+def _build_cited_from_learned(
+    row: LearnedRow,
+    facts: dict[str, Any],
+    metric: str,
+    company: str,
+    cik: str,
+    doc_map: dict[str, str] | None,
+) -> CitedValue | None:
+    return _build_cited_for_concept(
+        row.concept, row.taxonomy, facts, metric, company, cik, doc_map
+    )
+
+
+def _parse_iso_date(s: str) -> date | None:
+    if not s:
+        return None
+    try:
+        return date.fromisoformat(s)
+    except ValueError:
+        return None
