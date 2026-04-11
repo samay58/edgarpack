@@ -49,6 +49,11 @@ class CitedValue(BaseModel):
     # 'learned:user' for first-time discoveries that got persisted.
     source: str = "hardcoded"
 
+    # Layer B (Self-heal v2): literal quote from the pack prose that produced
+    # this value. Used by document_url to build a tight text-fragment anchor.
+    # Empty for v1 values (anchors use the concept label).
+    excerpt_text: str = ""
+
     @property
     def filing_url(self) -> str:
         acc_nodash = self.accession.replace("-", "")
@@ -85,7 +90,11 @@ class CitedValue(BaseModel):
     def document_url(self) -> str | None:
         """Direct filing HTML URL with text fragment scroll.
 
-        Uses Chrome/Edge #:~:text= to scroll to the concept label.
+        v1 behavior: uses the concept label as the text fragment.
+        v2 behavior: when excerpt_text is set (Layer B), uses the first
+        eight words of the excerpt for a tighter anchor into the exact
+        sentence that contained the value.
+
         Returns None if no primary_document is available.
         """
         if not self.primary_document:
@@ -93,6 +102,10 @@ class CitedValue(BaseModel):
         acc_nodash = self.accession.replace("-", "")
         cik_bare = self.cik.lstrip("0")
         base = f"{SEC_ARCHIVES_BASE}/{cik_bare}/{acc_nodash}/{self.primary_document}"
+        if self.excerpt_text:
+            words = self.excerpt_text.split()[:8]
+            fragment = quote(" ".join(words))
+            return f"{base}#:~:text={fragment}"
         label = _concept_to_label(self.concept)
         return f"{base}#:~:text={quote(label)}"
 
