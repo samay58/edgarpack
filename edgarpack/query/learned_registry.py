@@ -284,13 +284,33 @@ class LearnedRegistry:
         cur = conn.execute(sql, tuple(params))
         return [_row_to_dataclass(r) for r in cur.fetchall()]
 
-    def verify_row(self, cik: str, metric: str) -> None:
+    def verify_row(
+        self,
+        cik: str,
+        metric: str,
+        accession: str | None = None,
+    ) -> None:
+        """Mark a learned row as verified (verif_method='manual').
+
+        Mirrors lookup/bump_hit_count semantics: accession=None targets the
+        whole-company (v1) row with accession=''; a specific accession
+        targets that per-filing row only.
+        """
         conn = self._get_conn()
-        conn.execute(
-            "UPDATE learned_concepts SET verified = 1, verif_method = 'manual' "
-            "WHERE cik = ? AND metric = ?",
-            (cik, metric),
-        )
+        if accession is None:
+            conn.execute(
+                "UPDATE learned_concepts "
+                "SET verified = 1, verif_method = 'manual' "
+                "WHERE cik = ? AND metric = ? AND accession = ''",
+                (cik, metric),
+            )
+        else:
+            conn.execute(
+                "UPDATE learned_concepts "
+                "SET verified = 1, verif_method = 'manual' "
+                "WHERE cik = ? AND metric = ? AND accession = ?",
+                (cik, metric, accession),
+            )
         conn.commit()
 
     def clear(

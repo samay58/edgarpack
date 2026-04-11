@@ -242,6 +242,42 @@ class TestLearnedRegistryAccessionKey(unittest.TestCase):
         self.assertEqual(removed, 1)
         self.assertIsNotNone(self.reg.lookup("A", "arr", accession="ACC-2"))
 
+    def test_verify_row_targets_only_whole_company_row_by_default(self) -> None:
+        """verify_row without accession should only flip the whole-company row."""
+        self.reg.upsert(
+            cik="A", metric="arr", concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=False,
+        )
+        self.reg.upsert(
+            cik="A", metric="arr", concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=False,
+            accession="ACC-1",
+        )
+        self.reg.verify_row("A", "arr")  # no accession kwarg
+        whole = self.reg.lookup("A", "arr")
+        per = self.reg.lookup("A", "arr", accession="ACC-1")
+        assert whole is not None and per is not None
+        self.assertTrue(whole.verified)
+        self.assertFalse(per.verified)  # untouched
+
+    def test_verify_row_targets_specific_accession(self) -> None:
+        self.reg.upsert(
+            cik="A", metric="arr", concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=False,
+            accession="ACC-1",
+        )
+        self.reg.upsert(
+            cik="A", metric="arr", concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=False,
+            accession="ACC-2",
+        )
+        self.reg.verify_row("A", "arr", accession="ACC-1")
+        acc1 = self.reg.lookup("A", "arr", accession="ACC-1")
+        acc2 = self.reg.lookup("A", "arr", accession="ACC-2")
+        assert acc1 is not None and acc2 is not None
+        self.assertTrue(acc1.verified)
+        self.assertFalse(acc2.verified)  # untouched
+
 
 if __name__ == "__main__":
     unittest.main()
