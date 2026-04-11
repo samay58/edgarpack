@@ -1,0 +1,44 @@
+# Learn {{PROJECT_NAME}}
+
+How the system works, traced through what actually happens.
+
+## The napkin sketch
+
+```
+{{NAPKIN_SKETCH}}
+```
+
+That is the entire lifecycle. Everything below fills in the details.
+
+## Trails
+
+Trails trace a concrete action through the code. Each one starts with something you do and follows the chain of what happens next.
+
+**Start here:**
+
+- [Trail 0: {{TRAIL_0_TITLE}}](trail-0-{{TRAIL_0_SLUG}}.md) (~{{TRAIL_0_MIN}} min)
+  {{TRAIL_0_DESCRIPTION}}
+
+**Then go deeper:**
+
+{{OTHER_TRAILS}}
+
+## Reference
+
+When you need to look up a specific function or module, use the reference docs. These cover every exported function with purpose, inputs, outputs, design choices, and invariants.
+
+Trails tell you the story. Reference is the dictionary.
+
+{{REFS}}
+
+## How to use this
+
+**Before a session**: glance at the napkin sketch. Orient yourself to where you'll be working.
+
+**During a session**: when something is unclear, ask "walk me through this" and reference the relevant trail.
+
+**After a session**: walk the trail for what you just built. The code references point you to the exact lines.
+
+## Keeping it current
+
+These trails reference actual source files and line numbers. When the code changes, the trails should be updated in the same commit. If a trail reference is wrong, that is a bug.

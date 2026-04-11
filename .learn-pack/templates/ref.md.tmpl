@@ -1,0 +1,53 @@
+# Reference: {{MODULE_NAME}}
+
+`{{MODULE_PATH}}`
+
+One-paragraph orientation. What is this module for, in the context of the system as a whole? What single sentence would you give a new contributor about why it exists?
+
+---
+
+## Data types
+
+### {{TYPE_NAME}}
+
+```{{LANGUAGE}}
+# struct/class/typedef definition with field comments
+```
+
+What each field means. Which fields are load-bearing and which are bookkeeping.
+
+---
+
+## Functions
+
+### {{function_name}}({{params}})
+
+**Purpose**: one sentence.
+
+**Inputs**:
+- `param` (type): what it represents
+- `param` (type): what it represents
+
+**Returns**: what comes back, including the empty/error case
+
+**How it works**, step by step:
+
+1. First thing it does.
+2. Second thing.
+3. The interesting step that's worth knowing about.
+
+**Design notes**: any non-obvious choice — why not the obvious approach, what invariant this preserves, what would break if you changed it.
+
+---
+
+## Invariants
+
+Things that must be true for this module to function correctly. State each invariant in one sentence and name the function that enforces it.
+
+- {{INVARIANT}} — enforced by `{{function_name}}`
+
+---
+
+## What this module does not do
+
+The boundary. List the things a reader might assume this module handles but doesn't, and point at the module that does. Two or three lines.

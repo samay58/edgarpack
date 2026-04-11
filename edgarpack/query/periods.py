@@ -69,9 +69,9 @@ def parse_fact_ids_from_html(html: str | bytes) -> dict[tuple[str, float], str]:
 
     The matching strategy: within a single filing, the same concept at different
     periods almost always has a different dollar value. So ``(concept, value)``
-    is a reliable composite key. If duplicates exist (rare), the last occurrence
-    wins (typically the notes repeat values from the financial statements, but
-    the financial statement element is the canonical one and appears first).
+    is a reliable composite key. If duplicates exist (rare), the first occurrence
+    wins. Financial statements appear before the notes section, so the canonical
+    element keeps its fact_id.
     """
     if isinstance(html, bytes):
         html = html.decode("utf-8", errors="replace")
