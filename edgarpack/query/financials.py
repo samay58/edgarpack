@@ -13,8 +13,10 @@ from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
+from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
 from .models import CitedValue, DerivedValue, QueryResult
 from .periods import parse_fact_ids_from_html, select_period
+from .self_heal import try_learn
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +180,16 @@ async def financials(
     else:
         metric_list = list(metrics)
 
+    # Layer 0: alias dereferencing + unknown-metric guard
+    resolved_list: list[str] = []
+    for m in metric_list:
+        resolved = resolve_alias(m)
+        if resolved not in METRIC_MAP:
+            suggestions = suggest_metrics(resolved, set(METRIC_MAP.keys()), n=3)
+            raise MetricNotFound(m, suggestions=suggestions)
+        resolved_list.append(resolved)
+    metric_list = resolved_list
+
     result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
     derived_cache: _DerivedCache = {}
 
@@ -205,7 +217,17 @@ async def financials(
         else:
             resolved = resolve_concept(metric, facts)
             if resolved is None:
-                result_metrics[metric] = None
+                # Concept resolution failed: try self-heal before giving up.
+                learned = try_learn(
+                    metric=metric,
+                    meta=meta,
+                    facts=facts,
+                    cik=cik,
+                    company=company_name,
+                    prior_year_cited=None,
+                    doc_map=doc_map,
+                )
+                result_metrics[metric] = learned
                 continue
 
             concept, taxonomy = resolved
@@ -235,7 +257,29 @@ async def financials(
                     scope_warn = get_scope_warning(concept)
                     if scope_warn:
                         value.warnings.append(scope_warn)
-                result_metrics[metric] = value
+                    result_metrics[metric] = value
+                    continue
+
+                # Deterministic path returned None. Try self-heal with the
+                # prior-year annual value as verification ground truth.
+                prior = _fetch_prior_year_for_self_heal(
+                    facts=facts,
+                    concept=concept,
+                    metric=metric,
+                    company=company_name,
+                    cik=cik,
+                    doc_map=doc_map,
+                )
+                learned = try_learn(
+                    metric=metric,
+                    meta=meta,
+                    facts=facts,
+                    cik=cik,
+                    company=company_name,
+                    prior_year_cited=prior,
+                    doc_map=doc_map,
+                )
+                result_metrics[metric] = learned
 
     # Post-resolution sanity check: flag anomalously low total_debt relative
     # to total_liabilities.  Companies with captive finance subsidiaries
@@ -253,6 +297,33 @@ async def financials(
         _enrich_fact_ids(result, fact_id_maps)
 
     return result
+
+
+def _fetch_prior_year_for_self_heal(
+    facts: dict[str, Any],
+    concept: str,
+    metric: str,
+    company: str,
+    cik: str,
+    doc_map: dict[str, str] | None,
+) -> CitedValue | None:
+    """Try to get a prior-year ground truth for verifying a learned mapping.
+
+    Walks the annual history for the resolved concept and returns the second
+    most recent full-year entry (prior fiscal year). Returns None if fewer
+    than two annual entries exist. Used only as a sanity-check input for
+    the self-heal verifier — never for user-visible output.
+    """
+    from .periods import _annual_history, _extract_values, _unit_for_concept, _value_to_cited
+
+    values = _extract_values(facts, concept, taxonomy="us-gaap")
+    annual = _annual_history(values)
+    if len(annual) < 2:
+        return None
+    unit = _unit_for_concept(facts, concept, taxonomy="us-gaap")
+    return _value_to_cited(
+        annual[1], metric, concept, unit, company, cik, doc_map=doc_map,
+    )
 
 
 def _check_low_debt(

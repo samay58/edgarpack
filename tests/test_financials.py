@@ -208,13 +208,19 @@ class TestFinancials(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")
     @patch(f"{_P}.resolve_ticker")
-    async def test_unknown_metric_returns_none(self, mock_resolve, mock_facts, mock_subs) -> None:
+    async def test_unknown_metric_raises_metric_not_found(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """As of self-heal v1, unknown metric names raise instead of silently
+        returning None. Layer 0 dereferences aliases first and the caller
+        (financials()) raises MetricNotFound with suggestions for anything
+        that still doesn't resolve."""
+        from edgarpack.query.layer_zero import MetricNotFound
+
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
         mock_facts.return_value = MOCK_COMPANY_FACTS
 
-        result = await financials("NVDA", "nonexistent_metric")
-
-        self.assertIsNone(result.metrics["nonexistent_metric"])
+        with self.assertRaises(MetricNotFound) as ctx:
+            await financials("NVDA", "nonexistent_metric")
+        self.assertEqual(ctx.exception.metric_name, "nonexistent_metric")
 
 
 MOCK_CROSS_YEAR_FACTS = {
@@ -1286,6 +1292,33 @@ class TestDerivedCycleProtection(unittest.TestCase):
                 period="lfy",
             )
         self.assertIsNone(result)
+
+
+class TestAliasDereferencing(unittest.TestCase):
+    """Alias lookup happens before METRIC_MAP check."""
+
+    def test_free_cash_flow_is_known_canonical(self) -> None:
+        # 'fcf' should resolve to 'free_cash_flow' via alias; free_cash_flow
+        # is already in METRIC_MAP as a derived metric.
+        from edgarpack.query.concepts import METRIC_MAP
+        self.assertIn("free_cash_flow", METRIC_MAP)
+
+    def test_unknown_metric_raises_metric_not_found(self) -> None:
+        import asyncio as _asyncio
+        from edgarpack.query.layer_zero import MetricNotFound
+
+        async def _run() -> None:
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})):
+                with self.assertRaises(MetricNotFound) as ctx:
+                    await financials("NVDA", metrics="xyzzy_nothing", period="lfy")
+                self.assertEqual(ctx.exception.metric_name, "xyzzy_nothing")
+
+        _asyncio.run(_run())
 
 
 if __name__ == "__main__":
