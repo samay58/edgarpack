@@ -254,9 +254,11 @@ logger = logging.getLogger(__name__)
 
 _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"^10k_parti_item7(?=_|$)"),   # MD&A (10-K)
-    re.compile(r"^10k_parti_item7a(?=_|$)"),  # Quant/Qual market risk (sometimes KPIs)
+    re.compile(r"^10k_parti_item7a(?=_|$)"),  # Quant/Qual market risk
     re.compile(r"^10q_parti_item2(?=_|$)"),   # MD&A (10-Q)
-    re.compile(r"_segment"),                  # segment reporting, anywhere
+    # Unanchored: slug patterns fire anywhere in the section ID.
+    # A segment overview nested inside Item 1 Business is a valid target.
+    re.compile(r"_segment"),
     re.compile(r"_key_metric"),
     re.compile(r"_operating_data"),
     re.compile(r"_key_performance"),
@@ -266,7 +268,8 @@ _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
 def _select_sections(sections: list[dict]) -> list[dict]:
     """Return manifest section entries whose IDs match MD&A / key-metrics patterns.
 
-    Empty list if none match. The caller handles the 'malformed pack' case.
+    Preserves manifest order. Empty list if none match. The caller handles
+    the 'malformed pack' case.
     """
     result: list[dict] = []
     for sec in sections:
@@ -299,7 +302,7 @@ def _read_section_text(pack_dir: Path, sections: list[dict]) -> str:
             continue
         try:
             content = section_file.read_text(encoding="utf-8")
-        except OSError as e:
+        except (OSError, UnicodeDecodeError) as e:
             logger.warning("Failed to read %s: %s", section_file, e)
             continue
         parts.append(_SECTION_SEPARATOR.format(id=sec_id))
@@ -320,4 +323,4 @@ def _trim_to_budget(text: str, max_chars: int = _DEFAULT_MAX_CHARS) -> str:
     if len(text) <= max_chars:
         return text
     head = text[: max_chars - 100]
-    return f"{head}\n\n[truncated] at {max_chars} chars"
+    return f"{head}\n\n[truncated at {max_chars} chars]"

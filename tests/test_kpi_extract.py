@@ -259,6 +259,30 @@ class TestSelectSections(unittest.TestCase):
         ]
         self.assertEqual(_select_sections(sections), [])
 
+    def test_empty_section_list_returns_empty(self) -> None:
+        self.assertEqual(_select_sections([]), [])
+
+    def test_preserves_manifest_order(self) -> None:
+        """Sections in the output must appear in the same order as the input,
+        regardless of which pattern matched which entry."""
+        sections = [
+            {"id": "10k_parti_item7_mda", "path": "p1",
+             "title": "MD&A", "char_start": 0, "char_end": 100},
+            {"id": "10k_parti_item1_business", "path": "p2",
+             "title": "Business", "char_start": 100, "char_end": 200},  # filtered out
+            {"id": "10k_segment_data", "path": "p3",
+             "title": "Segments", "char_start": 200, "char_end": 300},
+            {"id": "10k_key_metric_nontraditional", "path": "p4",
+             "title": "Key Metrics", "char_start": 300, "char_end": 400},
+        ]
+        selected = _select_sections(sections)
+        ids = [s["id"] for s in selected]
+        self.assertEqual(
+            ids,
+            ["10k_parti_item7_mda", "10k_segment_data",
+             "10k_key_metric_nontraditional"],
+        )
+
 
 class TestReadSectionText(unittest.TestCase):
     def test_concatenates_section_files_in_order(self) -> None:
@@ -291,6 +315,27 @@ class TestReadSectionText(unittest.TestCase):
             text = _read_section_text(pack_dir, sections)
             self.assertEqual(text, "")
 
+    def test_skips_undecodable_bytes_with_warning(self) -> None:
+        """A section file with non-UTF-8 bytes must be skipped, not raise."""
+        with tempfile.TemporaryDirectory() as td:
+            pack_dir = Path(td)
+            sections_dir = pack_dir / "sections"
+            sections_dir.mkdir()
+            (sections_dir / "bad.md").write_bytes(b"\xff\xfe\xff bad")
+            (sections_dir / "good.md").write_text("Good content", encoding="utf-8")
+            sections = [
+                {"id": "bad_sec", "path": "sections/bad.md", "title": "Bad",
+                 "char_start": 0, "char_end": 100},
+                {"id": "good_sec", "path": "sections/good.md", "title": "Good",
+                 "char_start": 100, "char_end": 200},
+            ]
+            # Must not raise; should return only the good section's content.
+            text = _read_section_text(pack_dir, sections)
+            self.assertIn("Good content", text)
+            self.assertNotIn("bad", text)  # the bad file's content is skipped
+            # The good section's id should be in the separator
+            self.assertIn("good_sec", text)
+
 
 class TestTrimToBudget(unittest.TestCase):
     def test_passthrough_when_under_budget(self) -> None:
@@ -300,8 +345,8 @@ class TestTrimToBudget(unittest.TestCase):
     def test_truncates_when_over_budget(self) -> None:
         text = "x" * 200
         trimmed = _trim_to_budget(text, max_chars=100)
-        self.assertLessEqual(len(trimmed), 150)  # allow for the marker
-        self.assertIn("[truncated]", trimmed)
+        self.assertLessEqual(len(trimmed), 150)
+        self.assertIn("truncated", trimmed)
 
     def test_default_budget_is_reasonable(self) -> None:
         # Default should allow up to ~60K chars (~15K tokens at 4 chars/token)
