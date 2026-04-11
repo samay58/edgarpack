@@ -25,7 +25,11 @@ Resolution order inside this module:
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
+
+from ..harvest.registry import PackRecord, PackRegistry
 
 
 @dataclass(frozen=True)
@@ -47,12 +51,6 @@ class KpiDef:
     unit_hint: str
     industry: tuple[str, ...] = field(default=())
     description: str = ""
-
-
-import json
-from pathlib import Path
-
-from ..harvest.registry import PackRecord, PackRegistry
 
 
 def _load_pack_manifest(pack_dir: Path) -> dict:

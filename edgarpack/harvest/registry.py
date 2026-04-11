@@ -128,6 +128,7 @@ class PackRegistry:
         pack_dir: str,
         manifest_hash: str | None = None,
         warnings: list[str] | None = None,
+        built_at: str | None = None,
     ) -> None:
         """Register a built pack in the registry."""
         conn = self._get_conn()
@@ -146,7 +147,7 @@ class PackRegistry:
                 sections_count,
                 tokens_total,
                 pack_dir,
-                datetime.now(UTC).isoformat(),
+                built_at or datetime.now(UTC).isoformat(),
                 manifest_hash,
                 json.dumps(warnings) if warnings else None,
             ),
@@ -154,9 +155,12 @@ class PackRegistry:
         conn.commit()
 
     def register_pack(self, record: PackRecord) -> None:
-        """Register a PackRecord directly (convenience wrapper around register)."""
-        import json as _json
-        warnings = _json.loads(record.warnings_json) if record.warnings_json else None
+        """Register a PackRecord directly (convenience wrapper around register).
+
+        Preserves record.built_at (falls back to now() if the record has no
+        timestamp). warnings_json is decoded and passed as the warnings list.
+        """
+        warnings = json.loads(record.warnings_json) if record.warnings_json else None
         self.register(
             accession=record.accession,
             cik=record.cik,
@@ -169,6 +173,7 @@ class PackRegistry:
             pack_dir=record.pack_dir,
             manifest_hash=record.manifest_hash,
             warnings=warnings,
+            built_at=record.built_at,
         )
 
     def lookup(self, accession: str) -> PackRecord | None:
