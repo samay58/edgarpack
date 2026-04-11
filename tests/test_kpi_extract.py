@@ -673,6 +673,50 @@ class TestVerifyExcerptInText(unittest.TestCase):
         excerpt = "annual recurring revenue was $3.44 billion"
         self.assertTrue(_verify_excerpt_in_text(excerpt, text))
 
+    def test_value_in_excerpt_passes_when_value_present(self) -> None:
+        text = "CrowdStrike reported Annual Recurring Revenue of $3.44 billion at year end."
+        excerpt = "Annual Recurring Revenue of $3.44 billion"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text, expected_value="$3.44 billion"))
+
+    def test_value_in_excerpt_fails_when_value_absent(self) -> None:
+        """The excerpt is real, but the value the LLM attributed to it came
+        from elsewhere in the source. Must be rejected."""
+        text = "Revenue was $3.44 billion. Separately, deferred revenue grew to $1.2 billion."
+        excerpt = "Revenue was $3.44 billion"
+        self.assertFalse(
+            _verify_excerpt_in_text(excerpt, text, expected_value="$1.2 billion")
+        )
+
+    def test_value_in_excerpt_normalized_whitespace(self) -> None:
+        text = "ARR of $3.44 billion."
+        excerpt = "ARR of $3.44 billion"
+        self.assertTrue(
+            _verify_excerpt_in_text(excerpt, text, expected_value="$3.44  billion")
+        )
+
+    def test_handles_zero_width_characters(self) -> None:
+        """Zero-width spaces in the source must not cause false negatives."""
+        text = "Our ARR was $3.44\u200Bbillion at year end."
+        excerpt = "ARR was $3.44 billion"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text))
+
+    def test_word_order_mismatch_fails(self) -> None:
+        """Same words in a different order is not a substring match."""
+        text = "revenue was $3.44 billion"
+        excerpt = "$3.44 billion revenue"
+        self.assertFalse(_verify_excerpt_in_text(excerpt, text))
+
+    def test_multi_line_excerpt_matches_across_newlines(self) -> None:
+        text = "Our key metric this year:\n  ARR of $3.44 billion"
+        excerpt = "ARR of $3.44 billion"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text))
+
+    def test_casefold_handles_sharp_s(self) -> None:
+        """German ß casefolds to 'ss'. Lowercase alone would miss this."""
+        text = "Straße revenue was $100 million"
+        excerpt = "STRASSE REVENUE WAS $100 MILLION"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text))
+
 
 if __name__ == "__main__":
     unittest.main()

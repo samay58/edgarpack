@@ -31,6 +31,7 @@ import math
 import re
 import shutil
 import subprocess
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -467,22 +468,70 @@ def _extract_via_llm(prompt: str) -> dict | None:
 
 
 _WS_RUN = re.compile(r"\s+")
+# Zero-width, directional, and BOM code points that confuse substring matches.
+# EDGAR packs run through HTML/PDF pipelines that inject these into
+# filing prose. Stripping them before comparison makes the firewall robust
+# against "$3.44\u200Bbillion" vs "$3.44 billion" false negatives.
+_ZERO_WIDTH = re.compile(r"[\u200B-\u200F\u202A-\u202E\uFEFF]")
 
 
-def _verify_excerpt_in_text(excerpt: str, source_text: str) -> bool:
-    """True when ``excerpt`` is a substring of ``source_text``.
+def _normalize_for_match(text: str) -> str:
+    """Normalize a string for substring matching in the hallucination firewall.
 
-    Whitespace is collapsed to single spaces on both sides before the
-    comparison. Case-insensitive. Empty excerpt or source returns False.
+    NFKC + zero-width replace-with-space + whitespace collapse + casefold.
 
-    This is the hallucination firewall: an LLM cannot invent values that
-    weren't in the source text if we reject any response whose excerpt
-    fails this check.
+    Zero-width characters are replaced with a space (not stripped to empty)
+    because in EDGAR prose they function as word separators injected by
+    HTML/PDF pipelines (e.g. "$3.44\\u200Bbillion" should compare equal to
+    "$3.44 billion"). The subsequent _WS_RUN collapse handles any resulting
+    double spaces.
+    """
+    text = unicodedata.normalize("NFKC", text)
+    text = _ZERO_WIDTH.sub(" ", text)
+    text = _WS_RUN.sub(" ", text).strip()
+    return text.casefold()
+
+
+def _verify_excerpt_in_text(
+    excerpt: str,
+    source_text: str,
+    expected_value: str | None = None,
+) -> bool:
+    """True when ``excerpt`` is a substring of ``source_text`` (and when
+    ``expected_value`` is set, also true that it appears inside the excerpt).
+
+    Normalization, in order:
+      1. Unicode NFKC (collapses full-width digits, precomposes diacritics).
+      2. Strip zero-width marks and BOMs (EDGAR pipelines often inject these).
+      3. Collapse whitespace runs to single spaces.
+      4. Strip leading/trailing whitespace.
+      5. Casefold (handles German ß, Turkish dotless i, etc.).
+
+    Empty excerpt, empty source, or an excerpt that normalizes to empty
+    returns False. If ``expected_value`` is set, it must appear (under the
+    same normalization) inside the normalized excerpt, not just the source.
+
+    This is the hallucination firewall for Layer B. Two guarantees:
+      - The excerpt came from the source document (excerpt in source).
+      - The value was attributed to that quote (value in excerpt), not
+        pulled from elsewhere in the document.
     """
     if not excerpt or not source_text:
         return False
-    norm_excerpt = _WS_RUN.sub(" ", excerpt).strip().lower()
-    norm_source = _WS_RUN.sub(" ", source_text).strip().lower()
+
+    norm_excerpt = _normalize_for_match(excerpt)
+    norm_source = _normalize_for_match(source_text)
     if not norm_excerpt:
         return False
-    return norm_excerpt in norm_source
+
+    if norm_excerpt not in norm_source:
+        return False
+
+    if expected_value is not None:
+        norm_value = _normalize_for_match(expected_value)
+        if not norm_value:
+            return False
+        if norm_value not in norm_excerpt:
+            return False
+
+    return True
