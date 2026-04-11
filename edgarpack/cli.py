@@ -853,12 +853,9 @@ def _cmd_query(args: Any) -> int:
                 force=bool(args.force),
             )
         except MetricNotFound as e:
+            # e's __str__ already includes 'Did you mean: ...' when suggestions
+            # are populated. Don't duplicate it.
             print(f"Error: {e}", file=sys.stderr)
-            if e.suggestions:
-                print(
-                    f"  Did you mean: {', '.join(e.suggestions)}?",
-                    file=sys.stderr,
-                )
             return 2
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
