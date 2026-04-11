@@ -79,6 +79,22 @@ class LearnedRegistry:
     def _ensure_schema(self) -> None:
         conn = self._get_conn()
         conn.executescript(_SCHEMA)
+        current_version = conn.execute("PRAGMA user_version").fetchone()[0]
+        if current_version < 1:
+            # v2 migration: add accession column and a (cik, accession, metric) unique index
+            existing_cols = {row[1] for row in conn.execute(
+                "PRAGMA table_info(learned_concepts)"
+            ).fetchall()}
+            if "accession" not in existing_cols:
+                conn.execute(
+                    "ALTER TABLE learned_concepts "
+                    "ADD COLUMN accession TEXT NOT NULL DEFAULT ''"
+                )
+            conn.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_learned_cik_accn_metric "
+                "ON learned_concepts(cik, accession, metric)"
+            )
+            conn.execute("PRAGMA user_version = 1")
         conn.commit()
 
     def close(self) -> None:
