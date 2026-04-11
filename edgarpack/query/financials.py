@@ -181,11 +181,15 @@ async def financials(
         metric_list = list(metrics)
 
     # Layer 0: alias dereferencing + unknown-metric guard
+    # A metric is "known" if it's in METRIC_MAP OR in KPI_CATALOG (Layer B).
+    from .kpi_extract import KPI_CATALOG
+
     resolved_list: list[str] = []
     for m in metric_list:
         resolved = resolve_alias(m)
-        if resolved not in METRIC_MAP:
-            suggestions = suggest_metrics(resolved, set(METRIC_MAP.keys()), n=3)
+        if resolved not in METRIC_MAP and resolved not in KPI_CATALOG:
+            combined_known = set(METRIC_MAP.keys()) | set(KPI_CATALOG.keys())
+            suggestions = suggest_metrics(resolved, combined_known, n=3)
             raise MetricNotFound(m, suggestions=suggestions)
         resolved_list.append(resolved)
     metric_list = resolved_list
@@ -196,6 +200,9 @@ async def financials(
     for metric in metric_list:
         meta = METRIC_MAP.get(metric)
         if meta is None:
+            # KPI-only metric (in KPI_CATALOG but not METRIC_MAP).
+            # Task 12 will wire try_extract_kpi here. For now, set to None
+            # so the test passes and the structure is ready.
             result_metrics[metric] = None
             continue
 

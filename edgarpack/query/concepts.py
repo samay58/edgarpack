@@ -12,6 +12,7 @@ from typing import Any
 
 # Re-export Layer 0 helpers for callers that only import from concepts.
 from .layer_zero import METRIC_ALIASES, MetricNotFound, resolve_alias, suggest_metrics
+from .kpi_extract import KPI_CATALOG, KpiDef
 
 __all__ = [
     "METRIC_ALIASES",
@@ -24,6 +25,8 @@ __all__ = [
     "resolve_concept",
     "get_metric_meta",
     "get_scope_warning",
+    "KPI_CATALOG",
+    "KpiDef",
 ]
 
 

@@ -1320,6 +1320,31 @@ class TestAliasDereferencing(unittest.TestCase):
 
         _asyncio.run(_run())
 
+    def test_kpi_catalog_name_does_not_raise(self) -> None:
+        """A metric name in KPI_CATALOG but not METRIC_MAP must not raise."""
+        import asyncio as _asyncio
+
+        # Use a mock facts blob with no matching concepts so Layer A fails too.
+        # The test only checks that MetricNotFound is NOT raised — the query
+        # will still return None for the metric because Layer B isn't wired
+        # yet in Task 5. That happens in Task 12.
+
+        async def _run() -> None:
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001535527", "CrowdStrike"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})):
+                # 'arr' is in KPI_CATALOG, not in METRIC_MAP.
+                # Before Layer B is wired, the result for 'arr' is None, not a raise.
+                result = await financials("CRWD", metrics="arr", period="lfy")
+                self.assertIn("arr", result.metrics)
+                # Layer B isn't firing yet (Task 12 does that), so expect None
+                self.assertIsNone(result.metrics["arr"])
+
+        _asyncio.run(_run())
+
 
 if __name__ == "__main__":
     unittest.main()
