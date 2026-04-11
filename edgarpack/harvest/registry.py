@@ -1,4 +1,11 @@
-"""SQLite registry of all built packs for sub-ms lookups."""
+"""SQLite registry of all built packs for sub-ms lookups.
+
+PRAGMA user_version note: this module does NOT use PRAGMA user_version
+for migrations — it uses a list-based try/except scheme via _run_migrations.
+The learned_concepts table (edgarpack/query/learned_registry.py) owns
+PRAGMA user_version for its own migrations. Do not touch user_version
+from this module unless you coordinate with learned_registry.
+"""
 
 from __future__ import annotations
 
@@ -96,6 +103,9 @@ class PackRegistry:
         self._run_migrations(conn)
         conn.commit()
 
+    # NOTE: Uses a list-based migration scheme, not PRAGMA user_version.
+    # PRAGMA user_version is claimed by query/learned_registry.py for its
+    # migrations. See learned_registry.py's module docstring for details.
     def _run_migrations(self, conn: sqlite3.Connection) -> None:
         for name, sql in _MIGRATIONS:
             try:

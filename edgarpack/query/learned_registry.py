@@ -8,9 +8,15 @@ Schema:
         cik, metric, concept, taxonomy,
         source ('fuzzy' | 'llm' | 'user'),
         verified (0/1), verif_method, value_sample,
-        learned_at, hit_count
+        learned_at, hit_count, accession
     )
     PRIMARY KEY (cik, metric)
+
+PRAGMA user_version ownership: this module claims PRAGMA user_version as
+its migration counter. harvest/registry.py uses a try/except _MIGRATIONS
+list and does NOT touch user_version. If harvest ever adopts user_version-
+based migrations, the two owners must coordinate (e.g. move to per-table
+metadata rows) or one will silently skip migrations on existing databases.
 """
 
 from __future__ import annotations

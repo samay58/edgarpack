@@ -67,11 +67,30 @@ class TestLearnedRegistryMigration(unittest.TestCase):
 
         from edgarpack.query.learned_registry import LearnedRegistry
         reg = LearnedRegistry(db_path=self.db_path)
+        reg.close()
 
-        row = reg.lookup("0001045810", "revenue")
+        # Query the raw row to verify every field survived migration,
+        # especially that the new accession column defaulted to ''.
+        conn = sqlite3.connect(str(self.db_path))
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM learned_concepts WHERE cik = ? AND metric = ?",
+            ("0001045810", "revenue"),
+        ).fetchone()
+        conn.close()
+
         self.assertIsNotNone(row)
         assert row is not None
-        self.assertEqual(row.concept, "Revenues")
+        self.assertEqual(row["concept"], "Revenues")
+        self.assertEqual(row["taxonomy"], "us-gaap")
+        self.assertEqual(row["source"], "fuzzy")
+        self.assertEqual(row["verified"], 1)
+        self.assertEqual(row["verif_method"], "order_of_magnitude")
+        self.assertAlmostEqual(row["value_sample"], 130e9)
+        self.assertEqual(row["hit_count"], 0)
+        # The critical invariant: the new accession column was
+        # backfilled with '' (DEFAULT clause) on the existing v1 row.
+        self.assertEqual(row["accession"], "")
 
     def test_migration_is_idempotent(self) -> None:
         self._create_v1_schema_with_row()
