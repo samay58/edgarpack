@@ -121,21 +121,36 @@ class TestCitedValueExcerptText(unittest.TestCase):
 
 class TestQueryResultDiagnostics(unittest.TestCase):
     def test_default_diagnostics_is_empty_list(self) -> None:
-        from edgarpack.query.models import QueryResult
+        from edgarpack.query.models import Diagnostic, QueryResult
         qr = QueryResult(company="X", cik="0", period="lfy", metrics={})
         self.assertEqual(qr.diagnostics, [])
 
     def test_diagnostics_can_hold_structured_entries(self) -> None:
-        from edgarpack.query.models import QueryResult
+        from edgarpack.query.models import Diagnostic, QueryResult
         qr = QueryResult(
             company="X", cik="0", period="lfy", metrics={},
             diagnostics=[
-                {"metric": "arr", "kind": "no_pack",
-                 "message": "KPI extraction requires a built pack."}
+                Diagnostic(
+                    metric="arr",
+                    kind="layer_b_unresolved",
+                    message="Layer B could not resolve.",
+                )
             ],
         )
         self.assertEqual(len(qr.diagnostics), 1)
-        self.assertEqual(qr.diagnostics[0]["metric"], "arr")
+        self.assertEqual(qr.diagnostics[0].metric, "arr")
+        self.assertEqual(qr.diagnostics[0].kind, "layer_b_unresolved")
+
+    def test_invalid_kind_raises_validation_error(self) -> None:
+        """A typoed kind should be rejected by Pydantic at construction."""
+        from pydantic import ValidationError
+        from edgarpack.query.models import Diagnostic
+        with self.assertRaises(ValidationError):
+            Diagnostic(
+                metric="arr",
+                kind="typoed_kind",  # not in the Literal enum
+                message="nope",
+            )
 
 
 if __name__ == "__main__":

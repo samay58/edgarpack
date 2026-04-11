@@ -16,7 +16,7 @@ from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, re
 from . import kpi_extract as _kpi_extract_mod
 from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
-from .models import CitedValue, DerivedValue, QueryResult
+from .models import CitedValue, Diagnostic, DerivedValue, QueryResult
 from .periods import parse_fact_ids_from_html, select_period
 from .self_heal import try_learn
 
@@ -195,7 +195,7 @@ async def financials(
 
     result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
     derived_cache: _DerivedCache = {}
-    diagnostics_list: list[dict[str, str]] = []
+    diagnostics_list: list[Diagnostic] = []
 
     for metric in metric_list:
         meta = METRIC_MAP.get(metric)
@@ -212,15 +212,17 @@ async def financials(
                 result_metrics[metric] = cited
             else:
                 result_metrics[metric] = None
-                diagnostics_list.append({
-                    "metric": metric,
-                    "kind": "layer_b_unresolved",
-                    "message": (
+                diagnostics_list.append(Diagnostic(
+                    metric=metric,
+                    kind="layer_b_unresolved",
+                    message=(
                         f"Layer B could not resolve '{metric}': no pack, "
                         f"no LLM backend, or the value was not found in "
-                        f"MD&A/segment sections."
+                        f"MD&A/segment sections. TODO(v2.1): refactor "
+                        f"try_extract_kpi to return a structured result tuple "
+                        f"so the orchestrator can produce precise diagnostic kinds."
                     ),
-                })
+                ))
             continue
 
         if meta.derived:

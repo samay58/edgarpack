@@ -1408,9 +1408,28 @@ class TestLayerBWireUp(unittest.TestCase):
                 result = await financials("CRWD", metrics="arr", period="lfy")
                 self.assertIsNone(result.metrics["arr"])
                 self.assertTrue(
-                    any(d.get("metric") == "arr" for d in result.diagnostics),
+                    any(d.metric == "arr" for d in result.diagnostics),
                     f"expected 'arr' diagnostic, got {result.diagnostics}",
                 )
+
+        _asyncio.run(_run())
+
+    def test_known_metric_does_not_call_try_extract_kpi(self) -> None:
+        """A metric in METRIC_MAP must be resolved via the deterministic
+        path, not Layer B. Pins the gating invariant."""
+        import asyncio as _asyncio
+
+        async def _run() -> None:
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})), \
+                 patch("edgarpack.query.kpi_extract.try_extract_kpi") as mock_extract:
+                # 'revenue' is in METRIC_MAP, not KPI_CATALOG
+                await financials("NVDA", metrics="revenue", period="lfy")
+                mock_extract.assert_not_called()
 
         _asyncio.run(_run())
 

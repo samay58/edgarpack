@@ -6,6 +6,8 @@ import re
 from datetime import date
 from urllib.parse import quote
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from ..config import SEC_ARCHIVES_BASE, SEC_DATA_BASE
@@ -331,6 +333,25 @@ class DerivedValue(CitedValue):
         return d
 
 
+class Diagnostic(BaseModel):
+    """Structured failure diagnostic attached to a QueryResult.
+
+    Produced when Layer B (or any future self-heal layer) cannot resolve
+    a requested metric. The `kind` field is a closed enum so CLI
+    renderers and downstream consumers can filter reliably.
+    """
+
+    metric: str
+    kind: Literal[
+        "layer_b_no_pack",
+        "layer_b_no_llm_backend",
+        "layer_b_not_found",
+        "layer_b_hallucinated_excerpt",
+        "layer_b_unresolved",  # catch-all until fine-grained kinds are wired
+    ]
+    message: str
+
+
 class QueryResult(BaseModel):
     """Result for a single company, multiple metrics."""
 
@@ -340,8 +361,7 @@ class QueryResult(BaseModel):
     metrics: dict[str, CitedValue | list[CitedValue] | None]  # metric_name -> value(s) or None
 
     # Self-heal v2: structured diagnostics for Layer B failures.
-    # Each entry is {"metric": str, "kind": str, "message": str}.
-    diagnostics: list[dict[str, str]] = Field(default_factory=list)
+    diagnostics: list[Diagnostic] = Field(default_factory=list)
 
     @property
     def permalink(self) -> str:
@@ -525,6 +545,8 @@ class QueryResult(BaseModel):
         result["metrics"] = metrics_out
         result["citations"] = citations
         result["calculations"] = calculations
+        if self.diagnostics:
+            result["diagnostics"] = [d.model_dump() for d in self.diagnostics]
         return result
 
     def _collect_filings(self) -> dict[str, dict[str, object]]:
@@ -576,7 +598,7 @@ class QueryResult(BaseModel):
         filings = self._collect_filings()
         metrics_out, citations, calculations = self._serialize_metrics(lean=True)
 
-        return {
+        d: dict[str, object] = {
             "company": self.company,
             "cik": self.cik,
             "period": self.period,
@@ -586,3 +608,6 @@ class QueryResult(BaseModel):
             "citations": citations,
             "calculations": calculations,
         }
+        if self.diagnostics:
+            d["diagnostics"] = [diag.model_dump() for diag in self.diagnostics]
+        return d
