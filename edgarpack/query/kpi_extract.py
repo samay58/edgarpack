@@ -26,6 +26,8 @@ Resolution order inside this module:
 from __future__ import annotations
 
 import json
+import logging
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -247,3 +249,75 @@ KPI_CATALOG: dict[str, KpiDef] = {
         unit_hint="USD",
     ),
 }
+
+logger = logging.getLogger(__name__)
+
+_SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^10k_parti_item7(?=_|$)"),   # MD&A (10-K)
+    re.compile(r"^10k_parti_item7a(?=_|$)"),  # Quant/Qual market risk (sometimes KPIs)
+    re.compile(r"^10q_parti_item2(?=_|$)"),   # MD&A (10-Q)
+    re.compile(r"_segment"),                  # segment reporting, anywhere
+    re.compile(r"_key_metric"),
+    re.compile(r"_operating_data"),
+    re.compile(r"_key_performance"),
+)
+
+
+def _select_sections(sections: list[dict]) -> list[dict]:
+    """Return manifest section entries whose IDs match MD&A / key-metrics patterns.
+
+    Empty list if none match. The caller handles the 'malformed pack' case.
+    """
+    result: list[dict] = []
+    for sec in sections:
+        sec_id = str(sec.get("id", ""))
+        if any(pat.search(sec_id) for pat in _SECTION_PATTERNS):
+            result.append(sec)
+    return result
+
+
+_SECTION_SEPARATOR = "\n\n--- [{id}] ---\n\n"
+
+
+def _read_section_text(pack_dir: Path, sections: list[dict]) -> str:
+    """Concatenate section markdown from disk in manifest order.
+
+    Missing files are skipped with a warning log; the function never raises.
+    Returns an empty string if none of the requested sections exist.
+    """
+    parts: list[str] = []
+    for sec in sections:
+        sec_id = str(sec.get("id", ""))
+        rel_path = sec.get("path", "")
+        if not rel_path:
+            continue
+        section_file = pack_dir / rel_path
+        if not section_file.exists():
+            logger.warning(
+                "Section file missing: %s (pack=%s)", section_file, pack_dir
+            )
+            continue
+        try:
+            content = section_file.read_text(encoding="utf-8")
+        except OSError as e:
+            logger.warning("Failed to read %s: %s", section_file, e)
+            continue
+        parts.append(_SECTION_SEPARATOR.format(id=sec_id))
+        parts.append(content)
+    return "".join(parts)
+
+
+_DEFAULT_MAX_CHARS = 60_000
+
+
+def _trim_to_budget(text: str, max_chars: int = _DEFAULT_MAX_CHARS) -> str:
+    """Trim text to stay under a character budget (rough token proxy).
+
+    Uses a 4 chars/token heuristic: 60K chars ~= 15K tokens. Truncates
+    mid-section with a clear '[truncated]' marker so the LLM knows the
+    text has a boundary.
+    """
+    if len(text) <= max_chars:
+        return text
+    head = text[: max_chars - 100]
+    return f"{head}\n\n[truncated] at {max_chars} chars"

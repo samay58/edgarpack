@@ -13,7 +13,10 @@ from edgarpack.query.kpi_extract import (
     KPI_CATALOG,
     KpiDef,
     _load_pack_manifest,
+    _read_section_text,
     _resolve_filing_for_period,
+    _select_sections,
+    _trim_to_budget,
 )
 
 
@@ -205,6 +208,106 @@ class TestLoadPackManifest(unittest.TestCase):
             pack_dir.mkdir()
             with self.assertRaises(FileNotFoundError):
                 _load_pack_manifest(pack_dir)
+
+
+class TestSelectSections(unittest.TestCase):
+    def test_matches_mda_section(self) -> None:
+        sections = [
+            {"id": "10k_parti_item1_business", "path": "sections/item1.md",
+             "title": "Business", "char_start": 0, "char_end": 100},
+            {"id": "10k_parti_item7_managements_discussion_and_analysis",
+             "path": "sections/item7.md", "title": "MD&A",
+             "char_start": 100, "char_end": 5000},
+            {"id": "10k_parti_item8_financial_statements",
+             "path": "sections/item8.md", "title": "Financials",
+             "char_start": 5000, "char_end": 10000},
+        ]
+        selected = _select_sections(sections)
+        ids = {s["id"] for s in selected}
+        self.assertIn("10k_parti_item7_managements_discussion_and_analysis", ids)
+        self.assertNotIn("10k_parti_item1_business", ids)
+
+    def test_matches_key_metrics_section_by_slug(self) -> None:
+        sections = [
+            {"id": "10k_key_metrics_nontraditional",
+             "path": "sections/key.md", "title": "Key Metrics",
+             "char_start": 0, "char_end": 500},
+            {"id": "10k_operating_data_north_america",
+             "path": "sections/ops.md", "title": "Operating Data",
+             "char_start": 500, "char_end": 1000},
+        ]
+        selected = _select_sections(sections)
+        self.assertEqual(len(selected), 2)
+
+    def test_matches_10q_mda(self) -> None:
+        sections = [
+            {"id": "10q_parti_item1_financial_statements",
+             "path": "sections/q1.md", "title": "Financials",
+             "char_start": 0, "char_end": 100},
+            {"id": "10q_parti_item2_managements_discussion",
+             "path": "sections/q2.md", "title": "MD&A",
+             "char_start": 100, "char_end": 2000},
+        ]
+        selected = _select_sections(sections)
+        ids = {s["id"] for s in selected}
+        self.assertIn("10q_parti_item2_managements_discussion", ids)
+
+    def test_returns_empty_when_no_matches(self) -> None:
+        sections = [
+            {"id": "10k_parti_item1_business", "path": "sections/item1.md",
+             "title": "Business", "char_start": 0, "char_end": 100},
+        ]
+        self.assertEqual(_select_sections(sections), [])
+
+
+class TestReadSectionText(unittest.TestCase):
+    def test_concatenates_section_files_in_order(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            pack_dir = Path(td)
+            sections_dir = pack_dir / "sections"
+            sections_dir.mkdir()
+            (sections_dir / "a.md").write_text("Alpha content", encoding="utf-8")
+            (sections_dir / "b.md").write_text("Beta content", encoding="utf-8")
+            sections = [
+                {"id": "sec_a", "path": "sections/a.md", "title": "A",
+                 "char_start": 0, "char_end": 100},
+                {"id": "sec_b", "path": "sections/b.md", "title": "B",
+                 "char_start": 100, "char_end": 200},
+            ]
+            text = _read_section_text(pack_dir, sections)
+            self.assertIn("Alpha content", text)
+            self.assertIn("Beta content", text)
+            self.assertIn("sec_a", text)  # separator marker includes the id
+            self.assertIn("sec_b", text)
+
+    def test_skips_missing_files_with_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            pack_dir = Path(td)
+            (pack_dir / "sections").mkdir()
+            sections = [
+                {"id": "missing_sec", "path": "sections/missing.md", "title": "Gone",
+                 "char_start": 0, "char_end": 100},
+            ]
+            text = _read_section_text(pack_dir, sections)
+            self.assertEqual(text, "")
+
+
+class TestTrimToBudget(unittest.TestCase):
+    def test_passthrough_when_under_budget(self) -> None:
+        text = "short text"
+        self.assertEqual(_trim_to_budget(text, max_chars=100), text)
+
+    def test_truncates_when_over_budget(self) -> None:
+        text = "x" * 200
+        trimmed = _trim_to_budget(text, max_chars=100)
+        self.assertLessEqual(len(trimmed), 150)  # allow for the marker
+        self.assertIn("[truncated]", trimmed)
+
+    def test_default_budget_is_reasonable(self) -> None:
+        # Default should allow up to ~60K chars (~15K tokens at 4 chars/token)
+        text = "x" * 50_000
+        trimmed = _trim_to_budget(text)
+        self.assertEqual(trimmed, text)  # unmodified
 
 
 if __name__ == "__main__":
