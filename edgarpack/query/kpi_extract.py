@@ -62,6 +62,21 @@ class KpiDef:
     description: str = ""
 
 
+def _parse_filing_date_safe(filing_date: str | None) -> tuple[int, _date]:
+    """Parse a pack filing_date into (fiscal_year, filed_date), degrading
+    gracefully on malformed input.
+
+    Returns (0, _date.min) if filing_date is None, empty, or unparseable.
+    """
+    if not filing_date:
+        return 0, _date.min
+    try:
+        filed = _date.fromisoformat(filing_date)
+        return filed.year, filed
+    except ValueError:
+        return 0, _date.min
+
+
 def _load_pack_manifest(pack_dir: Path) -> dict:
     manifest_path = pack_dir / "manifest.json"
     if not manifest_path.exists():
@@ -705,30 +720,41 @@ def try_extract_kpi(
         try:
             cached = learned_reg.lookup(cik=cik, metric=metric, accession=accession)
             if cached is not None:
-                learned_reg.bump_hit_count(
-                    cik=cik, metric=metric, accession=accession,
-                )
-                # Rebuild CitedValue from cached row + pack manifest
+                # Cached verification is treated as permanent. EDGAR accessions
+                # are filing-immutable; restatements arrive as separate
+                # accessions under new (cik, accession, metric) keys, so a
+                # cached verified=True for this accession remains valid.
                 pack_dir = Path(pack_record.pack_dir)
                 try:
                     manifest = _load_pack_manifest(pack_dir)
-                except FileNotFoundError:
+                except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+                    logger.warning(
+                        "Layer B cache hit but pack manifest unreadable at %s: %s",
+                        pack_dir, e,
+                    )
                     return None
                 primary_doc = manifest.get("filing", {}).get(
                     "primary_document", ""
                 )
+                fiscal_year_cached, filed_cached = _parse_filing_date_safe(
+                    pack_record.filing_date
+                )
+                # Note: excerpt_text is not persisted in learned_concepts (v2
+                # schema), so cached CitedValues fall back to the concept-label
+                # text fragment in document_url rather than the tight excerpt
+                # anchor the live extraction path produces. A future v3
+                # migration could add excerpt_text to LearnedRow; for v2 the
+                # degradation is documented and accepted.
                 cited = CitedValue(
                     value=cached.value_sample,
                     unit=kpi_def.unit_hint,
                     metric=metric,
                     concept=cached.concept,
                     period_end=_date.min,
-                    fiscal_year=int(pack_record.filing_date[:4])
-                        if pack_record.filing_date else 0,
+                    fiscal_year=fiscal_year_cached,
                     fiscal_period="FY" if pack_record.form_type.startswith("10-K") else "",
                     form_type=pack_record.form_type,
-                    filed=_date.fromisoformat(pack_record.filing_date)
-                        if pack_record.filing_date else _date.min,
+                    filed=filed_cached,
                     accession=accession,
                     cik=cik,
                     company=pack_record.company_name,
@@ -742,6 +768,9 @@ def try_extract_kpi(
                         "Resolved via unverified learned KPI mapping. "
                         f"Verify manually: edgarpack learned verify {cik} {metric}"
                     )
+                learned_reg.bump_hit_count(
+                    cik=cik, metric=metric, accession=accession,
+                )
                 return cited
         finally:
             learned_reg.close()
@@ -750,7 +779,11 @@ def try_extract_kpi(
         pack_dir = Path(pack_record.pack_dir)
         try:
             manifest = _load_pack_manifest(pack_dir)
-        except FileNotFoundError:
+        except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+            logger.warning(
+                "Layer B cache hit but pack manifest unreadable at %s: %s",
+                pack_dir, e,
+            )
             return None
 
         # 4. Select sections
@@ -849,12 +882,15 @@ def try_extract_kpi(
             reason = {
                 "no_prior_filing": "No prior filing available for cross-check.",
                 "prior_extract_failed": "Prior-filing extraction failed; could not cross-check.",
-                "prior_extract_unavailable": "Prior-filing extractor unavailable at this point in the plan (Task 11 forward reference).",
+                "prior_extract_unavailable": "Prior-filing extractor unavailable.",
                 "prior_filing_crosscheck": "Value was outside the expected order of magnitude vs. prior filing.",
             }.get(verif_method or "", "Unverified learned KPI mapping.")
             cited.warnings.append(f"Unverified: {reason}")
 
         return cited
     finally:
+        # Safe on recursion: _verify_against_prior_filing passes pack_registry
+        # back to the inner try_extract_kpi call, so the inner call's
+        # own_registry=False and only the outer (this) call closes it.
         if own_registry:
             pack_registry.close()

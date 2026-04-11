@@ -1138,6 +1138,100 @@ class TestTryExtractKpi(unittest.TestCase):
 
         self.assertIsNone(cited)
 
+    def test_cache_hit_survives_malformed_filing_date(self) -> None:
+        """A PackRecord with a malformed filing_date should not crash the
+        cache path; it should degrade to sentinel values."""
+        self._build_pack()
+
+        # Manually tamper with the pack_record by re-registering with a bad date
+        # (the registry won't let us do this directly, so we use raw SQL)
+        import sqlite3
+        conn = sqlite3.connect(str(self.registry_db))
+        conn.execute(
+            "UPDATE packs SET filing_date = ? WHERE accession = ?",
+            ("pending", "0001535527-24-000123"),
+        )
+        conn.commit()
+        conn.close()
+
+        from edgarpack.query.learned_registry import LearnedRegistry
+        reg = LearnedRegistry(db_path=self.registry_db)
+        reg.upsert(
+            cik="0001535527", metric="arr",
+            concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=True,
+            verif_method="prior_filing_crosscheck", value_sample=3.44e9,
+            accession="0001535527-24-000123",
+        )
+        reg.close()
+
+        from edgarpack.query.kpi_extract import try_extract_kpi
+
+        # Fresh registry reference to pick up the tampered row
+        fresh_pack_reg = PackRegistry(db_path=self.registry_db)
+        try:
+            cited = try_extract_kpi(
+                metric="arr",
+                cik="0001535527",
+                company="CrowdStrike Holdings, Inc.",
+                period="lfy",
+                registry_path=self.registry_db,
+                pack_registry=fresh_pack_reg,
+            )
+        finally:
+            fresh_pack_reg.close()
+
+        # Must not crash. Should return the cached value with sentinel dates.
+        self.assertIsNotNone(cited)
+        assert cited is not None
+        self.assertEqual(cited.source, "learned:kpi-cached")
+        self.assertEqual(cited.fiscal_year, 0)
+        # filed should be the sentinel date.min
+
+    def test_cache_hit_returns_none_on_corrupt_manifest(self) -> None:
+        """A cache hit with a corrupt manifest.json must return None, not
+        propagate a JSONDecodeError or leave hit_count inflated."""
+        self._build_pack()
+
+        # Corrupt the manifest
+        (self.pack_dir / "manifest.json").write_text(
+            "{not valid json at all",
+            encoding="utf-8",
+        )
+
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        from edgarpack.query.learned_registry import LearnedRegistry
+        reg = LearnedRegistry(db_path=self.registry_db)
+        reg.upsert(
+            cik="0001535527", metric="arr",
+            concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=True,
+            verif_method="prior_filing_crosscheck", value_sample=3.44e9,
+            accession="0001535527-24-000123",
+        )
+        reg.close()
+
+        cited = try_extract_kpi(
+            metric="arr",
+            cik="0001535527",
+            company="CrowdStrike Holdings, Inc.",
+            period="lfy",
+            registry_path=self.registry_db,
+            pack_registry=self.pack_registry,
+        )
+
+        # Must return None (graceful failure), not crash
+        self.assertIsNone(cited)
+
+        # Hit count should NOT have been bumped (Fix 3)
+        reg = LearnedRegistry(db_path=self.registry_db)
+        row = reg.lookup("0001535527", "arr",
+                          accession="0001535527-24-000123")
+        reg.close()
+        self.assertIsNotNone(row)
+        assert row is not None
+        self.assertEqual(row.hit_count, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
