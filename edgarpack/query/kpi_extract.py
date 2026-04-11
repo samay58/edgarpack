@@ -37,6 +37,8 @@ from datetime import date as _date
 from pathlib import Path
 
 from ..harvest.registry import PackRecord, PackRegistry
+from .learned_registry import LearnedRegistry
+from .models import CitedValue
 
 
 @dataclass(frozen=True)
@@ -545,9 +547,7 @@ def _build_cited_from_extraction(
     pack_record: PackRecord,
     pack_manifest: dict,
     primary_document: str,
-) -> "CitedValue":
-    from .models import CitedValue
-
+) -> CitedValue:
     filing = pack_manifest.get("filing", {})
 
     filing_date_str = str(filing.get("filing_date", pack_record.filing_date))
@@ -557,7 +557,10 @@ def _build_cited_from_extraction(
         filed = _date.min
 
     fiscal_year = filed.year if filed != _date.min else 0
-    fiscal_period = "FY" if pack_record.form_type.startswith("10-K") else "Q"
+    # Layer B v2 only extracts from 10-Ks in practice, but guard against
+    # the non-10-K case with an empty string sentinel rather than an
+    # invalid "Q" placeholder (spec expects FY/Q1/Q2/Q3/Q4).
+    fiscal_period = "FY" if pack_record.form_type.startswith("10-K") else ""
 
     concept = kpi_def.phrases[0] if kpi_def.phrases else metric
 
@@ -566,7 +569,13 @@ def _build_cited_from_extraction(
         unit=str(response.get("unit") or kpi_def.unit_hint),
         metric=metric,
         concept=concept,
-        period_end=filed,
+        # Sentinel: pack manifest doesn't carry period_of_report in v2, so we
+        # can't reliably set period_end. Using date.min marks it as "unknown"
+        # for downstream consumers rather than silently using the filing date
+        # (which is semantically different from the fiscal period end).
+        # TODO(layer-b): pull period_of_report from the pack manifest once
+        # harvest/runner.py writes it.
+        period_end=_date.min,
         fiscal_year=fiscal_year,
         fiscal_period=fiscal_period,
         form_type=pack_record.form_type,
@@ -578,6 +587,7 @@ def _build_cited_from_extraction(
         primary_document=primary_document,
         fact_id="",
         excerpt_text=str(response.get("excerpt", "")),
+        source="learned:kpi-llm",
     )
 
 
@@ -589,7 +599,9 @@ def _verify_against_prior_filing(
     registry: PackRegistry,
     registry_path: Path | None,
 ) -> tuple[bool, str]:
-    from .learned_registry import LearnedRegistry
+    # Lazy import: self_heal imports from concepts, which re-exports
+    # KPI_CATALOG from this module. Top-level import would create
+    # concepts -> kpi_extract -> self_heal -> concepts cycle at import time.
     from .self_heal import verify_order_of_magnitude
 
     all_10k = registry.list_packs(cik=cik, form_type="10-K", limit=10)
@@ -611,7 +623,15 @@ def _verify_against_prior_filing(
     if cached is not None and cached.value_sample is not None:
         prior_value = float(cached.value_sample)
     else:
-        cited = try_extract_kpi(
+        # Forward reference: try_extract_kpi is defined in Task 11. Until
+        # Task 11 lands in the same file, this branch can't execute — but
+        # if the LearnedRegistry cache is missing or has value_sample=None,
+        # we'd otherwise NameError at call time. Guard with a module-level
+        # lookup so the fallback is clean.
+        try_extract = globals().get("try_extract_kpi")
+        if try_extract is None:
+            return False, "prior_extract_unavailable"
+        cited = try_extract(
             metric=metric,
             cik=cik,
             company=prior_pack.company_name,

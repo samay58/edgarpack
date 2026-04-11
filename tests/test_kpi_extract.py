@@ -784,6 +784,50 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
         self.assertEqual(cited.fact_id, "")
         self.assertIn("$3.44 billion", cited.excerpt_text)
 
+    def test_source_is_learned_kpi_llm(self) -> None:
+        """Layer B extractions must be tagged source='learned:kpi-llm'
+        so they don't get silently persisted as 'hardcoded' rows."""
+        kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
+        response = {"value": 1000, "unit": "USD",
+                    "excerpt": "ARR of $1,000", "section_id": "s",
+                    "confidence": "high"}
+        pack_record = PackRecord(
+            accession="A-1", cik="C-1", ticker="X", company_name="X",
+            form_type="10-K", filing_date="2024-03-07",
+            sections_count=0, tokens_total=0, pack_dir="/tmp",
+            built_at="2024-03-08T00:00:00+00:00",
+        )
+        manifest = {"filing": {"filing_date": "2024-03-07"}}
+        cited = _build_cited_from_extraction(
+            response=response, metric="arr", kpi_def=kpi,
+            pack_record=pack_record, pack_manifest=manifest,
+            primary_document="doc.htm",
+        )
+        self.assertEqual(cited.source, "learned:kpi-llm")
+
+    def test_period_end_is_sentinel_not_filing_date(self) -> None:
+        """period_end should be date.min (unknown) rather than the filing
+        date, which is semantically different from the fiscal period end."""
+        kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
+        response = {"value": 1000, "unit": "USD",
+                    "excerpt": "ARR of $1,000", "section_id": "s",
+                    "confidence": "high"}
+        pack_record = PackRecord(
+            accession="A-1", cik="C-1", ticker="X", company_name="X",
+            form_type="10-K", filing_date="2024-03-07",
+            sections_count=0, tokens_total=0, pack_dir="/tmp",
+            built_at="2024-03-08T00:00:00+00:00",
+        )
+        manifest = {"filing": {"filing_date": "2024-03-07"}}
+        cited = _build_cited_from_extraction(
+            response=response, metric="arr", kpi_def=kpi,
+            pack_record=pack_record, pack_manifest=manifest,
+            primary_document="doc.htm",
+        )
+        self.assertEqual(cited.period_end, date.min)
+        # filed should still be the parsed filing date
+        self.assertEqual(cited.filed, date(2024, 3, 7))
+
     def test_document_url_uses_excerpt(self) -> None:
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
         response = {
