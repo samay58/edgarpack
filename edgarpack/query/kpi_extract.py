@@ -49,6 +49,87 @@ class KpiDef:
     description: str = ""
 
 
+import json
+from pathlib import Path
+
+from ..harvest.registry import PackRecord, PackRegistry
+
+
+def _load_pack_manifest(pack_dir: Path) -> dict:
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(
+            f"No manifest.json at {manifest_path}. Pack may be incomplete."
+        )
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+
+_PERIOD_TO_FORM: dict[str, str] = {
+    "lfy": "10-K",
+    "mrq": "10-Q",
+}
+
+
+def _resolve_filing_for_period(
+    cik: str,
+    period: str,
+    registry: PackRegistry,
+) -> PackRecord | None:
+    """Given a period selector, find the pack that represents it.
+
+    Period semantics:
+      lfy              -> most recent 10-K
+      mrq              -> most recent 10-Q
+      mrp / ltm        -> most recent 10-K OR 10-Q by filing_date
+      annual:N         -> Nth most recent 10-K (N is 1-indexed)
+      quarterly:N      -> Nth most recent 10-Q (N is 1-indexed)
+
+    Returns None if the required pack does not exist in the registry.
+    """
+    p = period.strip().lower()
+
+    if p in ("lfy", "mrq"):
+        form = _PERIOD_TO_FORM[p]
+        packs = registry.list_packs(cik=cik, form_type=form, limit=5)
+        return packs[0] if packs else None
+
+    if p in ("mrp", "ltm"):
+        tens_k = registry.list_packs(cik=cik, form_type="10-K", limit=5)
+        tens_q = registry.list_packs(cik=cik, form_type="10-Q", limit=5)
+        merged = sorted(
+            tens_k + tens_q,
+            key=lambda r: r.filing_date,
+            reverse=True,
+        )
+        return merged[0] if merged else None
+
+    if p.startswith("annual:"):
+        try:
+            n = int(p.split(":", 1)[1])
+        except (ValueError, IndexError):
+            return None
+        if n < 1:
+            return None
+        packs = registry.list_packs(cik=cik, form_type="10-K", limit=max(5, n))
+        if len(packs) < n:
+            return None
+        return packs[n - 1]
+
+    if p.startswith("quarterly:"):
+        try:
+            n = int(p.split(":", 1)[1])
+        except (ValueError, IndexError):
+            return None
+        if n < 1:
+            return None
+        packs = registry.list_packs(cik=cik, form_type="10-Q", limit=max(5, n))
+        if len(packs) < n:
+            return None
+        return packs[n - 1]
+
+    return None
+
+
 KPI_CATALOG: dict[str, KpiDef] = {
     # SaaS / subscription
     "arr": KpiDef(

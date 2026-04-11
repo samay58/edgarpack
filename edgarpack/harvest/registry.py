@@ -153,6 +153,24 @@ class PackRegistry:
         )
         conn.commit()
 
+    def register_pack(self, record: PackRecord) -> None:
+        """Register a PackRecord directly (convenience wrapper around register)."""
+        import json as _json
+        warnings = _json.loads(record.warnings_json) if record.warnings_json else None
+        self.register(
+            accession=record.accession,
+            cik=record.cik,
+            ticker=record.ticker,
+            company_name=record.company_name,
+            form_type=record.form_type,
+            filing_date=record.filing_date,
+            sections_count=record.sections_count,
+            tokens_total=record.tokens_total,
+            pack_dir=record.pack_dir,
+            manifest_hash=record.manifest_hash,
+            warnings=warnings,
+        )
+
     def lookup(self, accession: str) -> PackRecord | None:
         """Look up a pack by accession number."""
         conn = self._get_conn()
