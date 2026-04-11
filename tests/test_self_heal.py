@@ -98,5 +98,37 @@ class TestFuzzyMatch(unittest.TestCase):
             self.assertIn(m, METRIC_HINTS)
 
 
+from edgarpack.query.self_heal import verify_order_of_magnitude
+
+
+class TestVerifyOrderOfMagnitude(unittest.TestCase):
+    def test_exact_match_passes(self) -> None:
+        self.assertTrue(verify_order_of_magnitude(100.0, 100.0))
+
+    def test_within_2x_passes(self) -> None:
+        self.assertTrue(verify_order_of_magnitude(150.0, 100.0))
+        self.assertTrue(verify_order_of_magnitude(70.0, 100.0))
+
+    def test_within_4x_passes(self) -> None:
+        self.assertTrue(verify_order_of_magnitude(399.0, 100.0))
+        self.assertTrue(verify_order_of_magnitude(26.0, 100.0))
+
+    def test_beyond_4x_fails(self) -> None:
+        self.assertFalse(verify_order_of_magnitude(500.0, 100.0))
+        self.assertFalse(verify_order_of_magnitude(20.0, 100.0))
+
+    def test_zero_prior_year_fails(self) -> None:
+        self.assertFalse(verify_order_of_magnitude(100.0, 0.0))
+
+    def test_none_prior_year_fails(self) -> None:
+        self.assertFalse(verify_order_of_magnitude(100.0, None))
+
+    def test_handles_negative_values(self) -> None:
+        # Operating losses: -100 and -150 should pass
+        self.assertTrue(verify_order_of_magnitude(-150.0, -100.0))
+        # Sign flip is suspicious but within 4x magnitude is still accepted
+        self.assertTrue(verify_order_of_magnitude(100.0, -150.0))
+
+
 if __name__ == "__main__":
     unittest.main()

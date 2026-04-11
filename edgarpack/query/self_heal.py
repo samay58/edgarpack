@@ -129,3 +129,29 @@ def _fuzzy_match(
     if best is None or best_score < threshold:
         return None
     return best
+
+
+def verify_order_of_magnitude(
+    proposed_value: float | None,
+    prior_year_value: float | None,
+    min_ratio: float = 0.25,
+    max_ratio: float = 4.0,
+) -> bool:
+    """True when ``proposed_value`` is within [min_ratio, max_ratio] of the prior year.
+
+    Compares absolute values so a sign flip is tolerated as long as the
+    magnitude is in the right ballpark. This is a sanity check, not a
+    correctness proof. Bad concept mappings often return values that are
+    one or two orders of magnitude off (segment pieces, per-share instead
+    of absolute, thousands vs millions, etc.) and this catches them.
+
+    Returns False if there's no prior year to compare against. Callers
+    should treat False as 'unverified', not 'wrong'. The value still gets
+    persisted with verified=0.
+    """
+    if proposed_value is None:
+        return False
+    if prior_year_value is None or prior_year_value == 0:
+        return False
+    ratio = abs(proposed_value) / abs(prior_year_value)
+    return min_ratio <= ratio <= max_ratio
