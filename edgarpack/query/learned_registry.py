@@ -60,6 +60,8 @@ CREATE INDEX IF NOT EXISTS idx_learned_hit_count
 """
 
 _REBUILD_TABLE_SQL = """
+BEGIN;
+
 CREATE TABLE learned_concepts_new (
     cik           TEXT NOT NULL,
     metric        TEXT NOT NULL,
@@ -91,6 +93,8 @@ CREATE INDEX IF NOT EXISTS idx_learned_hit_count
     ON learned_concepts(hit_count DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_learned_cik_accn_metric
     ON learned_concepts(cik, accession, metric);
+
+COMMIT;
 """
 
 

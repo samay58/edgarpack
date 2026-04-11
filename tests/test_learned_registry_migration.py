@@ -15,8 +15,8 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.db_path = Path(self._tmp.name) / "registry.db"
 
-    def _create_v1_schema_with_row(self) -> None:
-        """Write a pre-migration v1 schema + one row, as a v1 installation would."""
+    def _create_pre_migration_schema_with_row(self) -> None:
+        """Write a pre-migration v0 schema + one row (user_version=0), as it would look before any self-heal migration ran."""
         conn = sqlite3.connect(str(self.db_path))
         conn.execute("""
             CREATE TABLE IF NOT EXISTS learned_concepts (
@@ -46,7 +46,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         conn.close()
 
     def test_migration_adds_accession_column(self) -> None:
-        self._create_v1_schema_with_row()
+        self._create_pre_migration_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
         reg = LearnedRegistry(db_path=self.db_path)
@@ -63,7 +63,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         reg.close()
 
     def test_migration_preserves_existing_v1_rows(self) -> None:
-        self._create_v1_schema_with_row()
+        self._create_pre_migration_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
         reg = LearnedRegistry(db_path=self.db_path)
@@ -93,7 +93,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self.assertEqual(row["accession"], "")
 
     def test_migration_is_idempotent(self) -> None:
-        self._create_v1_schema_with_row()
+        self._create_pre_migration_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
         LearnedRegistry(db_path=self.db_path).close()  # first open: migrates
