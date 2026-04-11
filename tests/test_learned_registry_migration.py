@@ -56,9 +56,9 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         cols = [row[1] for row in conn.execute("PRAGMA table_info(learned_concepts)").fetchall()]
         self.assertIn("accession", cols)
 
-        # user_version bumped to 1
+        # user_version bumped to at least 1 (currently 2 after PK rebuild)
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        self.assertEqual(version, 1)
+        self.assertGreaterEqual(version, 1)
         conn.close()
         reg.close()
 
@@ -104,17 +104,17 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         rows = conn.execute("SELECT * FROM learned_concepts").fetchall()
         self.assertEqual(len(rows), 1)
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        self.assertEqual(version, 1)
+        self.assertGreaterEqual(version, 1)
         conn.close()
 
     def test_fresh_install_has_migrated_schema(self) -> None:
-        """A fresh DB (no pre-existing table) should still end up at user_version=1."""
+        """A fresh DB (no pre-existing table) should still end up at user_version=2."""
         from edgarpack.query.learned_registry import LearnedRegistry
         reg = LearnedRegistry(db_path=self.db_path)
 
         conn = sqlite3.connect(str(self.db_path))
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        self.assertEqual(version, 1)
+        self.assertEqual(version, 2)
         cols = [row[1] for row in conn.execute("PRAGMA table_info(learned_concepts)").fetchall()]
         self.assertIn("accession", cols)
         conn.close()
