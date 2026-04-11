@@ -13,6 +13,7 @@ from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
+from . import kpi_extract as _kpi_extract_mod
 from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
 from .models import CitedValue, DerivedValue, QueryResult
@@ -194,14 +195,32 @@ async def financials(
 
     result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
     derived_cache: _DerivedCache = {}
+    diagnostics_list: list[dict[str, str]] = []
 
     for metric in metric_list:
         meta = METRIC_MAP.get(metric)
         if meta is None:
-            # KPI-only metric: in KPI_CATALOG but has no GAAP concept mapping.
-            # Layer B (try_extract_kpi) extracts these from pack prose.
-            # TODO(layer-b): wire try_extract_kpi here.
-            result_metrics[metric] = None
+            # KPI-only metric (in KPI_CATALOG but not METRIC_MAP).
+            # Layer B extracts these from the pack's MD&A/segment sections.
+            cited = _kpi_extract_mod.try_extract_kpi(
+                metric=metric,
+                cik=cik,
+                company=company_name,
+                period=period,
+            )
+            if cited is not None:
+                result_metrics[metric] = cited
+            else:
+                result_metrics[metric] = None
+                diagnostics_list.append({
+                    "metric": metric,
+                    "kind": "layer_b_unresolved",
+                    "message": (
+                        f"Layer B could not resolve '{metric}': no pack, "
+                        f"no LLM backend, or the value was not found in "
+                        f"MD&A/segment sections."
+                    ),
+                })
             continue
 
         if meta.derived:
@@ -292,7 +311,13 @@ async def financials(
     # total liabilities remain correctly reported.
     _check_low_debt(result_metrics, facts, company_name, cik, period, doc_map)
 
-    result = QueryResult(company=company_name, cik=cik, period=period, metrics=result_metrics)
+    result = QueryResult(
+        company=company_name,
+        cik=cik,
+        period=period,
+        metrics=result_metrics,
+        diagnostics=diagnostics_list,
+    )
 
     # Enrich CitedValues with XBRL fact IDs for stable deep-link anchors.
     # One HTTP fetch per unique accession number (cached).

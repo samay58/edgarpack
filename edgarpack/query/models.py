@@ -339,6 +339,10 @@ class QueryResult(BaseModel):
     period: str = "lfy"
     metrics: dict[str, CitedValue | list[CitedValue] | None]  # metric_name -> value(s) or None
 
+    # Self-heal v2: structured diagnostics for Layer B failures.
+    # Each entry is {"metric": str, "kind": str, "message": str}.
+    diagnostics: list[dict[str, str]] = Field(default_factory=list)
+
     @property
     def permalink(self) -> str:
         """CLI command that reproduces this query."""
