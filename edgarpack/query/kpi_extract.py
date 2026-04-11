@@ -77,7 +77,7 @@ KPI_CATALOG: dict[str, KpiDef] = {
         unit_hint="USD",
     ),
     "billings": KpiDef(
-        phrases=("billings", "calculated billings"),
+        phrases=("calculated billings", "total billings", "non-GAAP billings"),
         unit_hint="USD",
     ),
     "subscription_rev": KpiDef(
@@ -89,11 +89,6 @@ KPI_CATALOG: dict[str, KpiDef] = {
                  "customers with ARR over"),
         unit_hint="count",
     ),
-    "magic_number": KpiDef(
-        phrases=("sales efficiency", "magic number"),
-        unit_hint="pure",
-    ),
-
     # Consumer / internet
     "dau": KpiDef(
         phrases=("daily active users", "DAU"),
@@ -143,7 +138,7 @@ KPI_CATALOG: dict[str, KpiDef] = {
     # Retail / consumer goods
     "same_store_sales": KpiDef(
         phrases=("same-store sales", "comparable store sales",
-                 "comparable sales", "comps"),
+                 "comparable sales"),
         unit_hint="percent",
     ),
     "store_count": KpiDef(
