@@ -651,3 +651,210 @@ def _verify_against_prior_filing(
     if verify_order_of_magnitude(current_value, prior_value):
         return True, "prior_filing_crosscheck"
     return False, "prior_filing_crosscheck"
+
+
+def try_extract_kpi(
+    metric: str,
+    cik: str,
+    company: str,
+    period: str,
+    *,
+    registry_path: Path | None = None,
+    pack_registry: PackRegistry | None = None,
+    _verify: bool = True,
+    _override_pack: PackRecord | None = None,
+) -> CitedValue | None:
+    """Layer B entry point. Extracts a KPI from a pack's MD&A/segment sections.
+
+    Returns a CitedValue with source='learned:kpi-llm' (or 'learned:kpi-cached'
+    on a registry hit), or None on any failure path.
+
+    Parameters:
+        metric: canonical metric name (must be in KPI_CATALOG)
+        cik: zero-padded CIK string
+        company: company name (used in the LLM prompt)
+        period: lfy / mrq / mrp / ltm / annual:N / quarterly:N
+        registry_path: path to the learned_concepts registry db (None -> default)
+        pack_registry: PackRegistry instance (None -> new default one)
+        _verify: internal, set to False by recursive prior-filing cross-check
+        _override_pack: internal, set when the caller has already resolved
+                        the prior filing (skips _resolve_filing_for_period)
+    """
+    kpi_def = KPI_CATALOG.get(metric)
+    if kpi_def is None:
+        return None
+
+    own_registry = False
+    if pack_registry is None:
+        pack_registry = PackRegistry()
+        own_registry = True
+
+    try:
+        # 1. Resolve filing
+        if _override_pack is not None:
+            pack_record = _override_pack
+        else:
+            pack_record = _resolve_filing_for_period(cik, period, pack_registry)
+        if pack_record is None:
+            return None
+
+        accession = pack_record.accession
+
+        # 2. Cache check
+        learned_reg = LearnedRegistry(db_path=registry_path)
+        try:
+            cached = learned_reg.lookup(cik=cik, metric=metric, accession=accession)
+            if cached is not None:
+                learned_reg.bump_hit_count(
+                    cik=cik, metric=metric, accession=accession,
+                )
+                # Rebuild CitedValue from cached row + pack manifest
+                pack_dir = Path(pack_record.pack_dir)
+                try:
+                    manifest = _load_pack_manifest(pack_dir)
+                except FileNotFoundError:
+                    return None
+                primary_doc = manifest.get("filing", {}).get(
+                    "primary_document", ""
+                )
+                cited = CitedValue(
+                    value=cached.value_sample,
+                    unit=kpi_def.unit_hint,
+                    metric=metric,
+                    concept=cached.concept,
+                    period_end=_date.min,
+                    fiscal_year=int(pack_record.filing_date[:4])
+                        if pack_record.filing_date else 0,
+                    fiscal_period="FY" if pack_record.form_type.startswith("10-K") else "",
+                    form_type=pack_record.form_type,
+                    filed=_date.fromisoformat(pack_record.filing_date)
+                        if pack_record.filing_date else _date.min,
+                    accession=accession,
+                    cik=cik,
+                    company=pack_record.company_name,
+                    taxonomy=cached.taxonomy,
+                    primary_document=primary_doc,
+                    fact_id="",
+                    source="learned:kpi-cached",
+                )
+                if not cached.verified:
+                    cited.warnings.append(
+                        "Resolved via unverified learned KPI mapping. "
+                        f"Verify manually: edgarpack learned verify {cik} {metric}"
+                    )
+                return cited
+        finally:
+            learned_reg.close()
+
+        # 3. Load pack manifest
+        pack_dir = Path(pack_record.pack_dir)
+        try:
+            manifest = _load_pack_manifest(pack_dir)
+        except FileNotFoundError:
+            return None
+
+        # 4. Select sections
+        sections = manifest.get("sections", [])
+        selected = _select_sections(sections)
+        if not selected:
+            return None
+
+        # 5. Read and trim text
+        raw_text = _read_section_text(pack_dir, selected)
+        if not raw_text:
+            return None
+        text = _trim_to_budget(raw_text)
+
+        # 6. LLM backend check
+        if not _llm_backend_available_kpi():
+            return None
+
+        # 7. Build prompt + extract
+        filing_meta = manifest.get("filing", {})
+        prompt = _build_extraction_prompt(
+            metric=metric,
+            kpi_def=kpi_def,
+            company=filing_meta.get("company_name", company),
+            form_type=filing_meta.get("form_type", pack_record.form_type),
+            filing_date=filing_meta.get("filing_date", pack_record.filing_date),
+            text=text,
+        )
+        response = _extract_via_llm(prompt)
+        if response is None:
+            return None
+
+        confidence = response.get("confidence")
+        if confidence in ("not_found", "ambiguous", "low"):
+            return None
+
+        # 8. Verify excerpt is a substring of the source text
+        excerpt = str(response.get("excerpt", ""))
+        if not _verify_excerpt_in_text(excerpt, text):
+            logger.warning(
+                "Layer B rejected hallucinated excerpt for %s/%s: %s",
+                cik, metric, excerpt[:100],
+            )
+            return None
+
+        # 9. Build CitedValue
+        primary_doc = filing_meta.get("primary_document", "")
+        if not primary_doc:
+            artifacts = manifest.get("artifacts", {})
+            if isinstance(artifacts, dict):
+                for path in artifacts:
+                    if path.endswith(".htm") and "/" not in path:
+                        primary_doc = path
+                        break
+        cited = _build_cited_from_extraction(
+            response=response,
+            metric=metric,
+            kpi_def=kpi_def,
+            pack_record=pack_record,
+            pack_manifest=manifest,
+            primary_document=primary_doc,
+        )
+
+        # 10. Verification (skipped on recursive calls)
+        verified = False
+        verif_method: str | None = None
+        if _verify and isinstance(cited.value, (int, float)):
+            verified, verif_method = _verify_against_prior_filing(
+                current_value=float(cited.value),
+                metric=metric,
+                cik=cik,
+                current_accession=accession,
+                registry=pack_registry,
+                registry_path=registry_path,
+            )
+
+        # 11. Persist
+        learned_reg = LearnedRegistry(db_path=registry_path)
+        try:
+            learned_reg.upsert(
+                cik=cik,
+                metric=metric,
+                concept=cited.concept,
+                taxonomy="kpi-prose",
+                source="kpi-llm",
+                verified=verified,
+                verif_method=verif_method,
+                value_sample=float(cited.value) if isinstance(cited.value, (int, float)) else None,
+                accession=accession,
+            )
+        finally:
+            learned_reg.close()
+
+        cited.source = "learned:kpi-llm"
+        if not verified:
+            reason = {
+                "no_prior_filing": "No prior filing available for cross-check.",
+                "prior_extract_failed": "Prior-filing extraction failed; could not cross-check.",
+                "prior_extract_unavailable": "Prior-filing extractor unavailable at this point in the plan (Task 11 forward reference).",
+                "prior_filing_crosscheck": "Value was outside the expected order of magnitude vs. prior filing.",
+            }.get(verif_method or "", "Unverified learned KPI mapping.")
+            cited.warnings.append(f"Unverified: {reason}")
+
+        return cited
+    finally:
+        if own_registry:
+            pack_registry.close()

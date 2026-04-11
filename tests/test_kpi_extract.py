@@ -936,5 +936,208 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
         self.assertEqual(method, "prior_filing_crosscheck")
 
 
+class TestTryExtractKpi(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.registry_db = Path(self._tmp.name) / "registry.db"
+        self.pack_registry = PackRegistry(db_path=self.registry_db)
+        self.pack_dir = Path(self._tmp.name) / "packs" / "0001535527" / "0001535527-24-000123"
+
+    def _build_pack(self) -> None:
+        _write_manifest(
+            self.pack_dir,
+            sections=[
+                {"id": "10k_parti_item7_mda", "path": "sections/mda.md",
+                 "title": "MD&A", "char_start": 0, "char_end": 1000,
+                 "tokens_approx": 100, "sha256": "abc"}
+            ],
+        )
+        (self.pack_dir / "sections").mkdir(exist_ok=True)
+        (self.pack_dir / "sections" / "mda.md").write_text(
+            "Annual recurring revenue of $3.44 billion at fiscal year end.",
+            encoding="utf-8",
+        )
+        self.pack_registry.register_pack(PackRecord(
+            accession="0001535527-24-000123",
+            cik="0001535527",
+            ticker="CRWD",
+            company_name="CrowdStrike Holdings, Inc.",
+            form_type="10-K",
+            filing_date="2024-03-07",
+            sections_count=1,
+            tokens_total=100,
+            pack_dir=str(self.pack_dir),
+            built_at=datetime.now(UTC).isoformat(),
+        ))
+
+    def test_returns_none_for_metric_not_in_catalog(self) -> None:
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        result = try_extract_kpi(
+            metric="not_a_kpi",
+            cik="0001535527",
+            company="CRWD",
+            period="lfy",
+            registry_path=self.registry_db,
+            pack_registry=self.pack_registry,
+        )
+        self.assertIsNone(result)
+
+    def test_returns_none_when_no_pack(self) -> None:
+        """No pack registered -> None (caller renders diagnostic)."""
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        result = try_extract_kpi(
+            metric="arr",
+            cik="9999999",
+            company="Nobody",
+            period="lfy",
+            registry_path=self.registry_db,
+            pack_registry=self.pack_registry,
+        )
+        self.assertIsNone(result)
+
+    def test_successful_extraction_returns_cited_value(self) -> None:
+        from unittest.mock import patch as _patch
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        self._build_pack()
+
+        fake_response = _json.dumps({
+            "value": 3_440_000_000,
+            "unit": "USD",
+            "excerpt": "Annual recurring revenue of $3.44 billion",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake_response
+            stderr = ""
+            returncode = 0
+
+        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            cited = try_extract_kpi(
+                metric="arr",
+                cik="0001535527",
+                company="CrowdStrike Holdings, Inc.",
+                period="lfy",
+                registry_path=self.registry_db,
+                pack_registry=self.pack_registry,
+            )
+
+        self.assertIsNotNone(cited)
+        assert cited is not None
+        self.assertEqual(cited.value, 3_440_000_000)
+        self.assertEqual(cited.source, "learned:kpi-llm")
+        self.assertEqual(cited.metric, "arr")
+        self.assertEqual(cited.accession, "0001535527-24-000123")
+
+        # Row persisted to learned_concepts
+        from edgarpack.query.learned_registry import LearnedRegistry
+        reg = LearnedRegistry(db_path=self.registry_db)
+        row = reg.lookup("0001535527", "arr",
+                          accession="0001535527-24-000123")
+        self.assertIsNotNone(row)
+        reg.close()
+
+    def test_second_call_hits_cache(self) -> None:
+        """Second call with the same args should not touch the LLM at all."""
+        from unittest.mock import patch as _patch
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        self._build_pack()
+
+        # Seed the registry with the expected result
+        from edgarpack.query.learned_registry import LearnedRegistry
+        reg = LearnedRegistry(db_path=self.registry_db)
+        reg.upsert(
+            cik="0001535527", metric="arr",
+            concept="annual recurring revenue",
+            taxonomy="kpi-prose", source="kpi-llm", verified=True,
+            verif_method="prior_filing_crosscheck", value_sample=3.44e9,
+            accession="0001535527-24-000123",
+        )
+        reg.close()
+
+        # Patch subprocess to blow up if called; cache hit means no call
+        with _patch("edgarpack.query.kpi_extract.subprocess.run",
+                    side_effect=AssertionError("should not be called")):
+            cited = try_extract_kpi(
+                metric="arr",
+                cik="0001535527",
+                company="CrowdStrike Holdings, Inc.",
+                period="lfy",
+                registry_path=self.registry_db,
+                pack_registry=self.pack_registry,
+            )
+
+        self.assertIsNotNone(cited)
+        assert cited is not None
+        self.assertEqual(cited.source, "learned:kpi-cached")
+
+    def test_llm_returns_not_found_returns_none_without_cache(self) -> None:
+        from unittest.mock import patch as _patch
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        self._build_pack()
+
+        fake_response = _json.dumps({
+            "value": None, "unit": None, "excerpt": "",
+            "section_id": "", "confidence": "not_found",
+        })
+
+        class _Fake:
+            stdout = fake_response
+            stderr = ""
+            returncode = 0
+
+        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            cited = try_extract_kpi(
+                metric="arr",
+                cik="0001535527",
+                company="CrowdStrike Holdings, Inc.",
+                period="lfy",
+                registry_path=self.registry_db,
+                pack_registry=self.pack_registry,
+            )
+
+        self.assertIsNone(cited)
+        from edgarpack.query.learned_registry import LearnedRegistry
+        reg = LearnedRegistry(db_path=self.registry_db)
+        row = reg.lookup("0001535527", "arr", accession="0001535527-24-000123")
+        self.assertIsNone(row)
+        reg.close()
+
+    def test_hallucinated_excerpt_is_rejected(self) -> None:
+        from unittest.mock import patch as _patch
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        self._build_pack()
+
+        fake_response = _json.dumps({
+            "value": 99_999_999_999,  # nonsense number
+            "unit": "USD",
+            "excerpt": "This sentence is not in the source text at all",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake_response
+            stderr = ""
+            returncode = 0
+
+        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            cited = try_extract_kpi(
+                metric="arr",
+                cik="0001535527",
+                company="CrowdStrike Holdings, Inc.",
+                period="lfy",
+                registry_path=self.registry_db,
+                pack_registry=self.pack_registry,
+            )
+
+        self.assertIsNone(cited)
+
+
 if __name__ == "__main__":
     unittest.main()
