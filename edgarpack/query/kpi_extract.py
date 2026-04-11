@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import re
 import shutil
 import subprocess
@@ -254,6 +255,8 @@ KPI_CATALOG: dict[str, KpiDef] = {
 
 logger = logging.getLogger(__name__)
 
+_VALID_LLM_UNITS: frozenset[str] = frozenset({"USD", "count", "percent", "days", "pure"})
+
 _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"^10k_parti_item7(?=_|$)"),   # MD&A (10-K)
     re.compile(r"^10k_parti_item7a(?=_|$)"),  # Quant/Qual market risk
@@ -368,7 +371,12 @@ def _build_extraction_prompt(
         "or a labeled table row. Forward-looking targets, ranges, and "
         "competitor figures do not count.\n"
         f"3. The value's unit must match the hint ({kpi_def.unit_hint}). "
-        "If the text reports a different unit, normalize or return not_found.\n"
+        "Return the number in base units: for USD, raw dollars (not "
+        "millions or billions; $3.44 billion -> 3440000000). For count, "
+        "individual units (not thousands; 50,000 users -> 50000). For "
+        "percent, a whole percentage point (95% NRR -> 95.0, not 0.95). "
+        "If the text reports a different unit that cannot be normalized, "
+        "return not_found.\n"
         "4. The excerpt must be a verbatim substring of the text. "
         "No paraphrasing.\n"
         "5. If multiple candidate values exist (e.g. historical AND current), "
@@ -444,7 +452,11 @@ def _extract_via_llm(prompt: str) -> dict | None:
 
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    if not isinstance(unit, str) or not unit:
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if value < 0:
+        return None
+    if not isinstance(unit, str) or unit not in _VALID_LLM_UNITS:
         return None
     if not isinstance(excerpt, str) or not excerpt.strip():
         return None

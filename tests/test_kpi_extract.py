@@ -404,6 +404,23 @@ class TestBuildExtractionPrompt(unittest.TestCase):
         )
         self.assertIn("percent", prompt)
 
+    def test_prompt_with_real_catalog_entry(self) -> None:
+        """Prompt builds correctly from a real KPI_CATALOG entry."""
+        kpi = KPI_CATALOG["arr"]
+        prompt = _build_extraction_prompt(
+            metric="arr", kpi_def=kpi,
+            company="CrowdStrike", form_type="10-K",
+            filing_date="2024-03-07",
+            text="Our ARR was $3.44 billion at year end.",
+        )
+        # All canonical phrases from the catalog appear in the prompt
+        for phrase in kpi.phrases:
+            self.assertIn(phrase, prompt)
+        self.assertIn("USD", prompt)
+        self.assertIn("CrowdStrike", prompt)
+        # Prompt stays under LLM context budget (prompt + 60K text budget)
+        self.assertLess(len(prompt), 80_000)
+
 
 class TestExtractViaLlm(unittest.TestCase):
     def test_returns_none_without_backend(self) -> None:
@@ -552,6 +569,66 @@ class TestExtractViaLlm(unittest.TestCase):
             "unit": "USD",
             "excerpt": "Annual recurring revenue of $3.44 billion",
             "section_id": "",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_rejects_nan_value(self) -> None:
+        import json as _j
+        fake = _j.dumps({
+            "value": float("nan"),
+            "unit": "USD",
+            "excerpt": "Revenue of NaN",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_rejects_negative_value(self) -> None:
+        import json as _j
+        fake = _j.dumps({
+            "value": -3440000000,
+            "unit": "USD",
+            "excerpt": "ARR was minus something",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_rejects_unit_not_in_enum(self) -> None:
+        import json as _j
+        fake = _j.dumps({
+            "value": 3440000000,
+            "unit": "dollars",  # not in _VALID_LLM_UNITS
+            "excerpt": "ARR of $3.44 billion",
+            "section_id": "10k_parti_item7_mda",
             "confidence": "high",
         })
 
