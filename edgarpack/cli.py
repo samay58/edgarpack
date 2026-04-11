@@ -563,6 +563,9 @@ def _render_query_table(result: Any, args: Any) -> str:
     width = shutil.get_terminal_size((120, 20)).columns
     lines: list[str] = [f"{result.company} (CIK: {result.cik})", ""]
 
+    strict = bool(getattr(args, "strict", False))
+    strict_rejected: list[str] = []
+
     for metric_name, raw_value in result.metrics.items():
         label = metric_name.replace("_", " ").title()
         lean_value = metrics_lean.get(metric_name)
@@ -570,6 +573,31 @@ def _render_query_table(result: Any, args: Any) -> str:
         if raw_value is None:
             lines.append(f"{label}: N/A")
             continue
+
+        # Self-heal source handling
+        def _source_of(v: Any) -> str:
+            return getattr(v, "source", "hardcoded")
+
+        scalar_source = (
+            _source_of(raw_value[0]) if isinstance(raw_value, list) and raw_value
+            else _source_of(raw_value)
+        )
+
+        if strict and scalar_source != "hardcoded":
+            lines.append(f"{label}: N/A [strict]")
+            strict_rejected.append(metric_name)
+            continue
+
+        def _source_badge(v: Any) -> str:
+            src = _source_of(v)
+            if src == "hardcoded":
+                return ""
+            mark = "✓"
+            for w in getattr(v, "warnings", []):
+                if "unverified" in w.lower():
+                    mark = "⚠"
+                    break
+            return f" [{src} {mark}]"
 
         if isinstance(raw_value, list):
             lines.append(f"{label}:")
@@ -613,7 +641,8 @@ def _render_query_table(result: Any, args: Any) -> str:
             elif isinstance(citation_ids, list) and citation_ids:
                 marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
 
-        lines.append(f"{label}: {_format_value(raw_value)}{marker}")
+        source_badge = _source_badge(raw_value)
+        lines.append(f"{label}: {_format_value(raw_value)}{marker}{source_badge}")
 
         warnings = payload.get("warnings", []) if isinstance(payload, dict) else []
         if isinstance(warnings, list):
@@ -746,6 +775,15 @@ def _render_query_table(result: Any, args: Any) -> str:
                         indent="         ",
                     )
                 )
+
+    if strict_rejected:
+        lines.append("")
+        lines.append(
+            f"Strict mode: rejected learned values for: {', '.join(strict_rejected)}"
+        )
+        lines.append(
+            "Use `edgarpack learned list` to inspect, or re-run without --strict."
+        )
 
     if isinstance(permalink, str) and permalink:
         lines.append("")
