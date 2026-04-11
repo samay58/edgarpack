@@ -196,5 +196,35 @@ class TestLearnedSubcommand(unittest.TestCase):
                 self.assertIn("refusing", stderr.getvalue().lower())
 
 
+class TestDiagnosticsFooter(unittest.TestCase):
+    def test_diagnostics_rendered_as_footer(self) -> None:
+        from edgarpack.query.models import Diagnostic
+        qr = QueryResult(
+            company="CRWD",
+            cik="0001535527",
+            period="lfy",
+            metrics={"arr": None},
+            diagnostics=[
+                Diagnostic(
+                    metric="arr",
+                    kind="layer_b_unresolved",
+                    message="Layer B could not resolve 'arr': no pack.",
+                )
+            ],
+        )
+        out = _render_query_table(qr, _args())
+        self.assertIn("Diagnostics:", out)
+        self.assertIn("arr:", out)
+        self.assertIn("Layer B could not resolve", out)
+
+    def test_no_diagnostics_no_footer(self) -> None:
+        qr = QueryResult(
+            company="CRWD", cik="0001535527", period="lfy",
+            metrics={"revenue": _cited("revenue", "Revenues", 5e9)},
+        )
+        out = _render_query_table(qr, _args())
+        self.assertNotIn("Diagnostics:", out)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -329,7 +329,7 @@ def main(argv: list[str] | None = None) -> int:
     p_learned_list.add_argument("--metric", help="Filter by metric name")
     p_learned_list.add_argument(
         "--source",
-        choices=["fuzzy", "llm", "user"],
+        choices=["fuzzy", "llm", "user", "kpi-llm"],
         help="Filter by source mechanism",
     )
     p_learned_list.add_argument(
@@ -823,6 +823,22 @@ def _render_query_table(result: Any, args: Any) -> str:
                         indent="         ",
                     )
                 )
+
+    diagnostics = getattr(result, "diagnostics", [])
+    if diagnostics:
+        lines.append("")
+        lines.append("Diagnostics:")
+        for diag in diagnostics:
+            # diag is a Diagnostic dataclass (Task 12), not a dict
+            metric_name = getattr(diag, "metric", "?")
+            message = getattr(diag, "message", "")
+            lines.extend(
+                _wrap_cli_text(
+                    f"  {metric_name}: {message}",
+                    width,
+                    indent="    ",
+                )
+            )
 
     if strict_rejected:
         lines.append("")
