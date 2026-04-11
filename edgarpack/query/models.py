@@ -44,6 +44,11 @@ class CitedValue(BaseModel):
     fact_id: str = ""
     warnings: list[str] = Field(default_factory=list)
 
+    # Self-heal provenance. 'hardcoded' for values resolved through METRIC_MAP.
+    # 'learned:cached' for registry hits. 'learned:fuzzy', 'learned:llm', or
+    # 'learned:user' for first-time discoveries that got persisted.
+    source: str = "hardcoded"
+
     @property
     def filing_url(self) -> str:
         acc_nodash = self.accession.replace("-", "")
@@ -204,6 +209,10 @@ class CitedValue(BaseModel):
             d["document_url"] = self.document_url
         if self.anchor_url and self.anchor_url != self.document_url:
             d["anchor_url"] = self.anchor_url
+        # Only surface source when it's not the default, to avoid polluting
+        # existing JSON consumers that don't know about this field.
+        if self.source == "hardcoded":
+            d.pop("source", None)
         return d
 
     def _period_str(self) -> str:
@@ -230,6 +239,8 @@ class CitedValue(BaseModel):
             d["concept_url"] = self.concept_url
         if self.warnings:
             d["warnings"] = list(self.warnings)
+        if self.source != "hardcoded":
+            d["source"] = self.source
         return d
 
 

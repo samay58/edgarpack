@@ -168,6 +168,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Citation placement in table output (default: inline)",
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
+    p_query.add_argument(
+        "--strict",
+        action="store_true",
+        help="Reject values resolved via the self-heal path (learned mappings). "
+             "Only hardcoded METRIC_MAP resolutions are returned.",
+    )
 
     p_harvest = sub.add_parser(
         "harvest",
@@ -312,6 +318,46 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_comps.add_argument("--force", action="store_true", help="Bypass cache")
 
+    p_learned = sub.add_parser(
+        "learned",
+        help="Inspect or manage the self-heal learned_concepts registry",
+    )
+    learned_sub = p_learned.add_subparsers(dest="learned_cmd", required=True)
+
+    p_learned_list = learned_sub.add_parser("list", help="List learned mappings")
+    p_learned_list.add_argument("--cik", help="Filter by CIK")
+    p_learned_list.add_argument("--metric", help="Filter by metric name")
+    p_learned_list.add_argument(
+        "--source",
+        choices=["fuzzy", "llm", "user"],
+        help="Filter by source mechanism",
+    )
+    p_learned_list.add_argument(
+        "--unverified",
+        action="store_true",
+        help="Show only unverified mappings",
+    )
+
+    p_learned_show = learned_sub.add_parser("show", help="Show one mapping")
+    p_learned_show.add_argument("cik")
+    p_learned_show.add_argument("metric")
+
+    p_learned_verify = learned_sub.add_parser(
+        "verify",
+        help="Promote an unverified mapping to verified",
+    )
+    p_learned_verify.add_argument("cik")
+    p_learned_verify.add_argument("metric")
+
+    p_learned_clear = learned_sub.add_parser("clear", help="Delete mappings")
+    p_learned_clear.add_argument("--cik")
+    p_learned_clear.add_argument("--metric")
+    p_learned_clear.add_argument(
+        "--all",
+        action="store_true",
+        help="Clear everything (required if no filter is provided)",
+    )
+
     args = parser.parse_args(argv)
 
     if args.cmd == "build":
@@ -340,6 +386,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_search(args)
     if args.cmd == "index":
         return _cmd_index(args)
+    if args.cmd == "learned":
+        return _cmd_learned(args)
 
     parser.print_help()
     return 2
@@ -563,6 +611,9 @@ def _render_query_table(result: Any, args: Any) -> str:
     width = shutil.get_terminal_size((120, 20)).columns
     lines: list[str] = [f"{result.company} (CIK: {result.cik})", ""]
 
+    strict = bool(getattr(args, "strict", False))
+    strict_rejected: list[str] = []
+
     for metric_name, raw_value in result.metrics.items():
         label = metric_name.replace("_", " ").title()
         lean_value = metrics_lean.get(metric_name)
@@ -570,6 +621,31 @@ def _render_query_table(result: Any, args: Any) -> str:
         if raw_value is None:
             lines.append(f"{label}: N/A")
             continue
+
+        # Self-heal source handling
+        def _source_of(v: Any) -> str:
+            return getattr(v, "source", "hardcoded")
+
+        scalar_source = (
+            _source_of(raw_value[0]) if isinstance(raw_value, list) and raw_value
+            else _source_of(raw_value)
+        )
+
+        if strict and scalar_source != "hardcoded":
+            lines.append(f"{label}: N/A [strict]")
+            strict_rejected.append(metric_name)
+            continue
+
+        def _source_badge(v: Any) -> str:
+            src = _source_of(v)
+            if src == "hardcoded":
+                return ""
+            mark = "✓"
+            for w in getattr(v, "warnings", []):
+                if "unverified" in w.lower():
+                    mark = "⚠"
+                    break
+            return f" [{src} {mark}]"
 
         if isinstance(raw_value, list):
             lines.append(f"{label}:")
@@ -613,7 +689,8 @@ def _render_query_table(result: Any, args: Any) -> str:
             elif isinstance(citation_ids, list) and citation_ids:
                 marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
 
-        lines.append(f"{label}: {_format_value(raw_value)}{marker}")
+        source_badge = _source_badge(raw_value)
+        lines.append(f"{label}: {_format_value(raw_value)}{marker}{source_badge}")
 
         warnings = payload.get("warnings", []) if isinstance(payload, dict) else []
         if isinstance(warnings, list):
@@ -747,6 +824,15 @@ def _render_query_table(result: Any, args: Any) -> str:
                     )
                 )
 
+    if strict_rejected:
+        lines.append("")
+        lines.append(
+            f"Strict mode: rejected learned values for: {', '.join(strict_rejected)}"
+        )
+        lines.append(
+            "Use `edgarpack learned list` to inspect, or re-run without --strict."
+        )
+
     if isinstance(permalink, str) and permalink:
         lines.append("")
         lines.extend(_wrap_cli_text(f"Reproduce: {permalink}", width, indent="           "))
@@ -757,6 +843,7 @@ def _render_query_table(result: Any, args: Any) -> str:
 def _cmd_query(args: Any) -> int:
     async def _run() -> int:
         from .query.financials import financials
+        from .query.layer_zero import MetricNotFound
 
         try:
             result = await financials(
@@ -765,6 +852,11 @@ def _cmd_query(args: Any) -> int:
                 period=args.period,
                 force=bool(args.force),
             )
+        except MetricNotFound as e:
+            # e's __str__ already includes 'Did you mean: ...' when suggestions
+            # are populated. Don't duplicate it.
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
@@ -1084,6 +1176,77 @@ def _cmd_index(args: Any) -> int:
     registry.close()
     index.close()
     return 0
+
+
+def _cmd_learned(args: Any) -> int:
+    """Inspect or manage the self-heal learned_concepts registry."""
+    from .query.learned_registry import LearnedRegistry
+
+    reg = LearnedRegistry()
+    try:
+        sub_cmd = args.learned_cmd
+        if sub_cmd == "list":
+            rows = reg.list_rows(
+                cik=args.cik,
+                metric=args.metric,
+                source=args.source,
+                only_unverified=bool(args.unverified),
+            )
+            if not rows:
+                print("no learned mappings")
+                return 0
+            print(
+                f"{'CIK':<12} {'METRIC':<24} {'CONCEPT':<40} "
+                f"{'SRC':<6} {'V':<2} HITS LEARNED_AT"
+            )
+            for r in rows:
+                mark = "✓" if r.verified else "⚠"
+                print(
+                    f"{r.cik:<12} {r.metric:<24} {r.concept:<40} "
+                    f"{r.source:<6} {mark:<2} {r.hit_count:<4} {r.learned_at}"
+                )
+            return 0
+
+        if sub_cmd == "show":
+            row = reg.lookup(args.cik, args.metric)
+            if row is None:
+                print(f"no mapping for ({args.cik}, {args.metric})", file=sys.stderr)
+                return 1
+            print(f"CIK:          {row.cik}")
+            print(f"Metric:       {row.metric}")
+            print(f"Concept:      {row.concept}")
+            print(f"Taxonomy:     {row.taxonomy}")
+            print(f"Source:       {row.source}")
+            print(f"Verified:     {row.verified}")
+            print(f"Verif method: {row.verif_method or '-'}")
+            print(f"Value sample: {row.value_sample}")
+            print(f"Learned at:   {row.learned_at}")
+            print(f"Hit count:    {row.hit_count}")
+            return 0
+
+        if sub_cmd == "verify":
+            if reg.lookup(args.cik, args.metric) is None:
+                print(f"no mapping for ({args.cik}, {args.metric})", file=sys.stderr)
+                return 1
+            reg.verify_row(args.cik, args.metric)
+            print(f"verified: ({args.cik}, {args.metric})")
+            return 0
+
+        if sub_cmd == "clear":
+            try:
+                removed = reg.clear(
+                    cik=args.cik, metric=args.metric, all=bool(args.all),
+                )
+            except ValueError as e:
+                print(f"Error: {e}", file=sys.stderr)
+                return 2
+            print(f"removed {removed} row(s)")
+            return 0
+
+        print(f"Unknown learned subcommand: {sub_cmd}", file=sys.stderr)
+        return 2
+    finally:
+        reg.close()
 
 
 if __name__ == "__main__":

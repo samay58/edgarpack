@@ -10,6 +10,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+# Re-export Layer 0 helpers for callers that only import from concepts.
+from .layer_zero import METRIC_ALIASES, MetricNotFound, resolve_alias, suggest_metrics
+
+__all__ = [
+    "METRIC_ALIASES",
+    "MetricNotFound",
+    "resolve_alias",
+    "suggest_metrics",
+    "METRIC_MAP",
+    "ALL_METRICS",
+    "MetricMeta",
+    "resolve_concept",
+    "get_metric_meta",
+    "get_scope_warning",
+]
+
 
 @dataclass(frozen=True)
 class MetricMeta:
