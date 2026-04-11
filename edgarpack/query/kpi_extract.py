@@ -464,3 +464,25 @@ def _extract_via_llm(prompt: str) -> dict | None:
         return None
 
     return parsed
+
+
+_WS_RUN = re.compile(r"\s+")
+
+
+def _verify_excerpt_in_text(excerpt: str, source_text: str) -> bool:
+    """True when ``excerpt`` is a substring of ``source_text``.
+
+    Whitespace is collapsed to single spaces on both sides before the
+    comparison. Case-insensitive. Empty excerpt or source returns False.
+
+    This is the hallucination firewall: an LLM cannot invent values that
+    weren't in the source text if we reject any response whose excerpt
+    fails this check.
+    """
+    if not excerpt or not source_text:
+        return False
+    norm_excerpt = _WS_RUN.sub(" ", excerpt).strip().lower()
+    norm_source = _WS_RUN.sub(" ", source_text).strip().lower()
+    if not norm_excerpt:
+        return False
+    return norm_excerpt in norm_source

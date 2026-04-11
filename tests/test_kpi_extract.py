@@ -643,5 +643,36 @@ class TestExtractViaLlm(unittest.TestCase):
             self.assertIsNone(_extract_via_llm("prompt"))
 
 
+from edgarpack.query.kpi_extract import _verify_excerpt_in_text
+
+
+class TestVerifyExcerptInText(unittest.TestCase):
+    def test_exact_substring_passes(self) -> None:
+        text = "CrowdStrike reported Annual Recurring Revenue of $3.44 billion at year end."
+        excerpt = "Annual Recurring Revenue of $3.44 billion"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text))
+
+    def test_whitespace_normalized(self) -> None:
+        text = "ARR of  $3.44  billion  \n at year end."
+        excerpt = "ARR of $3.44 billion"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text))
+
+    def test_hallucinated_excerpt_fails(self) -> None:
+        text = "CrowdStrike reported $3.44 billion at year end."
+        excerpt = "ARR was $3.44 billion, a 30 percent increase year over year"
+        self.assertFalse(_verify_excerpt_in_text(excerpt, text))
+
+    def test_empty_excerpt_fails(self) -> None:
+        self.assertFalse(_verify_excerpt_in_text("", "some text"))
+
+    def test_empty_text_fails(self) -> None:
+        self.assertFalse(_verify_excerpt_in_text("something", ""))
+
+    def test_case_insensitive_match(self) -> None:
+        text = "Annual Recurring Revenue was $3.44 billion."
+        excerpt = "annual recurring revenue was $3.44 billion"
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text))
+
+
 if __name__ == "__main__":
     unittest.main()
