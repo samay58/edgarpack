@@ -355,5 +355,149 @@ class TestTrimToBudget(unittest.TestCase):
         self.assertEqual(trimmed, text)  # unmodified
 
 
+import json as _json
+from unittest.mock import patch
+
+from edgarpack.query.kpi_extract import (
+    _build_extraction_prompt,
+    _extract_via_llm,
+    _llm_backend_available_kpi,
+)
+
+
+class TestBuildExtractionPrompt(unittest.TestCase):
+    def test_prompt_contains_metric_phrases(self) -> None:
+        kpi = KpiDef(
+            phrases=("annual recurring revenue", "ARR"),
+            unit_hint="USD",
+        )
+        prompt = _build_extraction_prompt(
+            metric="arr", kpi_def=kpi,
+            company="CrowdStrike", form_type="10-K",
+            filing_date="2024-03-07",
+            text="MD&A says ARR was $3.44B at year end.",
+        )
+        self.assertIn("annual recurring revenue", prompt)
+        self.assertIn("ARR", prompt)
+        self.assertIn("CrowdStrike", prompt)
+        self.assertIn("10-K", prompt)
+        self.assertIn("2024-03-07", prompt)
+        self.assertIn("MD&A says ARR was $3.44B at year end.", prompt)
+
+    def test_prompt_requests_strict_json(self) -> None:
+        kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
+        prompt = _build_extraction_prompt(
+            metric="arr", kpi_def=kpi,
+            company="X", form_type="10-K", filing_date="2024-01-01",
+            text="text",
+        )
+        self.assertIn("JSON", prompt)
+        self.assertIn("confidence", prompt)
+        self.assertIn("excerpt", prompt)
+
+    def test_prompt_includes_unit_hint(self) -> None:
+        kpi = KpiDef(phrases=("NRR",), unit_hint="percent")
+        prompt = _build_extraction_prompt(
+            metric="nrr", kpi_def=kpi,
+            company="X", form_type="10-K", filing_date="2024-01-01",
+            text="text",
+        )
+        self.assertIn("percent", prompt)
+
+
+class TestExtractViaLlm(unittest.TestCase):
+    def test_returns_none_without_backend(self) -> None:
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", None):
+            result = _extract_via_llm("dummy prompt")
+            self.assertIsNone(result)
+
+    def test_parses_valid_response(self) -> None:
+        fake = _json.dumps({
+            "value": 3440000000,
+            "unit": "USD",
+            "excerpt": "Annual recurring revenue of $3.44 billion",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            result = _extract_via_llm("prompt")
+            self.assertIsNotNone(result)
+            assert result is not None
+            self.assertEqual(result["confidence"], "high")
+            self.assertEqual(result["value"], 3440000000)
+            self.assertEqual(result["unit"], "USD")
+
+    def test_returns_none_on_malformed_json(self) -> None:
+        class _Fake:
+            stdout = "not json at all"
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_returns_none_on_nonzero_exit(self) -> None:
+        class _Fake:
+            stdout = ""
+            stderr = "error"
+            returncode = 1
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_returns_none_on_timeout(self) -> None:
+        import subprocess as _sp
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   side_effect=_sp.TimeoutExpired(cmd="codex", timeout=45)):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_parses_dict_object_field_types(self) -> None:
+        """Reject responses missing required keys or with wrong types."""
+        bad_responses = [
+            {"confidence": "high"},  # missing value/unit/excerpt/section_id
+            {"value": None, "unit": "USD", "excerpt": "x", "section_id": "y",
+             "confidence": "high"},  # value is None but confidence is high
+            {"value": "not a number", "unit": "USD", "excerpt": "x",
+             "section_id": "y", "confidence": "high"},
+        ]
+        for resp in bad_responses:
+            class _Fake:
+                stdout = _json.dumps(resp)
+                stderr = ""
+                returncode = 0
+            with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+                 patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+                self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_passes_through_not_found_confidence(self) -> None:
+        fake = _json.dumps({
+            "value": None, "unit": None, "excerpt": "",
+            "section_id": "", "confidence": "not_found",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            result = _extract_via_llm("prompt")
+            self.assertIsNotNone(result)
+            assert result is not None
+            self.assertEqual(result["confidence"], "not_found")
+
+
 if __name__ == "__main__":
     unittest.main()

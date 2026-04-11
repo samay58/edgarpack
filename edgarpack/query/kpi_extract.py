@@ -28,6 +28,8 @@ from __future__ import annotations
 import json
 import logging
 import re
+import shutil
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -324,3 +326,129 @@ def _trim_to_budget(text: str, max_chars: int = _DEFAULT_MAX_CHARS) -> str:
         return text
     head = text[: max_chars - 100]
     return f"{head}\n\n[truncated at {max_chars} chars]"
+
+
+# Module-level LLM backend detection for Layer B. Separate from Layer A's
+# _LLM_CMD so tests can patch each independently.
+_LLM_CMD_KPI: str | None = None
+for _candidate in ("codex", "claude"):
+    if shutil.which(_candidate):
+        _LLM_CMD_KPI = _candidate
+        break
+
+
+def _llm_backend_available_kpi() -> bool:
+    return _LLM_CMD_KPI is not None
+
+
+_LLM_TIMEOUT_SECONDS_KPI = 45
+
+
+def _build_extraction_prompt(
+    metric: str,
+    kpi_def: KpiDef,
+    company: str,
+    form_type: str,
+    filing_date: str,
+    text: str,
+) -> str:
+    phrases = ", ".join(f'"{p}"' for p in kpi_def.phrases)
+    return (
+        "You are extracting a reported KPI from SEC filing prose. Be "
+        "conservative. Reject ambiguous cases. Never infer or compute; "
+        "only extract values that are stated literally.\n\n"
+        f"Company: {company}\n"
+        f"Filing: {form_type} filed {filing_date}\n"
+        f"Metric: {metric}\n"
+        f"Metric phrases to search for: {phrases}\n"
+        f"Unit hint: {kpi_def.unit_hint}\n\n"
+        "Rules:\n"
+        "1. Search only the text below. Never use outside knowledge.\n"
+        "2. Only return a value if the text states it in unambiguous prose "
+        "or a labeled table row. Forward-looking targets, ranges, and "
+        "competitor figures do not count.\n"
+        f"3. The value's unit must match the hint ({kpi_def.unit_hint}). "
+        "If the text reports a different unit, normalize or return not_found.\n"
+        "4. The excerpt must be a verbatim substring of the text. "
+        "No paraphrasing.\n"
+        "5. If multiple candidate values exist (e.g. historical AND current), "
+        "return the most recent as-of the filing date.\n"
+        "6. If you cannot find the value with high confidence, return "
+        '{"confidence": "not_found", ...} or {"confidence": "ambiguous", ...}.\n\n'
+        "Respond with strict JSON, no prose, no markdown fences:\n"
+        "  {\n"
+        '    "value": <number or null>,\n'
+        '    "unit": "USD" | "count" | "percent" | "days" | "pure" | null,\n'
+        '    "excerpt": "<verbatim substring of the text>",\n'
+        '    "section_id": "<the section ID the excerpt came from>",\n'
+        '    "confidence": "high" | "medium" | "low" | "not_found" | "ambiguous"\n'
+        "  }\n\n"
+        "TEXT:\n"
+        f"{text}\n"
+    )
+
+
+def _extract_via_llm(prompt: str) -> dict | None:
+    if _LLM_CMD_KPI is None:
+        return None
+
+    try:
+        completed = subprocess.run(
+            [_LLM_CMD_KPI, "exec", "--prompt", prompt],
+            capture_output=True,
+            text=True,
+            timeout=_LLM_TIMEOUT_SECONDS_KPI,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        logger.warning("KPI LLM extract failed: %s", e)
+        return None
+
+    if completed.returncode != 0:
+        logger.warning(
+            "KPI LLM extract returned non-zero: %s",
+            (completed.stderr or "")[:200],
+        )
+        return None
+
+    raw = (completed.stdout or "").strip()
+    if not raw:
+        return None
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        match = re.search(r"\{[\s\S]*\}", raw)
+        if not match:
+            return None
+        try:
+            parsed = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+
+    if not isinstance(parsed, dict):
+        return None
+
+    confidence = parsed.get("confidence")
+    if confidence not in ("high", "medium", "low", "not_found", "ambiguous"):
+        return None
+
+    # Low-confidence responses pass through for the caller to use as diagnostics.
+    if confidence in ("not_found", "ambiguous", "low"):
+        return parsed
+
+    # High/medium confidence: require value/unit/excerpt/section_id.
+    value = parsed.get("value")
+    unit = parsed.get("unit")
+    excerpt = parsed.get("excerpt")
+    section_id = parsed.get("section_id")
+
+    if not isinstance(value, (int, float)):
+        return None
+    if not isinstance(unit, str) or not unit:
+        return None
+    if not isinstance(excerpt, str) or not excerpt.strip():
+        return None
+    if not isinstance(section_id, str):
+        return None
+
+    return parsed
