@@ -498,6 +498,73 @@ class TestExtractViaLlm(unittest.TestCase):
             assert result is not None
             self.assertEqual(result["confidence"], "not_found")
 
+    def test_parses_json_wrapped_in_markdown_fences(self) -> None:
+        """If the LLM wraps its response in ```json ... ```, the salvage
+        regex should extract and parse the inner object."""
+        wrapped = (
+            "```json\n"
+            '{"value": 3440000000, "unit": "USD", '
+            '"excerpt": "Annual recurring revenue of $3.44 billion", '
+            '"section_id": "10k_parti_item7_mda", "confidence": "high"}\n'
+            "```"
+        )
+
+        class _Fake:
+            stdout = wrapped
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_Fake):
+            result = _extract_via_llm("prompt")
+            self.assertIsNotNone(result)
+            assert result is not None
+            self.assertEqual(result["value"], 3440000000)
+            self.assertEqual(result["confidence"], "high")
+
+    def test_rejects_bool_value(self) -> None:
+        """bool is a subclass of int in Python; must not pass numeric validation."""
+        import json as _j
+        fake = _j.dumps({
+            "value": True,
+            "unit": "USD",
+            "excerpt": "Revenue",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
+    def test_rejects_empty_section_id(self) -> None:
+        """section_id must be a non-empty string."""
+        import json as _j
+        fake = _j.dumps({
+            "value": 3440000000,
+            "unit": "USD",
+            "excerpt": "Annual recurring revenue of $3.44 billion",
+            "section_id": "",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_Fake):
+            self.assertIsNone(_extract_via_llm("prompt"))
+
 
 if __name__ == "__main__":
     unittest.main()

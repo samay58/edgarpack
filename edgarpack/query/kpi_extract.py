@@ -442,13 +442,13 @@ def _extract_via_llm(prompt: str) -> dict | None:
     excerpt = parsed.get("excerpt")
     section_id = parsed.get("section_id")
 
-    if not isinstance(value, (int, float)):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     if not isinstance(unit, str) or not unit:
         return None
     if not isinstance(excerpt, str) or not excerpt.strip():
         return None
-    if not isinstance(section_id, str):
+    if not isinstance(section_id, str) or not section_id.strip():
         return None
 
     return parsed
