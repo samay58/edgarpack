@@ -106,5 +106,28 @@ class TestRenderQueryTable(unittest.TestCase):
         self.assertNotIn("N/A", out)
 
 
+import io
+from contextlib import redirect_stderr
+from unittest.mock import AsyncMock, patch
+
+from edgarpack.cli import main
+
+
+class TestCliMetricNotFound(unittest.TestCase):
+    def test_unknown_metric_prints_suggestions_and_exits_nonzero(self) -> None:
+        stderr = io.StringIO()
+        with patch("edgarpack.query.financials.resolve_ticker",
+                   new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
+             patch("edgarpack.query.financials.fetch_company_facts",
+                   new=AsyncMock(return_value={"facts": {}})), \
+             patch("edgarpack.query.financials._build_doc_map",
+                   new=AsyncMock(return_value={})), \
+             redirect_stderr(stderr):
+            rc = main(["query", "NVDA", "xyzzy", "--period", "lfy"])
+        self.assertEqual(rc, 2)  # 2 = usage-ish error
+        err = stderr.getvalue()
+        self.assertIn("Unknown metric", err)
+
+
 if __name__ == "__main__":
     unittest.main()

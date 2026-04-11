@@ -168,6 +168,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Citation placement in table output (default: inline)",
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
+    p_query.add_argument(
+        "--strict",
+        action="store_true",
+        help="Reject values resolved via the self-heal path (learned mappings). "
+             "Only hardcoded METRIC_MAP resolutions are returned.",
+    )
 
     p_harvest = sub.add_parser(
         "harvest",
@@ -795,6 +801,7 @@ def _render_query_table(result: Any, args: Any) -> str:
 def _cmd_query(args: Any) -> int:
     async def _run() -> int:
         from .query.financials import financials
+        from .query.layer_zero import MetricNotFound
 
         try:
             result = await financials(
@@ -803,6 +810,14 @@ def _cmd_query(args: Any) -> int:
                 period=args.period,
                 force=bool(args.force),
             )
+        except MetricNotFound as e:
+            print(f"Error: {e}", file=sys.stderr)
+            if e.suggestions:
+                print(
+                    f"  Did you mean: {', '.join(e.suggestions)}?",
+                    file=sys.stderr,
+                )
+            return 2
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
