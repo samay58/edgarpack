@@ -129,5 +129,72 @@ class TestCliMetricNotFound(unittest.TestCase):
         self.assertIn("Unknown metric", err)
 
 
+import tempfile
+from contextlib import redirect_stdout
+from pathlib import Path
+
+
+class TestLearnedSubcommand(unittest.TestCase):
+    def test_list_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db = Path(td) / "registry.db"
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    rc = main(["learned", "list"])
+                self.assertEqual(rc, 0)
+                self.assertIn("no learned mappings", stdout.getvalue().lower())
+
+    def test_list_after_upsert(self) -> None:
+        from edgarpack.query.learned_registry import LearnedRegistry
+        with tempfile.TemporaryDirectory() as td:
+            db = Path(td) / "registry.db"
+            reg = LearnedRegistry(db_path=db)
+            reg.upsert(
+                cik="0001045810", metric="revenue", concept="Revenues",
+                taxonomy="us-gaap", source="fuzzy", verified=True,
+            )
+            reg.close()
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    rc = main(["learned", "list"])
+                self.assertEqual(rc, 0)
+                out = stdout.getvalue()
+                self.assertIn("0001045810", out)
+                self.assertIn("revenue", out)
+                self.assertIn("Revenues", out)
+
+    def test_verify_promotes_unverified_row(self) -> None:
+        from edgarpack.query.learned_registry import LearnedRegistry
+        with tempfile.TemporaryDirectory() as td:
+            db = Path(td) / "registry.db"
+            reg = LearnedRegistry(db_path=db)
+            reg.upsert(
+                cik="A", metric="rev", concept="X", taxonomy="us-gaap",
+                source="llm", verified=False,
+            )
+            reg.close()
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    rc = main(["learned", "verify", "A", "rev"])
+                self.assertEqual(rc, 0)
+            reg = LearnedRegistry(db_path=db)
+            row = reg.lookup("A", "rev")
+            assert row is not None
+            self.assertTrue(row.verified)
+
+    def test_clear_refuses_without_all_or_filter(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db = Path(td) / "registry.db"
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db):
+                stderr = io.StringIO()
+                with redirect_stderr(stderr):
+                    rc = main(["learned", "clear"])
+                self.assertNotEqual(rc, 0)
+                self.assertIn("refusing", stderr.getvalue().lower())
+
+
 if __name__ == "__main__":
     unittest.main()
