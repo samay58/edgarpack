@@ -100,6 +100,92 @@ class TestFuzzyMatch(unittest.TestCase):
 
 from edgarpack.query.self_heal import verify_order_of_magnitude
 
+import json
+from unittest.mock import patch
+
+from edgarpack.query.self_heal import _llm_backend_available, _llm_propose
+
+
+class TestLlmPropose(unittest.TestCase):
+    def test_llm_backend_available_returns_bool(self) -> None:
+        # Don't assert which backend; only that the function returns bool cleanly.
+        self.assertIsInstance(_llm_backend_available(), bool)
+
+    def test_llm_propose_returns_none_without_backend(self) -> None:
+        with patch("edgarpack.query.self_heal._LLM_CMD", None):
+            out = _llm_propose(
+                metric="revenue",
+                company="Test Co",
+                candidates=[("Revenues", "us-gaap")],
+            )
+            self.assertIsNone(out)
+
+    def test_llm_propose_parses_valid_response(self) -> None:
+        fake_stdout = json.dumps({"concept": "Revenues", "taxonomy": "us-gaap"})
+
+        class _FakeCompleted:
+            def __init__(self, stdout: str) -> None:
+                self.stdout = stdout
+                self.stderr = ""
+                self.returncode = 0
+
+        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
+             patch("edgarpack.query.self_heal.subprocess.run",
+                   return_value=_FakeCompleted(fake_stdout)):
+            out = _llm_propose(
+                metric="revenue",
+                company="Test Co",
+                candidates=[("Revenues", "us-gaap"), ("SalesRevenueNet", "us-gaap")],
+            )
+            self.assertEqual(out, ("Revenues", "us-gaap"))
+
+    def test_llm_propose_rejects_hallucinated_concept(self) -> None:
+        fake_stdout = json.dumps({"concept": "MadeUpConcept", "taxonomy": "us-gaap"})
+
+        class _FakeCompleted:
+            stdout = fake_stdout
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
+             patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted):
+            out = _llm_propose(
+                metric="revenue",
+                company="Test Co",
+                candidates=[("Revenues", "us-gaap")],
+            )
+            self.assertIsNone(out)
+
+    def test_llm_propose_returns_none_on_null_response(self) -> None:
+        class _FakeCompleted:
+            stdout = "null"
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
+             patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted):
+            out = _llm_propose(
+                metric="revenue",
+                company="Test Co",
+                candidates=[("Revenues", "us-gaap")],
+            )
+            self.assertIsNone(out)
+
+    def test_llm_propose_returns_none_on_malformed_json(self) -> None:
+        class _FakeCompleted:
+            stdout = "this is not json at all"
+            stderr = ""
+            returncode = 0
+
+        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
+             patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted):
+            out = _llm_propose(
+                metric="revenue",
+                company="Test Co",
+                candidates=[("Revenues", "us-gaap")],
+            )
+            self.assertIsNone(out)
+
 
 class TestVerifyOrderOfMagnitude(unittest.TestCase):
     def test_exact_match_passes(self) -> None:

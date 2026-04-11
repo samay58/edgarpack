@@ -155,3 +155,144 @@ def verify_order_of_magnitude(
         return False
     ratio = abs(proposed_value) / abs(prior_year_value)
     return min_ratio <= ratio <= max_ratio
+
+
+import json
+import logging
+import shutil
+import subprocess
+
+logger = logging.getLogger(__name__)
+
+# Detect an available LLM CLI at import time. Module-level constant so tests
+# can monkey-patch it. None means no backend is available.
+_LLM_CMD: str | None = None
+for _candidate in ("codex", "claude"):
+    if shutil.which(_candidate):
+        _LLM_CMD = _candidate
+        break
+
+
+def _llm_backend_available() -> bool:
+    return _LLM_CMD is not None
+
+
+_LLM_TIMEOUT_SECONDS = 30
+_LLM_MAX_CANDIDATES = 40  # Keep prompt tight; more than this and we rely on fuzzy
+
+
+def _latest_value_for(
+    facts: dict[str, Any] | None,
+    concept: str,
+    taxonomy: str,
+) -> float | int | None:
+    if facts is None:
+        return None
+    tax_data = facts.get(taxonomy, {})
+    concept_data = tax_data.get(concept, {})
+    units = concept_data.get("units", {}) if isinstance(concept_data, dict) else {}
+    for unit_values in units.values():
+        if not isinstance(unit_values, list):
+            continue
+        for v in reversed(unit_values):
+            if isinstance(v, dict) and v.get("val") is not None:
+                return v.get("val")
+    return None
+
+
+def _build_llm_prompt(
+    metric: str,
+    company: str,
+    candidates: list[tuple[str, str]],
+    facts: dict[str, Any] | None = None,
+) -> str:
+    # Trim the candidate list and annotate with a sample value where possible
+    trimmed = candidates[:_LLM_MAX_CANDIDATES]
+    lines = []
+    for concept, taxonomy in trimmed:
+        sample = _latest_value_for(facts, concept, taxonomy) if facts else None
+        if sample is not None:
+            lines.append(f"  {concept}: {sample}")
+        else:
+            lines.append(f"  {concept}")
+    concepts_block = "\n".join(lines)
+
+    return (
+        f"You are resolving a financial metric to an XBRL concept tag.\n\n"
+        f"Company: {company}\n"
+        f'Requested metric: "{metric}"\n\n'
+        f"Candidate concepts reported by this company (with latest USD value "
+        f"where known):\n{concepts_block}\n\n"
+        f"Which concept represents the requested metric?\n"
+        f"Return strict JSON with no prose:\n"
+        f'  {{"concept": "ExactConceptName", "taxonomy": "us-gaap"}}\n'
+        f"or:\n"
+        f"  null\n"
+    )
+
+
+def _llm_propose(
+    metric: str,
+    company: str,
+    candidates: list[tuple[str, str]],
+    facts: dict[str, Any] | None = None,
+) -> tuple[str, str] | None:
+    """Ask an external LLM CLI to pick a concept from the candidate list.
+
+    Returns (concept_name, taxonomy) on success, or None on any failure:
+    no backend, timeout, non-zero exit, malformed JSON, hallucinated concept.
+    """
+    if _LLM_CMD is None:
+        return None
+    if not candidates:
+        return None
+
+    prompt = _build_llm_prompt(metric, company, candidates, facts=facts)
+
+    try:
+        completed = subprocess.run(
+            [_LLM_CMD, "exec", "--prompt", prompt],
+            capture_output=True,
+            text=True,
+            timeout=_LLM_TIMEOUT_SECONDS,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        logger.warning("LLM propose failed: %s", e)
+        return None
+
+    if completed.returncode != 0:
+        logger.warning(
+            "LLM propose returned non-zero: %s",
+            (completed.stderr or "")[:200],
+        )
+        return None
+
+    raw = (completed.stdout or "").strip()
+    if not raw or raw.lower() == "null":
+        return None
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        # Try to salvage a JSON object out of a wrapper like markdown
+        match = re.search(r"\{[^}]*\}", raw)
+        if not match:
+            return None
+        try:
+            parsed = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+
+    if not isinstance(parsed, dict):
+        return None
+    concept = parsed.get("concept")
+    taxonomy = parsed.get("taxonomy")
+    if not isinstance(concept, str) or not isinstance(taxonomy, str):
+        return None
+
+    # Reject hallucinated concepts: must be in the candidate list
+    candidate_set = {(c, t) for c, t in candidates}
+    if (concept, taxonomy) not in candidate_set:
+        return None
+
+    return (concept, taxonomy)
