@@ -33,6 +33,7 @@ import shutil
 import subprocess
 import unicodedata
 from dataclasses import dataclass, field
+from datetime import date as _date
 from pathlib import Path
 
 from ..harvest.registry import PackRecord, PackRegistry
@@ -535,3 +536,98 @@ def _verify_excerpt_in_text(
             return False
 
     return True
+
+
+def _build_cited_from_extraction(
+    response: dict,
+    metric: str,
+    kpi_def: KpiDef,
+    pack_record: PackRecord,
+    pack_manifest: dict,
+    primary_document: str,
+) -> "CitedValue":
+    from .models import CitedValue
+
+    filing = pack_manifest.get("filing", {})
+
+    filing_date_str = str(filing.get("filing_date", pack_record.filing_date))
+    try:
+        filed = _date.fromisoformat(filing_date_str)
+    except ValueError:
+        filed = _date.min
+
+    fiscal_year = filed.year if filed != _date.min else 0
+    fiscal_period = "FY" if pack_record.form_type.startswith("10-K") else "Q"
+
+    concept = kpi_def.phrases[0] if kpi_def.phrases else metric
+
+    return CitedValue(
+        value=response["value"],
+        unit=str(response.get("unit") or kpi_def.unit_hint),
+        metric=metric,
+        concept=concept,
+        period_end=filed,
+        fiscal_year=fiscal_year,
+        fiscal_period=fiscal_period,
+        form_type=pack_record.form_type,
+        filed=filed,
+        accession=pack_record.accession,
+        cik=pack_record.cik,
+        company=pack_record.company_name,
+        taxonomy="kpi-prose",
+        primary_document=primary_document,
+        fact_id="",
+        excerpt_text=str(response.get("excerpt", "")),
+    )
+
+
+def _verify_against_prior_filing(
+    current_value: float,
+    metric: str,
+    cik: str,
+    current_accession: str,
+    registry: PackRegistry,
+    registry_path: Path | None,
+) -> tuple[bool, str]:
+    from .learned_registry import LearnedRegistry
+    from .self_heal import verify_order_of_magnitude
+
+    all_10k = registry.list_packs(cik=cik, form_type="10-K", limit=10)
+    prior = [p for p in all_10k if p.accession != current_accession]
+    if not prior:
+        return False, "no_prior_filing"
+
+    prior_pack = prior[0]
+
+    learned_reg = LearnedRegistry(db_path=registry_path)
+    try:
+        cached = learned_reg.lookup(
+            cik=cik, metric=metric, accession=prior_pack.accession,
+        )
+    finally:
+        learned_reg.close()
+
+    prior_value: float | None = None
+    if cached is not None and cached.value_sample is not None:
+        prior_value = float(cached.value_sample)
+    else:
+        cited = try_extract_kpi(
+            metric=metric,
+            cik=cik,
+            company=prior_pack.company_name,
+            period="lfy",
+            registry_path=registry_path,
+            pack_registry=registry,
+            _verify=False,
+            _override_pack=prior_pack,
+        )
+        if cited is None or not isinstance(cited.value, (int, float)):
+            return False, "prior_extract_failed"
+        prior_value = float(cited.value)
+
+    if prior_value is None:
+        return False, "prior_extract_failed"
+
+    if verify_order_of_magnitude(current_value, prior_value):
+        return True, "prior_filing_crosscheck"
+    return False, "prior_filing_crosscheck"

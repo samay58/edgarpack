@@ -718,5 +718,179 @@ class TestVerifyExcerptInText(unittest.TestCase):
         self.assertTrue(_verify_excerpt_in_text(excerpt, text))
 
 
+from datetime import date
+
+from edgarpack.query.kpi_extract import _build_cited_from_extraction
+
+
+class TestBuildCitedFromExtraction(unittest.TestCase):
+    def test_builds_cited_value_with_expected_fields(self) -> None:
+        kpi = KpiDef(
+            phrases=("annual recurring revenue", "ARR"),
+            unit_hint="USD",
+        )
+        response = {
+            "value": 3_440_000_000,
+            "unit": "USD",
+            "excerpt": "Annual recurring revenue of $3.44 billion at fiscal year end",
+            "section_id": "10k_parti_item7_managements_discussion",
+            "confidence": "high",
+        }
+        pack_record = PackRecord(
+            accession="0001535527-24-000123",
+            cik="0001535527",
+            ticker="CRWD",
+            company_name="CrowdStrike Holdings, Inc.",
+            form_type="10-K",
+            filing_date="2024-03-07",
+            sections_count=10,
+            tokens_total=300_000,
+            pack_dir="/tmp/packs/0001535527/0001535527-24-000123",
+            built_at=datetime.now(UTC).isoformat(),
+            manifest_hash=None,
+            warnings_json=None,
+        )
+        pack_manifest = {
+            "filing": {
+                "cik": "0001535527",
+                "accession": "0001535527-24-000123",
+                "form_type": "10-K",
+                "filing_date": "2024-03-07",
+                "company_name": "CrowdStrike Holdings, Inc.",
+            },
+            "sections": [],
+        }
+
+        cited = _build_cited_from_extraction(
+            response=response,
+            metric="arr",
+            kpi_def=kpi,
+            pack_record=pack_record,
+            pack_manifest=pack_manifest,
+            primary_document="crwd-20240131.htm",
+        )
+
+        self.assertEqual(cited.value, 3_440_000_000)
+        self.assertEqual(cited.unit, "USD")
+        self.assertEqual(cited.metric, "arr")
+        self.assertEqual(cited.concept, "annual recurring revenue")
+        self.assertEqual(cited.accession, "0001535527-24-000123")
+        self.assertEqual(cited.cik, "0001535527")
+        self.assertEqual(cited.company, "CrowdStrike Holdings, Inc.")
+        self.assertEqual(cited.form_type, "10-K")
+        self.assertEqual(cited.filed, date(2024, 3, 7))
+        self.assertEqual(cited.taxonomy, "kpi-prose")
+        self.assertEqual(cited.primary_document, "crwd-20240131.htm")
+        self.assertEqual(cited.fact_id, "")
+        self.assertIn("$3.44 billion", cited.excerpt_text)
+
+    def test_document_url_uses_excerpt(self) -> None:
+        kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
+        response = {
+            "value": 1000, "unit": "USD",
+            "excerpt": "Annual recurring revenue of $1,000",
+            "section_id": "sec", "confidence": "high",
+        }
+        pack_record = PackRecord(
+            accession="0001535527-24-000123", cik="0001535527",
+            ticker="CRWD", company_name="CRWD",
+            form_type="10-K", filing_date="2024-03-07",
+            sections_count=0, tokens_total=0,
+            pack_dir="/tmp/p", built_at="2024-03-08T00:00:00+00:00",
+        )
+        manifest = {"filing": {
+            "cik": "0001535527",
+            "accession": "0001535527-24-000123",
+            "form_type": "10-K",
+            "filing_date": "2024-03-07",
+            "company_name": "CRWD",
+        }}
+        cited = _build_cited_from_extraction(
+            response=response, metric="arr", kpi_def=kpi,
+            pack_record=pack_record, pack_manifest=manifest,
+            primary_document="doc.htm",
+        )
+        url = cited.document_url
+        self.assertIsNotNone(url)
+        assert url is not None
+        # Should use the excerpt-based text fragment
+        self.assertIn("#:~:text=", url)
+        self.assertIn("Annual", url)
+
+
+from edgarpack.query.kpi_extract import _verify_against_prior_filing
+
+
+class TestVerifyAgainstPriorFiling(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.registry_db = Path(self._tmp.name) / "registry.db"
+        self.registry = PackRegistry(db_path=self.registry_db)
+
+    def _register(self, accession: str, filing_date: str) -> None:
+        pack_dir = Path(self._tmp.name) / "packs" / "A" / accession
+        _write_manifest(pack_dir, sections=[])
+        self.registry.register_pack(PackRecord(
+            accession=accession,
+            cik="0001535527",
+            ticker="CRWD",
+            company_name="CRWD",
+            form_type="10-K",
+            filing_date=filing_date,
+            sections_count=0,
+            tokens_total=0,
+            pack_dir=str(pack_dir),
+            built_at=datetime.now(UTC).isoformat(),
+        ))
+
+    def test_returns_false_when_no_prior_filing(self) -> None:
+        # Only one filing registered
+        self._register("ACC-A", "2024-03-07")
+        verified, method = _verify_against_prior_filing(
+            current_value=3.44e9,
+            metric="arr",
+            cik="0001535527",
+            current_accession="ACC-A",
+            registry=self.registry,
+            registry_path=self.registry_db,
+        )
+        self.assertFalse(verified)
+        self.assertEqual(method, "no_prior_filing")
+
+    def test_returns_true_when_within_order_of_magnitude(self) -> None:
+        """If the prior filing's extraction returns a value within 4x,
+        verify passes. Simulate by seeding the learned_concepts registry
+        with a prior entry so try_extract_kpi hits the cache."""
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        self._register("ACC-23", "2023-03-01")
+        self._register("ACC-24", "2024-03-07")
+
+        # Seed a prior-filing learned row so recursive try_extract_kpi is a
+        # cache hit instead of a live LLM call.
+        reg = LearnedRegistry(db_path=self.registry_db)
+        reg.upsert(
+            cik="0001535527", metric="arr",
+            concept="annual recurring revenue", taxonomy="kpi-prose",
+            source="kpi-llm", verified=True,
+            verif_method="order_of_magnitude",
+            value_sample=2.56e9,  # prior year
+            accession="ACC-23",
+        )
+        reg.close()
+
+        verified, method = _verify_against_prior_filing(
+            current_value=3.44e9,  # 1.34x prior year -> within [0.25, 4.0]
+            metric="arr",
+            cik="0001535527",
+            current_accession="ACC-24",
+            registry=self.registry,
+            registry_path=self.registry_db,
+        )
+        self.assertTrue(verified)
+        self.assertEqual(method, "prior_filing_crosscheck")
+
+
 if __name__ == "__main__":
     unittest.main()
