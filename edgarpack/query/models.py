@@ -226,6 +226,8 @@ class CitedValue(BaseModel):
         # existing JSON consumers that don't know about this field.
         if self.source == "hardcoded":
             d.pop("source", None)
+        if not self.excerpt_text:
+            d.pop("excerpt_text", None)
         return d
 
     def _period_str(self) -> str:

@@ -108,6 +108,16 @@ class TestCitedValueExcerptText(unittest.TestCase):
         cv = _make_cited()  # no primary_document set
         self.assertIsNone(cv.document_url)
 
+    def test_to_cited_dict_omits_excerpt_text_when_empty(self) -> None:
+        cv = _make_cited()
+        d = cv.to_cited_dict()
+        self.assertNotIn("excerpt_text", d)
+
+    def test_to_cited_dict_includes_excerpt_text_when_set(self) -> None:
+        cv = _make_cited(excerpt_text="Annual recurring revenue of $3.44 billion")
+        d = cv.to_cited_dict()
+        self.assertEqual(d.get("excerpt_text"), "Annual recurring revenue of $3.44 billion")
+
 
 if __name__ == "__main__":
     unittest.main()
