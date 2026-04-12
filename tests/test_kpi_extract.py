@@ -225,7 +225,8 @@ class TestSelectSections(unittest.TestCase):
         selected = _select_sections(sections)
         ids = {s["id"] for s in selected}
         self.assertIn("10k_parti_item7_managements_discussion_and_analysis", ids)
-        self.assertNotIn("10k_parti_item1_business", ids)
+        self.assertIn("10k_parti_item1_business", ids)
+        self.assertNotIn("10k_parti_item8_financial_statements", ids)
 
     def test_matches_key_metrics_section_by_slug(self) -> None:
         sections = [
@@ -254,8 +255,8 @@ class TestSelectSections(unittest.TestCase):
 
     def test_returns_empty_when_no_matches(self) -> None:
         sections = [
-            {"id": "10k_parti_item1_business", "path": "sections/item1.md",
-             "title": "Business", "char_start": 0, "char_end": 100},
+            {"id": "10k_parti_item3_legal_proceedings", "path": "sections/item3.md",
+             "title": "Legal Proceedings", "char_start": 0, "char_end": 100},
         ]
         self.assertEqual(_select_sections(sections), [])
 
@@ -269,18 +270,20 @@ class TestSelectSections(unittest.TestCase):
             {"id": "10k_parti_item7_mda", "path": "p1",
              "title": "MD&A", "char_start": 0, "char_end": 100},
             {"id": "10k_parti_item1_business", "path": "p2",
-             "title": "Business", "char_start": 100, "char_end": 200},  # filtered out
+             "title": "Business", "char_start": 100, "char_end": 200},
+            {"id": "10k_parti_item3_legal_proceedings", "path": "p2b",
+             "title": "Legal", "char_start": 200, "char_end": 250},  # filtered out
             {"id": "10k_segment_data", "path": "p3",
-             "title": "Segments", "char_start": 200, "char_end": 300},
+             "title": "Segments", "char_start": 250, "char_end": 350},
             {"id": "10k_key_metric_nontraditional", "path": "p4",
-             "title": "Key Metrics", "char_start": 300, "char_end": 400},
+             "title": "Key Metrics", "char_start": 350, "char_end": 450},
         ]
         selected = _select_sections(sections)
         ids = [s["id"] for s in selected]
         self.assertEqual(
             ids,
-            ["10k_parti_item7_mda", "10k_segment_data",
-             "10k_key_metric_nontraditional"],
+            ["10k_parti_item7_mda", "10k_parti_item1_business",
+             "10k_segment_data", "10k_key_metric_nontraditional"],
         )
 
 

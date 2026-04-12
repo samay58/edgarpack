@@ -277,13 +277,17 @@ logger = logging.getLogger(__name__)
 _VALID_LLM_UNITS: frozenset[str] = frozenset({"USD", "count", "percent", "days", "pure"})
 
 _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
-    # MD&A is Part II Item 7 in a 10-K. The section_id function produces
-    # "10k_partii_item7_..." (lowercase roman "ii" for Part II). Match
-    # both "parti_" and "partii_" so we also catch any Part I Item 7 edge
-    # case from unusual filers.
+    # MD&A is Part II Item 7 in a 10-K. Match both "parti_" and "partii_"
+    # so we also catch any Part I Item 7 edge case from unusual filers.
     re.compile(r"^10k_parti+_item7(?=_|$)"),   # MD&A (10-K, Part I or II)
     re.compile(r"^10k_parti+_item7a(?=_|$)"),  # Quant/Qual market risk
     re.compile(r"^10q_parti+_item2(?=_|$)"),   # MD&A (10-Q, Part I)
+    # Item 1 Business often contains the "Key Operating Metrics" narrative
+    # where tech companies report DAU, ARR, NRR, and similar KPIs. The
+    # sectionizer sometimes captures a thin MD&A stub while the actual
+    # metrics live in Item 1. Including it costs ~30-50K chars but stays
+    # within the 60K budget for most filings.
+    re.compile(r"^10k_parti+_item1(?=_|$)"),   # Business (10-K, Part I)
     # Unanchored: slug patterns fire anywhere in the section ID.
     # A segment overview nested inside Item 1 Business is a valid target.
     re.compile(r"_segment"),
