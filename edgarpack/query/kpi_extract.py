@@ -277,9 +277,13 @@ logger = logging.getLogger(__name__)
 _VALID_LLM_UNITS: frozenset[str] = frozenset({"USD", "count", "percent", "days", "pure"})
 
 _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"^10k_parti_item7(?=_|$)"),   # MD&A (10-K)
-    re.compile(r"^10k_parti_item7a(?=_|$)"),  # Quant/Qual market risk
-    re.compile(r"^10q_parti_item2(?=_|$)"),   # MD&A (10-Q)
+    # MD&A is Part II Item 7 in a 10-K. The section_id function produces
+    # "10k_partii_item7_..." (lowercase roman "ii" for Part II). Match
+    # both "parti_" and "partii_" so we also catch any Part I Item 7 edge
+    # case from unusual filers.
+    re.compile(r"^10k_parti+_item7(?=_|$)"),   # MD&A (10-K, Part I or II)
+    re.compile(r"^10k_parti+_item7a(?=_|$)"),  # Quant/Qual market risk
+    re.compile(r"^10q_parti+_item2(?=_|$)"),   # MD&A (10-Q, Part I)
     # Unanchored: slug patterns fire anywhere in the section ID.
     # A segment overview nested inside Item 1 Business is a valid target.
     re.compile(r"_segment"),
