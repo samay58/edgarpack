@@ -896,6 +896,7 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
             metric="arr",
             cik="0001535527",
             current_accession="ACC-A",
+            current_form_type="10-K",
             registry=self.registry,
             registry_path=self.registry_db,
         )
@@ -929,11 +930,101 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
             metric="arr",
             cik="0001535527",
             current_accession="ACC-24",
+            current_form_type="10-K",
             registry=self.registry,
             registry_path=self.registry_db,
         )
         self.assertTrue(verified)
         self.assertEqual(method, "prior_filing_crosscheck")
+
+    def test_verify_against_prior_via_live_extraction_does_not_poison_cache(self) -> None:
+        """When _verify_against_prior_filing triggers a live recursive
+        extraction (cache miss), the prior extraction must NOT be cached
+        with verified=False — it's a verification helper, not a user-facing
+        extraction."""
+        from unittest.mock import patch as _patch
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        # Register two 10-Ks (current + prior), no cache seeded
+        self._register("ACC-23", "2023-03-01")
+        self._register("ACC-24", "2024-03-07")
+
+        # Build synthetic packs for both so the recursive extraction
+        # can actually read manifest/sections.
+        for acc in ("ACC-23", "ACC-24"):
+            pack_dir = Path(self._tmp.name) / "packs" / "A" / acc
+            sections_dir = pack_dir / "sections"
+            sections_dir.mkdir(parents=True, exist_ok=True)
+            (sections_dir / "mda.md").write_text(
+                "Annual recurring revenue of $2.56 billion.",
+                encoding="utf-8",
+            )
+            filing_date = "2023-03-01" if acc == "ACC-23" else "2024-03-07"
+            manifest = {
+                "schema_version": 1,
+                "parser_version": "0.1.0",
+                "generated_at": datetime.now(UTC).isoformat(),
+                "source": {"url": "x", "fetched_at": datetime.now(UTC).isoformat()},
+                "filing": {
+                    "cik": "0001535527",
+                    "accession": acc,
+                    "form_type": "10-K",
+                    "filing_date": filing_date,
+                    "company_name": "CRWD",
+                    "primary_document": "crwd.htm",
+                },
+                "sections": [
+                    {"id": "10k_parti_item7_mda", "path": "sections/mda.md",
+                     "title": "MD&A", "char_start": 0, "char_end": 100,
+                     "tokens_approx": 20, "sha256": "abc"},
+                ],
+                "artifacts": {},
+                "warnings": [],
+                "tokens_total": 20,
+            }
+            (pack_dir / "manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+
+        # Mock LLM to return a consistent value for the prior filing
+        fake_response = _json.dumps({
+            "value": 2_560_000_000,
+            "unit": "USD",
+            "excerpt": "Annual recurring revenue of $2.56 billion",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake_response
+            stderr = ""
+            returncode = 0
+
+        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             _patch("edgarpack.query.kpi_extract.subprocess.run",
+                    return_value=_Fake):
+            verified, method = _verify_against_prior_filing(
+                current_value=3.44e9,  # within 4x of 2.56e9
+                metric="arr",
+                cik="0001535527",
+                current_accession="ACC-24",
+                current_form_type="10-K",
+                registry=self.registry,
+                registry_path=self.registry_db,
+            )
+
+        self.assertTrue(verified)
+        self.assertEqual(method, "prior_filing_crosscheck")
+
+        # Prior filing should NOT be in learned_concepts (no poison cache)
+        reg = LearnedRegistry(db_path=self.registry_db)
+        prior_row = reg.lookup("0001535527", "arr", accession="ACC-23")
+        reg.close()
+        self.assertIsNone(
+            prior_row,
+            "Prior filing was persisted to learned_concepts with verified=False; "
+            "the _no_persist=True flag should prevent this.",
+        )
 
 
 class TestTryExtractKpi(unittest.TestCase):
@@ -1231,6 +1322,49 @@ class TestTryExtractKpi(unittest.TestCase):
         self.assertIsNotNone(row)
         assert row is not None
         self.assertEqual(row.hit_count, 0)
+
+    def test_no_persist_flag_skips_upsert(self) -> None:
+        """When _no_persist=True, successful extraction should NOT write
+        to learned_concepts. Used by the recursive prior-filing verification
+        to avoid polluting the cache with verified=False rows."""
+        from unittest.mock import patch as _patch
+        from edgarpack.query.kpi_extract import try_extract_kpi
+        from edgarpack.query.learned_registry import LearnedRegistry
+        self._build_pack()
+
+        fake_response = _json.dumps({
+            "value": 3_440_000_000,
+            "unit": "USD",
+            "excerpt": "Annual recurring revenue of $3.44 billion",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _Fake:
+            stdout = fake_response
+            stderr = ""
+            returncode = 0
+
+        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+            cited = try_extract_kpi(
+                metric="arr",
+                cik="0001535527",
+                company="CrowdStrike Holdings, Inc.",
+                period="lfy",
+                registry_path=self.registry_db,
+                pack_registry=self.pack_registry,
+                _no_persist=True,
+            )
+
+        # Extraction succeeded...
+        self.assertIsNotNone(cited)
+        # ...but nothing was written to learned_concepts
+        reg = LearnedRegistry(db_path=self.registry_db)
+        row = reg.lookup("0001535527", "arr",
+                          accession="0001535527-24-000123")
+        reg.close()
+        self.assertIsNone(row)
 
 
 if __name__ == "__main__":

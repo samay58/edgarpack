@@ -611,16 +611,20 @@ def _verify_against_prior_filing(
     metric: str,
     cik: str,
     current_accession: str,
+    current_form_type: str,
     registry: PackRegistry,
     registry_path: Path | None,
 ) -> tuple[bool, str]:
+    """Verify by extracting the same KPI from the prior filing of the same
+    form type and comparing.
+    """
     # Lazy import: self_heal imports from concepts, which re-exports
     # KPI_CATALOG from this module. Top-level import would create
     # concepts -> kpi_extract -> self_heal -> concepts cycle at import time.
     from .self_heal import verify_order_of_magnitude
 
-    all_10k = registry.list_packs(cik=cik, form_type="10-K", limit=10)
-    prior = [p for p in all_10k if p.accession != current_accession]
+    all_prior = registry.list_packs(cik=cik, form_type=current_form_type, limit=10)
+    prior = [p for p in all_prior if p.accession != current_accession]
     if not prior:
         return False, "no_prior_filing"
 
@@ -655,6 +659,7 @@ def _verify_against_prior_filing(
             pack_registry=registry,
             _verify=False,
             _override_pack=prior_pack,
+            _no_persist=True,  # don't cache prior with verified=False
         )
         if cited is None or not isinstance(cited.value, (int, float)):
             return False, "prior_extract_failed"
@@ -678,6 +683,7 @@ def try_extract_kpi(
     pack_registry: PackRegistry | None = None,
     _verify: bool = True,
     _override_pack: PackRecord | None = None,
+    _no_persist: bool = False,
 ) -> CitedValue | None:
     """Layer B entry point. Extracts a KPI from a pack's MD&A/segment sections.
 
@@ -694,6 +700,9 @@ def try_extract_kpi(
         _verify: internal, set to False by recursive prior-filing cross-check
         _override_pack: internal, set when the caller has already resolved
                         the prior filing (skips _resolve_filing_for_period)
+        _no_persist: internal, set to True by recursive prior-filing calls so
+                     a successful prior extraction is not cached with
+                     verified=False (cache pollution prevention)
     """
     kpi_def = KPI_CATALOG.get(metric)
     if kpi_def is None:
@@ -856,26 +865,29 @@ def try_extract_kpi(
                 metric=metric,
                 cik=cik,
                 current_accession=accession,
+                current_form_type=pack_record.form_type,
                 registry=pack_registry,
                 registry_path=registry_path,
             )
 
-        # 11. Persist
-        learned_reg = LearnedRegistry(db_path=registry_path)
-        try:
-            learned_reg.upsert(
-                cik=cik,
-                metric=metric,
-                concept=cited.concept,
-                taxonomy="kpi-prose",
-                source="kpi-llm",
-                verified=verified,
-                verif_method=verif_method,
-                value_sample=float(cited.value) if isinstance(cited.value, (int, float)) else None,
-                accession=accession,
-            )
-        finally:
-            learned_reg.close()
+        # 11. Persist (skip on recursive verification calls so a successful
+        # prior-filing extraction isn't cached with verified=False)
+        if not _no_persist:
+            learned_reg = LearnedRegistry(db_path=registry_path)
+            try:
+                learned_reg.upsert(
+                    cik=cik,
+                    metric=metric,
+                    concept=cited.concept,
+                    taxonomy="kpi-prose",
+                    source="kpi-llm",
+                    verified=verified,
+                    verif_method=verif_method,
+                    value_sample=float(cited.value) if isinstance(cited.value, (int, float)) else None,
+                    accession=accession,
+                )
+            finally:
+                learned_reg.close()
 
         cited.source = "learned:kpi-llm"
         if not verified:

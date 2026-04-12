@@ -294,7 +294,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_learned_cik_accn_metric
     ON learned_concepts(cik, accession, metric);
 ```
 
-Layer A rows get `accession=''`. `LearnedRegistry.lookup(cik, metric, accession=None)` preserves old behavior. `lookup(cik, metric, accession='0001535527-24-000123')` checks the per-accession row first and falls back to the whole-company row.
+Layer A rows get `accession=''`. `LearnedRegistry.lookup(cik, metric, accession=None)` — with `accession=None`, returns the v1-style whole-company row (`accession=''`). With a specific accession, returns only the per-filing row; does NOT fall back to the whole-company row. Callers that need fallback behavior call twice.
 
 To avoid migration landmines, the migration runs inside `_ensure_schema()` via a `PRAGMA user_version` check:
 
