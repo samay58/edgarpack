@@ -6,6 +6,8 @@ import re
 from datetime import date
 from urllib.parse import quote
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from ..config import SEC_ARCHIVES_BASE, SEC_DATA_BASE
@@ -49,6 +51,11 @@ class CitedValue(BaseModel):
     # 'learned:user' for first-time discoveries that got persisted.
     source: str = "hardcoded"
 
+    # Layer B (Self-heal v2): literal quote from the pack prose that produced
+    # this value. Used by document_url to build a tight text-fragment anchor.
+    # Empty for v1 values (anchors use the concept label).
+    excerpt_text: str = ""
+
     @property
     def filing_url(self) -> str:
         acc_nodash = self.accession.replace("-", "")
@@ -85,7 +92,11 @@ class CitedValue(BaseModel):
     def document_url(self) -> str | None:
         """Direct filing HTML URL with text fragment scroll.
 
-        Uses Chrome/Edge #:~:text= to scroll to the concept label.
+        v1 behavior: uses the concept label as the text fragment.
+        v2 behavior: when excerpt_text is set (Layer B), uses the first
+        eight words of the excerpt for a tighter anchor into the exact
+        sentence that contained the value.
+
         Returns None if no primary_document is available.
         """
         if not self.primary_document:
@@ -93,6 +104,10 @@ class CitedValue(BaseModel):
         acc_nodash = self.accession.replace("-", "")
         cik_bare = self.cik.lstrip("0")
         base = f"{SEC_ARCHIVES_BASE}/{cik_bare}/{acc_nodash}/{self.primary_document}"
+        if self.excerpt_text:
+            words = self.excerpt_text.split()[:8]
+            fragment = quote(" ".join(words))
+            return f"{base}#:~:text={fragment}"
         label = _concept_to_label(self.concept)
         return f"{base}#:~:text={quote(label)}"
 
@@ -213,6 +228,8 @@ class CitedValue(BaseModel):
         # existing JSON consumers that don't know about this field.
         if self.source == "hardcoded":
             d.pop("source", None)
+        if not self.excerpt_text:
+            d.pop("excerpt_text", None)
         return d
 
     def _period_str(self) -> str:
@@ -316,6 +333,31 @@ class DerivedValue(CitedValue):
         return d
 
 
+class Diagnostic(BaseModel):
+    """Structured failure diagnostic attached to a QueryResult.
+
+    Produced when Layer B (or any future self-heal layer) cannot resolve
+    a requested metric. The `kind` field is a closed enum so CLI
+    renderers and downstream consumers can filter reliably.
+    """
+
+    metric: str
+    # TODO(v2.1): four of the five kinds are unreachable until
+    # try_extract_kpi is refactored to return a structured result tuple
+    # (see edgarpack/query/financials.py for the corresponding TODO).
+    # The catch-all 'layer_b_unresolved' is currently the only kind
+    # emitted in practice. The others are reserved for when the
+    # orchestrator has per-failure-mode information.
+    kind: Literal[
+        "layer_b_no_pack",
+        "layer_b_no_llm_backend",
+        "layer_b_not_found",
+        "layer_b_hallucinated_excerpt",
+        "layer_b_unresolved",
+    ]
+    message: str
+
+
 class QueryResult(BaseModel):
     """Result for a single company, multiple metrics."""
 
@@ -323,6 +365,9 @@ class QueryResult(BaseModel):
     cik: str
     period: str = "lfy"
     metrics: dict[str, CitedValue | list[CitedValue] | None]  # metric_name -> value(s) or None
+
+    # Self-heal v2: structured diagnostics for Layer B failures.
+    diagnostics: list[Diagnostic] = Field(default_factory=list)
 
     @property
     def permalink(self) -> str:
@@ -506,6 +551,8 @@ class QueryResult(BaseModel):
         result["metrics"] = metrics_out
         result["citations"] = citations
         result["calculations"] = calculations
+        if self.diagnostics:
+            result["diagnostics"] = [d.model_dump() for d in self.diagnostics]
         return result
 
     def _collect_filings(self) -> dict[str, dict[str, object]]:
@@ -557,7 +604,7 @@ class QueryResult(BaseModel):
         filings = self._collect_filings()
         metrics_out, citations, calculations = self._serialize_metrics(lean=True)
 
-        return {
+        d: dict[str, object] = {
             "company": self.company,
             "cik": self.cik,
             "period": self.period,
@@ -567,3 +614,6 @@ class QueryResult(BaseModel):
             "citations": citations,
             "calculations": calculations,
         }
+        if self.diagnostics:
+            d["diagnostics"] = [diag.model_dump() for diag in self.diagnostics]
+        return d

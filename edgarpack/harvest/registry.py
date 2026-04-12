@@ -1,4 +1,11 @@
-"""SQLite registry of all built packs for sub-ms lookups."""
+"""SQLite registry of all built packs for sub-ms lookups.
+
+PRAGMA user_version note: this module does NOT use PRAGMA user_version
+for migrations — it uses a list-based try/except scheme via _run_migrations.
+The learned_concepts table (edgarpack/query/learned_registry.py) owns
+PRAGMA user_version for its own migrations. Do not touch user_version
+from this module unless you coordinate with learned_registry.
+"""
 
 from __future__ import annotations
 
@@ -96,6 +103,9 @@ class PackRegistry:
         self._run_migrations(conn)
         conn.commit()
 
+    # NOTE: Uses a list-based migration scheme, not PRAGMA user_version.
+    # PRAGMA user_version is claimed by query/learned_registry.py for its
+    # migrations. See learned_registry.py's module docstring for details.
     def _run_migrations(self, conn: sqlite3.Connection) -> None:
         for name, sql in _MIGRATIONS:
             try:
@@ -118,6 +128,7 @@ class PackRegistry:
         pack_dir: str,
         manifest_hash: str | None = None,
         warnings: list[str] | None = None,
+        built_at: str | None = None,
     ) -> None:
         """Register a built pack in the registry."""
         conn = self._get_conn()
@@ -136,12 +147,34 @@ class PackRegistry:
                 sections_count,
                 tokens_total,
                 pack_dir,
-                datetime.now(UTC).isoformat(),
+                built_at or datetime.now(UTC).isoformat(),
                 manifest_hash,
                 json.dumps(warnings) if warnings else None,
             ),
         )
         conn.commit()
+
+    def register_pack(self, record: PackRecord) -> None:
+        """Register a PackRecord directly (convenience wrapper around register).
+
+        Preserves record.built_at (falls back to now() if the record has no
+        timestamp). warnings_json is decoded and passed as the warnings list.
+        """
+        warnings = json.loads(record.warnings_json) if record.warnings_json else None
+        self.register(
+            accession=record.accession,
+            cik=record.cik,
+            ticker=record.ticker,
+            company_name=record.company_name,
+            form_type=record.form_type,
+            filing_date=record.filing_date,
+            sections_count=record.sections_count,
+            tokens_total=record.tokens_total,
+            pack_dir=record.pack_dir,
+            manifest_hash=record.manifest_hash,
+            warnings=warnings,
+            built_at=record.built_at,
+        )
 
     def lookup(self, accession: str) -> PackRecord | None:
         """Look up a pack by accession number."""

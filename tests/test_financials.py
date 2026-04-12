@@ -1320,6 +1320,119 @@ class TestAliasDereferencing(unittest.TestCase):
 
         _asyncio.run(_run())
 
+    def test_kpi_catalog_name_does_not_raise(self) -> None:
+        """A metric name in KPI_CATALOG but not METRIC_MAP must not raise.
+
+        Task 5 ships the guard extension. Task 12 will wire try_extract_kpi
+        so 'arr' actually resolves to a value. For now we pin the
+        'no MetricNotFound' contract and assert the current None return.
+        """
+        import asyncio as _asyncio
+        from edgarpack.query.layer_zero import MetricNotFound
+
+        async def _run() -> None:
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001535527", "CrowdStrike"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})):
+                try:
+                    result = await financials("CRWD", metrics="arr", period="lfy")
+                except MetricNotFound:
+                    self.fail(
+                        "KPI_CATALOG name 'arr' must not raise MetricNotFound"
+                    )
+                self.assertIn("arr", result.metrics)
+                # Task 12 will change this to an extracted CitedValue.
+                self.assertIsNone(result.metrics["arr"])
+
+        _asyncio.run(_run())
+
+
+class TestLayerBWireUp(unittest.TestCase):
+    def test_kpi_catalog_metric_calls_try_extract_kpi(self) -> None:
+        """When a metric is in KPI_CATALOG but not METRIC_MAP, financials()
+        must call try_extract_kpi instead of returning None silently."""
+        import asyncio as _asyncio
+        from datetime import date as _date
+        from edgarpack.query.models import CitedValue
+
+        async def _run() -> None:
+            fake_cited = CitedValue(
+                value=3_440_000_000,
+                unit="USD",
+                metric="arr",
+                concept="annual recurring revenue",
+                period_end=_date(2024, 1, 31),
+                fiscal_year=2024,
+                fiscal_period="FY",
+                form_type="10-K",
+                filed=_date(2024, 3, 7),
+                accession="0001535527-24-000008",
+                cik="0001535527",
+                company="CROWDSTRIKE HOLDINGS INC",
+                source="learned:kpi-llm",
+            )
+
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001535527", "CRWD"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})), \
+                 patch("edgarpack.query.kpi_extract.try_extract_kpi",
+                       return_value=fake_cited) as mock_extract:
+                result = await financials("CRWD", metrics="arr", period="lfy")
+                mock_extract.assert_called_once()
+                self.assertIsNotNone(result.metrics["arr"])
+                self.assertEqual(result.metrics["arr"].value, 3_440_000_000)
+                self.assertEqual(result.metrics["arr"].source, "learned:kpi-llm")
+
+        _asyncio.run(_run())
+
+    def test_kpi_none_result_adds_diagnostic(self) -> None:
+        """When try_extract_kpi returns None, a diagnostic entry is added
+        to the QueryResult."""
+        import asyncio as _asyncio
+
+        async def _run() -> None:
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001535527", "CRWD"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})), \
+                 patch("edgarpack.query.kpi_extract.try_extract_kpi",
+                       return_value=None):
+                result = await financials("CRWD", metrics="arr", period="lfy")
+                self.assertIsNone(result.metrics["arr"])
+                self.assertTrue(
+                    any(d.metric == "arr" for d in result.diagnostics),
+                    f"expected 'arr' diagnostic, got {result.diagnostics}",
+                )
+
+        _asyncio.run(_run())
+
+    def test_known_metric_does_not_call_try_extract_kpi(self) -> None:
+        """A metric in METRIC_MAP must be resolved via the deterministic
+        path, not Layer B. Pins the gating invariant."""
+        import asyncio as _asyncio
+
+        async def _run() -> None:
+            with patch(f"{_P}.resolve_ticker",
+                       new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
+                 patch(f"{_P}.fetch_company_facts",
+                       new=AsyncMock(return_value={"facts": {}})), \
+                 patch(f"{_P}._build_doc_map",
+                       new=AsyncMock(return_value={})), \
+                 patch("edgarpack.query.kpi_extract.try_extract_kpi") as mock_extract:
+                # 'revenue' is in METRIC_MAP, not KPI_CATALOG
+                await financials("NVDA", metrics="revenue", period="lfy")
+                mock_extract.assert_not_called()
+
+        _asyncio.run(_run())
+
 
 if __name__ == "__main__":
     unittest.main()

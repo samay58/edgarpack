@@ -72,5 +72,86 @@ class TestCitedValueSource(unittest.TestCase):
         self.assertEqual(d.get("source"), "learned:llm")
 
 
+class TestCitedValueExcerptText(unittest.TestCase):
+    def test_default_excerpt_text_is_empty(self) -> None:
+        cv = _make_cited()
+        self.assertEqual(cv.excerpt_text, "")
+
+    def test_excerpt_text_can_be_set(self) -> None:
+        cv = _make_cited(excerpt_text="Annual recurring revenue of $1.2 billion as of fiscal year end.")
+        self.assertEqual(
+            cv.excerpt_text,
+            "Annual recurring revenue of $1.2 billion as of fiscal year end.",
+        )
+
+    def test_document_url_uses_excerpt_when_set(self) -> None:
+        cv = _make_cited(
+            primary_document="crwd-20240131.htm",
+            excerpt_text="Annual recurring revenue of $3.44 billion as of January 31, 2024.",
+        )
+        url = cv.document_url
+        self.assertIsNotNone(url)
+        assert url is not None
+        # First 8 words of the excerpt should be in the fragment
+        self.assertIn("Annual%20recurring%20revenue%20of", url)
+        self.assertIn("#:~:text=", url)
+
+    def test_document_url_falls_back_to_concept_when_no_excerpt(self) -> None:
+        cv = _make_cited(primary_document="nvda-20250126.htm")
+        url = cv.document_url
+        self.assertIsNotNone(url)
+        assert url is not None
+        # Uses concept label ("Revenues" -> "Revenues") as the fragment
+        self.assertIn("#:~:text=Revenues", url)
+
+    def test_document_url_none_without_primary_document(self) -> None:
+        cv = _make_cited()  # no primary_document set
+        self.assertIsNone(cv.document_url)
+
+    def test_to_cited_dict_omits_excerpt_text_when_empty(self) -> None:
+        cv = _make_cited()
+        d = cv.to_cited_dict()
+        self.assertNotIn("excerpt_text", d)
+
+    def test_to_cited_dict_includes_excerpt_text_when_set(self) -> None:
+        cv = _make_cited(excerpt_text="Annual recurring revenue of $3.44 billion")
+        d = cv.to_cited_dict()
+        self.assertEqual(d.get("excerpt_text"), "Annual recurring revenue of $3.44 billion")
+
+
+class TestQueryResultDiagnostics(unittest.TestCase):
+    def test_default_diagnostics_is_empty_list(self) -> None:
+        from edgarpack.query.models import Diagnostic, QueryResult
+        qr = QueryResult(company="X", cik="0", period="lfy", metrics={})
+        self.assertEqual(qr.diagnostics, [])
+
+    def test_diagnostics_can_hold_structured_entries(self) -> None:
+        from edgarpack.query.models import Diagnostic, QueryResult
+        qr = QueryResult(
+            company="X", cik="0", period="lfy", metrics={},
+            diagnostics=[
+                Diagnostic(
+                    metric="arr",
+                    kind="layer_b_unresolved",
+                    message="Layer B could not resolve.",
+                )
+            ],
+        )
+        self.assertEqual(len(qr.diagnostics), 1)
+        self.assertEqual(qr.diagnostics[0].metric, "arr")
+        self.assertEqual(qr.diagnostics[0].kind, "layer_b_unresolved")
+
+    def test_invalid_kind_raises_validation_error(self) -> None:
+        """A typoed kind should be rejected by Pydantic at construction."""
+        from pydantic import ValidationError
+        from edgarpack.query.models import Diagnostic
+        with self.assertRaises(ValidationError):
+            Diagnostic(
+                metric="arr",
+                kind="typoed_kind",  # not in the Literal enum
+                message="nope",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
