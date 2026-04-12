@@ -163,6 +163,58 @@ class TestLayerBEndToEnd(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(rev.source, "hardcoded")
         self.assertEqual(arr.source, "learned:kpi-llm")
 
+    async def test_second_call_hits_cache_no_llm(self) -> None:
+        """Second call with the same args must hit the registry cache
+        and not invoke subprocess.run a second time. Success criterion
+        #2 from the Layer B spec."""
+        from edgarpack.query.financials import financials
+
+        fake_response = json.dumps({
+            "value": 3_440_000_000,
+            "unit": "USD",
+            "excerpt": "Annual Recurring Revenue of $3.44 billion",
+            "section_id": "10k_parti_item7_mda",
+            "confidence": "high",
+        })
+
+        class _FakeCompleted:
+            stdout = fake_response
+            stderr = ""
+            returncode = 0
+
+        with patch(f"{_P}.resolve_ticker",
+                   new=AsyncMock(return_value=("0001535527", "CrowdStrike Holdings, Inc."))), \
+             patch(f"{_P}.fetch_company_facts",
+                   new=AsyncMock(return_value={"facts": {}})), \
+             patch(f"{_P}._build_doc_map",
+                   new=AsyncMock(return_value={})), \
+             patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
+             patch("edgarpack.query.kpi_extract.subprocess.run",
+                   return_value=_FakeCompleted) as mock_run, \
+             patch("edgarpack.query.kpi_extract.PackRegistry",
+                   return_value=self.pack_registry), \
+             patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH",
+                   self.learned_db):
+            # First call — should hit the LLM (mocked) and persist
+            result1 = await financials("CRWD", metrics="arr", period="lfy")
+            arr1 = result1.metrics.get("arr")
+            self.assertIsNotNone(arr1)
+            assert arr1 is not None
+            self.assertEqual(arr1.source, "learned:kpi-llm")
+            first_call_count = mock_run.call_count
+            self.assertGreater(first_call_count, 0)  # LLM was called
+
+            # Second call — should hit cache, NOT call subprocess.run again
+            result2 = await financials("CRWD", metrics="arr", period="lfy")
+            arr2 = result2.metrics.get("arr")
+            self.assertIsNotNone(arr2)
+            assert arr2 is not None
+            self.assertEqual(arr2.source, "learned:kpi-cached")
+            self.assertEqual(arr2.value, 3_440_000_000)
+
+            # subprocess.run must not have been called again
+            self.assertEqual(mock_run.call_count, first_call_count)
+
     async def test_no_pack_produces_diagnostic(self) -> None:
         """When no pack is registered for the CIK, Layer B returns None and
         a diagnostic is attached to the QueryResult."""

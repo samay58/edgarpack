@@ -342,12 +342,18 @@ class Diagnostic(BaseModel):
     """
 
     metric: str
+    # TODO(v2.1): four of the five kinds are unreachable until
+    # try_extract_kpi is refactored to return a structured result tuple
+    # (see edgarpack/query/financials.py for the corresponding TODO).
+    # The catch-all 'layer_b_unresolved' is currently the only kind
+    # emitted in practice. The others are reserved for when the
+    # orchestrator has per-failure-mode information.
     kind: Literal[
         "layer_b_no_pack",
         "layer_b_no_llm_backend",
         "layer_b_not_found",
         "layer_b_hallucinated_excerpt",
-        "layer_b_unresolved",  # catch-all until fine-grained kinds are wired
+        "layer_b_unresolved",
     ]
     message: str
 

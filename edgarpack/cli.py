@@ -824,12 +824,12 @@ def _render_query_table(result: Any, args: Any) -> str:
                     )
                 )
 
-    diagnostics = getattr(result, "diagnostics", [])
+    diagnostics = result.diagnostics
     if diagnostics:
         lines.append("")
         lines.append("Diagnostics:")
         for diag in diagnostics:
-            # diag is a Diagnostic dataclass (Task 12), not a dict
+            # diag is a Diagnostic pydantic model (Task 12), not a dict
             metric_name = getattr(diag, "metric", "?")
             message = getattr(diag, "message", "")
             lines.extend(
@@ -1213,13 +1213,13 @@ def _cmd_learned(args: Any) -> int:
                 return 0
             print(
                 f"{'CIK':<12} {'METRIC':<24} {'CONCEPT':<40} "
-                f"{'SRC':<6} {'V':<2} HITS LEARNED_AT"
+                f"{'SRC':<8} {'V':<2} HITS LEARNED_AT"
             )
             for r in rows:
                 mark = "✓" if r.verified else "⚠"
                 print(
                     f"{r.cik:<12} {r.metric:<24} {r.concept:<40} "
-                    f"{r.source:<6} {mark:<2} {r.hit_count:<4} {r.learned_at}"
+                    f"{r.source:<8} {mark:<2} {r.hit_count:<4} {r.learned_at}"
                 )
             return 0
 
