@@ -249,9 +249,17 @@ def _llm_propose(
 
     prompt = _build_llm_prompt(metric, company, candidates, facts=facts)
 
+    # Build the command based on which backend was detected.
+    # codex: `codex exec "prompt"` (positional arg)
+    # claude: `claude -p "prompt"` (print mode, positional arg)
+    if _LLM_CMD == "codex":
+        cmd = [_LLM_CMD, "exec", prompt]
+    else:
+        cmd = [_LLM_CMD, "-p", prompt]
+
     try:
         completed = subprocess.run(
-            [_LLM_CMD, "exec", "--prompt", prompt],
+            cmd,
             capture_output=True,
             text=True,
             timeout=_LLM_TIMEOUT_SECONDS,

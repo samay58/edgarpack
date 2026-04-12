@@ -423,9 +423,17 @@ def _extract_via_llm(prompt: str) -> dict | None:
     if _LLM_CMD_KPI is None:
         return None
 
+    # Build the command based on which backend was detected.
+    # codex: `codex exec "prompt"` (positional arg)
+    # claude: `claude -p "prompt"` (print mode, positional arg)
+    if _LLM_CMD_KPI == "codex":
+        cmd = [_LLM_CMD_KPI, "exec", prompt]
+    else:
+        cmd = [_LLM_CMD_KPI, "-p", prompt]
+
     try:
         completed = subprocess.run(
-            [_LLM_CMD_KPI, "exec", "--prompt", prompt],
+            cmd,
             capture_output=True,
             text=True,
             timeout=_LLM_TIMEOUT_SECONDS_KPI,
