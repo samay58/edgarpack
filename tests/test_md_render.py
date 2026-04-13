@@ -113,6 +113,42 @@ class TestRenderMarkdown(unittest.TestCase):
         # "Assets" should appear in both rows
         self.assertEqual(md.count("Assets"), 2)
 
+    def test_unwraps_empty_href_link(self) -> None:
+        html = '<a href="">click here</a>'
+        md = render_markdown(html)
+        self.assertIn("click here", md)
+        self.assertNotIn("[click here]()", md)
+
+    def test_drops_empty_text_link(self) -> None:
+        html = '<a href="https://example.com">   </a>'
+        md = render_markdown(html)
+        self.assertNotIn("[](", md)
+        self.assertNotIn("example.com", md)
+
+    def test_unwraps_javascript_link(self) -> None:
+        html = '<a href="javascript:void(0)">click</a>'
+        md = render_markdown(html)
+        self.assertIn("click", md)
+        self.assertNotIn("[click]", md)
+
+    def test_unwraps_bare_hash_link(self) -> None:
+        html = '<a href="#">top</a>'
+        md = render_markdown(html)
+        self.assertIn("top", md)
+        self.assertNotIn("[top](#)", md)
+
+    def test_preserves_space_around_bold(self) -> None:
+        html = "<p>the <strong>bold</strong> word</p>"
+        md = render_markdown(html)
+        self.assertIn("the **bold** word", md)
+        self.assertNotIn("the**bold**word", md)
+
+    def test_preserves_space_around_italic(self) -> None:
+        html = "<p>the <em>italic</em> word</p>"
+        md = render_markdown(html)
+        self.assertIn("the *italic* word", md)
+        self.assertNotIn("the*italic*word", md)
+
 
 class TestNormalizeOutput(unittest.TestCase):
     def test_collapses_multiple_blank_lines(self) -> None:

@@ -74,23 +74,35 @@ def render_markdown(html: str) -> str:
     # Process links
     result = re.sub(
         r'<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>',
-        lambda m: f"[{_strip_tags(m.group(2)).strip()}]({m.group(1)})",
+        lambda m: _render_link(m.group(1), _strip_tags(m.group(2)).strip()),
         result,
         flags=re.DOTALL | re.IGNORECASE,
     )
 
     # Process strong/bold
+    def _render_strong(m: re.Match) -> str:
+        inner = _process_inline(m.group(1)).strip()
+        if not inner:
+            return ""
+        return f"**{inner}**"
+
     result = re.sub(
         r"<(?:strong|b)[^>]*>(.*?)</(?:strong|b)>",
-        lambda m: f"**{_process_inline(m.group(1)).strip()}**",
+        _render_strong,
         result,
         flags=re.DOTALL | re.IGNORECASE,
     )
 
     # Process emphasis/italic
+    def _render_em(m: re.Match) -> str:
+        inner = _process_inline(m.group(1)).strip()
+        if not inner:
+            return ""
+        return f"*{inner}*"
+
     result = re.sub(
         r"<(?:em|i)[^>]*>(.*?)</(?:em|i)>",
-        lambda m: f"*{_process_inline(m.group(1)).strip()}*",
+        _render_em,
         result,
         flags=re.DOTALL | re.IGNORECASE,
     )
@@ -135,6 +147,15 @@ def _strip_tags(html: str) -> str:
     return re.sub(r"<[^>]+>", "", html)
 
 
+def _render_link(href: str, text: str) -> str:
+    href = href.strip()
+    if not text or text.isspace():
+        return ""
+    if not href or href == "#" or href.lower().startswith("javascript:"):
+        return text
+    return f"[{text}]({href})"
+
+
 def _process_inline(html: str) -> str:
     """Process inline elements within text."""
     result = html
@@ -166,7 +187,7 @@ def _process_inline(html: str) -> str:
     # Process links
     result = re.sub(
         r'<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>',
-        lambda m: f"[{_strip_tags(m.group(2)).strip()}]({m.group(1)})",
+        lambda m: _render_link(m.group(1), _strip_tags(m.group(2)).strip()),
         result,
         flags=re.DOTALL | re.IGNORECASE,
     )
@@ -213,9 +234,7 @@ def _render_list_items(html: str, ordered: bool, depth: int) -> str:
     lines: list[str] = []
     item_idx = 0
 
-    for li_match in re.finditer(
-        r"<li[^>]*>(.*?)</li>", html, re.DOTALL | re.IGNORECASE
-    ):
+    for li_match in re.finditer(r"<li[^>]*>(.*?)</li>", html, re.DOTALL | re.IGNORECASE):
         li_content = li_match.group(1)
         li_text = _process_inline(li_content).strip()
         marker = f"{item_idx + 1}." if ordered else "-"
@@ -249,9 +268,7 @@ def _process_tables(html: str) -> str:
         grid: list[list[str]] = []
 
         row_idx = -1
-        for tr_match in re.finditer(
-            r"<tr[^>]*>(.*?)</tr>", content, re.DOTALL | re.IGNORECASE
-        ):
+        for tr_match in re.finditer(r"<tr[^>]*>(.*?)</tr>", content, re.DOTALL | re.IGNORECASE):
             tr_content = tr_match.group(1)
             row_idx += 1
             # Rowspan pre-fill may have already created this row; only append if needed
