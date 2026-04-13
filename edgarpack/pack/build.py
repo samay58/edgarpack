@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from ..config import SEC_ARCHIVES_BASE
 from ..parse.html_clean import clean_html
 from ..parse.ixbrl_strip import strip_ixbrl
+from ..parse.md_polish import polish
 from ..parse.md_render import render_markdown
 from ..parse.sectionize import sectionize
 from ..parse.semantic_html import reduce_to_semantic
@@ -49,7 +50,8 @@ def _process_html_files(html_files: list[tuple[str, bytes]], base_url: str) -> s
     html_stripped = strip_ixbrl(combined_html)
     html_cleaned = clean_html(html_stripped)
     html_semantic = reduce_to_semantic(html_cleaned, base_url=base_url)
-    return render_markdown(html_semantic)
+    md = render_markdown(html_semantic)
+    return polish(md)
 
 
 async def build_pack(
@@ -135,6 +137,10 @@ async def build_pack(
     # Step 4: Process HTML to markdown
     base_url = f"{SEC_ARCHIVES_BASE}/{meta.cik}/{meta.accession_nodash}/"
     markdown = _process_html_files(html_files, base_url=base_url)
+
+    # Step 4b: Prepend filing title
+    filing_title = f"# {meta.company_name} | {meta.form_type} | Filed {meta.filing_date.isoformat()}"
+    markdown = f"{filing_title}\n\n{markdown}"
 
     # Step 5: Sectionize
     sections = sectionize(markdown, meta.form_type)

@@ -270,5 +270,76 @@ class TestPolish(unittest.TestCase):
         self.assertEqual(once, twice)
 
 
+class TestPolishIntegration(unittest.TestCase):
+    def test_idempotent_on_realistic_input(self) -> None:
+        md = (
+            "##### Table of Contents\n\n"
+            "[Item 1](#item1)\n\n"
+            "##### Table of Contents\n\n"
+            "# PART I\n\n"
+            "## ITEM 1. BUSINESS\n\n"
+            "**$1,234** million in revenue.\n\n"
+            "See [Risk Factors](#toc123) for details.\n\n"
+            "| | \u2022 | | Risk one |\n"
+            "| --- | --- | --- | --- |\n"
+            "| | \u2022 | | Risk two |\n\n"
+            "| | Name | | Value | |\n"
+            "| --- | --- | --- | --- | --- |\n"
+            "| | Alpha | | 100 | |\n\n"
+            "##### Table of Contents\n\n"
+            "## ITEM 1A. RISK FACTORS\n\n"
+            "**This entire paragraph is bold and should not be.**\n\n"
+            "\n\n\n\n"
+            "More content here.\n"
+        )
+        once = polish(md)
+        twice = polish(once)
+        self.assertEqual(once, twice)
+
+    def test_all_rules_applied(self) -> None:
+        md = (
+            "##### Table of Contents\n\n"
+            "##### Table of Contents\n\n"
+            "# PART I\n\n"
+            "**$500** revenue\n\n"
+            "See [details](#anchor123)\n\n"
+            "| | \u2022 | | Item A |\n"
+            "| --- | --- | --- | --- |\n\n"
+            "| | Data | |\n"
+            "| --- | --- | --- |\n\n"
+            "\n\n\n\n"
+        )
+        result = polish(md)
+        # TOC spam removed
+        self.assertEqual(result.count("Table of Contents"), 1)
+        # Bold stripped from dollar amount
+        self.assertNotIn("**$500**", result)
+        self.assertIn("$500", result)
+        # Anchor stripped
+        self.assertNotIn("#anchor123", result)
+        self.assertIn("details", result)
+        # Bullet table recovered
+        self.assertIn("- Item A", result)
+        # Whitespace normalized
+        self.assertNotIn("\n\n\n", result)
+        # Heading shifted to ##
+        self.assertIn("## PART I", result)
+
+    def test_preserves_normal_content(self) -> None:
+        md = (
+            "## Section Title\n\n"
+            "Normal paragraph with **emphasis** on a word.\n\n"
+            "| Name | Value |\n"
+            "| --- | --- |\n"
+            "| Alpha | 100 |\n\n"
+            "- List item one\n"
+            "- List item two\n"
+        )
+        result = polish(md)
+        self.assertIn("**emphasis**", result)
+        self.assertIn("| Name | Value |", result)
+        self.assertIn("- List item one", result)
+
+
 if __name__ == "__main__":
     unittest.main()
