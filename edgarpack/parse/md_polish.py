@@ -2,7 +2,6 @@
 
 import re
 
-
 # Matches a heading line that is a Table of Contents or INDEX marker.
 # Handles any heading level (#..#), optional bold/italic wrappers, and
 # case variations. Examples that match:

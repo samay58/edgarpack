@@ -194,7 +194,7 @@ class TestNormalizeHeadings(unittest.TestCase):
         result = _normalize_headings(md)
         self.assertIn("## PART I", result)
         # Ensure no line starts with exactly one '#' (i.e., no h1 remains)
-        heading_lines = [l for l in result.split("\n") if l.startswith("#")]
+        heading_lines = [line for line in result.split("\n") if line.startswith("#")]
         for hl in heading_lines:
             self.assertFalse(hl.startswith("# ") and not hl.startswith("## "))
 
@@ -209,7 +209,7 @@ class TestNormalizeHeadings(unittest.TestCase):
         md = "## PART I\n\n##### Deep heading\n\nContent"
         result = _normalize_headings(md)
         lines = result.split("\n")
-        heading_lines = [l for l in lines if l.startswith("#")]
+        heading_lines = [line for line in lines if line.startswith("#")]
         first_level = len(heading_lines[0].split(" ")[0])
         second_level = len(heading_lines[1].split(" ")[0])
         self.assertLessEqual(second_level, first_level + 1)
@@ -264,7 +264,10 @@ class TestSimplifyComplexTables(unittest.TestCase):
 
 class TestPolish(unittest.TestCase):
     def test_idempotent(self) -> None:
-        md = "##### Table of Contents\n\nContent\n\n##### Table of Contents\n\nMore\n\n\n\n## Section"
+        md = (
+            "##### Table of Contents\n\nContent\n\n"
+            "##### Table of Contents\n\nMore\n\n\n\n## Section"
+        )
         once = polish(md)
         twice = polish(once)
         self.assertEqual(once, twice)

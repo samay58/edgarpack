@@ -139,7 +139,8 @@ async def build_pack(
     markdown = _process_html_files(html_files, base_url=base_url)
 
     # Step 4b: Prepend filing title
-    filing_title = f"# {meta.company_name} | {meta.form_type} | Filed {meta.filing_date.isoformat()}"
+    filed = meta.filing_date.isoformat()
+    filing_title = f"# {meta.company_name} | {meta.form_type} | Filed {filed}"
     markdown = f"{filing_title}\n\n{markdown}"
 
     # Step 5: Sectionize
