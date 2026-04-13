@@ -72,9 +72,15 @@ class CompanyRow:
 
 
 def companies_index(rows: Iterable[CompanyRow]) -> str:
-    """Render the companies index list."""
-    lines = [h2("COMPANIES"), '<ul class="list">']
-    for r in rows:
+    """Render the companies index list with a client-side filter."""
+    row_list = list(rows)
+    count = len(row_list)
+    lines = [
+        h2("COMPANIES"),
+        f'<input id="filter" type="text" placeholder="Filter by name, ticker, or CIK ({count} companies)" autofocus>',
+        '<ul id="company-list" class="list">',
+    ]
+    for r in row_list:
         lines.append(
             "<li>"
             f"{link(r.href, f'{r.name} ({r.cik})')}"
@@ -82,7 +88,23 @@ def companies_index(rows: Iterable[CompanyRow]) -> str:
             "</li>"
         )
     lines.append("</ul>")
+    lines.append(_FILTER_JS)
     return "\n".join(lines)
+
+
+_FILTER_JS = """<script>
+(function() {
+  var input = document.getElementById('filter');
+  var items = document.querySelectorAll('#company-list li');
+  input.addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    for (var i = 0; i < items.length; i++) {
+      var text = items[i].textContent.toLowerCase();
+      items[i].style.display = text.indexOf(q) !== -1 ? '' : 'none';
+    }
+  });
+})();
+</script>"""
 
 
 @dataclass(frozen=True)

@@ -58,6 +58,20 @@ ol { margin: 0.75rem 0; padding-left: 1.5rem; }
 li { margin: 0.35rem 0; }
 ul.list { list-style: none; padding-left: 0; }
 
+#filter {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--fg);
+  outline: none;
+}
+#filter:focus { border-color: var(--link); }
+#filter::placeholder { color: var(--muted); }
+
 table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
 th, td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; vertical-align: top; }
 th { text-align: left; color: var(--muted); font-weight: 600; }
