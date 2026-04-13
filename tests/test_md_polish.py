@@ -3,8 +3,10 @@
 import unittest
 
 from edgarpack.parse.md_polish import (
+    _normalize_headings,
     _normalize_whitespace,
     _recover_bullet_tables,
+    _simplify_complex_tables,
     _simplify_empty_columns,
     _strip_bold_noise,
     _strip_broken_anchors,
@@ -184,6 +186,80 @@ class TestSimplifyEmptyColumns(unittest.TestCase):
         )
         result = _simplify_empty_columns(md)
         self.assertEqual(result, md)
+
+
+class TestNormalizeHeadings(unittest.TestCase):
+    def test_shifts_h1_to_h2(self) -> None:
+        md = "# PART I\n\nContent"
+        result = _normalize_headings(md)
+        self.assertIn("## PART I", result)
+        # Ensure no line starts with exactly one '#' (i.e., no h1 remains)
+        heading_lines = [l for l in result.split("\n") if l.startswith("#")]
+        for hl in heading_lines:
+            self.assertFalse(hl.startswith("# ") and not hl.startswith("## "))
+
+    def test_maintains_relative_levels(self) -> None:
+        md = "# PART I\n\n## ITEM 1\n\n### Sub-section\n\nContent"
+        result = _normalize_headings(md)
+        self.assertIn("## PART I", result)
+        self.assertIn("### ITEM 1", result)
+        self.assertIn("#### Sub-section", result)
+
+    def test_clamps_level_skips(self) -> None:
+        md = "## PART I\n\n##### Deep heading\n\nContent"
+        result = _normalize_headings(md)
+        lines = result.split("\n")
+        heading_lines = [l for l in lines if l.startswith("#")]
+        first_level = len(heading_lines[0].split(" ")[0])
+        second_level = len(heading_lines[1].split(" ")[0])
+        self.assertLessEqual(second_level, first_level + 1)
+
+    def test_already_normalized_unchanged(self) -> None:
+        md = "## PART I\n\n### ITEM 1\n\n#### Details\n\nContent"
+        result = _normalize_headings(md)
+        self.assertEqual(result, md)
+
+    def test_no_headings_unchanged(self) -> None:
+        md = "Just some text\n\nMore text"
+        result = _normalize_headings(md)
+        self.assertEqual(result, md)
+
+
+class TestSimplifyComplexTables(unittest.TestCase):
+    def test_leaves_simple_table_alone(self) -> None:
+        md = (
+            "| Metric | Q1 | Q2 |\n"
+            "| --- | --- | --- |\n"
+            "| Revenue | 100 | 200 |\n"
+        )
+        result = _simplify_complex_tables(md)
+        self.assertIn("| Metric |", result)
+
+    def test_converts_wide_table_to_block(self) -> None:
+        header = "| Category | Sub | 2025 Q1 | 2025 Q2 | 2024 Q1 | 2024 Q2 | 2023 Q1 | 2023 Q2 |"
+        sep = "| --- | --- | --- | --- | --- | --- | --- | --- |"
+        row1 = "| Revenue | Product | 100 | 200 | 80 | 150 | 60 | 120 |"
+        md = f"{header}\n{sep}\n{row1}\n"
+        result = _simplify_complex_tables(md)
+        self.assertIn(">", result)
+        self.assertNotIn("| --- |", result)
+
+    def test_converts_long_row_table_to_block(self) -> None:
+        header = "| Description | Amount | Notes |"
+        sep = "| --- | --- | --- |"
+        long_row = "| " + "A" * 50 + " | " + "B" * 50 + " | " + "C" * 50 + " |"
+        md = f"{header}\n{sep}\n{long_row}\n"
+        result = _simplify_complex_tables(md)
+        self.assertIn(">", result)
+
+    def test_preserves_content_in_block_format(self) -> None:
+        header = "| A | B | C | D | E | F | G |"
+        sep = "| --- | --- | --- | --- | --- | --- | --- |"
+        row = "| Revenue | 100 | 200 | 300 | 400 | 500 | 600 |"
+        md = f"{header}\n{sep}\n{row}\n"
+        result = _simplify_complex_tables(md)
+        self.assertIn("Revenue", result)
+        self.assertIn("100", result)
 
 
 class TestPolish(unittest.TestCase):

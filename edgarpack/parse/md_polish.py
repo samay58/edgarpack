@@ -296,6 +296,117 @@ def _simplify_empty_columns(md: str) -> str:
     return "\n".join(lines)
 
 
+_MAX_SIMPLE_COLS = 6
+_MAX_ROW_WIDTH = 120
+
+
+def _simplify_complex_tables(md: str) -> str:
+    """Convert wide/complex GFM tables to indented blockquote format.
+
+    Tables with more than _MAX_SIMPLE_COLS columns or rows wider than
+    _MAX_ROW_WIDTH characters are converted to a blockquote with dot-leaders.
+    Simple tables are left as GFM.
+    """
+    lines = md.split("\n")
+    blocks = _find_table_blocks(md)
+    if not blocks:
+        return md
+
+    result_lines = list(lines)
+    # Process blocks in reverse to preserve line indices.
+    for start, end in reversed(blocks):
+        table_lines = lines[start:end]
+
+        # Parse rows (skip separator rows).
+        parsed_rows: list[list[str]] = []
+        for tl in table_lines:
+            cells = [c.strip() for c in tl.split("|")]
+            cells = cells[1:-1] if len(cells) >= 2 else cells
+            if cells and all(re.match(r"^-+$", c.strip()) for c in cells if c.strip()):
+                continue  # skip separator
+            parsed_rows.append(cells)
+
+        if not parsed_rows:
+            continue
+
+        num_cols = max(len(r) for r in parsed_rows)
+        max_row_len = max(len(tl) for tl in table_lines)
+
+        if num_cols <= _MAX_SIMPLE_COLS and max_row_len <= _MAX_ROW_WIDTH:
+            continue  # simple table, leave alone
+
+        # Convert to blockquote format.
+        header_row = parsed_rows[0]
+        data_rows = parsed_rows[1:] if len(parsed_rows) > 1 else parsed_rows
+
+        output: list[str] = []
+
+        caption_parts = [c for c in header_row if c]
+        if caption_parts:
+            if len(caption_parts) <= 3:
+                output.append(f"> **{' / '.join(caption_parts)}**")
+            else:
+                output.append(f"> **{caption_parts[0]}**")
+                output.append(">")
+                output.append("> " + " / ".join(caption_parts[1:]))
+            output.append(">")
+
+        for row in data_rows:
+            padded = row + [""] * (num_cols - len(row))
+            label = padded[0] if padded else ""
+            values = [v for v in padded[1:] if v]
+
+            if not label and not values:
+                continue
+
+            if label and values:
+                stripped_label = label.lstrip()
+                indent_spaces = len(label) - len(stripped_label)
+                indent = "  " * min(indent_spaces // 2, 3) if indent_spaces else ""
+                value_str = " / ".join(values)
+                leader_target = max(40 - len(indent) - len(stripped_label), 3)
+                leader = "." * leader_target
+                output.append(f"> {indent}{stripped_label} {leader} {value_str}")
+            elif label:
+                output.append(f"> {label}")
+            else:
+                output.append(f"> {' / '.join(values)}")
+
+        result_lines[start:end] = output
+
+    return "\n".join(result_lines)
+
+
+def _normalize_headings(md: str) -> str:
+    """Normalize heading levels: minimum becomes ##, no level skips."""
+    heading_re = re.compile(r"^(#{1,6})\s+(.*)", re.MULTILINE)
+    matches = list(heading_re.finditer(md))
+    if not matches:
+        return md
+
+    min_level = min(len(m.group(1)) for m in matches)
+    shift = 2 - min_level  # target: minimum becomes ##
+
+    lines = md.split("\n")
+    prev_level = 1  # virtual parent (the # title added later by pack builder)
+    result_lines: list[str] = []
+
+    for line in lines:
+        m = heading_re.match(line)
+        if m:
+            raw_level = len(m.group(1))
+            shifted = max(2, min(6, raw_level + shift))
+            if shifted > prev_level + 1:
+                shifted = prev_level + 1
+            shifted = min(shifted, 6)
+            prev_level = shifted
+            result_lines.append(f"{'#' * shifted} {m.group(2)}")
+        else:
+            result_lines.append(line)
+
+    return "\n".join(result_lines)
+
+
 def _strip_broken_anchors(md: str) -> str:
     """Strip fragment-only links outside the TOC section.
 
@@ -359,6 +470,8 @@ def polish(md: str) -> str:
     md = _strip_bold_noise(md)
     md = _recover_bullet_tables(md)
     md = _simplify_empty_columns(md)
+    md = _simplify_complex_tables(md)
+    md = _normalize_headings(md)
     md = _strip_broken_anchors(md)
     md = _normalize_whitespace(md)
     return md
