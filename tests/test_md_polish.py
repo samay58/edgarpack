@@ -2,7 +2,15 @@
 
 import unittest
 
-from edgarpack.parse.md_polish import polish, _strip_toc_spam, _normalize_whitespace, _strip_broken_anchors, _strip_bold_noise
+from edgarpack.parse.md_polish import (
+    _normalize_whitespace,
+    _recover_bullet_tables,
+    _simplify_empty_columns,
+    _strip_bold_noise,
+    _strip_broken_anchors,
+    _strip_toc_spam,
+    polish,
+)
 
 
 class TestStripTocSpam(unittest.TestCase):
@@ -107,6 +115,75 @@ class TestStripBoldNoise(unittest.TestCase):
         md = "Total was **42,000** units"
         result = _strip_bold_noise(md)
         self.assertNotIn("**42,000**", result)
+
+
+class TestRecoverBulletTables(unittest.TestCase):
+    def test_converts_bullet_table_to_list(self) -> None:
+        md = (
+            "| | \u2022 | | First item |\n"
+            "| --- | --- | --- | --- |\n"
+            "| | \u2022 | | Second item |\n"
+        )
+        result = _recover_bullet_tables(md)
+        self.assertIn("- First item", result)
+        self.assertIn("- Second item", result)
+        self.assertNotIn("|", result)
+
+    def test_ignores_normal_tables(self) -> None:
+        md = (
+            "| Name | Value |\n"
+            "| --- | --- |\n"
+            "| Alpha | 100 |\n"
+        )
+        result = _recover_bullet_tables(md)
+        self.assertIn("|", result)
+        self.assertIn("Alpha", result)
+
+    def test_converts_dash_bullet_table(self) -> None:
+        md = (
+            "| - | Item one |\n"
+            "| --- | --- |\n"
+            "| - | Item two |\n"
+        )
+        result = _recover_bullet_tables(md)
+        self.assertIn("- Item one", result)
+        self.assertIn("- Item two", result)
+
+
+class TestSimplifyEmptyColumns(unittest.TestCase):
+    def test_removes_all_empty_columns(self) -> None:
+        md = (
+            "| | Name | | Value | |\n"
+            "| --- | --- | --- | --- | --- |\n"
+            "| | Alpha | | 100 | |\n"
+        )
+        result = _simplify_empty_columns(md)
+        lines = [row for row in result.strip().split("\n") if row.startswith("|")]
+        for line in lines:
+            if "---" in line:
+                continue
+            cells = [c.strip() for c in line.split("|") if c.strip()]
+            self.assertLessEqual(len(cells), 2)
+
+    def test_converts_single_column_to_text(self) -> None:
+        md = (
+            "| | Content here | |\n"
+            "| --- | --- | --- |\n"
+            "| | More content | |\n"
+        )
+        result = _simplify_empty_columns(md)
+        self.assertIn("Content here", result)
+        self.assertIn("More content", result)
+        self.assertNotIn("| --- |", result)
+
+    def test_no_empty_columns_unchanged(self) -> None:
+        md = (
+            "| A | B |\n"
+            "| --- | --- |\n"
+            "| 1 | 2 |\n"
+        )
+        result = _simplify_empty_columns(md)
+        self.assertEqual(result, md)
 
 
 class TestPolish(unittest.TestCase):

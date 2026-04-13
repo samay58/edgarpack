@@ -95,6 +95,207 @@ def _strip_bold_noise(md: str) -> str:
     return md
 
 
+_BULLET_CHARS = {"\u2022", "\u25cb", "\u25aa", "\u25e6", "*", "-", "\u2023", "\u25b8"}
+
+# Matches a GFM separator row (e.g. | --- | :---: | --- |)
+_TABLE_SEP_RE = re.compile(r"^\|[\s\-:|]+\|[\s\-:|]*$")
+
+
+def _parse_table_block(lines: list[str]) -> list[list[str]] | None:
+    """Parse a sequence of table lines into a list of cell-lists.
+
+    Returns None if the block is not a valid GFM table (no separator row).
+    The separator row itself is represented as an empty list so we can
+    reconstruct position but is otherwise treated specially by callers.
+    """
+    if len(lines) < 2:
+        return None
+    rows: list[list[str]] = []
+    sep_found = False
+    for line in lines:
+        if _TABLE_SEP_RE.match(line.strip()):
+            rows.append([])  # sentinel for separator
+            sep_found = True
+        else:
+            # Split on | and strip, dropping empty first/last tokens from leading/trailing |
+            parts = line.split("|")
+            # Remove empty strings from leading/trailing pipe
+            has_border = parts[0].strip() == "" and parts[-1].strip() == ""
+            cells = [c.strip() for c in parts[1:-1]] if has_border else [c.strip() for c in parts]
+            rows.append(cells)
+    return rows if sep_found else None
+
+
+def _find_table_blocks(md: str) -> list[tuple[int, int]]:
+    """Return list of (start_line, end_line) index pairs for each GFM table block.
+
+    A block is a maximal run of consecutive lines that each start with '|'.
+    end_line is exclusive.
+    """
+    lines = md.split("\n")
+    blocks: list[tuple[int, int]] = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip().startswith("|"):
+            start = i
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                i += 1
+            blocks.append((start, i))
+        else:
+            i += 1
+    return blocks
+
+
+def _recover_bullet_tables(md: str) -> str:
+    """Convert GFM tables with a bullet-character column into markdown lists.
+
+    When every data cell in exactly one column consists solely of a bullet
+    character (and the rest of the table has at most one other content column),
+    the table is better represented as a plain list.  We find the bullet column
+    and the content column and emit "- <content>" lines.
+    """
+    lines = md.split("\n")
+    blocks = _find_table_blocks(md)
+    if not blocks:
+        return md
+
+    # Work from last block to first so line indices stay valid.
+    for start, end in reversed(blocks):
+        block_lines = lines[start:end]
+        rows = _parse_table_block(block_lines)
+        if rows is None:
+            continue
+
+        # Collect data rows (non-separator)
+        data_rows = [r for r in rows if r]  # separator rows are []
+        if not data_rows:
+            continue
+
+        # Determine number of columns from first data row
+        ncols = len(data_rows[0])
+        if ncols == 0:
+            continue
+
+        # Find which column index is the bullet column
+        bullet_col = None
+        for col in range(ncols):
+            if all(
+                col < len(row) and row[col] in _BULLET_CHARS
+                for row in data_rows
+            ):
+                bullet_col = col
+                break
+
+        if bullet_col is None:
+            continue  # no bullet column — leave table alone
+
+        # Find the content column: the single non-empty, non-bullet column
+        content_col = None
+        for col in range(ncols):
+            if col == bullet_col:
+                continue
+            # Check if any cell in this column has content
+            if any(col < len(row) and row[col] for row in data_rows):
+                if content_col is not None:
+                    content_col = None  # more than one content column
+                    break
+                content_col = col
+
+        if content_col is None:
+            continue  # ambiguous or no content — leave table alone
+
+        # Build list lines
+        list_lines = [
+            f"- {row[content_col]}" if content_col < len(row) else "-"
+            for row in data_rows
+        ]
+
+        lines[start:end] = list_lines
+
+    return "\n".join(lines)
+
+
+def _simplify_empty_columns(md: str) -> str:
+    """Remove GFM table columns where every cell (including header) is empty.
+
+    If after removal only 0 or 1 data columns remain, convert the block to
+    plain text lines instead of a single-column table.
+    """
+    lines = md.split("\n")
+    blocks = _find_table_blocks(md)
+    if not blocks:
+        return md
+
+    for start, end in reversed(blocks):
+        block_lines = lines[start:end]
+        rows = _parse_table_block(block_lines)
+        if rows is None:
+            continue
+
+        # Identify separator row index and data rows
+        sep_idx = next((i for i, r in enumerate(rows) if r == []), None)
+        if sep_idx is None:
+            continue
+
+        data_rows = [r for r in rows if r != []]
+        if not data_rows:
+            continue
+
+        ncols = max(len(r) for r in data_rows)
+
+        # Find empty columns (every cell empty across all data rows)
+        empty_cols = set()
+        for col in range(ncols):
+            if all(col >= len(row) or row[col] == "" for row in data_rows):
+                empty_cols.add(col)
+
+        if not empty_cols:
+            continue  # nothing to remove
+
+        # Build filtered data rows (drop empty columns)
+        filtered_rows = [
+            [cell for ci, cell in enumerate(row) if ci not in empty_cols]
+            for row in data_rows
+        ]
+
+        remaining_cols = ncols - len(empty_cols)
+
+        if remaining_cols <= 1:
+            # Convert to plain text
+            text_lines: list[str] = []
+            for row in filtered_rows:
+                text_lines.append(row[0] if row else "")
+            lines[start:end] = text_lines
+        else:
+            # Rebuild as a GFM table
+            def _fmt_row(cells: list[str]) -> str:
+                return "| " + " | ".join(cells) + " |"
+
+            rebuilt: list[str] = []
+            row_iter = iter(data_rows)
+            out_iter = iter(filtered_rows)
+
+            # Header row(s) before separator
+            header_out: list[str] = []
+            for _ in range(sep_idx):
+                next(row_iter)
+                header_out.append(_fmt_row(next(out_iter)))
+
+            rebuilt.extend(header_out)
+            rebuilt.append("| " + " | ".join(["---"] * remaining_cols) + " |")
+
+            # Remaining data rows
+            for _ in range(len(data_rows) - sep_idx):
+                try:
+                    rebuilt.append(_fmt_row(next(out_iter)))
+                except StopIteration:
+                    break
+
+            lines[start:end] = rebuilt
+
+    return "\n".join(lines)
+
+
 def _strip_broken_anchors(md: str) -> str:
     """Strip fragment-only links outside the TOC section.
 
@@ -156,6 +357,8 @@ def polish(md: str) -> str:
     """Apply all polish rules to rendered markdown in sequence."""
     md = _strip_toc_spam(md)
     md = _strip_bold_noise(md)
+    md = _recover_bullet_tables(md)
+    md = _simplify_empty_columns(md)
     md = _strip_broken_anchors(md)
     md = _normalize_whitespace(md)
     return md
