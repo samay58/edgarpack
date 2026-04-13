@@ -178,42 +178,61 @@ def _process_inline(html: str) -> str:
 
 
 def _process_lists(html: str) -> str:
-    """Process ul and ol lists."""
+    """Process ul and ol lists, including nested lists."""
+
+    # Process innermost lists first (no nested <ul>/<ol> inside them),
+    # then work outward.  Each pass converts one layer of list tags into
+    # indented markdown lines, shrinking the depth until no list tags remain.
     result = html
-
-    # Process unordered lists
-    def process_ul(match: re.Match) -> str:
-        content = match.group(1)
-        items = re.findall(r"<li[^>]*>(.*?)</li>", content, re.DOTALL | re.IGNORECASE)
-        if not items:
-            return ""
-        lines = [f"- {_process_inline(item).strip()}" for item in items]
-        return "\n\n" + "\n".join(lines) + "\n\n"
-
-    result = re.sub(
-        r"<ul[^>]*>(.*?)</ul>",
-        process_ul,
-        result,
-        flags=re.DOTALL | re.IGNORECASE,
-    )
-
-    # Process ordered lists
-    def process_ol(match: re.Match) -> str:
-        content = match.group(1)
-        items = re.findall(r"<li[^>]*>(.*?)</li>", content, re.DOTALL | re.IGNORECASE)
-        if not items:
-            return ""
-        lines = [f"{i + 1}. {_process_inline(item).strip()}" for i, item in enumerate(items)]
-        return "\n\n" + "\n".join(lines) + "\n\n"
-
-    result = re.sub(
-        r"<ol[^>]*>(.*?)</ol>",
-        process_ol,
-        result,
-        flags=re.DOTALL | re.IGNORECASE,
-    )
-
+    prev = None
+    while prev != result:
+        prev = result
+        result = re.sub(
+            r"<ul[^>]*>((?:(?!<ul|<ol).)*?)</ul>",
+            lambda m: _render_list_items(m.group(1), ordered=False, depth=0),
+            result,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+        result = re.sub(
+            r"<ol[^>]*>((?:(?!<ul|<ol).)*?)</ol>",
+            lambda m: _render_list_items(m.group(1), ordered=True, depth=0),
+            result,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
     return result
+
+
+def _render_list_items(html: str, ordered: bool, depth: int) -> str:
+    """Render a flat list of <li> items at the given indentation depth.
+
+    When called bottom-up by _process_lists, nested lists have already been
+    converted to indented lines and are embedded as plain text inside the
+    <li> content, so no recursive descent is needed here.
+    """
+    indent = "  " * depth
+    lines: list[str] = []
+    item_idx = 0
+
+    for li_match in re.finditer(
+        r"<li[^>]*>(.*?)</li>", html, re.DOTALL | re.IGNORECASE
+    ):
+        li_content = li_match.group(1)
+        li_text = _process_inline(li_content).strip()
+        marker = f"{item_idx + 1}." if ordered else "-"
+
+        # Split on embedded newlines so already-rendered nested lines get
+        # the right indentation prefix.
+        sub_lines = li_text.splitlines()
+        if sub_lines:
+            lines.append(f"{indent}{marker} {sub_lines[0]}")
+            for sub in sub_lines[1:]:
+                if sub.strip():
+                    lines.append(f"{indent}  {sub}")
+        else:
+            lines.append(f"{indent}{marker} ")
+        item_idx += 1
+
+    return "\n\n" + "\n".join(lines) + "\n\n" if lines else ""
 
 
 def _process_tables(html: str) -> str:

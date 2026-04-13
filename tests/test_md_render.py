@@ -41,6 +41,29 @@ class TestRenderMarkdown(unittest.TestCase):
         self.assertIn("- A", md)
         self.assertIn("- B", md)
 
+    def test_renders_nested_unordered_list(self) -> None:
+        html = "<ul><li>A<ul><li>A1</li><li>A2</li></ul></li><li>B</li></ul>"
+        md = render_markdown(html)
+        self.assertIn("- A", md)
+        self.assertIn("  - A1", md)
+        self.assertIn("  - A2", md)
+        self.assertIn("- B", md)
+
+    def test_renders_nested_ordered_list(self) -> None:
+        html = "<ol><li>First<ol><li>Sub 1</li><li>Sub 2</li></ol></li><li>Second</li></ol>"
+        md = render_markdown(html)
+        self.assertIn("1. First", md)
+        self.assertIn("  1. Sub 1", md)
+        self.assertIn("  2. Sub 2", md)
+        self.assertIn("2. Second", md)
+
+    def test_renders_deeply_nested_list(self) -> None:
+        html = "<ul><li>L1<ul><li>L2<ul><li>L3</li></ul></li></ul></li></ul>"
+        md = render_markdown(html)
+        self.assertIn("- L1", md)
+        self.assertIn("  - L2", md)
+        self.assertIn("    - L3", md)
+
     def test_renders_table(self) -> None:
         html = "<table><tr><th>Name</th><th>Value</th></tr><tr><td>A</td><td>1</td></tr></table>"
         md = render_markdown(html)
