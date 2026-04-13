@@ -1,44 +1,78 @@
-# EdgarPack Filing Observatory - Company Universe
-# This file defines which companies and filings to harvest.
+# EdgarPack Filing Observatory - Top 200 Tech Companies by Market Cap
+# Source: companiesmarketcap.com/tech (April 2026)
 #
-# Usage: edgarpack harvest --universe universe.toml --out ./packs
+# Usage: edgarpack harvest --universe universe.toml --out ./packs --refresh
 #
 # Per-company overrides take precedence over [defaults].
 # Foreign filers (20-F) need explicit CIK and forms_20f.
+# Companies not filing with the SEC (e.g. Samsung, SK Hynix) are excluded.
 
 [defaults]
 forms_10k = 2
 forms_10q = 4
 forms_8k = 5
 
-# --- Semiconductors ---
+# ============================================================
+#  Hyperscalers / Mega-Cap
+# ============================================================
 
 [[companies]]
 ticker = "NVDA"
 
 [[companies]]
-ticker = "AMD"
+ticker = "GOOGL"
 
 [[companies]]
-ticker = "INTC"
+ticker = "AAPL"
+
+[[companies]]
+ticker = "MSFT"
+
+[[companies]]
+ticker = "AMZN"
+
+[[companies]]
+ticker = "META"
+
+[[companies]]
+ticker = "TSLA"
+
+[[companies]]
+ticker = "ORCL"
+
+# ============================================================
+#  Semiconductors
+# ============================================================
 
 [[companies]]
 ticker = "AVGO"
 
 [[companies]]
-ticker = "QCOM"
+ticker = "MU"
+
+[[companies]]
+ticker = "AMD"
+
+[[companies]]
+ticker = "LRCX"
+
+[[companies]]
+ticker = "KLAC"
+
+[[companies]]
+ticker = "AMAT"
 
 [[companies]]
 ticker = "TXN"
 
 [[companies]]
-ticker = "MU"
+ticker = "ADI"
+
+[[companies]]
+ticker = "QCOM"
 
 [[companies]]
 ticker = "MRVL"
-
-[[companies]]
-ticker = "ADI"
 
 [[companies]]
 ticker = "NXPI"
@@ -50,13 +84,48 @@ ticker = "ON"
 ticker = "MCHP"
 
 [[companies]]
-ticker = "LRCX"
+ticker = "ARM"
 
 [[companies]]
-ticker = "KLAC"
+ticker = "MPWR"
 
 [[companies]]
-ticker = "AMAT"
+ticker = "INTC"
+
+[[companies]]
+ticker = "STM"  # STMicroelectronics
+
+[[companies]]
+ticker = "GFS"  # GlobalFoundries
+
+[[companies]]
+ticker = "ALAB"  # Astera Labs
+
+[[companies]]
+ticker = "CRDO"  # Credo Technology
+
+[[companies]]
+ticker = "TSEM"  # Tower Semiconductor
+
+[[companies]]
+ticker = "UMC"  # United Microelectronics
+cik = "0001033767"
+forms_10q = 0
+forms_20f = 2
+
+[[companies]]
+ticker = "ENTG"  # Entegris
+
+[[companies]]
+ticker = "MTSI"  # MACOM Technology
+
+[[companies]]
+ticker = "LSCC"  # Lattice Semiconductor
+
+[[companies]]
+ticker = "AMKR"  # Amkor Technology
+
+# Foreign semi filers (20-F)
 
 [[companies]]
 ticker = "ASML"
@@ -70,33 +139,31 @@ cik = "0001046179"
 forms_10q = 0
 forms_20f = 2
 
-# --- Hyperscalers / Cloud ---
+# ============================================================
+#  Semiconductor Equipment / EDA
+# ============================================================
 
 [[companies]]
-ticker = "MSFT"
+ticker = "SNPS"
 
 [[companies]]
-ticker = "GOOGL"
+ticker = "CDNS"
 
 [[companies]]
-ticker = "AMZN"
+ticker = "COHR"  # Coherent Corp
 
 [[companies]]
-ticker = "META"
+ticker = "KEYS"  # Keysight Technologies
 
-[[companies]]
-ticker = "AAPL"
-
-[[companies]]
-ticker = "ORCL"
-
-# --- Enterprise Software ---
+# ============================================================
+#  Enterprise Software / SaaS
+# ============================================================
 
 [[companies]]
 ticker = "CRM"
 
 [[companies]]
-ticker = "NOW"
+ticker = "NOW"  # ServiceNow
 
 [[companies]]
 ticker = "ADBE"
@@ -114,9 +181,6 @@ ticker = "SNOW"
 ticker = "DDOG"
 
 [[companies]]
-ticker = "NET"
-
-[[companies]]
 ticker = "PANW"
 
 [[companies]]
@@ -132,9 +196,148 @@ ticker = "FTNT"
 ticker = "MDB"
 
 [[companies]]
-ticker = "TEAM"
+ticker = "TEAM"  # Atlassian
 
-# --- Fintech ---
+[[companies]]
+ticker = "ADSK"  # Autodesk
+
+[[companies]]
+ticker = "VEEV"  # Veeva Systems
+
+[[companies]]
+ticker = "ROP"  # Roper Technologies
+
+[[companies]]
+ticker = "PTC"
+
+[[companies]]
+ticker = "TWLO"
+
+[[companies]]
+ticker = "NET"  # Cloudflare
+
+[[companies]]
+ticker = "ESTC"  # Elastic
+
+[[companies]]
+ticker = "CFLT"  # Confluent
+
+[[companies]]
+ticker = "DOCN"  # DigitalOcean
+
+[[companies]]
+ticker = "GTLB"  # GitLab
+
+[[companies]]
+ticker = "ZM"  # Zoom
+
+[[companies]]
+ticker = "FICO"  # Fair Isaac
+
+[[companies]]
+ticker = "SSNC"  # SS&C Technologies
+
+[[companies]]
+ticker = "FFIV"  # F5
+
+[[companies]]
+ticker = "AKAM"  # Akamai
+
+[[companies]]
+ticker = "TYL"  # Tyler Technologies
+
+[[companies]]
+ticker = "TRMB"  # Trimble
+
+[[companies]]
+ticker = "IOT"  # Samsara
+
+[[companies]]
+ticker = "TOST"  # Toast
+
+[[companies]]
+ticker = "CSGP"  # CoStar Group
+
+[[companies]]
+ticker = "CHKP"  # Check Point Software
+
+# ============================================================
+#  Cloud Infrastructure / AI / Data
+# ============================================================
+
+[[companies]]
+ticker = "PLTR"
+
+[[companies]]
+ticker = "AI"  # C3.ai
+
+[[companies]]
+ticker = "PATH"  # UiPath
+
+[[companies]]
+ticker = "SMCI"  # Supermicro
+
+[[companies]]
+ticker = "VRT"  # Vertiv
+
+[[companies]]
+ticker = "DELL"
+
+[[companies]]
+ticker = "HPE"
+
+[[companies]]
+ticker = "EQIX"  # Equinix
+
+[[companies]]
+ticker = "PSTG"  # Pure Storage
+
+[[companies]]
+ticker = "NTAP"  # NetApp
+
+[[companies]]
+ticker = "CRWV"  # CoreWeave
+
+[[companies]]
+ticker = "NBIS"  # Nebius Group
+
+[[companies]]
+ticker = "SYM"  # Symbotic
+
+[[companies]]
+ticker = "IREN"  # Iris Energy
+
+[[companies]]
+ticker = "MSTR"  # MicroStrategy / Strategy
+
+[[companies]]
+ticker = "HPQ"  # HP Inc
+
+# ============================================================
+#  Networking / Telecom Equipment
+# ============================================================
+
+[[companies]]
+ticker = "CSCO"
+
+[[companies]]
+ticker = "ANET"
+
+[[companies]]
+ticker = "NOK"  # Nokia
+cik = "0000924613"
+forms_10q = 0
+forms_20f = 2
+
+[[companies]]
+ticker = "ERIC"  # Ericsson
+cik = "0000717826"
+forms_10q = 0
+forms_20f = 2
+
+# ============================================================
+#  Fintech / Payments
+# ============================================================
 
 [[companies]]
 ticker = "V"
@@ -157,7 +360,24 @@ ticker = "AFRM"
 [[companies]]
 ticker = "HOOD"
 
-# --- Consumer Tech ---
+[[companies]]
+ticker = "FISV"  # Fiserv
+
+[[companies]]
+ticker = "FIS"  # Fidelity National
+
+[[companies]]
+ticker = "GPN"  # Global Payments
+
+[[companies]]
+ticker = "SOFI"
+
+[[companies]]
+ticker = "CRCL"  # Circle Internet Group
+
+# ============================================================
+#  Consumer Tech / Internet
+# ============================================================
 
 [[companies]]
 ticker = "NFLX"
@@ -178,81 +398,990 @@ ticker = "PINS"
 ticker = "RBLX"
 
 [[companies]]
+ticker = "BKNG"  # Booking Holdings
+
+[[companies]]
+ticker = "DASH"  # DoorDash
+
+[[companies]]
+ticker = "EXPE"  # Expedia
+
+[[companies]]
+ticker = "RDDT"  # Reddit
+
+[[companies]]
+ticker = "ROKU"
+
+[[companies]]
+ticker = "EBAY"
+
+[[companies]]
+ticker = "LOGI"  # Logitech
+cik = "0001032975"
+forms_10q = 0
+forms_20f = 2
+
+# Foreign consumer tech (20-F)
+
+[[companies]]
 ticker = "SPOT"
 cik = "0001639920"
 forms_10q = 0
 forms_20f = 2
 
-# --- AI / Data Infrastructure ---
+[[companies]]
+ticker = "SHOP"
+cik = "0001594805"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "PLTR"
+ticker = "SE"  # Sea Limited
+cik = "0001703399"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "AI"
+ticker = "GRAB"  # Grab Holdings
+cik = "0001855612"
+forms_10q = 0
+forms_20f = 2
+
+# ============================================================
+#  Gaming
+# ============================================================
 
 [[companies]]
-ticker = "PATH"
+ticker = "TTWO"  # Take-Two Interactive
 
 [[companies]]
-ticker = "SMCI"
+ticker = "EA"  # Electronic Arts
+
+# ============================================================
+#  E-Commerce (China ADRs)
+# ============================================================
 
 [[companies]]
-ticker = "VRT"
+ticker = "BABA"  # Alibaba
+cik = "0001577552"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "DELL"
+ticker = "PDD"  # PDD Holdings / Pinduoduo
+cik = "0001737806"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "HPE"
-
-# --- Networking / Telecom ---
-
-[[companies]]
-ticker = "CSCO"
+ticker = "JD"  # JD.com
+cik = "0001549802"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "ANET"
-
-# --- EDA / Design ---
-
-[[companies]]
-ticker = "SNPS"
+ticker = "BIDU"  # Baidu
+cik = "0001329099"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "CDNS"
-
-# --- Misc Tech ---
+ticker = "NTES"  # NetEase
+cik = "0001110646"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "IBM"
+ticker = "TCOM"  # Trip.com
+cik = "0001269238"
+forms_10q = 0
+forms_20f = 2
+
+[[companies]]
+ticker = "FUTU"  # Futu Holdings
+cik = "0001754581"
+forms_10q = 0
+forms_20f = 2
+
+# ============================================================
+#  IT Services / Consulting
+# ============================================================
 
 [[companies]]
 ticker = "ACN"
 
 [[companies]]
-ticker = "SHOP"
+ticker = "IBM"
+
+[[companies]]
+ticker = "ADP"  # Automatic Data Processing
+
+[[companies]]
+ticker = "IQV"  # IQVIA
+
+[[companies]]
+ticker = "LDOS"  # Leidos
+
+[[companies]]
+ticker = "CPNG"  # Coupang
+cik = "0001834584"
+forms_10q = 0
+forms_20f = 2
+
+# ============================================================
+#  Ad Tech / MarTech
+# ============================================================
 
 [[companies]]
 ticker = "TTD"
 
 [[companies]]
-ticker = "ZM"
+ticker = "APP"  # AppLovin
+
+# ============================================================
+#  Hardware / Devices
+# ============================================================
 
 [[companies]]
-ticker = "TWLO"
+ticker = "STX"  # Seagate
 
 [[companies]]
-ticker = "ESTC"
+ticker = "GRMN"  # Garmin
+cik = "0001121788"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "CFLT"
+ticker = "TEL"  # TE Connectivity
+cik = "0001385157"
+forms_10q = 0
+forms_20f = 2
+
+# ============================================================
+#  Other / Specialty Tech
+# ============================================================
 
 [[companies]]
-ticker = "DOCN"
+ticker = "SAP"  # SAP SE
+cik = "0001000184"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "GTLB"
+ticker = "SONY"  # Sony Group
+cik = "0000313838"
+forms_10q = 0
+forms_20f = 2
 
 [[companies]]
-ticker = "ARM"
+ticker = "MELI"  # MercadoLibre
+cik = "0001099590"
+
+[[companies]]
+ticker = "NVMI"  # Nova Ltd
+
+[[companies]]
+ticker = "ASTS"  # AST SpaceMobile
+
+[[companies]]
+ticker = "QXO"  # QXO Inc
+
+# ============================================================
+#  Expansion: ranks ~200-300 (mid-cap tech)
+# ============================================================
+
+# --- Cybersecurity ---
+[[companies]]
+ticker = "CYBR"  # CyberArk
+[[companies]]
+ticker = "S"  # SentinelOne
+[[companies]]
+ticker = "TENB"  # Tenable
+[[companies]]
+ticker = "QLYS"  # Qualys
+[[companies]]
+ticker = "RPD"  # Rapid7
+[[companies]]
+ticker = "VRNS"  # Varonis
+
+# --- Enterprise / SaaS (mid-cap) ---
+[[companies]]
+ticker = "HUBS"  # HubSpot
+[[companies]]
+ticker = "BILL"  # Bill.com
+[[companies]]
+ticker = "DOCU"  # DocuSign
+[[companies]]
+ticker = "OKTA"  # Okta
+[[companies]]
+ticker = "MNDY"  # Monday.com
+[[companies]]
+ticker = "DT"  # Dynatrace
+[[companies]]
+ticker = "PCOR"  # Procore
+[[companies]]
+ticker = "GWRE"  # Guidewire
+[[companies]]
+ticker = "BSY"  # Bentley Systems
+[[companies]]
+ticker = "MANH"  # Manhattan Associates
+[[companies]]
+ticker = "APPF"  # AppFolio
+[[companies]]
+ticker = "BRZE"  # Braze
+[[companies]]
+ticker = "WK"  # Workiva
+[[companies]]
+ticker = "GEN"  # Gen Digital (NortonLifeLock)
+[[companies]]
+ticker = "NTNX"  # Nutanix
+[[companies]]
+ticker = "BOX"  # Box
+[[companies]]
+ticker = "DBX"  # Dropbox
+[[companies]]
+ticker = "FROG"  # JFrog
+[[companies]]
+ticker = "ASAN"  # Asana
+[[companies]]
+ticker = "GDDY"  # GoDaddy
+[[companies]]
+ticker = "SQSP"  # Squarespace
+[[companies]]
+ticker = "IT"  # Gartner
+[[companies]]
+ticker = "EPAM"  # EPAM Systems
+[[companies]]
+ticker = "GLOB"  # Globant
+[[companies]]
+ticker = "QTWO"  # Q2 Holdings
+[[companies]]
+ticker = "NCNO"  # nCino
+[[companies]]
+ticker = "CWAN"  # Clearwater Analytics
+[[companies]]
+ticker = "ZI"  # ZoomInfo
+
+# --- HR Tech / Payroll ---
+[[companies]]
+ticker = "PAYC"  # Paycom
+[[companies]]
+ticker = "PCTY"  # Paylocity
+
+# --- Fintech (mid-cap) ---
+[[companies]]
+ticker = "FOUR"  # Shift4 Payments
+[[companies]]
+ticker = "RELY"  # Remitly
+[[companies]]
+ticker = "UPST"  # Upstart
+[[companies]]
+ticker = "WEX"  # WEX Inc
+[[companies]]
+ticker = "GLBE"  # Global-E Online
+# --- Consumer Internet (mid-cap) ---
+[[companies]]
+ticker = "LYFT"
+[[companies]]
+ticker = "ETSY"
+[[companies]]
+ticker = "MTCH"  # Match Group
+[[companies]]
+ticker = "DUOL"  # Duolingo
+[[companies]]
+ticker = "COUR"  # Coursera
+[[companies]]
+ticker = "U"  # Unity
+[[companies]]
+ticker = "YELP"
+[[companies]]
+ticker = "TRIP"  # TripAdvisor
+[[companies]]
+ticker = "BMBL"  # Bumble
+
+# --- Gaming (mid-cap) ---
+# --- Ad Tech (mid-cap) ---
+[[companies]]
+ticker = "DV"  # DoubleVerify
+[[companies]]
+ticker = "IAS"  # Integral Ad Science
+[[companies]]
+ticker = "MGNI"  # Magnite
+
+# --- Semiconductors (mid-cap) ---
+[[companies]]
+ticker = "SWKS"  # Skyworks
+[[companies]]
+ticker = "QRVO"  # Qorvo
+[[companies]]
+ticker = "CRUS"  # Cirrus Logic
+[[companies]]
+ticker = "RMBS"  # Rambus
+[[companies]]
+ticker = "PI"  # Impinj
+[[companies]]
+ticker = "FORM"  # FormFactor
+[[companies]]
+ticker = "DIOD"  # Diodes Inc
+[[companies]]
+ticker = "SLAB"  # Silicon Labs
+[[companies]]
+ticker = "WOLF"  # Wolfspeed
+[[companies]]
+ticker = "OLED"  # Universal Display
+[[companies]]
+ticker = "MKSI"  # MKS Instruments
+[[companies]]
+ticker = "TER"  # Teradyne
+
+# --- Networking / Infrastructure (mid-cap) ---
+[[companies]]
+ticker = "CALX"  # Calix
+[[companies]]
+ticker = "ZBRA"  # Zebra Technologies
+[[companies]]
+ticker = "LITE"  # Lumentum
+
+# --- IT Services (mid-cap) ---
+[[companies]]
+ticker = "INFY"  # Infosys
+cik = "0001067491"
+forms_10q = 0
+forms_20f = 2
+[[companies]]
+ticker = "WIT"  # Wipro
+cik = "0001120506"
+forms_10q = 0
+forms_20f = 2
+
+# --- Web / E-commerce platforms ---
+[[companies]]
+ticker = "WIX"  # Wix.com
+cik = "0001576789"
+forms_10q = 0
+forms_20f = 2
+[[companies]]
+ticker = "ANSS"  # Ansys
+
+# --- Data / Analytics ---
+[[companies]]
+ticker = "CLVT"  # Clarivate
+[[companies]]
+ticker = "DSGX"  # Descartes Group
+[[companies]]
+ticker = "SPSC"  # SPS Commerce
+[[companies]]
+ticker = "ALRM"  # Alarm.com
+[[companies]]
+ticker = "JAMF"  # Jamf
+[[companies]]
+ticker = "SMAR"  # Smartsheet
+[[companies]]
+ticker = "FRSH"  # Freshworks
+[[companies]]
+ticker = "VTEX"  # VTEX
+# --- Misc tech 200-300 ---
+[[companies]]
+ticker = "OTEX"  # Open Text
+[[companies]]
+ticker = "JKHY"  # Jack Henry
+
+# --- More mid/small-cap tech to reach ~300 ---
+
+# Semis (small-cap)
+[[companies]]
+ticker = "PEGA"
+[[companies]]
+ticker = "ALTR"
+[[companies]]
+ticker = "AZPN"
+[[companies]]
+ticker = "CAMT"
+[[companies]]
+ticker = "ONTO"
+[[companies]]
+ticker = "ACLS"
+[[companies]]
+ticker = "IPGP"
+[[companies]]
+ticker = "POWI"
+[[companies]]
+ticker = "SMTC"
+[[companies]]
+ticker = "SITM"
+[[companies]]
+ticker = "ALGM"
+[[companies]]
+ticker = "CEVA"
+[[companies]]
+ticker = "AEHR"
+[[companies]]
+ticker = "AMBA"
+
+# Software (small-cap)
+[[companies]]
+ticker = "BASE"
+[[companies]]
+ticker = "NABL"
+[[companies]]
+ticker = "PRGS"
+[[companies]]
+ticker = "BLKB"
+[[companies]]
+ticker = "INTA"
+[[companies]]
+ticker = "EXLS"
+[[companies]]
+ticker = "CSGS"
+[[companies]]
+ticker = "RAMP"
+[[companies]]
+ticker = "SEMR"
+[[companies]]
+ticker = "PYCR"
+[[companies]]
+ticker = "PROS"
+[[companies]]
+ticker = "AGYS"
+[[companies]]
+ticker = "OLO"
+[[companies]]
+ticker = "EVBG"
+[[companies]]
+ticker = "VERX"
+[[companies]]
+ticker = "ENV"
+[[companies]]
+ticker = "CNXC"
+[[companies]]
+ticker = "TASK"
+[[companies]]
+ticker = "PRFT"
+
+# AI / Quantum / Compute
+[[companies]]
+ticker = "SOUN"
+[[companies]]
+ticker = "BBAI"
+[[companies]]
+ticker = "IONQ"
+[[companies]]
+ticker = "RGTI"
+
+# Crypto mining / Compute infrastructure
+[[companies]]
+ticker = "CIFR"
+[[companies]]
+ticker = "CLSK"
+[[companies]]
+ticker = "RIOT"
+[[companies]]
+ticker = "MARA"
+[[companies]]
+ticker = "HUT"
+[[companies]]
+ticker = "BTDR"
+[[companies]]
+ticker = "CORZ"
+[[companies]]
+ticker = "WULF"
+
+# Auto / Marketplace tech
+[[companies]]
+ticker = "CARG"
+[[companies]]
+ticker = "CARS"
+[[companies]]
+ticker = "VNT"
+
+# Industrial tech / Sensors
+[[companies]]
+ticker = "LFUS"
+[[companies]]
+ticker = "NOVT"
+[[companies]]
+ticker = "ST"
+[[companies]]
+ticker = "ITRI"
+[[companies]]
+ticker = "CGNX"
+[[companies]]
+ticker = "AZTA"
+[[companies]]
+ticker = "KD"
+
+# Final batch to hit 300
+[[companies]]
+ticker = "TTMI"  # TTM Technologies
+[[companies]]
+ticker = "ICHR"  # Ichor Holdings
+[[companies]]
+ticker = "AEIS"  # Advanced Energy
+[[companies]]
+ticker = "COHU"  # Cohu
+[[companies]]
+ticker = "IDCC"  # InterDigital
+[[companies]]
+ticker = "SANM"  # Sanmina
+[[companies]]
+ticker = "PLXS"  # Plexus
+[[companies]]
+ticker = "BDC"  # Belden
+[[companies]]
+ticker = "FLEX"  # Flex Ltd
+[[companies]]
+ticker = "DXC"  # DXC Technology
+[[companies]]
+ticker = "MANT"  # ManTech (defense IT)
+[[companies]]
+ticker = "SAIC"  # Science Applications Intl
+[[companies]]
+ticker = "BAH"  # Booz Allen Hamilton (tech consulting)
+[[companies]]
+ticker = "CTSH"  # Cognizant
+[[companies]]
+ticker = "GDYN"  # Grid Dynamics
+
+# ============================================================
+#  Additional from top500 spreadsheet (US-listed, rank < 350)
+# ============================================================
+
+[[companies]]
+ticker = "APH"  # Amphenol
+[[companies]]
+ticker = "GLW"  # Corning
+[[companies]]
+ticker = "MSI"  # Motorola Solutions
+[[companies]]
+ticker = "VRSN"  # VeriSign
+[[companies]]
+ticker = "WDC"  # Western Digital
+[[companies]]
+ticker = "CIEN"  # Ciena
+[[companies]]
+ticker = "JNPR"  # Juniper Networks
+[[companies]]
+ticker = "RNG"  # RingCentral
+[[companies]]
+ticker = "FIVN"  # Five9
+[[companies]]
+ticker = "SWI"  # SolarWinds
+[[companies]]
+ticker = "DLB"  # Dolby Laboratories
+[[companies]]
+ticker = "FSLY"  # Fastly
+[[companies]]
+ticker = "ENPH"  # Enphase Energy
+[[companies]]
+ticker = "KLIC"  # Kulicke & Soffa
+[[companies]]
+ticker = "HLIT"  # Harmonic
+[[companies]]
+ticker = "EXTR"  # Extreme Networks
+[[companies]]
+ticker = "VIAV"  # Viavi Solutions
+[[companies]]
+ticker = "ATEN"  # A10 Networks
+[[companies]]
+ticker = "VRNT"  # Verint Systems
+[[companies]]
+ticker = "APPN"  # Appian
+[[companies]]
+ticker = "VSH"  # Vishay Intertechnology
+[[companies]]
+ticker = "ACMR"  # ACM Research
+[[companies]]
+ticker = "INDI"  # indie Semiconductor
+[[companies]]
+ticker = "MQ"  # Marqeta
+[[companies]]
+ticker = "FLYW"  # Flywire
+[[companies]]
+ticker = "RKT"  # Rocket Companies
+[[companies]]
+ticker = "ALKT"  # Alkami Technology
+[[companies]]
+ticker = "PAYO"  # Payoneer Global
+[[companies]]
+ticker = "RKLB"  # Rocket Lab
+[[companies]]
+ticker = "PL"  # Planet Labs
+[[companies]]
+ticker = "CVNA"  # Carvana
+[[companies]]
+ticker = "ZG"  # Zillow Group
+[[companies]]
+ticker = "RDFN"  # Redfin
+[[companies]]
+ticker = "TEM"  # Tempus AI
+[[companies]]
+ticker = "APLD"  # Applied Digital
+[[companies]]
+ticker = "A"  # Agilent Technologies
+[[companies]]
+ticker = "MXL"  # MaxLinear
+[[companies]]
+ticker = "PDFS"  # PDF Solutions
+[[companies]]
+ticker = "BAND"  # Bandwidth
+[[companies]]
+ticker = "SPT"  # Sprout Social
+[[companies]]
+ticker = "MTTR"  # Matterport
+
+# ============================================================
+#  Batch add: remaining US-listed from top500 spreadsheet
+# ============================================================
+
+[[companies]]
+ticker = "SNDK"  # SanDisk (WD spin-off)
+[[companies]]
+ticker = "ASX"  # ASE Technology
+[[companies]]
+ticker = "NICE"  # NICE
+[[companies]]
+ticker = "LI"  # Li Auto
+[[companies]]
+ticker = "INFA"  # Informatica
+[[companies]]
+ticker = "CXM"  # Sprinklr
+[[companies]]
+ticker = "OPRA"  # Opera
+[[companies]]
+ticker = "ZTO"  # ZTO Express
+[[companies]]
+ticker = "CDAY"  # Ceridian HCM
+[[companies]]
+ticker = "YEXT"  # Yext
+[[companies]]
+ticker = "SEDG"  # SolarEdge Technologies
+[[companies]]
+ticker = "HCP"  # HashiCorp
+[[companies]]
+ticker = "MTLS"  # Materialise
+[[companies]]
+ticker = "IRDM"  # IRIDIUM Communications
+[[companies]]
+ticker = "COMM"  # CommScope
+[[companies]]
+ticker = "COUP"  # Coupa Software
+[[companies]]
+ticker = "TDC"  # Teradata
+[[companies]]
+ticker = "DGII"  # Digi International
+[[companies]]
+ticker = "MFGP"  # Micro Focus
+[[companies]]
+ticker = "QTS"  # QTS Realty (Blackstone)
+[[companies]]
+ticker = "UPWK"  # Upwork
+[[companies]]
+ticker = "FVRR"  # Fiverr International
+[[companies]]
+ticker = "SUMO"  # Sumo Logic
+[[companies]]
+ticker = "ZUO"  # Zuora
+[[companies]]
+ticker = "SIMO"  # Silicon Motion
+[[companies]]
+ticker = "PHOT"  # Photon Dynamics
+[[companies]]
+ticker = "CAMP"  # CalAmp
+[[companies]]
+ticker = "RBBN"  # Ribbon Communications
+[[companies]]
+ticker = "NTCT"  # NetScout Systems
+[[companies]]
+ticker = "SAIL"  # SailPoint Technologies
+[[companies]]
+ticker = "LPSN"  # LivePerson
+[[companies]]
+ticker = "MODN"  # Model N
+[[companies]]
+ticker = "MSP"  # Datto (Kaseya)
+[[companies]]
+ticker = "SPNS"  # Sapiens International
+[[companies]]
+ticker = "AUDC"  # AudioCodes
+[[companies]]
+ticker = "PERI"  # Perion Network
+[[companies]]
+ticker = "LLNW"  # Limelight Networks
+[[companies]]
+ticker = "LSPD"  # Lightspeed Commerce
+[[companies]]
+ticker = "TWKS"  # Thoughtworks
+[[companies]]
+ticker = "BIGC"  # BigCommerce
+[[companies]]
+ticker = "YNDX"  # Yandex
+[[companies]]
+ticker = "ASUR"  # Asure Software
+[[companies]]
+ticker = "TUYA"  # Tuya Inc.
+[[companies]]
+ticker = "BZ"  # Kanzhun (Boss Zhipin)
+[[companies]]
+ticker = "VNET"  # Vnet Group
+[[companies]]
+ticker = "BEKE"  # KE Holdings (Beike)
+[[companies]]
+ticker = "IQ"  # iQIYI
+[[companies]]
+ticker = "BILI"  # Bilibili
+[[companies]]
+ticker = "WB"  # Weibo
+[[companies]]
+ticker = "YMM"  # Full Truck Alliance
+[[companies]]
+ticker = "ZH"  # Zhihu
+[[companies]]
+ticker = "LU"  # Lufax
+[[companies]]
+ticker = "GDS"  # GDS Holdings
+[[companies]]
+ticker = "HSAI"  # Hesai Group
+[[companies]]
+ticker = "ZYXI"  # Zynex Medical
+[[companies]]
+ticker = "WEAV"  # Weave Communications
+[[companies]]
+ticker = "WKME"  # WalkMe
+[[companies]]
+ticker = "AVPT"  # AvePoint
+[[companies]]
+ticker = "BCO"  # Brink's
+[[companies]]
+ticker = "LAW"  # CS Disco
+[[companies]]
+ticker = "IS"  # ironSource (Unity)
+[[companies]]
+ticker = "LZ"  # Legalzoom
+[[companies]]
+ticker = "ETWO"  # E2open Parent
+[[companies]]
+ticker = "PLTK"  # Playtika
+[[companies]]
+ticker = "XPER"  # Xperi
+[[companies]]
+ticker = "RSKD"  # Riskified
+[[companies]]
+ticker = "ENFN"  # Enfusion
+[[companies]]
+ticker = "DOMO"  # Domo
+[[companies]]
+ticker = "CERT"  # Certara
+[[companies]]
+ticker = "AMPL"  # Amplitude
+[[companies]]
+ticker = "USER"  # UserTesting
+[[companies]]
+ticker = "SMWB"  # Similarweb
+[[companies]]
+ticker = "ZIP"  # ZipRecruiter
+[[companies]]
+ticker = "ODD"  # Oddity Tech
+[[companies]]
+ticker = "TBLA"  # Taboola.com
+[[companies]]
+ticker = "OB"  # Outbrain
+[[companies]]
+ticker = "TIXT"  # Telus International
+[[companies]]
+ticker = "FORG"  # ForgeRock
+[[companies]]
+ticker = "RXT"  # Rackspace Technology
+[[companies]]
+ticker = "PING"  # Ping Identity
+[[companies]]
+ticker = "MIME"  # Mimecast
+[[companies]]
+ticker = "MNTV"  # Momentive Global
+[[companies]]
+ticker = "KLTR"  # Kaltura
+[[companies]]
+ticker = "BLZE"  # Backblaze
+[[companies]]
+ticker = "VMEO"  # Vimeo
+[[companies]]
+ticker = "HIMS"  # Hims & Hers Health
+[[companies]]
+ticker = "WBTN"  # Webtoon Entertainment
+[[companies]]
+ticker = "TSP"  # TuSimple
+[[companies]]
+ticker = "QBTS"  # D-Wave Quantum
+[[companies]]
+ticker = "RXRX"  # Recursion Pharmaceuticals
+[[companies]]
+ticker = "SERV"  # Serve Robotics
+[[companies]]
+ticker = "ACHR"  # Archer Aviation
+[[companies]]
+ticker = "JOBY"  # Joby Aviation
+[[companies]]
+ticker = "LILM"  # Lilium
+[[companies]]
+ticker = "BLDE"  # Blade Air Mobility
+[[companies]]
+ticker = "ASTR"  # Astra Space
+[[companies]]
+ticker = "SPIR"  # Spire Global
+[[companies]]
+ticker = "BKSY"  # BlackSky Technology
+[[companies]]
+ticker = "LLAP"  # Terran Orbital
+[[companies]]
+ticker = "RDW"  # Redwire
+[[companies]]
+ticker = "VLD"  # Velo3D
+[[companies]]
+ticker = "DM"  # Desktop Metal
+[[companies]]
+ticker = "NNDM"  # Nano Dimension
+[[companies]]
+ticker = "MKFG"  # Markforged
+[[companies]]
+ticker = "SHPW"  # Shapeways
+[[companies]]
+ticker = "LTCH"  # Latch (DOOR.com)
+[[companies]]
+ticker = "SMRT"  # SmartRent
+[[companies]]
+ticker = "SOND"  # Sonder Holdings
+[[companies]]
+ticker = "HIPO"  # Hippo Holdings
+[[companies]]
+ticker = "LMND"  # Lemonade
+[[companies]]
+ticker = "ROOT"  # Root Inc.
+[[companies]]
+ticker = "MILE"  # Metromile
+[[companies]]
+ticker = "OSCR"  # Oscar Health
+[[companies]]
+ticker = "CLOV"  # Clover Health
+[[companies]]
+ticker = "ALHC"  # Alignment Healthcare
+[[companies]]
+ticker = "AGL"  # Agilon Health
+[[companies]]
+ticker = "PHR"  # Phreesia
+[[companies]]
+ticker = "EVH"  # Evolent Health
+[[companies]]
+ticker = "HCAT"  # Health Catalyst
+[[companies]]
+ticker = "NVEI"  # Nuvei
+[[companies]]
+ticker = "RPAY"  # Repay Holdings
+[[companies]]
+ticker = "PAYA"  # Paya Holdings
+[[companies]]
+ticker = "PRTH"  # Priority Technology
+[[companies]]
+ticker = "CTLP"  # Cantaloupe
+[[companies]]
+ticker = "NRDS"  # Nerdwallet
+[[companies]]
+ticker = "LC"  # LendingClub
+[[companies]]
+ticker = "PGY"  # Pagaya Technologies
+[[companies]]
+ticker = "DAVE"  # Dave Inc.
+[[companies]]
+ticker = "ML"  # MoneyLion
+[[companies]]
+ticker = "LPRO"  # Open Lending
+[[companies]]
+ticker = "KPLT"  # Katapult Holdings
+[[companies]]
+ticker = "NRDY"  # Nerdy
+[[companies]]
+ticker = "INST"  # Instructure
+[[companies]]
+ticker = "PWSC"  # PowerSchool
+[[companies]]
+ticker = "TWOU"  # 2U Inc.
+[[companies]]
+ticker = "CHGG"  # Chegg
+[[companies]]
+ticker = "SKIL"  # Skillsoft
+[[companies]]
+ticker = "CURV"  # Torrid Holdings
+[[companies]]
+ticker = "POSH"  # Poshmark
+[[companies]]
+ticker = "TDUP"  # ThredUp
+[[companies]]
+ticker = "WISH"  # Wish (ContextLogic)
+[[companies]]
+ticker = "GRPN"  # Groupon
+[[companies]]
+ticker = "SSTK"  # Shutterstock
+[[companies]]
+ticker = "GETY"  # Getty Images
+[[companies]]
+ticker = "BZFD"  # Buzzfeed
+[[companies]]
+ticker = "GRND"  # Grindr
+[[companies]]
+ticker = "TRVG"  # Trivago
+[[companies]]
+ticker = "VRM"  # Vroom
+[[companies]]
+ticker = "OPEN"  # Opendoor Technologies
+[[companies]]
+ticker = "OPAD"  # Offerpad Solutions
+[[companies]]
+ticker = "COMP"  # Compass
+[[companies]]
+ticker = "BLND"  # Blend Labs
+[[companies]]
+ticker = "BETR"  # Better Home & Finance
+[[companies]]
+ticker = "LDI"  # LoanDepot
+[[companies]]
+ticker = "UWMC"  # UWM Holdings
+[[companies]]
+ticker = "MOGO"  # Mogo Inc.
+[[companies]]
+ticker = "BKKT"  # Bakkt Holdings
+[[companies]]
+ticker = "GRDI"  # Griid Infrastructure
+[[companies]]
+ticker = "BITF"  # Bitfarms
+[[companies]]
+ticker = "GREE"  # Greenidge Generation
+[[companies]]
+ticker = "BTCS"  # BTCS Inc.
+[[companies]]
+ticker = "BIOP"  # Bioptimus
+[[companies]]
+ticker = "VERI"  # Veritone
+[[companies]]
+ticker = "INOD"  # Innodata
+[[companies]]
+ticker = "GNE"  # Genie Energy
+[[companies]]
+ticker = "IDEX"  # Ideanomics
+[[companies]]
+ticker = "AGFY"  # Agrify
+[[companies]]
+ticker = "BSQR"  # Bsquare
+[[companies]]
+ticker = "SLR"  # Sievert Larsen
+[[companies]]
+ticker = "CVU"  # CPI Aerostructures
+[[companies]]
+ticker = "PPIH"  # Perma-Pipe
+[[companies]]
+ticker = "OPRX"  # OptimizeRx
+[[companies]]
+ticker = "IMMR"  # Immersion Corp.
+[[companies]]
+ticker = "SILA"  # Sievert Larsen & Co.
+[[companies]]
+ticker = "SMSI"  # Smith Micro Software
+[[companies]]
+ticker = "EVLV"  # Evolv Technology
