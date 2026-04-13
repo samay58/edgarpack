@@ -83,6 +83,18 @@ def _find_toc_span(md: str) -> tuple[int, int] | None:
     return (body_start, len(md))
 
 
+def _strip_bold_noise(md: str) -> str:
+    # Rule 1: All-bold paragraphs
+    md = re.sub(r"(?m)^(\*\*)((?:(?!\*\*).)+)\1$", r"\2", md)
+    # Rule 2: Bold dollar amounts like **$1,234**
+    md = re.sub(r"\*\*(\$[\d,]+(?:\.\d+)?)\*\*", r"\1", md)
+    # Rule 3: Bold parenthetical negatives like **(1,234)** or **($1,234)**
+    md = re.sub(r"\*\*(\(?\$?[\d,]+(?:\.\d+)?\)?)\*\*", r"\1", md)
+    # Rule 4: Bold standalone numbers like **42,000** or **12.5%**
+    md = re.sub(r"\*\*([\d,]+(?:\.\d+)?%?)\*\*", r"\1", md)
+    return md
+
+
 def _strip_broken_anchors(md: str) -> str:
     """Strip fragment-only links outside the TOC section.
 
@@ -143,6 +155,7 @@ def _normalize_whitespace(md: str) -> str:
 def polish(md: str) -> str:
     """Apply all polish rules to rendered markdown in sequence."""
     md = _strip_toc_spam(md)
+    md = _strip_bold_noise(md)
     md = _strip_broken_anchors(md)
     md = _normalize_whitespace(md)
     return md

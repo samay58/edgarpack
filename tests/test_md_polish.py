@@ -2,7 +2,7 @@
 
 import unittest
 
-from edgarpack.parse.md_polish import polish, _strip_toc_spam, _normalize_whitespace, _strip_broken_anchors
+from edgarpack.parse.md_polish import polish, _strip_toc_spam, _normalize_whitespace, _strip_broken_anchors, _strip_bold_noise
 
 
 class TestStripTocSpam(unittest.TestCase):
@@ -73,6 +73,40 @@ class TestStripBrokenAnchors(unittest.TestCase):
         md = "##### Table of Contents\n\n[Item 1](#item1)\n[Item 2](#item2)\n\n## Item 1"
         result = _strip_broken_anchors(md)
         self.assertIn("[Item 1](#item1)", result)
+
+
+class TestStripBoldNoise(unittest.TestCase):
+    def test_strips_all_bold_paragraph(self) -> None:
+        md = "**This entire paragraph is bold and should not be.**"
+        result = _strip_bold_noise(md)
+        self.assertEqual(result, "This entire paragraph is bold and should not be.")
+
+    def test_strips_bold_dollar_amount(self) -> None:
+        md = "Revenue was **$1,234** million"
+        result = _strip_bold_noise(md)
+        self.assertIn("$1,234", result)
+        self.assertNotIn("**$1,234**", result)
+
+    def test_strips_bold_negative_parens(self) -> None:
+        md = "Loss of **(1,234)**"
+        result = _strip_bold_noise(md)
+        self.assertIn("(1,234)", result)
+        self.assertNotIn("**(1,234)**", result)
+
+    def test_strips_bold_percentage(self) -> None:
+        md = "Growth of **12.5%** year over year"
+        result = _strip_bold_noise(md)
+        self.assertNotIn("**12.5%**", result)
+
+    def test_preserves_partial_bold_in_sentence(self) -> None:
+        md = "The company **expanded operations** to new markets"
+        result = _strip_bold_noise(md)
+        self.assertIn("**expanded operations**", result)
+
+    def test_strips_bold_standalone_number(self) -> None:
+        md = "Total was **42,000** units"
+        result = _strip_bold_noise(md)
+        self.assertNotIn("**42,000**", result)
 
 
 class TestPolish(unittest.TestCase):
