@@ -79,6 +79,40 @@ class TestRenderMarkdown(unittest.TestCase):
         self.assertIn("Two", md)
         self.assertNotIn("OneTwo", md)
 
+    def test_renders_table_with_colspan(self) -> None:
+        html = (
+            "<table>"
+            "<tr><th colspan='2'>Merged Header</th><th>C</th></tr>"
+            "<tr><td>A1</td><td>A2</td><td>A3</td></tr>"
+            "</table>"
+        )
+        md = render_markdown(html)
+        # The merged header should expand to fill 2 columns
+        rows = [line for line in md.strip().split("\n") if line.startswith("|")]
+        # Header row should have 3 pipe-separated cells
+        header_cells = [c.strip() for c in rows[0].split("|") if c.strip()]
+        self.assertEqual(len(header_cells), 3)
+        # Data row should also have 3 cells
+        data_cells = [c.strip() for c in rows[2].split("|") if c.strip()]
+        self.assertEqual(len(data_cells), 3)
+
+    def test_renders_table_with_rowspan(self) -> None:
+        html = (
+            "<table>"
+            "<tr><th>Category</th><th>Value</th></tr>"
+            "<tr><td rowspan='2'>Assets</td><td>100</td></tr>"
+            "<tr><td>200</td></tr>"
+            "</table>"
+        )
+        md = render_markdown(html)
+        rows = [line for line in md.strip().split("\n") if line.startswith("|")]
+        # Both data rows should have 2 cells each
+        for row in rows[2:]:
+            cells = [c.strip() for c in row.split("|") if c.strip()]
+            self.assertEqual(len(cells), 2)
+        # "Assets" should appear in both rows
+        self.assertEqual(md.count("Assets"), 2)
+
 
 class TestNormalizeOutput(unittest.TestCase):
     def test_collapses_multiple_blank_lines(self) -> None:

@@ -236,67 +236,91 @@ def _render_list_items(html: str, ordered: bool, depth: int) -> str:
 
 
 def _process_tables(html: str) -> str:
-    """Process tables to GFM format."""
+    """Process tables to GFM format with colspan/rowspan support."""
+
+    def _parse_span_attr(tag: str, attr: str) -> int:
+        m = re.search(rf'{attr}\s*=\s*["\']?(\d+)', tag, re.IGNORECASE)
+        return int(m.group(1)) if m else 1
 
     def process_table(match: re.Match) -> str:
         content = match.group(1)
 
-        rows: list[list[str]] = []
-        has_header = False
+        # Build a 2D grid accounting for colspan/rowspan
+        grid: list[list[str]] = []
 
-        # Find all rows
-        for tr_match in re.finditer(r"<tr[^>]*>(.*?)</tr>", content, re.DOTALL | re.IGNORECASE):
+        row_idx = -1
+        for tr_match in re.finditer(
+            r"<tr[^>]*>(.*?)</tr>", content, re.DOTALL | re.IGNORECASE
+        ):
             tr_content = tr_match.group(1)
-            cells: list[str] = []
-            is_header_row = False
+            row_idx += 1
+            # Rowspan pre-fill may have already created this row; only append if needed
+            while len(grid) <= row_idx:
+                grid.append([])
 
-            # Find header cells
-            for th_match in re.finditer(
-                r"<th[^>]*>(.*?)</th>",
+            # Collect cells (th or td) in document order
+            cells: list[tuple[str, str]] = []  # (tag_attrs, text)
+            for cell_match in re.finditer(
+                r"<(th|td)([^>]*)>(.*?)</(?:th|td)>",
                 tr_content,
                 re.DOTALL | re.IGNORECASE,
             ):
-                cells.append(_strip_tags(th_match.group(1)).strip())
-                is_header_row = True
+                tag_attrs = cell_match.group(2)
+                cell_text = _strip_tags(cell_match.group(3)).strip()
+                cells.append((tag_attrs, cell_text))
 
-            # Find data cells (if no header cells found)
             if not cells:
-                for td_match in re.finditer(
-                    r"<td[^>]*>(.*?)</td>",
-                    tr_content,
-                    re.DOTALL | re.IGNORECASE,
-                ):
-                    cells.append(_strip_tags(td_match.group(1)).strip())
+                continue
 
-            if cells:
-                rows.append(cells)
-                if is_header_row and not has_header:
-                    has_header = True
+            # Place cells into grid, skipping occupied positions (from rowspan)
+            col = 0
+            for tag_attrs, cell_text in cells:
+                # Advance past columns occupied by previous rowspans
+                while col < len(grid[row_idx]) and grid[row_idx][col] is not None:
+                    col += 1
 
-        if not rows:
+                colspan = _parse_span_attr(tag_attrs, "colspan")
+                rowspan = _parse_span_attr(tag_attrs, "rowspan")
+
+                # Ensure grid row is wide enough
+                while len(grid[row_idx]) <= col + colspan - 1:
+                    grid[row_idx].append(None)
+
+                # Fill colspan cells (repeat text so expanded columns are non-empty)
+                grid[row_idx][col] = cell_text
+                for c in range(1, colspan):
+                    grid[row_idx][col + c] = cell_text
+
+                # Fill rowspan cells in subsequent rows
+                for r in range(1, rowspan):
+                    target_row = row_idx + r
+                    while len(grid) <= target_row:
+                        grid.append([])
+                    while len(grid[target_row]) <= col + colspan - 1:
+                        grid[target_row].append(None)
+                    for c in range(colspan):
+                        grid[target_row][col + c] = cell_text if c == 0 else ""
+
+                col += colspan
+
+        if not grid:
             return ""
 
-        # Determine column count
-        max_cols = max(len(row) for row in rows)
-
-        # Pad rows
-        for row in rows:
+        # Replace None placeholders with empty strings and pad rows
+        max_cols = max(len(row) for row in grid) if grid else 0
+        for row in grid:
+            for i in range(len(row)):
+                if row[i] is None:
+                    row[i] = ""
             while len(row) < max_cols:
                 row.append("")
 
-        # Build markdown table
+        # Render as GFM table
         lines: list[str] = []
-
-        # Header row
-        header = rows[0] if rows else [""] * max_cols
+        header = grid[0] if grid else [""] * max_cols
         lines.append("| " + " | ".join(_escape_table_cell(c) for c in header) + " |")
-
-        # Separator
         lines.append("| " + " | ".join("---" for _ in range(max_cols)) + " |")
-
-        # Body rows
-        start_idx = 1 if len(rows) > 1 else 0
-        for row in rows[start_idx:]:
+        for row in grid[1:]:
             lines.append("| " + " | ".join(_escape_table_cell(c) for c in row) + " |")
 
         return "\n\n" + "\n".join(lines) + "\n\n"
