@@ -28,12 +28,13 @@ Responses are stored in a SHA256-keyed disk cache so repeat runs do not re-downl
 
 ### Stage 2: Parse HTML to Markdown
 
-The parser runs five steps in strict order:
+The parser runs six steps in strict order:
 
 - `ixbrl_strip`: removes inline XBRL tags while keeping visible values. The annotation noise goes away; the number text stays.
 - `html_clean`: removes scripts, hidden blocks, and unsafe attributes. Only visible structural HTML survives.
 - `semantic_html`: normalizes tag shapes (`<b>` to `<strong>`, safe link normalization, unwraps presentational tags). Fewer rendering edge cases before markdown conversion.
-- `md_render`: converts semantic HTML into markdown using deterministic regex passes. The order is fixed so table and heading structure does not get flattened.
+- `md_render`: converts semantic HTML into markdown using deterministic regex passes. Handles nested lists recursively, expands colspan/rowspan into aligned table grids, and guards against empty or malformed links.
+- `md_polish`: post-processing pass that cleans up cosmetic noise in the raw markdown. Strips repeated TOC headings (page-break artifacts), removes bold from dollar amounts and all-bold paragraphs, recovers bullet lists trapped in table markup, drops empty table columns, normalizes heading levels so `#` is reserved for the filing title, simplifies wide financial tables into a blockquote format, and collapses excess whitespace. Eight rules chained in sequence, all idempotent.
 - `sectionize`: detects form-specific headings (`10-K`, `10-Q`, `8-K`) and splits output into section-addressable chunks.
 
 Most dramatic transformation example:
@@ -50,9 +51,11 @@ Revenue: 130,497
 
 ### Stage 3: Build the Pack
 
+After parsing, the pack builder prepends a filing title line (`# Company Name | Form Type | Filed YYYY-MM-DD`) to the top of the markdown. This gives the document a clear identity and reserves the `#` heading level that the polish pass normalizes against.
+
 A pack is a directory for one filing accession. It includes:
 
-- `filing.full.md`: full markdown output
+- `filing.full.md`: full markdown output (titled, polished)
 - `sections/*.md`: one file per detected section
 - `manifest.json`: filing metadata, section offsets, token counts, and SHA256 hashes
 - `llms.txt`: index-style entry file for the pack
@@ -112,7 +115,8 @@ Each value can also provide URLs such as:
 - `edgarpack/parse/ixbrl_strip.py`: strip inline XBRL tags and namespaces.
 - `edgarpack/parse/html_clean.py`: remove hidden or unsafe HTML content.
 - `edgarpack/parse/semantic_html.py`: normalize markup before markdown rendering.
-- `edgarpack/parse/md_render.py`: deterministic HTML-to-markdown conversion.
+- `edgarpack/parse/md_render.py`: deterministic HTML-to-markdown conversion (nested lists, colspan/rowspan, link cleanup).
+- `edgarpack/parse/md_polish.py`: post-render cleanup pass (TOC spam, bold noise, bullet-table recovery, heading normalization, complex table simplification, whitespace normalization).
 - `edgarpack/parse/sectionize.py`: form-aware section detection and splitting.
 - `edgarpack/parse/tokenize.py`: token counting and truncation helpers.
 

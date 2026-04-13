@@ -48,6 +48,9 @@ edgarpack query NVDA revenue --citations inline --show-links primary
 
 # Full JSON with all provenance fields
 edgarpack query NVDA revenue --format json-full
+
+# Reject self-healed mappings, use only hardcoded concepts
+edgarpack query NVDA revenue --strict
 ```
 
 ### Comparisons
@@ -276,6 +279,37 @@ The `document_url` uses Chrome/Edge text fragment scrolling (`#:~:text=Net%20Inc
 `gross_margin`*, `operating_margin`*, `net_margin`*, `ebitda_margin`*, `fcf_margin`*, `roe`*, `roa`*, `current_ratio`*, `debt_to_equity`*
 
 \* = derived metric (computed from components)
+
+## Self-Heal and Learned Mappings
+
+When a company uses an XBRL concept that is not in the hardcoded `METRIC_MAP`, the query layer can resolve it through a self-heal path: fuzzy matching against available concepts, or LLM-assisted resolution. Successful resolutions are persisted in a `learned_concepts` registry so subsequent queries skip the discovery step.
+
+The `learned` command inspects and manages this registry:
+
+```bash
+# List all learned mappings
+edgarpack learned list
+
+# Filter by company or metric
+edgarpack learned list --cik 0001045810
+edgarpack learned list --metric revenue
+
+# Filter by resolution source
+edgarpack learned list --source fuzzy
+edgarpack learned list --unverified
+
+# Show one mapping in detail
+edgarpack learned show 0001045810 revenue
+
+# Promote an unverified mapping to verified
+edgarpack learned verify 0001045810 revenue
+
+# Clear mappings
+edgarpack learned clear --cik 0001045810
+edgarpack learned clear --all
+```
+
+The `--strict` flag on `query` and `comps` rejects any value that was resolved through the self-heal path. Only hardcoded `METRIC_MAP` resolutions are returned. Use this when you need guaranteed concept provenance.
 
 ## What This System Is Good At
 

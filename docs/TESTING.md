@@ -35,6 +35,8 @@ What this covers:
 - query period selection and LTM math
 - citation and JSON serialization
 - pack builder determinism under mocks
+- markdown render structural fixes (nested lists, colspan/rowspan, link cleanup, inline spacing)
+- markdown polish rules (TOC spam, bold noise, bullet-table recovery, heading normalization, complex table simplification, whitespace normalization) and idempotency
 - China Lens service, API, and storage adapters
 
 ## 2. Live SEC Smoke Tests

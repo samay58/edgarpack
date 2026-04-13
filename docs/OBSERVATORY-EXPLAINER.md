@@ -12,7 +12,9 @@ A module-by-module view of how a filing becomes a diff, a timeline, and a search
 
 ```mermaid
 flowchart LR
-    A[SEC Filing HTML] --> B[parse/sectionize.py\nStable IDs + Canonical Titles]
+    A[SEC Filing HTML] --> A1[parse/md_render.py\nHTML to Markdown]
+    A1 --> A2[parse/md_polish.py\nCleanup + Normalize]
+    A2 --> B[parse/sectionize.py\nStable IDs + Canonical Titles]
     B --> C[Pack Artifacts\nmanifest + sections/*.md]
 
     C --> D[diff/text_diff.py\nParagraph match + similarity + boilerplate]
@@ -36,7 +38,7 @@ flowchart LR
 
 ### Layer 1: 90-second orientation
 
-- Data enters at `sectionize`.
+- Data enters at `md_render`, passes through `md_polish` for cleanup, then hits `sectionize`.
 - Diff intelligence happens in `text_diff` + `section_diff`.
 - API shapes payloads for summary vs deep views.
 - UI consumes typed models and surfaces ranking/filters.

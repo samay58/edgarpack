@@ -34,7 +34,7 @@ A comps table with inline citations by default. Drop `--citations off` if you wa
 edgarpack build --cik 0001045810 --form 10-K
 ```
 
-One full-filing markdown file, one file per detected section, a manifest with hashes and offsets, optional chunk and XBRL artifacts. Deterministic. Rebuild produces the same bytes.
+One full-filing markdown file, one file per detected section, a manifest with hashes and offsets, optional chunk and XBRL artifacts. The output runs through a polish pass that strips TOC page-break spam, recovers bullet lists trapped in tables, normalizes heading levels, and simplifies wide financial tables into a readable blockquote format. Deterministic. Rebuild produces the same bytes.
 
 ## Install
 
@@ -59,6 +59,8 @@ export EDGARPACK_CACHE_DIR="$HOME/.edgarpack/cache"
 If `EDGARPACK_USER_AGENT` is missing, the first network call fails with an actionable error. Requests are rate-limited to 10 per second and cached on disk to keep repeated runs polite.
 
 ## Output layout
+
+Each filing gets a title line at the top of `filing.full.md` (`# Company Name | Form Type | Filed YYYY-MM-DD`) followed by the polished markdown. Sections are split into individual files under `sections/`.
 
 ```text
 packs/
@@ -91,14 +93,29 @@ Full query model, JSON formats, and citation semantics in [`docs/QUERY.md`](docs
 ## Commands
 
 ```bash
+# Build & browse
+edgarpack build --cik 0001045810 --form 10-K                  # build one filing pack
 edgarpack list --cik 0001045810 --form 10-K --limit 5         # recent filings
 edgarpack company-llms --cik 0001045810 --out ./packs         # llms.txt index for a CIK
-edgarpack harvest --universe universe.toml                    # bulk-download from a spec file
+edgarpack site --packs ./packs --out ./site                   # static site generator
+
+# Query & compare
+edgarpack query NVDA revenue,net_income --period ltm          # single company, cited values
+edgarpack comps NVDA AMD INTC -m revenue,ebitda --period ltm  # side-by-side comparison
+
+# Bulk harvest & search
+edgarpack harvest --universe universe.toml --refresh          # bulk-download from a spec file
+edgarpack index --packs ./packs --incremental                 # build the search index
+edgarpack search "export controls" --topic risk:export        # full-text search across packs
+
+# Observatory
 edgarpack diff --ticker NVDA --form 10-K                      # compare latest two filings
 edgarpack timeline --ticker NVDA --section 10k_parti_item1a   # one section over time
-edgarpack search "export controls" --topic risk:export        # full-text search across packs
-edgarpack site --packs ./packs --out ./site                   # static site generator
+
+# Maintenance
+edgarpack learned list                                        # inspect self-heal concept mappings
 edgarpack cache                                               # cache stats or --clear
+edgarpack api --port 8000                                     # China Lens API server
 ```
 
 ## Filing Observatory
@@ -120,6 +137,6 @@ ruff format --check .
 uv run pytest tests/
 ```
 
-The parser and pack layout are versioned (`PARSER_VERSION`, `SCHEMA_VERSION` in `edgarpack/config.py`) so downstream caches know when to invalidate. Tests include a determinism check that rebuilds a pack byte-for-byte. Changes to HTML cleaning, section detection, or chunking will usually require regenerating fixtures.
+The parser and pack layout are versioned (`PARSER_VERSION`, `SCHEMA_VERSION` in `edgarpack/config.py`) so downstream caches know when to invalidate. `PARSER_VERSION` was bumped to `0.2.0` with the addition of the polish pass and structural rendering fixes. Tests include a determinism check that rebuilds a pack byte-for-byte. Changes to HTML cleaning, section detection, or chunking will usually require regenerating fixtures.
 
 Network tests that hit real SEC endpoints are gated on `EDGARPACK_USER_AGENT` being set. See [`docs/TESTING.md`](docs/TESTING.md) for the offline and live lanes.
