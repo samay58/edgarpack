@@ -120,7 +120,15 @@ edgarpack api --port 8000                                     # China Lens API s
 
 ## Filing Observatory
 
-The `diff`, `timeline`, and `search` commands power the Filing Observatory, a web view that stitches packs together into side-by-side diffs, section histories, and cross-corpus search. Change intensity is similarity-weighted so rewrites rank above mechanical rollovers (date rollovers, page refs, numeric-only boilerplate). Every diff and timeline result is disk-cached by manifest hash pair so warm queries return in single-digit milliseconds.
+The observatory answers "what actually changed?" across filings. Not byte-level diffs. Paragraph-level language diffs, with the noise stripped out so the signal is readable.
+
+Running `edgarpack diff` on NVIDIA's FY2024 vs FY2025 10-K surfaces things like: the company changed its self-description from "full-stack computing infrastructure company" to "data center scale AI infrastructure company." The China export controls section was rewritten from a chronological narrative about specific chip restrictions to a blunt statement that they "are unable to create and deliver a competitive product" under current rules. The cryptocurrency risk factor was deleted entirely. None of these show up in the financial data. They show up in the prose, and the diff engine finds them.
+
+What gets filtered out: table-of-contents links, date/fiscal-year rollovers, cross-reference sentences ("See Item 7 for discussion..."), financial statement tables, signature blocks. These all change mechanically every year and obscure the real changes. The diff engine detects and suppresses them so the output is the 15-20 sections that actually matter, not the 60+ sections that technically differ.
+
+```bash
+edgarpack diff --ticker NVDA --form 10-K --format full
+```
 
 The API lives at `/api/v1/observatory/...`. See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full data model and [`web/`](web/) for the Next.js frontend.
 

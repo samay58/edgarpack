@@ -12,7 +12,7 @@ from .models import ChangeType, DiffResult, SectionDelta
 from .text_diff import diff_paragraphs
 
 _DIFF_CACHE_DIR = CACHE_DIR.parent / "diff_cache"
-_DIFF_CACHE_VERSION = "v4"
+_DIFF_CACHE_VERSION = "v5"
 _FINANCIAL_SECTION_BASE_DAMPING = 0.4
 _FINANCIAL_TABLE_DAMPING = 0.35
 _INTEREST_SECTION_WEIGHTS = {
@@ -21,6 +21,11 @@ _INTEREST_SECTION_WEIGHTS = {
     "signature": 0.05,
     "exhibit_index": 0.15,
 }
+# Suppressed from diff_filings output. Financial damping constants above are
+# still used by _compute_section_intensity(), which timeline.py calls for
+# single-section tracking where suppression does not apply.
+_SUPPRESSED_SECTION_TYPES = {"financial_statement", "signature"}
+_FORM_PART_PREFIX = re.compile(r"^10[kq]_part[a-z]+_")
 _CANONICAL_ITEM_TITLES = {
     "1": "Business",
     "1A": "Risk Factors",
@@ -270,6 +275,14 @@ def _compute_section_intensity(delta: SectionDelta) -> float:
     return changed_words / total_words
 
 
+def _reduced_section_key(section_id: str) -> str:
+    """Strip form+part prefix for fallback matching.
+
+    '10k_partii_item7_managements_discussion' -> 'item7_managements_discussion'
+    """
+    return _FORM_PART_PREFIX.sub("", section_id)
+
+
 def diff_filings(
     before_dir: Path,
     after_dir: Path,
@@ -305,21 +318,61 @@ def diff_filings(
     before_sections = {s["id"]: s for s in before_manifest.get("sections", [])}
     after_sections = {s["id"]: s for s in after_manifest.get("sections", [])}
 
-    all_section_ids = set(before_sections.keys()) | set(after_sections.keys())
-    section_deltas: list[SectionDelta] = []
-    n_unchanged = 0
-    n_modified = 0
-    n_added = 0
-    n_removed = 0
+    # --- Pass 1: exact ID matching ---
+    exact_both = sorted(set(before_sections.keys()) & set(after_sections.keys()))
+    exact_matched_before: set[str] = set(exact_both)
+    exact_matched_after: set[str] = set(exact_both)
+    section_pairs: list[tuple[str, dict | None, dict | None]] = [
+        (sid, before_sections[sid], after_sections[sid]) for sid in exact_both
+    ]
 
-    for sid in sorted(all_section_ids):
-        before_sec = before_sections.get(sid)
-        after_sec = after_sections.get(sid)
+    # --- Pass 2: fallback matching by item+slug (strip part prefix) ---
+    remaining_before = {
+        sid: sec for sid, sec in before_sections.items() if sid not in exact_matched_before
+    }
+    remaining_after = {
+        sid: sec for sid, sec in after_sections.items() if sid not in exact_matched_after
+    }
+
+    before_by_reduced: dict[str, list[str]] = {}
+    for sid in remaining_before:
+        key_r = _reduced_section_key(sid)
+        before_by_reduced.setdefault(key_r, []).append(sid)
+
+    after_by_reduced: dict[str, list[str]] = {}
+    for sid in remaining_after:
+        key_r = _reduced_section_key(sid)
+        after_by_reduced.setdefault(key_r, []).append(sid)
+
+    fallback_matched_before: set[str] = set()
+    fallback_matched_after: set[str] = set()
+
+    for key_r in set(before_by_reduced.keys()) & set(after_by_reduced.keys()):
+        before_ids = before_by_reduced[key_r]
+        after_ids = after_by_reduced[key_r]
+        if len(before_ids) == 1 and len(after_ids) == 1:
+            b_sid = before_ids[0]
+            a_sid = after_ids[0]
+            section_pairs.append((a_sid, before_sections[b_sid], after_sections[a_sid]))
+            fallback_matched_before.add(b_sid)
+            fallback_matched_after.add(a_sid)
+
+    # --- Pass 3: remaining unmatched are genuinely added/removed ---
+    for sid in sorted(remaining_before):
+        if sid not in fallback_matched_before:
+            section_pairs.append((sid, before_sections[sid], None))
+
+    for sid in sorted(remaining_after):
+        if sid not in fallback_matched_after:
+            section_pairs.append((sid, None, after_sections[sid]))
+
+    # --- Process all pairs ---
+    section_deltas: list[SectionDelta] = []
+
+    for sid, before_sec, after_sec in section_pairs:
         section_type = _classify_section(sid)
 
         if before_sec and not after_sec:
-            # Section removed
-            n_removed += 1
             old_text = _read_section(before_dir, before_sec["path"])
             para_count = len([p for p in old_text.split("\n\n") if p.strip()])
             words_removed = len(old_text.split())
@@ -336,8 +389,6 @@ def diff_filings(
             continue
 
         if not before_sec and after_sec:
-            # Section added
-            n_added += 1
             new_text = _read_section(after_dir, after_sec["path"])
             para_count = len([p for p in new_text.split("\n\n") if p.strip()])
             words_added = len(new_text.split())
@@ -355,7 +406,6 @@ def diff_filings(
 
         # Both exist: check SHA256 for instant unchanged detection
         if before_sec["sha256"] == after_sec["sha256"]:
-            n_unchanged += 1
             section_deltas.append(
                 SectionDelta(
                     section_id=sid,
@@ -368,37 +418,57 @@ def diff_filings(
             continue
 
         # Sections differ: do paragraph-level diff
-        n_modified += 1
         old_text = _read_section(before_dir, before_sec["path"])
         new_text = _read_section(after_dir, after_sec["path"])
-
         para_deltas = diff_paragraphs(old_text, new_text)
-
-        added = sum(1 for d in para_deltas if d.change_type == ChangeType.ADDED)
-        removed = sum(1 for d in para_deltas if d.change_type == ChangeType.REMOVED)
-        modified = sum(1 for d in para_deltas if d.change_type == ChangeType.MODIFIED)
-        unchanged = sum(1 for d in para_deltas if d.change_type == ChangeType.UNCHANGED)
 
         delta = SectionDelta(
             section_id=sid,
             title=_display_title(sid, after_sec.get("title", sid)),
             change_type=ChangeType.MODIFIED,
             section_type=section_type,
-            paragraphs_added=added,
-            paragraphs_removed=removed,
-            paragraphs_modified=modified,
-            paragraphs_unchanged=unchanged,
+            paragraphs_added=sum(1 for d in para_deltas if d.change_type == ChangeType.ADDED),
+            paragraphs_removed=sum(1 for d in para_deltas if d.change_type == ChangeType.REMOVED),
+            paragraphs_modified=sum(1 for d in para_deltas if d.change_type == ChangeType.MODIFIED),
+            paragraphs_unchanged=sum(
+                1 for d in para_deltas if d.change_type == ChangeType.UNCHANGED
+            ),
             paragraph_deltas=para_deltas,
         )
         delta.change_intensity = _compute_section_intensity(delta)
         delta.interest_score = compute_interest_score(delta)
         section_deltas.append(delta)
 
-    # Highest-signal deltas first. Section ID provides stable tie-breaking.
+    # --- Post-processing: suppress noise section types ---
+    section_deltas = [d for d in section_deltas if d.section_type not in _SUPPRESSED_SECTION_TYPES]
+
+    # --- Post-processing: make boilerplate paragraphs invisible ---
+    for delta in section_deltas:
+        if delta.paragraph_deltas:
+            visible = [pd for pd in delta.paragraph_deltas if not pd.is_boilerplate]
+            delta.paragraph_deltas = visible
+            delta.paragraphs_added = sum(1 for d in visible if d.change_type == ChangeType.ADDED)
+            delta.paragraphs_removed = sum(
+                1 for d in visible if d.change_type == ChangeType.REMOVED
+            )
+            delta.paragraphs_modified = sum(
+                1 for d in visible if d.change_type == ChangeType.MODIFIED
+            )
+            delta.paragraphs_unchanged = sum(
+                1 for d in visible if d.change_type == ChangeType.UNCHANGED
+            )
+
+    # Recount section-level stats from non-suppressed deltas
+    n_unchanged = sum(1 for d in section_deltas if d.change_type == ChangeType.UNCHANGED)
+    n_modified = sum(1 for d in section_deltas if d.change_type == ChangeType.MODIFIED)
+    n_added = sum(1 for d in section_deltas if d.change_type == ChangeType.ADDED)
+    n_removed = sum(1 for d in section_deltas if d.change_type == ChangeType.REMOVED)
+
+    # Highest-signal deltas first
     section_deltas.sort(key=lambda d: (-d.interest_score, -d.change_intensity, d.section_id))
 
-    # Compute overall change intensity
-    total_sections = len(all_section_ids)
+    # Compute overall change intensity from non-suppressed sections
+    total_sections = len(section_deltas)
     if total_sections > 0:
         weighted = sum(d.change_intensity for d in section_deltas)
         overall_intensity = weighted / total_sections

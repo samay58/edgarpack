@@ -172,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
         "--strict",
         action="store_true",
         help="Reject values resolved via the self-heal path (learned mappings). "
-             "Only hardcoded METRIC_MAP resolutions are returned.",
+        "Only hardcoded METRIC_MAP resolutions are returned.",
     )
 
     p_harvest = sub.add_parser(
@@ -627,7 +627,8 @@ def _render_query_table(result: Any, args: Any) -> str:
             return getattr(v, "source", "hardcoded")
 
         scalar_source = (
-            _source_of(raw_value[0]) if isinstance(raw_value, list) and raw_value
+            _source_of(raw_value[0])
+            if isinstance(raw_value, list) and raw_value
             else _source_of(raw_value)
         )
 
@@ -764,9 +765,7 @@ def _render_query_table(result: Any, args: Any) -> str:
                             value = component.get("value")
                             unit = component.get("unit")
                             fiscal = component.get("fiscal_label")
-                            comp_line = (
-                                f"     {role}[{cid}] value={value} {unit} | {fiscal}"
-                            )
+                            comp_line = f"     {role}[{cid}] value={value} {unit} | {fiscal}"
                             lines.extend(_wrap_cli_text(comp_line, width, indent="             "))
                             if isinstance(cid, str):
                                 record = citations.get(cid)
@@ -800,9 +799,7 @@ def _render_query_table(result: Any, args: Any) -> str:
                 record = citations.get(cid)
                 if isinstance(record, dict):
                     lines.extend(
-                        _render_citation_lines(
-                            cid, record, show_links=args.show_links, width=width
-                        )
+                        _render_citation_lines(cid, record, show_links=args.show_links, width=width)
                     )
         if calculations:
             lines.append("")
@@ -842,12 +839,8 @@ def _render_query_table(result: Any, args: Any) -> str:
 
     if strict_rejected:
         lines.append("")
-        lines.append(
-            f"Strict mode: rejected learned values for: {', '.join(strict_rejected)}"
-        )
-        lines.append(
-            "Use `edgarpack learned list` to inspect, or re-run without --strict."
-        )
+        lines.append(f"Strict mode: rejected learned values for: {', '.join(strict_rejected)}")
+        lines.append("Use `edgarpack learned list` to inspect, or re-run without --strict.")
 
     if isinstance(permalink, str) and permalink:
         lines.append("")
@@ -993,6 +986,24 @@ def _cmd_harvest(args: Any) -> int:
     return asyncio.run(_run())
 
 
+def _truncate(text: str, max_words: int = 200) -> str:
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words]) + "..."
+
+
+def _print_paragraph_delta(pd: Any) -> None:
+    if pd.change_type.value == "added":
+        print(f"      [NEW] {_truncate(pd.new_text or '')}")
+    elif pd.change_type.value == "removed":
+        print(f"      [DEL] {_truncate(pd.old_text or '')}")
+    elif pd.change_type.value == "modified":
+        print(f"      [CHG sim={pd.similarity:.0%}]")
+        print(f"        - {_truncate(pd.old_text or '')}")
+        print(f"        + {_truncate(pd.new_text or '')}")
+
+
 def _cmd_diff(args: Any) -> int:
     from pathlib import Path
 
@@ -1062,6 +1073,10 @@ def _cmd_diff(args: Any) -> int:
                         f"~{delta.paragraphs_modified} ={delta.paragraphs_unchanged}"
                     )
                     print(f"    Change intensity: {delta.change_intensity:.1%}")
+                    for pd in delta.paragraph_deltas:
+                        if pd.change_type.value == "unchanged":
+                            continue
+                        _print_paragraph_delta(pd)
 
         return 0
 
@@ -1211,10 +1226,7 @@ def _cmd_learned(args: Any) -> int:
             if not rows:
                 print("no learned mappings")
                 return 0
-            print(
-                f"{'CIK':<12} {'METRIC':<24} {'CONCEPT':<40} "
-                f"{'SRC':<8} {'V':<2} HITS LEARNED_AT"
-            )
+            print(f"{'CIK':<12} {'METRIC':<24} {'CONCEPT':<40} {'SRC':<8} {'V':<2} HITS LEARNED_AT")
             for r in rows:
                 mark = "✓" if r.verified else "⚠"
                 print(
@@ -1251,7 +1263,9 @@ def _cmd_learned(args: Any) -> int:
         if sub_cmd == "clear":
             try:
                 removed = reg.clear(
-                    cik=args.cik, metric=args.metric, all=bool(args.all),
+                    cik=args.cik,
+                    metric=args.metric,
+                    all=bool(args.all),
                 )
             except ValueError as e:
                 print(f"Error: {e}", file=sys.stderr)

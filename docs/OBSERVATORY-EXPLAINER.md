@@ -17,14 +17,12 @@ flowchart LR
     A2 --> B[parse/sectionize.py\nStable IDs + Canonical Titles]
     B --> C[Pack Artifacts\nmanifest + sections/*.md]
 
-    C --> D[diff/text_diff.py\nParagraph match + similarity + boilerplate]
-    D --> E[diff/section_diff.py\nIntensity + interest score + section type + cache]
+    C --> D[diff/text_diff.py\nTOC filtering + paragraph match\n+ boilerplate detection]
+    D --> E[diff/section_diff.py\nFallback section matching\n+ suppression + intensity + cache]
     E --> F[diff/timeline.py\nCross-filing evolution]
-    E --> G[insights/language_shift.py\nHigh-intensity rewrite detector]
 
-    E --> H[api/observatory/routes.py\nFiltering + detail=sections + section_types]
+    E --> H[api/observatory/routes.py\nFiltering + detail=sections]
     F --> H
-    G --> H
 
     H --> I[web/lib/observatory-api.ts\nTyped client]
     I --> J[UI: company-grid]
@@ -45,14 +43,16 @@ flowchart LR
 
 ### Layer 2: 10-minute implementation mental model
 
-- `text_diff`: match paragraphs, compute similarity, tag boilerplate.
-- `section_diff`: compute intensity and `interest_score`, classify section type, cache by manifest-pair hash.
-- `routes`: serve lightweight (`detail=sections`) or full payloads; filter by section type.
+- `text_diff`: filter TOC links, match paragraphs by fingerprint then Jaccard similarity, detect boilerplate via cross-reference patterns and ratio-based token checks.
+- `section_diff`: three-pass section matching (exact ID, fallback by item+slug, genuinely new/removed), suppress financial and signature sections, strip boilerplate from output, compute intensity and `interest_score`, cache by manifest-pair hash.
+- `routes`: serve lightweight (`detail=sections`) or full payloads.
 
 ### Layer 3: deep-debug mode
 
 - Why a section ranked high: inspect paragraph deltas and score factors.
 - Why intensity dropped: inspect similarity weighting + boilerplate exclusion.
+- Why a section is missing: check if its `section_type` is in the suppression list (financial_statement, signature).
+- Why two filings show 0 added/removed despite Part changes: fallback matching paired them by item+slug.
 - Why response is fast: verify cache-hit path and stripped payload mode.
 
 ## Interaction pattern for an interactive version
@@ -73,4 +73,4 @@ flowchart LR
   - blue = core pipeline
   - amber = scoring/ranking
   - green = performance paths
-  - gray = expected-noise pathways
+  - gray = suppressed pathways (financials, signatures, boilerplate)
