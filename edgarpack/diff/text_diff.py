@@ -48,6 +48,16 @@ def _split_paragraphs(text: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
+_TOC_LINK_PATTERN = re.compile(
+    r"^\[.*?\]\(#[a-zA-Z0-9_]+\)$",
+)
+
+
+def _is_toc_link(text: str) -> bool:
+    """Return True if the paragraph is solely a TOC or anchor link."""
+    return bool(_TOC_LINK_PATTERN.match(text.strip()))
+
+
 _BOILERPLATE_TOKEN_PATTERN = re.compile(
     r"^(?:"
     r"\d{1,4}"
@@ -69,10 +79,32 @@ def _tokenize_for_change_detection(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", _normalize(text)))
 
 
-def _is_boilerplate_change(old_text: str, new_text: str, similarity: float) -> bool:
-    """Detect mechanical changes unlikely to be substantive (dates/refs/page numbers)."""
-    if similarity < 0.80:
+_CROSS_REF_OPENER = re.compile(
+    r"^(?:see\s|refer\s+to\s|for\s+(?:additional|further)\s+"
+    r"(?:information|discussion|details?))",
+    re.IGNORECASE,
+)
+_CROSS_REF_TARGET = re.compile(r"(?:item\s+\d+|note\s+\d+|part\s+[IVXivx]+)", re.IGNORECASE)
+
+
+def _is_cross_reference(text: str) -> bool:
+    """Return True if text is a short cross-reference sentence."""
+    stripped = text.strip()
+    if len(stripped.split()) > 100:
         return False
+    return bool(_CROSS_REF_OPENER.match(stripped) and _CROSS_REF_TARGET.search(stripped))
+
+
+def _is_boilerplate_change(old_text: str, new_text: str, similarity: float) -> bool:
+    """Detect mechanical changes unlikely to be substantive.
+
+    Two checks:
+    1. Strict: 80%+ similarity AND 100% of changed words match boilerplate tokens
+    2. Ratio: >60% of changed words match boilerplate tokens (any similarity)
+    Also flags cross-reference paragraph pairs regardless of content changes.
+    """
+    if _is_cross_reference(old_text) and _is_cross_reference(new_text):
+        return True
 
     old_words = _tokenize_for_change_detection(old_text)
     new_words = _tokenize_for_change_detection(new_text)
@@ -80,7 +112,17 @@ def _is_boilerplate_change(old_text: str, new_text: str, similarity: float) -> b
     if not diff_words:
         return False
 
-    return all(_BOILERPLATE_TOKEN_PATTERN.match(word) for word in diff_words)
+    boilerplate_count = sum(1 for w in diff_words if _BOILERPLATE_TOKEN_PATTERN.match(w))
+
+    # Strict check: high similarity + all changed words are boilerplate
+    if similarity >= 0.80 and boilerplate_count == len(diff_words):
+        return True
+
+    # Ratio check: >60% of changed words are boilerplate tokens
+    if boilerplate_count / len(diff_words) > 0.60:
+        return True
+
+    return False
 
 
 def diff_paragraphs(
@@ -104,8 +146,8 @@ def diff_paragraphs(
     Returns:
         List of ParagraphDelta objects describing changes
     """
-    old_paras = _split_paragraphs(old_text)
-    new_paras = _split_paragraphs(new_text)
+    old_paras = [p for p in _split_paragraphs(old_text) if not _is_toc_link(p)]
+    new_paras = [p for p in _split_paragraphs(new_text) if not _is_toc_link(p)]
 
     old_fps = [_fingerprint(p) for p in old_paras]
     new_fps = [_fingerprint(p) for p in new_paras]

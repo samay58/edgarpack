@@ -9,7 +9,13 @@ import pytest
 from edgarpack.diff import section_diff as section_diff_module
 from edgarpack.diff.models import ChangeType, ParagraphDelta, SectionDelta
 from edgarpack.diff.section_diff import diff_filings
-from edgarpack.diff.text_diff import _jaccard, _split_paragraphs, diff_paragraphs
+from edgarpack.diff.text_diff import (
+    _is_cross_reference,
+    _is_toc_link,
+    _jaccard,
+    _split_paragraphs,
+    diff_paragraphs,
+)
 from edgarpack.parse.sectionize import find_sections
 
 # --- text_diff tests ---
@@ -395,3 +401,266 @@ def test_canonical_title_fallback():
     assert matches
     assert matches[0].item == "1A"
     assert matches[0].title == "Risk Factors"
+
+
+# --- TOC link filtering tests ---
+
+
+def test_toc_link_detected():
+    assert _is_toc_link("[Table of Contents](#if3830601512b46079053ec0daaf407ac_7)")
+    assert _is_toc_link("[Table of Contents](#i82ea215a7c1f4862b6518f1348ddc832_7)")
+    assert _is_toc_link("  [Table of Contents](#abc123)  ")
+
+
+def test_standalone_anchor_link_detected():
+    assert _is_toc_link("[Back to top](#anchor_hash_99)")
+
+
+def test_prose_mentioning_toc_not_detected():
+    assert not _is_toc_link("See the Table of Contents for navigation to each section.")
+    assert not _is_toc_link("Risk factors are discussed below.")
+    assert not _is_toc_link("[Table of Contents](#abc) and other text follows here.")
+
+
+def test_toc_links_filtered_from_diff():
+    old = (
+        "Risk factors summary.\n\n"
+        "[Table of Contents](#old_hash_abc)\n\n"
+        "We face competition in AI chips."
+    )
+    new = (
+        "Risk factors summary.\n\n"
+        "[Table of Contents](#new_hash_xyz)\n\n"
+        "We face competition in AI chips."
+    )
+    deltas = diff_paragraphs(old, new)
+    assert len(deltas) == 2
+    assert all(d.change_type == ChangeType.UNCHANGED for d in deltas)
+
+
+# --- Cross-reference and boilerplate tests ---
+
+
+def test_cross_reference_detected():
+    assert _is_cross_reference("See Item 7 for a discussion of our results of operations.")
+    assert _is_cross_reference("Refer to Note 12 in our consolidated financial statements.")
+    assert _is_cross_reference(
+        "For additional information, see Part II, Item 8 of this Annual Report."
+    )
+    assert _is_cross_reference("For further discussion, refer to Item 1A Risk Factors.")
+
+
+def test_cross_reference_not_detected_for_prose():
+    assert not _is_cross_reference(
+        "We face heightened competition in AI and accelerated computing chips. "
+        "Our products compete with those from AMD, Intel, and custom silicon "
+        "from major cloud service providers."
+    )
+    assert not _is_cross_reference(
+        "The company reported revenue of $35.1 billion for the quarter. "
+        "See the full financial statements for details on segment breakdown."
+    )
+
+
+def test_cross_reference_not_detected_for_long_paragraphs():
+    long_text = "See Item 7 for discussion. " + "word " * 100
+    assert not _is_cross_reference(long_text)
+
+
+def test_cross_reference_pair_marked_boilerplate():
+    old = "See Item 7 of our Annual Report on Form 10-K for the fiscal year ended January 28, 2024."
+    new = "See Item 7 of our Annual Report on Form 10-K for the fiscal year ended January 26, 2025."
+    deltas = diff_paragraphs(old, new)
+    modified = [d for d in deltas if d.change_type == ChangeType.MODIFIED]
+    assert len(modified) == 1
+    assert modified[0].is_boilerplate is True
+
+
+def test_ratio_based_boilerplate():
+    old = (
+        "We invested heavily in research and development during fiscal year 2024 "
+        "ended January 28, 2024, focusing on next-generation architectures and "
+        "advanced manufacturing processes for our Q4 product lineup."
+    )
+    new = (
+        "We invested heavily in research and development during fiscal year 2025 "
+        "ended January 26, 2025, focusing on next-generation architectures and "
+        "advanced manufacturing processes for our Q1 product lineup."
+    )
+    deltas = diff_paragraphs(old, new)
+    modified = [d for d in deltas if d.change_type == ChangeType.MODIFIED]
+    assert len(modified) == 1
+    assert modified[0].is_boilerplate is True
+
+
+# --- Section fallback matching tests ---
+
+
+def test_fallback_matching_across_parts():
+    """Sections that move between parts should match, not show as added+removed."""
+    with tempfile.TemporaryDirectory() as tmp:
+        content = (
+            "Management discusses results of operations.\n\n"
+            "Revenue increased 20% year over year."
+        )
+        before_sections = {
+            "10k_partii_item7_managements_discussion": content,
+            "10k_parti_item1_business": "Business description.",
+        }
+        after_sections = {
+            "10k_partiv_item7_managements_discussion": content,
+            "10k_parti_item1_business": "Business description.",
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        assert result.sections_added == 0
+        assert result.sections_removed == 0
+        assert result.sections_unchanged == 2
+
+
+def test_fallback_matching_ambiguous_skipped():
+    """When multiple sections share the same reduced key, skip fallback matching."""
+    with tempfile.TemporaryDirectory() as tmp:
+        before_sections = {
+            "10k_parti_item1_business": "Business A.",
+            "10k_partii_item1_business": "Business B.",
+        }
+        after_sections = {
+            "10k_partiii_item1_business": "Business C.",
+            "10k_partiv_item1_business": "Business D.",
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        assert result.sections_added == 2
+        assert result.sections_removed == 2
+
+
+def test_fallback_matching_modified_content():
+    """Sections that moved parts AND changed content should show as modified."""
+    with tempfile.TemporaryDirectory() as tmp:
+        before_sections = {
+            "10k_partii_item7_managements_discussion": (
+                "Old management discussion with prior year analysis.\n\n"
+                "Revenue was flat year over year."
+            ),
+        }
+        after_sections = {
+            "10k_partiv_item7_managements_discussion": (
+                "New management discussion with current year analysis.\n\n"
+                "Revenue increased 20% year over year."
+            ),
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        assert result.sections_added == 0
+        assert result.sections_removed == 0
+        assert result.sections_modified == 1
+
+
+# --- Section suppression tests ---
+
+
+def test_financial_sections_suppressed():
+    with tempfile.TemporaryDirectory() as tmp:
+        before_sections = {
+            "10k_parti_item1_business": "Old business description.",
+            "10k_partii_item8_financial_statements": "Old revenue: $10B.\n\nOld net income: $2B.",
+        }
+        after_sections = {
+            "10k_parti_item1_business": "New business description with changes.",
+            "10k_partii_item8_financial_statements": "New revenue: $15B.\n\nNew net income: $3B.",
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        section_ids = [d.section_id for d in result.section_deltas]
+        assert "10k_partii_item8_financial_statements" not in section_ids
+        assert "10k_parti_item1_business" in section_ids
+        assert result.sections_modified == 1
+
+
+def test_signature_sections_suppressed():
+    with tempfile.TemporaryDirectory() as tmp:
+        before_sections = {
+            "10k_parti_item1_business": "Business description.",
+            "10k_partiv_itemother_signatures": "Signed January 28, 2024.",
+        }
+        after_sections = {
+            "10k_parti_item1_business": "Business description.",
+            "10k_partiv_itemother_signatures": "Signed January 26, 2025.",
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        section_ids = [d.section_id for d in result.section_deltas]
+        assert "10k_partiv_itemother_signatures" not in section_ids
+
+
+def test_exhibit_index_not_suppressed():
+    with tempfile.TemporaryDirectory() as tmp:
+        before_sections = {
+            "10k_partiv_itemother_exhibit_index": "Exhibit 31.1\n\nExhibit 31.2",
+        }
+        after_sections = {
+            "10k_partiv_itemother_exhibit_index": "Exhibit 31.1\n\nExhibit 31.2\n\nExhibit 32.1",
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        section_ids = [d.section_id for d in result.section_deltas]
+        assert "10k_partiv_itemother_exhibit_index" in section_ids
+
+
+def test_boilerplate_invisible_in_paragraph_counts():
+    with tempfile.TemporaryDirectory() as tmp:
+        before_sections = {
+            "10k_parti_item1_business": (
+                "For the fiscal year ended January 28, 2024, we grew revenue.\n\n"
+                "We expanded into new markets with bold product launches."
+            ),
+        }
+        after_sections = {
+            "10k_parti_item1_business": (
+                "For the fiscal year ended January 26, 2025, we grew revenue.\n\n"
+                "We expanded into enterprise markets with aggressive product launches."
+            ),
+        }
+
+        before_dir = Path(tmp) / "before"
+        after_dir = Path(tmp) / "after"
+        _create_pack(before_dir, "acc-001", "2024-01-01", "Test Corp", "10-K", before_sections)
+        _create_pack(after_dir, "acc-002", "2025-01-01", "Test Corp", "10-K", after_sections)
+
+        result = diff_filings(before_dir, after_dir)
+        delta = next(d for d in result.section_deltas if d.change_type == ChangeType.MODIFIED)
+        # No boilerplate paragraphs should be in the deltas at all
+        assert all(not pd.is_boilerplate for pd in delta.paragraph_deltas)
+        # Should have at least one visible modified paragraph
+        assert delta.paragraphs_modified >= 1

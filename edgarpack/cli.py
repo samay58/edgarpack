@@ -993,6 +993,24 @@ def _cmd_harvest(args: Any) -> int:
     return asyncio.run(_run())
 
 
+def _truncate(text: str, max_words: int = 200) -> str:
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words]) + "..."
+
+
+def _print_paragraph_delta(pd: Any) -> None:
+    if pd.change_type.value == "added":
+        print(f"      [NEW] {_truncate(pd.new_text or '')}")
+    elif pd.change_type.value == "removed":
+        print(f"      [DEL] {_truncate(pd.old_text or '')}")
+    elif pd.change_type.value == "modified":
+        print(f"      [CHG sim={pd.similarity:.0%}]")
+        print(f"        - {_truncate(pd.old_text or '')}")
+        print(f"        + {_truncate(pd.new_text or '')}")
+
+
 def _cmd_diff(args: Any) -> int:
     from pathlib import Path
 
@@ -1062,6 +1080,10 @@ def _cmd_diff(args: Any) -> int:
                         f"~{delta.paragraphs_modified} ={delta.paragraphs_unchanged}"
                     )
                     print(f"    Change intensity: {delta.change_intensity:.1%}")
+                    for pd in delta.paragraph_deltas:
+                        if pd.change_type.value == "unchanged":
+                            continue
+                        _print_paragraph_delta(pd)
 
         return 0
 
