@@ -21,6 +21,9 @@ _INTEREST_SECTION_WEIGHTS = {
     "signature": 0.05,
     "exhibit_index": 0.15,
 }
+# Suppressed from diff_filings output. Financial damping constants above are
+# still used by _compute_section_intensity(), which timeline.py calls for
+# single-section tracking where suppression does not apply.
 _SUPPRESSED_SECTION_TYPES = {"financial_statement", "signature"}
 _FORM_PART_PREFIX = re.compile(r"^10[kq]_part[a-z]+_")
 _CANONICAL_ITEM_TITLES = {

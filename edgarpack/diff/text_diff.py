@@ -49,7 +49,7 @@ def _split_paragraphs(text: str) -> list[str]:
 
 
 _TOC_LINK_PATTERN = re.compile(
-    r"^\[.*?\]\(#[a-zA-Z0-9_]+\)$",
+    r"^\[.*?\]\(#[a-zA-Z0-9_-]+\)$",
 )
 
 
@@ -80,8 +80,8 @@ def _tokenize_for_change_detection(text: str) -> set[str]:
 
 
 _CROSS_REF_OPENER = re.compile(
-    r"^(?:see\s|refer\s+to\s|for\s+(?:additional|further)\s+"
-    r"(?:information|discussion|details?))",
+    r"^(?:(?:please\s+)?see\s|refer\s+to\s|as\s+discussed\s+in\s|"
+    r"for\s+(?:additional|further)\s+(?:information|discussion|details?))",
     re.IGNORECASE,
 )
 _CROSS_REF_TARGET = re.compile(r"(?:item\s+\d+|note\s+\d+|part\s+[IVXivx]+)", re.IGNORECASE)
@@ -118,8 +118,9 @@ def _is_boilerplate_change(old_text: str, new_text: str, similarity: float) -> b
     if similarity >= 0.80 and boilerplate_count == len(diff_words):
         return True
 
-    # Ratio check: >60% of changed words are boilerplate tokens
-    if boilerplate_count / len(diff_words) > 0.60:
+    # Ratio check: >60% of changed words are boilerplate tokens.
+    # Require at least 3 diff words to avoid short-paragraph false positives.
+    if len(diff_words) >= 3 and boilerplate_count / len(diff_words) > 0.60:
         return True
 
     return False
