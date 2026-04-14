@@ -428,12 +428,8 @@ def diff_filings(
             change_type=ChangeType.MODIFIED,
             section_type=section_type,
             paragraphs_added=sum(1 for d in para_deltas if d.change_type == ChangeType.ADDED),
-            paragraphs_removed=sum(
-                1 for d in para_deltas if d.change_type == ChangeType.REMOVED
-            ),
-            paragraphs_modified=sum(
-                1 for d in para_deltas if d.change_type == ChangeType.MODIFIED
-            ),
+            paragraphs_removed=sum(1 for d in para_deltas if d.change_type == ChangeType.REMOVED),
+            paragraphs_modified=sum(1 for d in para_deltas if d.change_type == ChangeType.MODIFIED),
             paragraphs_unchanged=sum(
                 1 for d in para_deltas if d.change_type == ChangeType.UNCHANGED
             ),
@@ -444,18 +440,14 @@ def diff_filings(
         section_deltas.append(delta)
 
     # --- Post-processing: suppress noise section types ---
-    section_deltas = [
-        d for d in section_deltas if d.section_type not in _SUPPRESSED_SECTION_TYPES
-    ]
+    section_deltas = [d for d in section_deltas if d.section_type not in _SUPPRESSED_SECTION_TYPES]
 
     # --- Post-processing: make boilerplate paragraphs invisible ---
     for delta in section_deltas:
         if delta.paragraph_deltas:
             visible = [pd for pd in delta.paragraph_deltas if not pd.is_boilerplate]
             delta.paragraph_deltas = visible
-            delta.paragraphs_added = sum(
-                1 for d in visible if d.change_type == ChangeType.ADDED
-            )
+            delta.paragraphs_added = sum(1 for d in visible if d.change_type == ChangeType.ADDED)
             delta.paragraphs_removed = sum(
                 1 for d in visible if d.change_type == ChangeType.REMOVED
             )

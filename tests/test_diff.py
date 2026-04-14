@@ -500,8 +500,7 @@ def test_fallback_matching_across_parts():
     """Sections that move between parts should match, not show as added+removed."""
     with tempfile.TemporaryDirectory() as tmp:
         content = (
-            "Management discusses results of operations.\n\n"
-            "Revenue increased 20% year over year."
+            "Management discusses results of operations.\n\nRevenue increased 20% year over year."
         )
         before_sections = {
             "10k_partii_item7_managements_discussion": content,
