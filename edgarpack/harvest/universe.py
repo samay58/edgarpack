@@ -5,7 +5,7 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class CompanySpec(BaseModel):
@@ -22,6 +22,13 @@ class CompanySpec(BaseModel):
     aliases: list[str] = []
     alt_tickers: list[str] = []
     hk_stock_code: str | None = None
+    private: bool = False
+
+    @model_validator(mode="after")
+    def _infer_private(self) -> CompanySpec:
+        if self.listing == "PRIVATE":
+            self.private = True
+        return self
 
 
 class UniverseConfig(BaseModel):

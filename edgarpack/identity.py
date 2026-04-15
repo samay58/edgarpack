@@ -61,7 +61,7 @@ def _resolved_for(spec: CompanySpec, ticker: str) -> ResolvedCompany:
         cik=spec.cik,
         hk_stock_code=spec.hk_stock_code,
         aliases=tuple(spec.aliases),
-        private=False,
+        private=spec.private,
     )
 
 
@@ -85,7 +85,7 @@ def load_identity(path: Path) -> IdentityIndex:
                 cik=spec.cik,
                 hk_stock_code=spec.hk_stock_code,
                 aliases=tuple(spec.aliases),
-                private=False,
+                private=spec.private,
             )
             by_ticker[alt.upper()] = alt_resolved
 

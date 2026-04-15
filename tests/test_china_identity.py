@@ -97,3 +97,43 @@ aliases = ["baidu"]
     with pytest.raises(AmbiguousCompany) as excinfo:
         load_identity(cfg)
     assert "baidu" in str(excinfo.value).lower()
+
+
+def test_live_universe_resolves_all_six_public_targets():
+    from pathlib import Path
+
+    index = load_identity(Path("universe.toml"))
+
+    for ticker in ["BIDU", "PDD", "BABA", "JD"]:
+        r = resolve(index, ticker=ticker, company=None)
+        assert r.source == "SEC", f"{ticker} should route to SEC"
+        assert r.private is False
+
+    for ticker in ["0700.HK", "3690.HK", "9988.HK", "9618.HK"]:
+        r = resolve(index, ticker=ticker, company=None)
+        assert r.source == "HKEX", f"{ticker} should route to HKEX"
+        assert r.private is False
+
+
+def test_live_universe_resolves_every_alias():
+    from pathlib import Path
+
+    index = load_identity(Path("universe.toml"))
+    for alias, expected in [
+        ("baidu", "BIDU"),
+        ("pinduoduo", "PDD"),
+        ("alibaba", "BABA"),
+        ("jd.com", "JD"),
+        ("tencent", "0700.HK"),
+        ("meituan", "3690.HK"),
+    ]:
+        r = resolve(index, ticker=None, company=alias)
+        assert r.ticker == expected
+
+
+def test_live_universe_minimax_is_private():
+    from pathlib import Path
+
+    index = load_identity(Path("universe.toml"))
+    r = resolve(index, ticker=None, company="minimax")
+    assert r.private is True

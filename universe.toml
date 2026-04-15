@@ -463,27 +463,37 @@ ticker = "EA"  # Electronic Arts
 
 [[companies]]
 ticker = "BABA"  # Alibaba
+listing = "NYSE"
 cik = "0001577552"
 forms_10q = 0
-forms_20f = 2
+forms_20f = 3
+aliases = ["alibaba", "alibaba group"]
+alt_tickers = ["9988.HK"]
 
 [[companies]]
 ticker = "PDD"  # PDD Holdings / Pinduoduo
+listing = "NASDAQ"
 cik = "0001737806"
 forms_10q = 0
-forms_20f = 2
+forms_20f = 3
+aliases = ["pinduoduo", "pdd holdings"]
 
 [[companies]]
 ticker = "JD"  # JD.com
+listing = "NASDAQ"
 cik = "0001549802"
 forms_10q = 0
-forms_20f = 2
+forms_20f = 3
+aliases = ["jd.com", "jingdong"]
+alt_tickers = ["9618.HK"]
 
 [[companies]]
 ticker = "BIDU"  # Baidu
+listing = "NASDAQ"
 cik = "0001329099"
 forms_10q = 0
-forms_20f = 2
+forms_20f = 3
+aliases = ["baidu"]
 
 [[companies]]
 ticker = "NTES"  # NetEase
@@ -1385,3 +1395,25 @@ ticker = "SILA"  # Sievert Larsen & Co.
 ticker = "SMSI"  # Smith Micro Software
 [[companies]]
 ticker = "EVLV"  # Evolv Technology
+
+# ============================================================
+#  China Query Parity (edgarpack-2yg)
+# ============================================================
+
+[[companies]]
+ticker = "0700.HK"
+listing = "HKEX"
+aliases = ["tencent", "tencent holdings"]
+hk_stock_code = "00700"
+
+[[companies]]
+ticker = "3690.HK"
+listing = "HKEX"
+aliases = ["meituan"]
+hk_stock_code = "03690"
+
+# Private; scaffold-only in the query CLI. Separate issue tracks alt-data.
+[[companies]]
+ticker = "MINIMAX-PRIVATE"
+listing = "PRIVATE"
+aliases = ["minimax"]
