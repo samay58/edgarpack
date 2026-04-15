@@ -636,7 +636,24 @@ def _derived_unit(metric: str, components: dict[str, CitedValue]) -> str:
     return first.unit if first else "USD"
 
 
+_HKEX_CONCEPT_CANONICAL: dict[str, str] = {
+    "Revenue": "revenue",
+    "GrossProfit": "gross_profit",
+    "OperatingIncomeLoss": "operating_income",
+    "ProfitLoss": "net_income",
+    "TotalAssets": "total_assets",
+    "TotalLiabilities": "total_liabilities",
+    "TotalEquity": "total_equity",
+    "CashAndCashEquivalents": "cash_and_equivalents",
+    "ResearchAndDevelopmentExpense": "rd_expense",
+    "NetCashProvidedByUsedInOperatingActivities": "operating_cash_flow",
+}
+
+
 def _hkex_concept_to_canonical(concept: str, standard: str) -> str:
+    if concept in _HKEX_CONCEPT_CANONICAL:
+        return _HKEX_CONCEPT_CANONICAL[concept]
+
     from .metric_map import METRIC_MAP as _MM
 
     std_key = standard if standard in _MM else "HKFRS"
