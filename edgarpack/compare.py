@@ -11,7 +11,6 @@ from typing import Any
 
 from .query.models import CitedValue
 
-
 _BALANCE_SHEET_METRICS: frozenset[str] = frozenset({
     "total_assets",
     "total_liabilities",
@@ -35,7 +34,9 @@ def _load_rates():
     return load_rates(Path("data/fx_rates.csv"))
 
 
-def _convert_to_usd(value: float, from_ccy: str, metric: str, fy: int, rates) -> tuple[float, float] | None:
+def _convert_to_usd(
+    value: float, from_ccy: str, metric: str, fy: int, rates
+) -> tuple[float, float] | None:
     from .fx import RateNotFound, convert
 
     if from_ccy == "USD":
