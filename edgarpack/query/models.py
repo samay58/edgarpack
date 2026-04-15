@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from urllib.parse import quote
-
 from typing import Literal
+from urllib.parse import quote
 
 from pydantic import BaseModel, Field
 
