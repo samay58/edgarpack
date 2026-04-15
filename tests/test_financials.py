@@ -1434,5 +1434,53 @@ class TestLayerBWireUp(unittest.TestCase):
         _asyncio.run(_run())
 
 
+def test_cited_value_carries_accounting_standard_and_reporting_currency():
+    from datetime import date
+
+    from edgarpack.query.models import CitedValue
+
+    v = CitedValue(
+        value=100,
+        unit="USD",
+        metric="revenue",
+        concept="Revenues",
+        period_end=date(2023, 12, 31),
+        fiscal_year=2023,
+        fiscal_period="FY",
+        form_type="10-K",
+        filed=date(2024, 2, 1),
+        accession="0001234567-24-000001",
+        cik="0001329099",
+        company="Baidu",
+        accounting_standard="IFRS",
+        reporting_currency="USD",
+    )
+    assert v.accounting_standard == "IFRS"
+    assert v.reporting_currency == "USD"
+
+
+def test_cited_value_defaults_to_us_gaap_usd():
+    from datetime import date
+
+    from edgarpack.query.models import CitedValue
+
+    v = CitedValue(
+        value=100,
+        unit="USD",
+        metric="revenue",
+        concept="Revenues",
+        period_end=date(2023, 12, 31),
+        fiscal_year=2023,
+        fiscal_period="FY",
+        form_type="10-K",
+        filed=date(2024, 2, 1),
+        accession="0001234567-24-000001",
+        cik="0001234567",
+        company="Acme",
+    )
+    assert v.accounting_standard == "US-GAAP"
+    assert v.reporting_currency == "USD"
+
+
 if __name__ == "__main__":
     unittest.main()

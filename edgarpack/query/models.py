@@ -51,6 +51,9 @@ class CitedValue(BaseModel):
     # 'learned:user' for first-time discoveries that got persisted.
     source: str = "hardcoded"
 
+    accounting_standard: Literal["US-GAAP", "IFRS", "HKFRS", "CAS"] = "US-GAAP"
+    reporting_currency: str = "USD"
+
     # Layer B (Self-heal v2): literal quote from the pack prose that produced
     # this value. Used by document_url to build a tight text-fragment anchor.
     # Empty for v1 values (anchors use the concept label).
