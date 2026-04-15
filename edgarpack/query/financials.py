@@ -398,6 +398,58 @@ async def financials(
                 source="text-scan",
             )
 
+            # Inject the text-scan value into facts so any derived metric that
+            # depends on headcount (revenue_per_employee, etc.) can resolve it
+            # via the normal _compute_derived path. resolve_concept only
+            # searches us-gaap and ifrs-full taxonomies, so the synthetic
+            # fact is registered there (not under the semantically-correct
+            # dei namespace) to stay reachable.
+            synthetic_entry = {
+                "label": "Entity Number of Employees",
+                "units": {
+                    "pure": [
+                        {
+                            "val": value,
+                            "fy": report_date.year,
+                            "fp": "FY",
+                            "start": report_date.isoformat(),
+                            "end": report_date.isoformat(),
+                            "form": form_str,
+                            "filed": filing_date.isoformat(),
+                            "accn": accn,
+                        }
+                    ]
+                },
+            }
+            facts.setdefault("us-gaap", {})
+            facts["us-gaap"]["EntityNumberOfEmployees"] = synthetic_entry
+
+            # Re-run derivations whose component list mentions headcount and
+            # whose current value is None. Uses a fresh cache so a prior None
+            # is not retained from the main loop.
+            for m in metric_list:
+                if result_metrics.get(m) is not None:
+                    continue
+                meta_m = METRIC_MAP.get(m)
+                if meta_m is None or not meta_m.derived:
+                    continue
+                deps = {_normalize_component(c)[0] for c in meta_m.components}
+                if "headcount" not in deps:
+                    continue
+                cited_retry = _compute_derived(
+                    facts,
+                    m,
+                    meta_m,
+                    company_name,
+                    cik,
+                    period,
+                    doc_map,
+                    cache={},
+                    in_progress=set(),
+                )
+                if cited_retry is not None and not _is_stale(cited_retry, period):
+                    result_metrics[m] = cited_retry
+
     # Post-resolution sanity check: flag anomalously low total_debt relative
     # to total_liabilities.  Companies with captive finance subsidiaries
     # (e.g. Ford) may stop tagging consolidated debt in standard XBRL while

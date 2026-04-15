@@ -66,3 +66,21 @@ def test_gross_margin_trend_shifts_across_years():
     assert val is not None
     # Should not be 0 (which would indicate the offset did not propagate).
     assert abs(val.value) > 1e-6
+
+
+def test_sec_revenue_per_employee_resolves_after_text_scan_fallback():
+    """When headcount only populates via the 10-K text-scan fallback (i.e.
+    the filer omits dei:EntityNumberOfEmployees from XBRL), derived metrics
+    that depend on headcount must still compute. Regression: they used to
+    be n/a because the derivation ran before the fallback populated the
+    value."""
+    res = asyncio.run(
+        financials(company="NVDA", metrics="revenue_per_employee,headcount", period="lfy")
+    )
+    hc = res.metrics.get("headcount")
+    rpe = res.metrics.get("revenue_per_employee")
+    assert hc is not None, "headcount must populate via text-scan fallback"
+    assert rpe is not None, "revenue_per_employee must follow once headcount resolves"
+    # NVIDIA reports ~30k-50k employees and ~$100B-$300B revenue, so
+    # per-employee revenue is in the low millions.
+    assert 500_000 < rpe.value < 20_000_000
