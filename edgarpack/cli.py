@@ -887,14 +887,6 @@ def _cmd_query(args: Any) -> int:
         )
         return 2
 
-    if resolved.source == "HKEX":
-        print(
-            f"Error: HKEX metric extraction is not yet supported for {resolved.ticker}. "
-            "HKEX pack ingestion lands separately; query wiring is pending.",
-            file=sys.stderr,
-        )
-        return 2
-
     async def _run() -> int:
         from .query.financials import financials
         from .query.layer_zero import MetricNotFound

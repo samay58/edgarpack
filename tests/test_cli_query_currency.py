@@ -27,15 +27,6 @@ def test_query_rejects_unknown_currency_choice():
     assert "invalid choice" in result.stderr.lower() or "invalid" in result.stderr.lower()
 
 
-
-def test_query_hkex_ticker_exits_with_not_yet_supported_message():
-    result = _run("0700.HK", "revenue")
-    assert result.returncode == 2
-    err = result.stderr.lower()
-    assert "hkex" in err or "hong kong" in err
-    assert "not yet" in err or "unsupported" in err or "pending" in err
-
-
 def test_query_unknown_company_exits_with_suggestion():
     result = _run("ZZZZZ", "revenue")
     assert result.returncode == 2
