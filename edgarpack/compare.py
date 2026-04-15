@@ -1,12 +1,60 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import json
 import sys
 from dataclasses import dataclass
+from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from .query.models import CitedValue
+
+
+_BALANCE_SHEET_METRICS: frozenset[str] = frozenset({
+    "total_assets",
+    "total_liabilities",
+    "total_equity",
+    "cash_and_equivalents",
+    "total_debt",
+    "shares_outstanding_basic",
+    "shares_outstanding_diluted",
+})
+
+
+def _convention_for(metric: str) -> str:
+    if metric in _BALANCE_SHEET_METRICS:
+        return "spot"
+    return "average"
+
+
+def _load_rates():
+    from .fx import load_rates
+
+    return load_rates(Path("data/fx_rates.csv"))
+
+
+def _convert_to_usd(value: float, from_ccy: str, metric: str, fy: int, rates) -> tuple[float, float] | None:
+    from .fx import RateNotFound, convert
+
+    if from_ccy == "USD":
+        return float(value), 1.0
+    convention = _convention_for(metric)
+    as_of = dt.date(fy, 12, 31)
+    try:
+        result = convert(
+            value=Decimal(str(value)),
+            from_ccy=from_ccy,
+            to_ccy="USD",
+            as_of=as_of,
+            convention=convention,
+            rates=rates,
+            period_end=as_of if convention == "average" else None,
+        )
+    except (RateNotFound, NotImplementedError):
+        return None
+    return result.converted_value, result.rate_used
 
 
 @dataclass(frozen=True)
@@ -46,14 +94,25 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
         currency = "USD"
         company = result.company
 
-    metrics_dict = {
-        m: {
+    rates = None
+    metrics_dict: dict[str, dict[str, Any]] = {}
+    for m, cv in flattened.items():
+        entry: dict[str, Any] = {
             "value": cv.value,
             "currency": cv.reporting_currency or "",
             "extraction_method": cv.source or "",
         }
-        for m, cv in flattened.items()
-    }
+        if cv.reporting_currency and cv.reporting_currency != "USD":
+            if rates is None:
+                rates = _load_rates()
+            conv = _convert_to_usd(cv.value, cv.reporting_currency, m, cv.fiscal_year, rates)
+            if conv is not None:
+                entry["usd_value"] = conv[0]
+                entry["fx_rate"] = conv[1]
+        else:
+            entry["usd_value"] = float(cv.value)
+            entry["fx_rate"] = 1.0
+        metrics_dict[m] = entry
     return CompanyColumn(
         ticker=name,
         company=company,
@@ -70,11 +129,30 @@ async def _gather(names: list[str], metrics: str | None, period: str) -> list[Co
     return cols
 
 
+def _abbrev_usd(val: float) -> str:
+    if val is None:
+        return "n/a"
+    absval = abs(val)
+    sign = "-" if val < 0 else ""
+    if absval >= 1_000_000_000:
+        return f"{sign}${absval / 1_000_000_000:,.1f}B"
+    if absval >= 1_000_000:
+        return f"{sign}${absval / 1_000_000:,.1f}M"
+    if absval >= 1_000:
+        return f"{sign}${absval / 1_000:,.1f}K"
+    return f"{sign}${absval:,.0f}"
+
+
 def _format_value(v: dict[str, Any] | None) -> str:
     if v is None or v.get("value") is None:
         return "n/a"
     val = v["value"]
     cur = v.get("currency", "")
+    usd = v.get("usd_value")
+    if usd is not None and cur != "USD":
+        return f"{_abbrev_usd(usd)} (native: {float(val):,.0f} {cur})"
+    if usd is not None:
+        return _abbrev_usd(usd)
     try:
         return f"{float(val):,.0f} {cur}".strip()
     except (TypeError, ValueError):
