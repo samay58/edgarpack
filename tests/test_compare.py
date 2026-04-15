@@ -60,3 +60,31 @@ def test_compare_emits_currency_in_output():
     out = r.stdout
     assert "USD" in out or "$" in out
     assert "CNY" in out or "RMB" in out or "¥" in out
+
+
+def test_compare_footer_never_reports_non_currency_unit():
+    """Regression: non-currency units (headcount, pure) must not leak into
+    the 'reported in ...' footer when mixed with real currencies or when
+    queried in isolation."""
+    r = _run(
+        "minimax",
+        "zhipu",
+        "--metrics",
+        "revenue,headcount,r_and_d_intensity,revenue_growth_yoy",
+        "--format",
+        "table",
+    )
+    out = r.stdout
+    assert "reported in headcount" not in out
+    assert "reported in pure" not in out
+    # Real currencies still appear on the footer for non-headcount metrics.
+    assert "reported in USD" in out or "reported in CNY" in out
+
+
+def test_compare_headcount_only_falls_back_to_usd():
+    """When every metric is non-currency the footer defaults to USD rather
+    than showing a unit sentinel."""
+    r = _run("minimax", "zhipu", "--metrics", "headcount", "--format", "table")
+    out = r.stdout
+    assert "reported in headcount" not in out
+    assert "reported in USD" in out

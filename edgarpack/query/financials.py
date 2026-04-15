@@ -985,6 +985,9 @@ async def _query_hkex_pack(
             duration = duration_by_metric.get(metric, True)
             meta = MetricMeta(concepts=(concept,), duration=duration)
             unit = reporting_currency_by_concept.get(concept, "USD")
+            # Non-currency units (headcount) must not leak into reporting_currency;
+            # downstream renderers use reporting_currency to label the column footer.
+            reporting_currency = "" if unit == "headcount" else unit
             standard = standard_by_taxonomy[taxonomy]
 
             value = select_period(
@@ -1000,12 +1003,15 @@ async def _query_hkex_pack(
 
             if isinstance(value, list):
                 enriched = [
-                    _enrich_hkex_cited(cv, standard, unit, company_name, cik_str) for cv in value
+                    _enrich_hkex_cited(cv, standard, reporting_currency, company_name, cik_str)
+                    for cv in value
                 ]
                 _apply_extraction_source(enriched, facts[taxonomy][concept])
                 result_metrics[metric] = [cv for cv in enriched if cv is not None]
             elif value is not None and not isinstance(value, DerivedValue):
-                enriched_single = _enrich_hkex_cited(value, standard, unit, company_name, cik_str)
+                enriched_single = _enrich_hkex_cited(
+                    value, standard, reporting_currency, company_name, cik_str
+                )
                 _apply_extraction_source([enriched_single], facts[taxonomy][concept])
                 result_metrics[metric] = enriched_single
             else:

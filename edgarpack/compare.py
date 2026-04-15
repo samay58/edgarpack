@@ -105,9 +105,21 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
             flattened[k] = cv
 
     if flattened:
-        sample = next(iter(flattened.values()))
+        # Prefer a sample that actually names a reporting currency. Headcount
+        # and dimensionless ratios (reporting_currency="pure") would otherwise
+        # hijack the column footer.
+        sample = next(
+            (
+                cv
+                for cv in flattened.values()
+                if cv.reporting_currency and cv.reporting_currency not in ("headcount", "pure")
+            ),
+            next(iter(flattened.values())),
+        )
         period_label = f"FY{sample.fiscal_year}"
         currency = sample.reporting_currency or "USD"
+        if currency in ("headcount", "pure"):
+            currency = "USD"
         company = sample.company or result.company
     else:
         period_label = "n/a"
