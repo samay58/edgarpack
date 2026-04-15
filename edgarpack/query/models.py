@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from urllib.parse import quote
-
 from typing import Literal
+from urllib.parse import quote
 
 from pydantic import BaseModel, Field
 
@@ -50,6 +49,9 @@ class CitedValue(BaseModel):
     # 'learned:cached' for registry hits. 'learned:fuzzy', 'learned:llm', or
     # 'learned:user' for first-time discoveries that got persisted.
     source: str = "hardcoded"
+
+    accounting_standard: Literal["US-GAAP", "IFRS", "HKFRS", "CAS"] = "US-GAAP"
+    reporting_currency: str = "USD"
 
     # Layer B (Self-heal v2): literal quote from the pack prose that produced
     # this value. Used by document_url to build a tight text-fragment anchor.

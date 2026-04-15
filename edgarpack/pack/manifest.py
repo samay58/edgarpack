@@ -52,6 +52,8 @@ class Manifest(BaseModel):
     artifacts: dict[str, str]  # path -> sha256
     warnings: list[str]
     tokens_total: int
+    reporting_currency: str = "USD"
+    accounting_standard: str = "US-GAAP"
 
 
 def compute_sha256(content: bytes | str) -> str:

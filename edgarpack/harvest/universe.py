@@ -5,7 +5,7 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class CompanySpec(BaseModel):
@@ -17,6 +17,17 @@ class CompanySpec(BaseModel):
     forms_10q: int | None = None
     forms_8k: int | None = None
     forms_20f: int | None = None
+    listing: str | None = None
+    aliases: list[str] = []
+    alt_tickers: list[str] = []
+    hk_stock_code: str | None = None
+    private: bool = False
+
+    @model_validator(mode="after")
+    def _infer_private(self) -> CompanySpec:
+        if self.listing == "PRIVATE":
+            self.private = True
+        return self
 
 
 class UniverseConfig(BaseModel):
