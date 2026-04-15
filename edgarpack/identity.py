@@ -3,8 +3,6 @@
 Single entrypoint for the CLI. `--ticker` and `--company` both flow
 through `resolve()`. Ambiguity (two aliases colliding) is caught at
 config load time, not query time.
-
-Spec: docs/superpowers/specs/2026-04-14-china-query-performance-design.md
 """
 
 from __future__ import annotations
@@ -20,11 +18,11 @@ Source = Literal["SEC", "HKEX"]
 
 
 class UnknownCompany(ValueError):  # noqa: N818
-    """Raised when a ticker or alias does not resolve to any company."""
+    pass
 
 
 class AmbiguousCompany(ValueError):  # noqa: N818
-    """Raised at config load when two companies claim the same alias."""
+    pass
 
 
 @dataclass(frozen=True)

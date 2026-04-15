@@ -1,7 +1,4 @@
-"""FX rate table loader.
-
-Backs `edgarpack.fx.convert`. Reads `data/fx_rates.csv` once per process.
-"""
+"""FX rate table loader."""
 
 from __future__ import annotations
 

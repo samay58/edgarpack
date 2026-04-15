@@ -17,7 +17,7 @@ Convention = Literal["spot", "average"]
 
 
 class RateNotFound(ValueError):  # noqa: N818
-    """Raised when the rate table has no row for the requested date."""
+    pass
 
 
 @dataclass(frozen=True)

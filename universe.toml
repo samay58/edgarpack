@@ -1396,10 +1396,6 @@ ticker = "SMSI"  # Smith Micro Software
 [[companies]]
 ticker = "EVLV"  # Evolv Technology
 
-# ============================================================
-#  China Query Parity (edgarpack-2yg)
-# ============================================================
-
 [[companies]]
 ticker = "0700.HK"
 listing = "HKEX"
@@ -1412,7 +1408,6 @@ listing = "HKEX"
 aliases = ["meituan"]
 hk_stock_code = "03690"
 
-# Private; scaffold-only in the query CLI. Separate issue tracks alt-data.
 [[companies]]
 ticker = "MINIMAX-PRIVATE"
 listing = "PRIVATE"

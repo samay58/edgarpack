@@ -1,4 +1,4 @@
-"""FX convention tests for China query parity (edgarpack-2yg)."""
+"""FX convention tests."""
 
 import datetime as dt
 from decimal import Decimal

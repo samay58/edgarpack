@@ -1,4 +1,4 @@
-"""Identity resolution for China query parity (edgarpack-2yg)."""
+"""Identity resolution tests."""
 
 import pytest
 
