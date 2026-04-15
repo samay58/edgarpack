@@ -2,8 +2,9 @@
 
 Handles selecting the right data points from SEC companyfacts JSON based on
 period selectors like ``lfy`` (last fiscal year), ``mrq`` (most recent quarter),
-``ltm`` / ``ltm-1`` (trailing twelve month windows), ``annual:N``, and
-``quarterly:N``.
+``ltm`` / ``ltm-1`` (trailing twelve month windows), ``annual:N``,
+``quarterly:N``, and ``lfy-N`` (fiscal year N positions back from the latest;
+e.g. ``lfy-1`` = prior FY, ``lfy-0`` is equivalent to ``lfy``).
 """
 
 from __future__ import annotations
@@ -943,7 +944,13 @@ def select_period(
         meta: Metric metadata.
         company: Company name.
         cik: CIK number.
-        period: Period selector string.
+        period: Period selector string. Valid values: ``"lfy"`` (latest fiscal
+            year), ``"mrq"`` (most recent quarter), ``"ltm"`` / ``"ltm-1"``
+            (trailing twelve months, current and prior window), ``"annual:N"``
+            (series of N annual periods), ``"quarterly:N"`` (series of N
+            quarters), and ``"lfy-N"`` (fiscal year N positions back from the
+            latest; N must be a non-negative integer). ``lfy-0`` is equivalent
+            to ``lfy``.
         taxonomy: XBRL taxonomy ("us-gaap" or "ifrs-full").
         doc_map: Optional mapping of accession -> primaryDocument filename.
 

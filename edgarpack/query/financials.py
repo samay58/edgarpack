@@ -710,7 +710,20 @@ def _compute_derived(
 
 
 def _eval_formula(formula: str, components: dict[str, CitedValue]) -> float | None:
-    """Evaluate a simple arithmetic formula with component values."""
+    """Evaluate a simple arithmetic formula with component values.
+
+    The evaluator is positional and left-associative only. Supported shapes:
+
+    - ``a op b`` (3 tokens): single binary operation.
+    - ``a op1 b op2 c`` (5 tokens): left-associative; ``op1`` is applied first,
+      then ``op2`` is applied to that result and ``c``.
+
+    Do not use this for formulas that rely on operator precedence. For
+    ``(a / b) - c``, write exactly that token sequence (``a / b - c``).
+    For ``a * (b + c)``, decompose ``b + c`` into a named component first.
+
+    Numeric literals are supported in any operand position (e.g. ``revenue - 1``).
+    """
     vals = {k: float(v.value) for k, v in components.items() if v.value is not None}
 
     def _lookup(token: str) -> float | None:
