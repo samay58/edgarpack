@@ -29,6 +29,7 @@ china = [
     "httpx>=0.27",
     "psycopg[binary]>=3.2",
     "pypdf>=4.0",
+    "pyyaml>=6.0",
 ]
 dev = [
     "pytest>=8.0",

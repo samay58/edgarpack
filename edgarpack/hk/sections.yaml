@@ -1,0 +1,15 @@
+sections:
+  "CHAIRMAN'S STATEMENT": hkex_chairman_statement
+  "MANAGEMENT DISCUSSION AND ANALYSIS": hkex_mdna
+  "BUSINESS REVIEW": hkex_business_review
+  "CONSOLIDATED STATEMENT OF PROFIT OR LOSS": hkex_income_statement
+  "CONSOLIDATED STATEMENT OF COMPREHENSIVE INCOME": hkex_comprehensive_income
+  "CONSOLIDATED STATEMENT OF FINANCIAL POSITION": hkex_balance_sheet
+  "CONSOLIDATED STATEMENT OF CASH FLOWS": hkex_cash_flow
+  "CONSOLIDATED STATEMENT OF CHANGES IN EQUITY": hkex_equity_changes
+  "NOTES TO THE FINANCIAL STATEMENTS": hkex_notes
+  "CORPORATE GOVERNANCE REPORT": hkex_governance
+  "DIRECTORS' REPORT": hkex_directors_report
+  "INDEPENDENT AUDITOR'S REPORT": hkex_auditor_report
+  "FIVE-YEAR FINANCIAL SUMMARY": hkex_five_year_summary
+  "RISK FACTORS": hkex_risk_factors
