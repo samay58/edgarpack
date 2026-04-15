@@ -53,3 +53,47 @@ def test_canonical_metrics_covers_full_fundamental_set():
         "shares_outstanding_diluted",
     }
     assert required <= set(CANONICAL_METRICS)
+
+
+def test_lab_specific_metrics_in_canonical_set():
+    from edgarpack.query.metric_map import CANONICAL_METRICS
+
+    required = {
+        "cash_burn",
+        "runway_months",
+        "r_and_d_intensity",
+        "revenue_growth_yoy",
+        "gross_margin_trend",
+    }
+    assert required <= set(CANONICAL_METRICS)
+
+
+def test_cash_burn_resolves_concepts_per_standard():
+    from edgarpack.query.metric_map import resolve_concepts
+
+    assert resolve_concepts("cash_burn", "US-GAAP")
+    assert resolve_concepts("cash_burn", "IFRS")
+    assert resolve_concepts("cash_burn", "HKFRS")
+
+
+def test_derived_metrics_have_empty_concept_lists():
+    from edgarpack.query.metric_map import resolve_concepts
+
+    derived_metrics = (
+        "runway_months",
+        "r_and_d_intensity",
+        "revenue_growth_yoy",
+        "gross_margin_trend",
+    )
+    for derived in derived_metrics:
+        for std in ("US-GAAP", "IFRS", "HKFRS"):
+            result = resolve_concepts(derived, std)
+            assert result == [], f"{derived} {std} should be empty (derived)"
+
+
+def test_cas_stub_includes_new_metrics():
+    from edgarpack.query.metric_map import CANONICAL_METRICS, resolve_concepts
+
+    for m in ("cash_burn", "runway_months", "r_and_d_intensity"):
+        assert m in CANONICAL_METRICS
+        assert resolve_concepts(m, "CAS") == []
