@@ -67,10 +67,30 @@ _PROSE_LABELS: dict[str, list[str]] = {
         "cash and bank balances",
         "bank balances and cash",
     ],
+    "rd_expense": [
+        "research and development expenses",
+        "research and development expense",
+        "research and development costs",
+        "research and development",
+    ],
+    "operating_cash_flow": [
+        "net cash (used in)/generated from operating activities",
+        "net cash used in operating activities",
+        "net cash generated from operating activities",
+        "cash (used in)/generated from operations",
+        "cash used in operations",
+        "cash generated from operations",
+    ],
 }
 
 _SECTION_METRICS: dict[str, list[str]] = {
-    "hkex_income_statement": ["revenue", "gross_profit", "operating_income", "net_income"],
+    "hkex_income_statement": [
+        "revenue",
+        "gross_profit",
+        "operating_income",
+        "net_income",
+        "rd_expense",
+    ],
     "hkex_comprehensive_income": ["net_income"],
     "hkex_balance_sheet": [
         "total_assets",
@@ -78,7 +98,7 @@ _SECTION_METRICS: dict[str, list[str]] = {
         "total_equity",
         "cash_and_equivalents",
     ],
-    "hkex_cash_flow": [],
+    "hkex_cash_flow": ["operating_cash_flow"],
     "hkex_equity_changes": [],
 }
 
@@ -98,6 +118,8 @@ _CONCEPT_NAME: dict[str, str] = {
     "total_liabilities": "TotalLiabilities",
     "total_equity": "TotalEquity",
     "cash_and_equivalents": "CashAndCashEquivalents",
+    "rd_expense": "ResearchAndDevelopmentExpense",
+    "operating_cash_flow": "NetCashProvidedByUsedInOperatingActivities",
 }
 
 
