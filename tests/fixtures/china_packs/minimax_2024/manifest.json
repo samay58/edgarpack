@@ -1,0 +1,10 @@
+{
+  "source": "HKEX",
+  "stock_code": "00100",
+  "fiscal_year": 2024,
+  "company": "MiniMax Group Inc.",
+  "reporting_currency": "CNY",
+  "accounting_standard": "HKFRS",
+  "pdf_url": "file:///Users/samaydhawan/edgarpack-china-ai-labs/tests/fixtures/china_packs/minimax_2024/source.pdf",
+  "announcement_date": "N/A"
+}
