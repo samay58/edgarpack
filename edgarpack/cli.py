@@ -174,6 +174,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Reject values resolved via the self-heal path (learned mappings). "
         "Only hardcoded METRIC_MAP resolutions are returned.",
     )
+    p_query.add_argument(
+        "--currency",
+        choices=["native", "usd", "both"],
+        default="both",
+        help="Currency output: native (reporting currency only), usd (USD only), both.",
+    )
 
     p_harvest = sub.add_parser(
         "harvest",
@@ -850,6 +856,45 @@ def _render_query_table(result: Any, args: Any) -> str:
 
 
 def _cmd_query(args: Any) -> int:
+    from pathlib import Path
+
+    from .identity import AmbiguousCompany, UnknownCompany, load_identity, resolve
+
+    try:
+        index = load_identity(Path("universe.toml"))
+    except Exception as e:
+        print(f"Error: failed to load universe: {e}", file=sys.stderr)
+        return 2
+
+    resolved = None
+    try:
+        resolved = resolve(index, ticker=args.company, company=None)
+    except UnknownCompany:
+        try:
+            resolved = resolve(index, ticker=None, company=args.company)
+        except (UnknownCompany, AmbiguousCompany) as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+    except AmbiguousCompany as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+
+    if resolved.private:
+        print(
+            f"Error: {resolved.ticker} is a private company with no public filings. "
+            "Query is unsupported for private companies.",
+            file=sys.stderr,
+        )
+        return 2
+
+    if resolved.source == "HKEX":
+        print(
+            f"Error: HKEX metric extraction is not yet supported for {resolved.ticker}. "
+            "HKEX pack ingestion lands separately; query wiring is pending.",
+            file=sys.stderr,
+        )
+        return 2
+
     async def _run() -> int:
         from .query.financials import financials
         from .query.layer_zero import MetricNotFound
