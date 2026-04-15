@@ -123,7 +123,7 @@ def _detect_multiplier(text: str) -> int:
         return 1_000_000
     if re.search(r"in thousands\b", header, re.IGNORECASE):
         return 1_000
-    if re.search(r"'000\b", header):
+    if re.search(r"['\u2019\u2018]000\b", header):
         return 1_000
     return 1
 
@@ -277,6 +277,16 @@ def _extract_metric_from_section(
     return None
 
 
+_MUST_BE_POSITIVE: frozenset[str] = frozenset({
+    "revenue",
+    "total_assets",
+    "total_liabilities",
+    "cash_and_equivalents",
+    "shares_outstanding_basic",
+    "shares_outstanding_diluted",
+})
+
+
 def extract_with_regex(
     text: str,
     section_id: str,
@@ -299,6 +309,8 @@ def extract_with_regex(
         fact = _extract_metric_from_section(text, section_id, metric, fy_col, interleaved, n_years)
         if fact:
             scaled_val = fact.value * multiplier
+            if fact.metric in _MUST_BE_POSITIVE and scaled_val < 0:
+                continue
             out.append(
                 HKFact(
                     metric=fact.metric,
