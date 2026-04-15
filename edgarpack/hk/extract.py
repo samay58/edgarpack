@@ -395,38 +395,25 @@ def extract_with_regex(
     return out
 
 
-_HEADCOUNT_PATTERN = re.compile(
-    r"(?<!less than )(?<!fewer than )(?<!more than )(?<!over )"
-    r"(\d{1,3}(?:,\d{3})*|\d+)[^\S\n]+(?:full[^\S\n]*-?[^\S\n]*time[^\S\n]+)?employees",
-    re.IGNORECASE,
-)
-
-_HEADCOUNT_MIN = 50
-_HEADCOUNT_MAX = 5_000_000
-
-
 def extract_headcount_from_pack(pack_dir: Path) -> HKFact | None:
     import logging
+
+    from ..sec.headcount_text import HEADCOUNT_MAX, HEADCOUNT_MIN, HEADCOUNT_PATTERN
 
     logger = logging.getLogger(__name__)
     sections_dir = pack_dir / "sections"
     if not sections_dir.exists():
         return None
-    manifest_path = pack_dir / "manifest.json"
-    if not manifest_path.exists():
-        return None
-    manifest = json.loads(manifest_path.read_text())
-    fy: int = manifest["fiscal_year"]
 
     for section_file in sorted(sections_dir.glob("*.md")):
         text = section_file.read_text()
-        for m in _HEADCOUNT_PATTERN.finditer(text):
+        for m in HEADCOUNT_PATTERN.finditer(text):
             raw = m.group(1).replace(",", "")
             try:
                 value = int(raw)
             except ValueError:
                 continue
-            if _HEADCOUNT_MIN <= value <= _HEADCOUNT_MAX:
+            if HEADCOUNT_MIN <= value <= HEADCOUNT_MAX:
                 return HKFact(
                     metric="headcount",
                     concept="EntityNumberOfEmployees",
@@ -437,7 +424,6 @@ def extract_headcount_from_pack(pack_dir: Path) -> HKFact | None:
                     matched_label=m.group(0),
                 )
             logger.warning("headcount candidate %s out of bounds in %s", value, section_file.name)
-    _ = fy  # reserved for future per-period attribution
     return None
 
 

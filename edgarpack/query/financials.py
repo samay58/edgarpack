@@ -333,21 +333,55 @@ async def financials(
                 result_metrics[metric] = learned
 
     if "headcount" in metric_list and result_metrics.get("headcount") is None:
-        accessions_sorted = sorted(doc_map.keys(), reverse=True)
-        fallback = await _scan_headcount_fallback(cik, doc_map, accessions_sorted, force=force)
+        subs = await fetch_submissions(cik, force=force)
+        filings = subs.get("filings", {}).get("recent", {})
+        accession_meta: dict[str, dict[str, str]] = {}
+        accs = filings.get("accessionNumber", [])
+        rdates = filings.get("reportDate", [])
+        fdates = filings.get("filingDate", [])
+        forms = filings.get("form", [])
+        for i, acc in enumerate(accs):
+            accession_meta[acc] = {
+                "reportDate": rdates[i] if i < len(rdates) else "",
+                "filingDate": fdates[i] if i < len(fdates) else "",
+                "form": forms[i] if i < len(forms) else "",
+            }
+        accessions_sorted = sorted(
+            (a for a in doc_map if accession_meta.get(a, {}).get("form") in ("10-K", "20-F")),
+            key=lambda a: accession_meta[a].get("reportDate", ""),
+            reverse=True,
+        )
+        fallback = await _scan_headcount_fallback(
+            cik, doc_map, accessions_sorted, accession_meta, force=force
+        )
         if fallback is not None:
-            value, accn = fallback
+            value, accn, meta = fallback
+            report_date_str = meta.get("reportDate") or ""
+            filing_date_str = meta.get("filingDate") or report_date_str
+            form_str = meta.get("form") or "10-K"
+            try:
+                report_date = (
+                    _date.fromisoformat(report_date_str) if report_date_str else _date.today()
+                )
+            except ValueError:
+                report_date = _date.today()
+            try:
+                filing_date = (
+                    _date.fromisoformat(filing_date_str) if filing_date_str else report_date
+                )
+            except ValueError:
+                filing_date = report_date
             result_metrics["headcount"] = CitedValue(
                 value=value,
                 unit="headcount",
                 metric="headcount",
                 concept="EntityNumberOfEmployees",
-                period_end=_date.today(),
-                period_start=None,
-                fiscal_year=_date.today().year,
+                period_end=report_date,
+                period_start=report_date,
+                fiscal_year=report_date.year,
                 fiscal_period="FY",
-                form_type="10-K",
-                filed=_date.today(),
+                form_type=form_str,
+                filed=filing_date,
                 accession=accn,
                 cik=cik,
                 company=company_name,
@@ -470,9 +504,10 @@ async def _scan_headcount_fallback(
     cik: str,
     doc_map: dict[str, str],
     accessions: list[str],
+    accession_meta: dict[str, dict[str, str]],
     force: bool = False,
-) -> tuple[int, str] | None:
-    """Return (value, accession) for the first in-bounds headcount match."""
+) -> tuple[int, str, dict[str, str]] | None:
+    """Return (value, accession, meta) for the first in-bounds headcount match."""
     from ..sec.headcount_text import scan_headcount_from_text
 
     cik_bare = cik.lstrip("0")
@@ -480,7 +515,7 @@ async def _scan_headcount_fallback(
         primary_doc = doc_map.get(accn, "")
         if not primary_doc:
             continue
-        meta = FilingMeta(
+        filing_meta = FilingMeta(
             cik=cik_bare,
             accession=accn,
             form_type="",
@@ -489,14 +524,14 @@ async def _scan_headcount_fallback(
             company_name="",
         )
         try:
-            html_bytes = await fetch_file(meta, primary_doc)
+            html_bytes = await fetch_file(filing_meta, primary_doc)
         except (HTTPError, OSError, ValueError) as e:
             logger.warning("headcount fallback fetch failed for %s: %s", accn, e)
             continue
         text = html_bytes.decode("utf-8", errors="replace")
         value = scan_headcount_from_text(text)
         if value is not None:
-            return value, accn
+            return value, accn, accession_meta.get(accn, {})
     return None
 
 

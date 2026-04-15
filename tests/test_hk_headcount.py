@@ -56,3 +56,8 @@ def test_sec_text_scan_respects_bounds():
 def test_sec_text_scan_returns_none_when_absent():
     text = "No disclosure of human capital resources."
     assert scan_headcount_from_text(text) is None
+
+
+def test_sec_text_scan_ignores_comparative_phrasing():
+    text = "We had more than 50,000 employees globally."
+    assert scan_headcount_from_text(text) is None
