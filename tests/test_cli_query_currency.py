@@ -27,7 +27,14 @@ def test_query_rejects_unknown_currency_choice():
     assert "invalid choice" in result.stderr.lower() or "invalid" in result.stderr.lower()
 
 
-def test_query_unknown_company_exits_with_suggestion():
+def test_query_unknown_company_falls_through_to_sec():
+    """Unknown-to-universe tickers must pass through to the SEC ticker
+    resolver rather than hard-bailing at the universe gate. The SEC
+    resolver returns 'Unknown ticker' for genuinely unknown symbols."""
     result = _run("ZZZZZ", "revenue")
-    assert result.returncode == 2
-    assert "unknown" in result.stderr.lower() or "did you mean" in result.stderr.lower()
+    assert result.returncode in (1, 2)
+    stderr = result.stderr.lower()
+    assert "unknown" in stderr
+    # Regression guard: must not suggest Chinese aliases for a SEC-shaped ticker.
+    assert "alibaba" not in stderr
+    assert "baidu" not in stderr

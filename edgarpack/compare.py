@@ -220,19 +220,28 @@ def cmd_compare(args: Any) -> int:
 
     from .identity import AmbiguousCompany, UnknownCompany, load_identity, resolve
 
-    try:
-        idx = load_identity(Path("universe.toml"))
-    except Exception as e:
-        print(f"Error: failed to load universe: {e}", file=sys.stderr)
-        return 1
-
-    for name in args.companies:
+    universe_path = Path("universe.toml")
+    if universe_path.exists():
         try:
-            resolve(idx, ticker=name, company=None)
-        except UnknownCompany:
+            idx = load_identity(universe_path)
+        except Exception as e:
+            print(f"Error: failed to load universe: {e}", file=sys.stderr)
+            return 1
+
+        for name in args.companies:
             try:
-                resolve(idx, ticker=None, company=name)
-            except (UnknownCompany, AmbiguousCompany) as e:
+                resolve(idx, ticker=name, company=None)
+            except UnknownCompany:
+                try:
+                    resolve(idx, ticker=None, company=name)
+                except UnknownCompany:
+                    # Unknown in universe falls through to SEC ticker lookup
+                    # inside _gather(); do not hard-bail here.
+                    continue
+                except AmbiguousCompany as e:
+                    print(f"Error: {e}", file=sys.stderr)
+                    return 2
+            except AmbiguousCompany as e:
                 print(f"Error: {e}", file=sys.stderr)
                 return 2
 
@@ -244,6 +253,10 @@ def cmd_compare(args: Any) -> int:
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
+    except ValueError as e:
+        msg = str(e)
+        print(f"Error: {msg}", file=sys.stderr)
+        return 2 if msg.lower().startswith("unknown ticker") else 1
 
     metric_keys = [m.strip() for m in metrics.split(",")]
 

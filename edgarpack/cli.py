@@ -883,26 +883,30 @@ def _cmd_query(args: Any) -> int:
 
     from .identity import AmbiguousCompany, UnknownCompany, load_identity, resolve
 
-    try:
-        index = load_identity(Path("universe.toml"))
-    except Exception as e:
-        print(f"Error: failed to load universe: {e}", file=sys.stderr)
-        return 2
-
     resolved = None
-    try:
-        resolved = resolve(index, ticker=args.company, company=None)
-    except UnknownCompany:
+    universe_path = Path("universe.toml")
+    if universe_path.exists():
         try:
-            resolved = resolve(index, ticker=None, company=args.company)
-        except (UnknownCompany, AmbiguousCompany) as e:
+            index = load_identity(universe_path)
+        except Exception as e:
+            print(f"Error: failed to load universe: {e}", file=sys.stderr)
+            return 2
+
+        try:
+            resolved = resolve(index, ticker=args.company, company=None)
+        except UnknownCompany:
+            try:
+                resolved = resolve(index, ticker=None, company=args.company)
+            except UnknownCompany:
+                resolved = None
+            except AmbiguousCompany as e:
+                print(f"Error: {e}", file=sys.stderr)
+                return 2
+        except AmbiguousCompany as e:
             print(f"Error: {e}", file=sys.stderr)
             return 2
-    except AmbiguousCompany as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 2
 
-    if resolved.private:
+    if resolved is not None and resolved.private:
         print(
             f"Error: {resolved.ticker} is a private company with no public filings. "
             "Query is unsupported for private companies.",
@@ -926,6 +930,10 @@ def _cmd_query(args: Any) -> int:
             # are populated. Don't duplicate it.
             print(f"Error: {e}", file=sys.stderr)
             return 2
+        except ValueError as e:
+            msg = str(e)
+            print(f"Error: {msg}", file=sys.stderr)
+            return 2 if msg.lower().startswith("unknown ticker") else 1
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
