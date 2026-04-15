@@ -39,6 +39,24 @@
           ]
         }
       },
+      "NetCashProvidedByUsedInOperatingActivities": {
+        "label": "NetCashProvidedByUsedInOperatingActivities",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -258483000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_cash_flow"
+            }
+          ]
+        }
+      },
       "Revenue": {
         "label": "Revenue",
         "units": {
@@ -83,6 +101,24 @@
               "start": "2024-01-01",
               "end": "2024-12-31",
               "val": -465238000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      },
+      "ResearchAndDevelopmentExpense": {
+        "label": "ResearchAndDevelopmentExpense",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -188979000,
               "fy": 2024,
               "fp": "FY",
               "form": "Annual Report",

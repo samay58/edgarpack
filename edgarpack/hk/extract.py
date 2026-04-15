@@ -75,6 +75,8 @@ _PROSE_LABELS: dict[str, list[str]] = {
     ],
     "operating_cash_flow": [
         "net cash (used in)/generated from operating activities",
+        "net cash flows used in operating activities",
+        "net cash flows generated from operating activities",
         "net cash used in operating activities",
         "net cash generated from operating activities",
         "cash (used in)/generated from operations",
@@ -137,6 +139,49 @@ class HKFact:
 
 def _strip_filler(line: str) -> str:
     return re.sub(r"/H\d+", " ", line)
+
+
+def _merge_wrapped_labels(lines: list[str]) -> list[str]:
+    """Join a label line to the next line when a known label wraps.
+
+    Applies only when:
+      * line N, after filler strip, is a strict prefix of at least one known
+        label in _PROSE_LABELS (the stripped content is shorter than the label
+        and the label starts with the stripped content),
+      * line N contains no digits outside filler tokens,
+      * line N+1 begins with a lowercase word or a filler token.
+    """
+    all_labels: list[str] = []
+    for labels in _PROSE_LABELS.values():
+        all_labels.extend(label.lower() for label in labels)
+
+    def _is_label_prefix(text: str) -> bool:
+        t = text.lower()
+        for label in all_labels:
+            if label.startswith(t) and len(t) < len(label):
+                return True
+        return False
+
+    merged: list[str] = []
+    skip_next = False
+    for i, line in enumerate(lines):
+        if skip_next:
+            skip_next = False
+            continue
+        stripped = _strip_filler(line).strip()
+        if not stripped:
+            merged.append(line)
+            continue
+        has_digits = bool(re.search(r"\d", stripped))
+        if not has_digits and _is_label_prefix(stripped) and i + 1 < len(lines):
+            next_line = lines[i + 1]
+            next_stripped = _strip_filler(next_line).strip()
+            if next_stripped and (next_stripped[0].islower() or next_stripped.startswith("/H")):
+                merged.append(f"{line.rstrip()} {next_line.lstrip()}")
+                skip_next = True
+                continue
+        merged.append(line)
+    return merged
 
 
 def _detect_multiplier(text: str) -> int:
@@ -257,7 +302,7 @@ def _extract_metric_from_section(
     interleaved: bool,
     n_years: int,
 ) -> HKFact | None:
-    lines = text.split("\n")
+    lines = _merge_wrapped_labels(text.split("\n"))
 
     for label in _PROSE_LABELS.get(metric, []):
         pat = re.compile(rf"^\s*{re.escape(label)}\b", re.IGNORECASE)

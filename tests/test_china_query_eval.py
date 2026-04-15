@@ -82,13 +82,9 @@ def _case_id(c: GoldenCase) -> str:
 @pytest.mark.parametrize("case", _CASES, ids=_case_id)
 def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
     if case.xfail:
-        request.applymarker(
-            pytest.mark.xfail(strict=True, reason=f"known bug: {case.xfail}")
-        )
+        request.applymarker(pytest.mark.xfail(strict=True, reason=f"known bug: {case.xfail}"))
 
-    result = asyncio.run(
-        financials(company=case.ticker, metrics=case.metric, period=case.period)
-    )
+    result = asyncio.run(financials(company=case.ticker, metrics=case.metric, period=case.period))
     cited = result.metrics.get(case.metric)
     assert cited is not None, f"{case.metric} not returned by query"
     assert cited.value is not None, f"{case.metric} value is None"
