@@ -39,6 +39,24 @@
           ]
         }
       },
+      "NetCashProvidedByUsedInOperatingActivities": {
+        "label": "NetCashProvidedByUsedInOperatingActivities",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -2244919000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_cash_flow"
+            }
+          ]
+        }
+      },
       "Revenue": {
         "label": "Revenue",
         "units": {
