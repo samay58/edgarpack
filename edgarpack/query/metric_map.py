@@ -34,6 +34,7 @@ CANONICAL_METRICS: tuple[CanonicalMetric, ...] = (
     "r_and_d_intensity",
     "revenue_growth_yoy",
     "gross_margin_trend",
+    "revenue_per_employee",
 )
 
 
@@ -68,6 +69,7 @@ METRIC_MAP: dict[AccountingStandard, dict[CanonicalMetric, list[str]]] = {
         "r_and_d_intensity": [],
         "revenue_growth_yoy": [],
         "gross_margin_trend": [],
+        "revenue_per_employee": [],
     },
     "IFRS": {
         "revenue": ["Revenue", "RevenueFromContractsWithCustomers", "RevenueFromContracts"],
@@ -92,6 +94,7 @@ METRIC_MAP: dict[AccountingStandard, dict[CanonicalMetric, list[str]]] = {
         "r_and_d_intensity": [],
         "revenue_growth_yoy": [],
         "gross_margin_trend": [],
+        "revenue_per_employee": [],
     },
     "HKFRS": {
         "revenue": ["Revenue", "Turnover", "RevenueFromContracts"],
@@ -116,6 +119,7 @@ METRIC_MAP: dict[AccountingStandard, dict[CanonicalMetric, list[str]]] = {
         "r_and_d_intensity": [],
         "revenue_growth_yoy": [],
         "gross_margin_trend": [],
+        "revenue_per_employee": [],
     },
     "CAS": {m: [] for m in CANONICAL_METRICS},
 }

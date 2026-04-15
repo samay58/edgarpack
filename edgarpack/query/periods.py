@@ -653,18 +653,33 @@ def select_lfy(
     cik: str,
     taxonomy: str = "us-gaap",
     doc_map: dict[str, str] | None = None,
+    period_offset: int = 0,
 ) -> CitedValue | None:
-    """Select the last fiscal year value (most recent 10-K/20-F annual)."""
+    """Select the last fiscal year value (most recent 10-K/20-F annual).
+
+    When ``period_offset`` is negative, walk back N fiscal years from the
+    latest. E.g. ``period_offset=-1`` returns the prior fiscal year.
+    """
     values = _extract_values(facts, concept, taxonomy=taxonomy)
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+
+    # offset=-1 means "one FY back", so the target index is abs(offset).
+    target_idx = -period_offset if period_offset <= 0 else 0
 
     if meta.duration:
         # For P&L/CF: pick most recent FY value
         annual = _annual_history(values)
-        if not annual:
+        if not annual or target_idx >= len(annual):
             return None
         return _value_to_cited(
-            annual[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            annual[target_idx],
+            metric,
+            concept,
+            unit,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
         )
     else:
         # For balance sheet: pick most recent 10-K instant
@@ -677,8 +692,17 @@ def select_lfy(
         if not annual:
             return None
         annual.sort(key=lambda v: (int(v.get("fy") or 0), v.get("end", "")), reverse=True)
+        if target_idx >= len(annual):
+            return None
         return _value_to_cited(
-            annual[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            annual[target_idx],
+            metric,
+            concept,
+            unit,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
         )
 
 
@@ -908,6 +932,7 @@ def select_period(
     period: str = "lfy",
     taxonomy: str = "us-gaap",
     doc_map: dict[str, str] | None = None,
+    period_offset: int = 0,
 ) -> CitedValue | DerivedValue | list[CitedValue] | None:
     """Route to the appropriate period selector.
 
@@ -927,9 +952,34 @@ def select_period(
     """
     period = period.strip().lower()
 
+    # lfy-N reads as "N fiscal years before the latest FY". Keep the offset
+    # negative so downstream select_lfy walks back through the annual history.
+    lfy_back_match = re.fullmatch(r"lfy-(\d+)", period)
+    if lfy_back_match:
+        years_back = int(lfy_back_match.group(1))
+        return select_lfy(
+            facts,
+            concept,
+            metric,
+            meta,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+            period_offset=-years_back,
+        )
+
     if period == "lfy":
         return select_lfy(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            facts,
+            concept,
+            metric,
+            meta,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+            period_offset=period_offset,
         )
     elif period == "mrq":
         return select_mrq(

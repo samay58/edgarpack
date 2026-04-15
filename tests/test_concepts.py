@@ -37,13 +37,16 @@ class TestMetricMap(unittest.TestCase):
                 )
 
     def test_derived_components_exist_in_map(self) -> None:
+        from edgarpack.query.concepts import _normalize_component
+
         for name, meta in METRIC_MAP.items():
             if meta.derived:
                 for comp in meta.components:
+                    comp_name, _ = _normalize_component(comp)
                     self.assertIn(
-                        comp,
+                        comp_name,
                         METRIC_MAP,
-                        f"Derived metric {name} references unknown component {comp}",
+                        f"Derived metric {name} references unknown component {comp_name}",
                     )
 
     def test_known_metrics_count(self) -> None:

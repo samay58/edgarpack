@@ -135,6 +135,7 @@ class HKFact:
     section_id: str
     extraction_method: ExtractionMethod
     matched_label: str
+    fiscal_year: int = 0
 
 
 def _strip_filler(line: str) -> str:
@@ -317,18 +318,24 @@ def _extract_metric_from_section(
                 else:
                     cols = _parse_columns_plain(line)
 
-                if len(cols) > fy_col:
-                    val = cols[fy_col]
-                    if val is not None:
-                        return HKFact(
-                            metric=metric,
-                            concept=_CONCEPT_NAME.get(metric, metric),
-                            value=val,
-                            unit="USD",
-                            section_id=section_id,
-                            extraction_method="regex",
-                            matched_label=label,
-                        )
+                if cols:
+                    # Column grid parsed: trust its answer (including None for
+                    # dashes). Do not fall back to inline single-value parsing,
+                    # which would otherwise pick up trailing percentage tokens
+                    # on an adjacent column.
+                    if len(cols) > fy_col:
+                        val = cols[fy_col]
+                        if val is not None:
+                            return HKFact(
+                                metric=metric,
+                                concept=_CONCEPT_NAME.get(metric, metric),
+                                value=val,
+                                unit="USD",
+                                section_id=section_id,
+                                extraction_method="regex",
+                                matched_label=label,
+                            )
+                    continue
 
             # Fallback: single-value inline format
             val2 = _parse_inline_single(line)
@@ -356,11 +363,58 @@ _MUST_BE_POSITIVE: frozenset[str] = frozenset(
     }
 )
 
+# Expense-style metrics disclosed with parenthesized negative values in HKEX
+# prospectuses. Normalize to the unsigned magnitude so downstream ratios
+# (r_and_d_intensity, operating_margin) match SEC convention.
+_STORE_AS_MAGNITUDE: frozenset[str] = frozenset({"rd_expense"})
+
+
+def _extract_inline_single_year(
+    text: str,
+    section_id: str,
+    metrics: list[str],
+    multiplier: int,
+) -> list[HKFact]:
+    """Fallback extractor for sections with no column-year header."""
+    out: list[HKFact] = []
+    lines = _merge_wrapped_labels(text.split("\n"))
+    for metric in metrics:
+        for label in _PROSE_LABELS.get(metric, []):
+            pat = re.compile(rf"^\s*{re.escape(label)}\b", re.IGNORECASE)
+            fact: HKFact | None = None
+            for line in lines:
+                stripped = _strip_filler(line)
+                if not pat.match(stripped):
+                    continue
+                val = _parse_inline_single(line)
+                if val is None:
+                    continue
+                scaled_val = val * multiplier
+                if metric in _MUST_BE_POSITIVE and scaled_val < 0:
+                    continue
+                if metric in _STORE_AS_MAGNITUDE:
+                    scaled_val = abs(scaled_val)
+                fact = HKFact(
+                    metric=metric,
+                    concept=_CONCEPT_NAME.get(metric, metric),
+                    value=scaled_val,
+                    unit="USD",
+                    section_id=section_id,
+                    extraction_method="regex",
+                    matched_label=label,
+                )
+                break
+            if fact is not None:
+                out.append(fact)
+                break
+    return out
+
 
 def extract_with_regex(
     text: str,
     section_id: str,
     standard: AccountingStandard,
+    max_fy: int | None = None,
 ) -> list[HKFact]:
     if section_id not in _FINANCIAL_SECTIONS:
         return []
@@ -369,18 +423,46 @@ def extract_with_regex(
     if not metrics:
         return []
 
-    fy_col = _find_fy_col(text, 2024)
+    raw_years = [int(y) for y in re.findall(r"\b(20\d\d)\b", text[:500])]
+
+    # Keep first-occurrence of each year (duplicates are typically interim
+    # period columns reusing the same calendar year) and drop years that
+    # exceed the audited fiscal year upper bound.
+    seen: set[int] = set()
+    year_cols: list[tuple[int, int]] = []  # (fy_idx, year)
+    for idx, year in enumerate(raw_years):
+        if year in seen:
+            continue
+        if max_fy is not None and year > max_fy:
+            continue
+        seen.add(year)
+        year_cols.append((idx, year))
+
+    # No year header detected: fall back to legacy single-value inline
+    # extraction, emitting facts with fiscal_year=0 so the caller can
+    # stamp the pack-level fiscal year.
+    if not year_cols:
+        if not raw_years:
+            return _extract_inline_single_year(text, section_id, metrics, _detect_multiplier(text))
+        return []
+
     interleaved = _is_interleaved(text)
-    n_years = _count_years(text)
+    n_years = len(raw_years)
     multiplier = _detect_multiplier(text)
 
     out: list[HKFact] = []
-    for metric in metrics:
-        fact = _extract_metric_from_section(text, section_id, metric, fy_col, interleaved, n_years)
-        if fact:
+    for fy_idx, year in year_cols:
+        for metric in metrics:
+            fact = _extract_metric_from_section(
+                text, section_id, metric, fy_idx, interleaved, n_years
+            )
+            if fact is None:
+                continue
             scaled_val = fact.value * multiplier
             if fact.metric in _MUST_BE_POSITIVE and scaled_val < 0:
                 continue
+            if fact.metric in _STORE_AS_MAGNITUDE:
+                scaled_val = abs(scaled_val)
             out.append(
                 HKFact(
                     metric=fact.metric,
@@ -390,6 +472,7 @@ def extract_with_regex(
                     section_id=fact.section_id,
                     extraction_method=fact.extraction_method,
                     matched_label=fact.matched_label,
+                    fiscal_year=year,
                 )
             )
     return out
@@ -448,7 +531,7 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
             continue
 
         text = section_file.read_text()
-        raw_facts = extract_with_regex(text, section_id, standard)
+        raw_facts = extract_with_regex(text, section_id, standard, max_fy=fy)
         for f in raw_facts:
             all_facts.append(
                 HKFact(
@@ -459,6 +542,7 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
                     section_id=f.section_id,
                     extraction_method=f.extraction_method,
                     matched_label=f.matched_label,
+                    fiscal_year=f.fiscal_year,
                 )
             )
 
@@ -475,16 +559,17 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
     for fact in all_facts:
         concept_key = fact.concept
         fact_unit = fact.unit if fact.unit == "headcount" else currency
+        fact_fy = fact.fiscal_year or fy
         nested[standard.lower()].setdefault(
             concept_key,
             {"label": concept_key, "units": {}},
         )
         nested[standard.lower()][concept_key]["units"].setdefault(fact_unit, []).append(
             {
-                "start": f"{fy}-01-01",
-                "end": f"{fy}-12-31",
+                "start": f"{fact_fy}-01-01",
+                "end": f"{fact_fy}-12-31",
                 "val": fact.value,
-                "fy": fy,
+                "fy": fact_fy,
                 "fp": "FY",
                 "form": "Annual Report",
                 "accn": accession,

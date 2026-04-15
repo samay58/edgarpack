@@ -3,28 +3,32 @@
   "company": "Zhipu (Knowledge Atlas Technology)",
   "facts": {
     "hkfrs": {
-      "TotalEquity": {
-        "label": "TotalEquity",
+      "CashAndCashEquivalents": {
+        "label": "CashAndCashEquivalents",
         "units": {
           "CNY": [
             {
-              "start": "2024-01-01",
-              "end": "2024-12-31",
-              "val": -974767000,
-              "fy": 2024,
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": 219031000,
+              "fy": 2022,
               "fp": "FY",
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
               "section_id": "hkex_balance_sheet"
-            }
-          ]
-        }
-      },
-      "CashAndCashEquivalents": {
-        "label": "CashAndCashEquivalents",
-        "units": {
-          "CNY": [
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": 1249391000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            },
             {
               "start": "2024-01-01",
               "end": "2024-12-31",
@@ -39,10 +43,61 @@
           ]
         }
       },
+      "TotalEquity": {
+        "label": "TotalEquity",
+        "units": {
+          "CNY": [
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": -170648000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            },
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -974767000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            }
+          ]
+        }
+      },
       "NetCashProvidedByUsedInOperatingActivities": {
         "label": "NetCashProvidedByUsedInOperatingActivities",
         "units": {
           "CNY": [
+            {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": -68246000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_cash_flow"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": -648017000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_cash_flow"
+            },
             {
               "start": "2024-01-01",
               "end": "2024-12-31",
@@ -62,6 +117,28 @@
         "units": {
           "CNY": [
             {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": 57409000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": 124538000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
               "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 312414000,
@@ -79,6 +156,28 @@
         "label": "GrossProfit",
         "units": {
           "CNY": [
+            {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": 31360000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": 80482000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
             {
               "start": "2024-01-01",
               "end": "2024-12-31",
@@ -98,6 +197,28 @@
         "units": {
           "CNY": [
             {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": -98719000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": -625723000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
               "start": "2024-01-01",
               "end": "2024-12-31",
               "val": -2538352000,
@@ -115,6 +236,28 @@
         "label": "ProfitLoss",
         "units": {
           "CNY": [
+            {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": -143650000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": -787957000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
             {
               "start": "2024-01-01",
               "end": "2024-12-31",
@@ -134,9 +277,31 @@
         "units": {
           "CNY": [
             {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": 84377000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": 528884000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            },
+            {
               "start": "2024-01-01",
               "end": "2024-12-31",
-              "val": -2195436000,
+              "val": 2195436000,
               "fy": 2024,
               "fp": "FY",
               "form": "Annual Report",

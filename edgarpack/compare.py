@@ -23,6 +23,23 @@ _BALANCE_SHEET_METRICS: frozenset[str] = frozenset(
     }
 )
 
+# Signed percent (e.g. "+12%", "-3%"): YoY growth and period-over-period deltas.
+_GROWTH_METRICS: frozenset[str] = frozenset({"revenue_growth_yoy", "gross_margin_trend"})
+
+# Unsigned percent (e.g. "45%"): ratios and intensity metrics.
+_RATIO_METRICS: frozenset[str] = frozenset(
+    {
+        "r_and_d_intensity",
+        "gross_margin",
+        "operating_margin",
+        "net_margin",
+        "ebitda_margin",
+        "fcf_margin",
+    }
+)
+
+_PER_EMPLOYEE_METRICS: frozenset[str] = frozenset({"revenue_per_employee"})
+
 
 def _convention_for(metric: str) -> str:
     if metric in _BALANCE_SHEET_METRICS:
@@ -105,7 +122,26 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
             "currency": cv.reporting_currency or "",
             "extraction_method": cv.source or "",
         }
-        if cv.unit == "headcount":
+        if m in _GROWTH_METRICS:
+            entry["growth"] = float(cv.value)
+        elif m in _RATIO_METRICS:
+            entry["ratio"] = float(cv.value)
+        elif m in _PER_EMPLOYEE_METRICS:
+            # revenue / headcount in the native reporting currency. Convert
+            # to USD using the revenue convention (average over the year).
+            if cv.reporting_currency and cv.reporting_currency != "USD":
+                if rates is None:
+                    rates = _load_rates()
+                conv = _convert_to_usd(
+                    cv.value, cv.reporting_currency, "revenue", cv.fiscal_year, rates
+                )
+                if conv is not None:
+                    entry["per_employee_usd"] = conv[0]
+                    entry["fx_rate"] = conv[1]
+            else:
+                entry["per_employee_usd"] = float(cv.value)
+                entry["fx_rate"] = 1.0
+        elif cv.unit == "headcount":
             entry["headcount"] = int(cv.value)
         elif cv.reporting_currency and cv.reporting_currency != "USD":
             if rates is None:
@@ -151,6 +187,13 @@ def _abbrev_usd(val: float) -> str:
 def _format_value(v: dict[str, Any] | None) -> str:
     if v is None or v.get("value") is None:
         return "n/a"
+    if "growth" in (v or {}):
+        pct = v["growth"] * 100
+        return f"{pct:+.0f}%" if abs(pct) >= 10 else f"{pct:+.1f}%"
+    if "ratio" in (v or {}):
+        return f"{v['ratio'] * 100:.0f}%"
+    if "per_employee_usd" in (v or {}):
+        return f"${int(v['per_employee_usd']):,}"
     if "headcount" in (v or {}):
         return f"{int(v['headcount']):,}"
     val = v["value"]

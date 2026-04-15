@@ -13,7 +13,14 @@ from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
 from ..sec.xbrl import fetch_company_facts
 from . import kpi_extract as _kpi_extract_mod
-from .concepts import ALL_METRICS, METRIC_MAP, MetricMeta, get_scope_warning, resolve_concept
+from .concepts import (
+    ALL_METRICS,
+    METRIC_MAP,
+    MetricMeta,
+    _normalize_component,
+    get_scope_warning,
+    resolve_concept,
+)
 from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
 from .models import CitedValue, DerivedValue, Diagnostic, QueryResult
@@ -545,6 +552,7 @@ def _compute_derived(
     doc_map: dict[str, str] | None = None,
     cache: _DerivedCache | None = None,
     in_progress: set[str] | None = None,
+    period_offset: int = 0,
 ) -> CitedValue | None:
     """Compute a derived metric from its components with cycle protection."""
     if cache is None:
@@ -552,24 +560,29 @@ def _compute_derived(
     if in_progress is None:
         in_progress = set()
 
-    if metric in cache:
-        return cache[metric]
-    if metric in in_progress:
-        cache[metric] = None
+    cache_key = metric if period_offset == 0 else f"{metric}@off{period_offset}"
+    if cache_key in cache:
+        return cache[cache_key]
+    if cache_key in in_progress:
+        cache[cache_key] = None
         return None
 
     if not meta.components or not meta.formula:
-        cache[metric] = None
+        cache[cache_key] = None
         return None
 
-    in_progress.add(metric)
+    in_progress.add(cache_key)
     components: dict[str, CitedValue] = {}
 
-    for comp_name in meta.components:
+    for raw_comp in meta.components:
+        comp_name, raw_comp_offset = _normalize_component(raw_comp)
+        # Propagate the parent's offset into nested component lookups so that,
+        # e.g., gross_margin_trend's gross_margin_prev1 resolves to FY-1.
+        comp_offset = raw_comp_offset + period_offset
         comp_meta = METRIC_MAP.get(comp_name)
         if comp_meta is None:
-            in_progress.discard(metric)
-            cache[metric] = None
+            in_progress.discard(cache_key)
+            cache[cache_key] = None
             return None
 
         if comp_meta.derived:
@@ -584,14 +597,23 @@ def _compute_derived(
                 doc_map,
                 cache=cache,
                 in_progress=in_progress,
+                period_offset=comp_offset,
             )
         else:
-            resolved = resolve_concept(comp_name, facts)
-            if resolved is None:
-                in_progress.discard(metric)
-                cache[metric] = None
-                return None
-            concept, taxonomy = resolved
+            # HKEX packs tag concepts under their own taxonomy (hkfrs); use
+            # that directly. For SEC facts we route through resolve_concept.
+            concept: str
+            taxonomy: str
+            hkex_concept = _hkex_concept_for_metric(facts, comp_name)
+            if hkex_concept is not None:
+                concept, taxonomy = hkex_concept
+            else:
+                resolved = resolve_concept(comp_name, facts)
+                if resolved is None:
+                    in_progress.discard(cache_key)
+                    cache[cache_key] = None
+                    return None
+                concept, taxonomy = resolved
             value = select_period(
                 facts,
                 concept,
@@ -602,16 +624,18 @@ def _compute_derived(
                 period,
                 taxonomy=taxonomy,
                 doc_map=doc_map,
+                period_offset=comp_offset,
             )
             if isinstance(value, list):
                 comp_value = value[0] if value else None
             else:
                 comp_value = value
 
-            # Staleness guard on components
-            if comp_value is not None and _is_stale(comp_value, period):
-                in_progress.discard(metric)
-                cache[metric] = None
+            # Staleness guard on components (skip when an offset is requested
+            # because prior-year lookbacks are expected to be "stale").
+            if comp_value is not None and comp_offset == 0 and _is_stale(comp_value, period):
+                in_progress.discard(cache_key)
+                cache[cache_key] = None
                 return None
 
             # Scope warning on component
@@ -621,24 +645,38 @@ def _compute_derived(
                     comp_value.warnings.append(scope_warn)
 
         if comp_value is None or comp_value.value is None:
-            in_progress.discard(metric)
-            cache[metric] = None
+            in_progress.discard(cache_key)
+            cache[cache_key] = None
             return None
 
-        components[comp_name] = comp_value
+        # Key by offset-suffixed name so the same metric can appear at two
+        # different periods (e.g. revenue[fy] and revenue[fy-1]). Use the
+        # raw (formula-specified) offset for the key, not the propagated
+        # effective offset, so formulas always reference the same name.
+        if raw_comp_offset == 0:
+            components[comp_name] = comp_value
+        else:
+            suffix = (
+                f"_prev{abs(raw_comp_offset)}" if raw_comp_offset < 0 else f"_next{raw_comp_offset}"
+            )
+            components[f"{comp_name}{suffix}"] = comp_value
 
-    # Cross-year validation: all components must share the same fiscal year
-    fiscal_years = {comp.fiscal_year for comp in components.values()}
-    if len(fiscal_years) > 1:
-        in_progress.discard(metric)
-        cache[metric] = None
-        return None
+    # Cross-year validation: when no component has an offset, every component
+    # should resolve to the same fiscal year. Offsetted formulas (YoY, trend)
+    # intentionally cross FYs, so skip the check for those.
+    any_shifted = any(isinstance(c, tuple) and len(c) == 2 and c[1] != 0 for c in meta.components)
+    if not any_shifted and period_offset == 0:
+        fiscal_years = {comp.fiscal_year for comp in components.values()}
+        if len(fiscal_years) > 1:
+            in_progress.discard(cache_key)
+            cache[cache_key] = None
+            return None
 
     # Evaluate formula
     result_value = _eval_formula(meta.formula, components)
     if result_value is None:
-        in_progress.discard(metric)
-        cache[metric] = None
+        in_progress.discard(cache_key)
+        cache[cache_key] = None
         return None
 
     # Use the first component's provenance for the derived value
@@ -666,8 +704,8 @@ def _compute_derived(
         derived=True,
         components=components,
     )
-    in_progress.discard(metric)
-    cache[metric] = derived
+    in_progress.discard(cache_key)
+    cache[cache_key] = derived
     return derived
 
 
@@ -675,11 +713,18 @@ def _eval_formula(formula: str, components: dict[str, CitedValue]) -> float | No
     """Evaluate a simple arithmetic formula with component values."""
     vals = {k: float(v.value) for k, v in components.items() if v.value is not None}
 
+    def _lookup(token: str) -> float | None:
+        # Allow numeric literals in the formula (e.g. "... - 1" for YoY growth).
+        try:
+            return float(token)
+        except ValueError:
+            return vals.get(token)
+
     parts = formula.split()
     if len(parts) == 3:
         left_name, op, right_name = parts
-        left = vals.get(left_name)
-        right = vals.get(right_name)
+        left = _lookup(left_name)
+        right = _lookup(right_name)
         if left is None or right is None:
             return None
         if op == "+":
@@ -693,16 +738,34 @@ def _eval_formula(formula: str, components: dict[str, CitedValue]) -> float | No
                 return None
             return left / right
     elif len(parts) == 5:
-        # a + b - c  or  a + b + c
+        # a + b - c  or  a + b + c  or  (a / b) - c (left-to-right for -)
         a_name, op1, b_name, op2, c_name = parts
-        a = vals.get(a_name)
-        b = vals.get(b_name)
-        c = vals.get(c_name)
+        a = _lookup(a_name)
+        b = _lookup(b_name)
+        c = _lookup(c_name)
         if a is None or b is None or c is None:
             return None
-        result = a
-        result = result + b if op1 == "+" else result - b
-        result = result + c if op2 == "+" else result - c
+        # Respect precedence for /: (a / b) first, then +/- c.
+        if op1 == "/":
+            if b == 0:
+                return None
+            result = a / b
+        elif op1 == "*":
+            result = a * b
+        elif op1 == "+":
+            result = a + b
+        else:
+            result = a - b
+        if op2 == "+":
+            result = result + c
+        elif op2 == "-":
+            result = result - c
+        elif op2 == "*":
+            result = result * c
+        elif op2 == "/":
+            if c == 0:
+                return None
+            result = result / c
         return result
 
     return None
@@ -746,6 +809,26 @@ _HKEX_CONCEPT_CANONICAL: dict[str, str] = {
 }
 
 
+def _hkex_concept_for_metric(
+    facts: dict[str, Any],
+    metric: str,
+) -> tuple[str, str] | None:
+    """Reverse lookup: find an HKEX concept whose canonical metric matches.
+
+    Returns (concept, taxonomy) for use with select_period, or None if the
+    facts dict is not HKEX-shaped or no concept maps to ``metric``.
+    """
+    for taxonomy, concepts in facts.items():
+        if taxonomy in ("us-gaap", "ifrs-full", "dei"):
+            continue
+        if not isinstance(concepts, dict):
+            continue
+        for concept in concepts.keys():
+            if _HKEX_CONCEPT_CANONICAL.get(concept) == metric:
+                return concept, taxonomy
+    return None
+
+
 def _hkex_concept_to_canonical(concept: str, standard: str) -> str:
     if concept in _HKEX_CONCEPT_CANONICAL:
         return _HKEX_CONCEPT_CANONICAL[concept]
@@ -759,16 +842,32 @@ def _hkex_concept_to_canonical(concept: str, standard: str) -> str:
     return concept.lower()
 
 
+def _enrich_hkex_cited(
+    cited: CitedValue | None,
+    standard: str,
+    reporting_currency: str,
+    company: str,
+    cik: str,
+) -> CitedValue | None:
+    """Fill HKEX-specific metadata that ``select_period`` does not set."""
+    if cited is None:
+        return None
+    cited.accounting_standard = standard  # type: ignore[assignment]
+    cited.reporting_currency = reporting_currency
+    cited.company = company
+    cited.cik = cik
+    return cited
+
+
 async def _query_hkex_pack(
     resolved: object,
     metrics: str | list[str] | None,
     period: str,
 ) -> QueryResult:
     import json
-    from datetime import date as _date
     from pathlib import Path as _Path
 
-    from .models import CitedValue, QueryResult
+    from .models import QueryResult
 
     fy = 2024
 
@@ -807,40 +906,172 @@ async def _query_hkex_pack(
     else:
         requested = set(metrics) or None
 
-    result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
+    company_name = data.get("company", resolved.ticker)  # type: ignore[attr-defined]
+    cik_str = resolved.hk_stock_code or ""  # type: ignore[attr-defined]
+
+    # Build facts dict in {taxonomy: {concept: {units: {...}}}} shape that
+    # select_period understands, and map each HKEX concept back to its
+    # canonical metric name.
+    standard_by_taxonomy: dict[str, str] = {}
+    reporting_currency_by_concept: dict[str, str] = {}
+    facts: dict[str, dict] = {}
+    concept_to_metric: dict[str, tuple[str, str]] = {}  # concept -> (metric, taxonomy)
 
     for standard_key, concepts in data["facts"].items():
+        taxonomy = standard_key  # "hkfrs", "ifrs", etc.
         standard = standard_key.upper().replace("US_GAAP", "US-GAAP")
+        standard_by_taxonomy[taxonomy] = standard
+        facts.setdefault(taxonomy, {})
         for concept, info in concepts.items():
             metric = _hkex_concept_to_canonical(concept, standard)
-            if requested is not None and metric not in requested:
-                continue
-            for unit, points in info["units"].items():
-                for p in points:
-                    cv = CitedValue(
-                        value=p["val"],
-                        unit=unit,
-                        metric=metric,
-                        concept=concept,
-                        period_start=_date.fromisoformat(p["start"]),
-                        period_end=_date.fromisoformat(p["end"]),
-                        fiscal_year=p["fy"],
-                        fiscal_period=p["fp"],
-                        form_type=p["form"],
-                        filed=_date.fromisoformat(p["end"]),
-                        accession=p["accn"],
-                        cik=resolved.hk_stock_code or "",  # type: ignore[attr-defined]
-                        company=data.get("company", resolved.ticker),  # type: ignore[attr-defined]
-                        taxonomy="hkfrs",
-                        accounting_standard=standard,  # type: ignore[arg-type]
-                        reporting_currency=unit,
-                        source=p.get("extraction_method", "regex"),
+            facts[taxonomy][concept] = info
+            concept_to_metric[concept] = (metric, taxonomy)
+            units = info.get("units", {})
+            if units:
+                # Pick first unit as the reporting currency (or "headcount").
+                first_unit = next(iter(units.keys()))
+                reporting_currency_by_concept[concept] = first_unit
+
+    result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
+
+    # Derive meta lookup per metric: HKFact concepts aren't in METRIC_MAP
+    # under GAAP taxonomy, but we know their duration/instant nature from
+    # the canonical metric name.
+    duration_by_metric: dict[str, bool] = {
+        "revenue": True,
+        "gross_profit": True,
+        "operating_income": True,
+        "net_income": True,
+        "rd_expense": True,
+        "operating_cash_flow": True,
+        "total_assets": False,
+        "total_liabilities": False,
+        "total_equity": False,
+        "cash_and_equivalents": False,
+        "headcount": False,
+    }
+
+    # Metrics available as concrete concepts from the pack.
+    metric_to_concept: dict[str, tuple[str, str]] = {}
+    for concept, (metric, taxonomy) in concept_to_metric.items():
+        # First-concept-wins; HKEX packs only carry one concept per metric.
+        metric_to_concept.setdefault(metric, (concept, taxonomy))
+
+    # Decide which metrics to produce. If the caller asked for derived metrics
+    # not backed by a concept, compute them via _compute_derived.
+    if requested is None:
+        target_metrics = list(metric_to_concept.keys())
+    else:
+        target_metrics = sorted(requested)
+
+    derived_cache: _DerivedCache = {}
+
+    for metric in target_metrics:
+        if metric in metric_to_concept:
+            concept, taxonomy = metric_to_concept[metric]
+            duration = duration_by_metric.get(metric, True)
+            meta = MetricMeta(concepts=(concept,), duration=duration)
+            unit = reporting_currency_by_concept.get(concept, "USD")
+            standard = standard_by_taxonomy[taxonomy]
+
+            value = select_period(
+                facts,
+                concept,
+                metric,
+                meta,
+                company_name,
+                cik_str,
+                period,
+                taxonomy=taxonomy,
+            )
+
+            if isinstance(value, list):
+                enriched = [
+                    _enrich_hkex_cited(cv, standard, unit, company_name, cik_str) for cv in value
+                ]
+                _apply_extraction_source(enriched, facts[taxonomy][concept])
+                result_metrics[metric] = [cv for cv in enriched if cv is not None]
+            elif value is not None and not isinstance(value, DerivedValue):
+                enriched_single = _enrich_hkex_cited(value, standard, unit, company_name, cik_str)
+                _apply_extraction_source([enriched_single], facts[taxonomy][concept])
+                result_metrics[metric] = enriched_single
+            else:
+                result_metrics[metric] = value  # type: ignore[assignment]
+            continue
+
+        # Not in the pack as a concrete concept. Try a derived computation.
+        derived_meta = METRIC_MAP.get(metric)
+        if derived_meta is None or not derived_meta.derived:
+            result_metrics[metric] = None
+            continue
+
+        cited = _compute_derived(
+            facts,
+            metric,
+            derived_meta,
+            company_name,
+            cik_str,
+            period,
+            doc_map=None,
+            cache=derived_cache,
+            in_progress=set(),
+        )
+        if cited is not None:
+            # Propagate HKEX metadata (accounting standard + reporting currency).
+            cited.accounting_standard = next(  # type: ignore[assignment]
+                iter(standard_by_taxonomy.values()), "HKFRS"
+            )
+            # Use the native currency of the first non-headcount component.
+            ratio_or_growth = metric in {
+                "revenue_growth_yoy",
+                "gross_margin_trend",
+                "r_and_d_intensity",
+                "gross_margin",
+                "operating_margin",
+                "net_margin",
+                "ebitda_margin",
+                "fcf_margin",
+            }
+            if ratio_or_growth:
+                cited.reporting_currency = "pure"
+            elif metric == "revenue_per_employee":
+                # revenue / headcount -> money per person. Use the revenue
+                # component's reporting currency.
+                rev_concept = metric_to_concept.get("revenue")
+                if rev_concept is not None:
+                    cited.reporting_currency = reporting_currency_by_concept.get(
+                        rev_concept[0], "USD"
                     )
-                    result_metrics[metric] = cv
+        result_metrics[metric] = cited
 
     return QueryResult(
-        company=data.get("company", resolved.ticker),  # type: ignore[attr-defined]
-        cik=resolved.hk_stock_code or "",  # type: ignore[attr-defined]
+        company=company_name,
+        cik=cik_str,
         period=period,
         metrics=result_metrics,
     )
+
+
+def _apply_extraction_source(
+    cited_list: list[CitedValue | None],
+    concept_info: dict,
+) -> None:
+    """Copy extraction_method from the underlying pack fact onto CitedValues.
+
+    Pack facts carry "extraction_method" metadata per data point; select_period
+    only returns the standard SEC fields, so we re-attach the provenance after
+    routing so downstream consumers (compare, goldens) see "regex"/"llm" tags.
+    """
+    units = concept_info.get("units", {})
+    by_fy: dict[int, str] = {}
+    for _unit, pts in units.items():
+        for p in pts:
+            fy_val = int(p.get("fy") or 0)
+            if fy_val:
+                by_fy[fy_val] = p.get("extraction_method", "regex")
+    for cv in cited_list:
+        if cv is None:
+            continue
+        src = by_fy.get(cv.fiscal_year)
+        if src:
+            cv.source = src

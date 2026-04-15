@@ -28,6 +28,7 @@ __all__ = [
     "get_scope_warning",
     "KPI_CATALOG",
     "KpiDef",
+    "_normalize_component",
 ]
 
 
@@ -39,8 +40,19 @@ class MetricMeta:
     duration: bool  # True = P&L/CF (period), False = balance sheet (instant)
     derived: bool = False  # True = computed from other metrics
     formula: str | None = None  # e.g. "gross_profit / revenue"
-    components: tuple[str, ...] = ()  # metric names needed for derived calc
+    # Component metric names needed for derived calc. Each entry is either
+    # a bare name ("revenue") meaning "same period as the parent metric" or
+    # a (name, offset) tuple where offset shifts the period by N fiscal years
+    # (e.g. ("revenue", -1) resolves to the prior FY's revenue).
+    components: tuple[str | tuple[str, int], ...] = ()
     ifrs_concepts: tuple[str, ...] = ()  # IFRS concept names (fallback for non-US filers)
+
+
+def _normalize_component(comp: str | tuple[str, int]) -> tuple[str, int]:
+    """Expand a component entry to (metric_name, period_offset)."""
+    if isinstance(comp, tuple):
+        return comp
+    return (comp, 0)
 
 
 # Income Statement
@@ -105,6 +117,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
             "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost",
         ),
         duration=True,
+        ifrs_concepts=("ResearchAndDevelopmentExpense",),
     ),
     "sga_expense": MetricMeta(
         concepts=(
@@ -432,6 +445,35 @@ METRIC_MAP: dict[str, MetricMeta] = {
         derived=True,
         formula="free_cash_flow / revenue",
         components=("free_cash_flow", "revenue"),
+    ),
+    # Year-over-year growth / trend / intensity derivations.
+    "revenue_growth_yoy": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="revenue / revenue_prev1 - 1",
+        components=(("revenue", 0), ("revenue", -1)),
+    ),
+    "gross_margin_trend": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="gross_margin - gross_margin_prev1",
+        components=(("gross_margin", 0), ("gross_margin", -1)),
+    ),
+    "r_and_d_intensity": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="rd_expense / revenue",
+        components=(("rd_expense", 0), ("revenue", 0)),
+    ),
+    "revenue_per_employee": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="revenue / headcount",
+        components=(("revenue", 0), ("headcount", 0)),
     ),
 }
 

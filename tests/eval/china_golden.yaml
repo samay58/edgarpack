@@ -19,6 +19,12 @@ companies:
           fx_rate: 1.0
           fx_convention: average
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
+        lfy-1:
+          native: 3460000
+          usd: 3460000
+          fx_rate: 1.0
+          fx_convention: average
+          source: "MiniMax 00100.HK FY2023 historical column in FY2024 pack, Consolidated Statement of Profit or Loss"
       gross_profit:
         lfy:
           native: 3738000
@@ -98,6 +104,21 @@ companies:
           native: 385
           unit: headcount
           source: "MiniMax 00100.HK FY2024 pack, hkex_risk_factors section"
+      revenue_growth_yoy:
+        lfy:
+          native: 7.821676300578035
+          unit: ratio
+          source: "Derived: MiniMax FY2024 revenue 30,523k / FY2023 revenue 3,460k - 1"
+      r_and_d_intensity:
+        lfy:
+          native: 6.191363889525931
+          unit: ratio
+          source: "Derived: MiniMax FY2024 R&D 188,979k / revenue 30,523k"
+      revenue_per_employee:
+        lfy:
+          native: 79280.51948051948
+          unit: ratio
+          source: "Derived: MiniMax FY2024 revenue 30,523,000 USD / 385 employees"
   - ticker: "02513.HK"
     company: "Zhipu (Knowledge Atlas Technology)"
     accounting_standard: HKFRS
@@ -117,6 +138,18 @@ companies:
           fx_rate: 0.137350
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
+        lfy-1:
+          native: 124538000
+          usd: 17441920
+          fx_rate: 0.140053
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2023 historical column in FY2024 pack, Consolidated Statement of Profit or Loss"
+        lfy-2:
+          native: 57409000
+          usd: 8234689
+          fx_rate: 0.143439
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2022 historical column in FY2024 pack, Consolidated Statement of Profit or Loss"
       gross_profit:
         lfy:
           native: 175889000
@@ -211,3 +244,18 @@ companies:
           native: 883
           unit: headcount
           source: "Zhipu 02513.HK FY2024 pack, hkex_risk_factors section"
+      revenue_growth_yoy:
+        lfy:
+          native: 1.5085837254492604
+          unit: ratio
+          source: "Derived: Zhipu FY2024 revenue 312,414k / FY2023 revenue 124,538k - 1"
+      r_and_d_intensity:
+        lfy:
+          native: 7.027329120974092
+          unit: ratio
+          source: "Derived: Zhipu FY2024 R&D 2,195,436k / revenue 312,414k"
+      revenue_per_employee:
+        lfy:
+          native: 353809.7395243488
+          unit: ratio
+          source: "Derived: Zhipu FY2024 revenue 312,414,000 CNY / 883 employees"

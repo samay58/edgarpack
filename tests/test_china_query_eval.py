@@ -38,7 +38,7 @@ class GoldenCase:
     period: str
     metric: str
     currency: str  # "native" or "usd"
-    expected: int | None
+    expected: int | float | None
     fx_convention: str | None
     source: str
     xfail: str | None
@@ -54,8 +54,8 @@ def _load_cases() -> list[GoldenCase]:
         for metric_name, periods in company["metrics"].items():
             for period_name, block in periods.items():
                 unit = block.get("unit")
-                if unit == "headcount":
-                    # Non-currency metric: only one case, no FX conversion
+                if unit in {"headcount", "ratio"}:
+                    # Non-currency scalar: compare value directly, no FX.
                     cases.append(
                         GoldenCase(
                             ticker=company["ticker"],
@@ -116,6 +116,20 @@ def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
         # Non-currency metric: compare raw integer value directly, no FX
         actual: float = float(cited.value)
         if actual != case.expected:
+            pytest.fail(
+                _fail_block(case, actual, rate_used=None),
+                pytrace=False,
+            )
+    elif case.unit == "ratio":
+        # Derived ratio / growth / per-employee: direct numeric compare with
+        # modest relative tolerance to absorb rounding.
+        actual = float(cited.value)
+        if case.expected is None:
+            pytest.fail(
+                f"{_case_id(case)}: golden ratio value is null but xfail was not set",
+                pytrace=False,
+            )
+        if not math.isclose(actual, float(case.expected), rel_tol=0.02, abs_tol=1e-4):
             pytest.fail(
                 _fail_block(case, actual, rate_used=None),
                 pytrace=False,
