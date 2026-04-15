@@ -364,7 +364,32 @@ def main(argv: list[str] | None = None) -> int:
         help="Clear everything (required if no filter is provided)",
     )
 
+    p_compare = sub.add_parser(
+        "compare", help="Side-by-side comparison of two or more companies"
+    )
+    p_compare.add_argument("companies", nargs="+", help="Two or more company tickers or aliases")
+    p_compare.add_argument("--metrics", help="Comma-separated metric names")
+    p_compare.add_argument("--period", default="lfy", help="Fiscal period (default: lfy)")
+    p_compare.add_argument(
+        "--currency",
+        choices=["native", "usd", "both"],
+        default="both",
+        help="Currency output mode",
+    )
+    p_compare.add_argument(
+        "--format",
+        dest="compare_format",
+        choices=["table", "json", "markdown"],
+        default="table",
+        help="Output format",
+    )
+
     args = parser.parse_args(argv)
+
+    if args.cmd == "compare":
+        from .compare import cmd_compare
+
+        return cmd_compare(args)
 
     if args.cmd == "build":
         return _cmd_build(args)
