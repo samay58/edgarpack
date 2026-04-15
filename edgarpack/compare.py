@@ -221,7 +221,20 @@ def _format_value(v: dict[str, Any] | None) -> str:
         return f"{val} {cur}".strip()
 
 
-def _format_table(columns: list[CompanyColumn], metric_keys: list[str]) -> str:
+def _period_header(period_request: str, columns: list[CompanyColumn]) -> str:
+    """One-line period statement. Shows the requested period and resolved
+    fiscal years; flags mismatch when companies don't line up."""
+    resolved = [c.period for c in columns if c.period != "n/a"]
+    unique = list(dict.fromkeys(resolved))
+    if not unique:
+        return f"Period: {period_request}"
+    if len(unique) == 1:
+        return f"Period: {period_request} ({unique[0]})"
+    pairs = ", ".join(f"{c.ticker}={c.period}" for c in columns)
+    return f"Period: {period_request} — fiscal years differ: {pairs}"
+
+
+def _format_table(columns: list[CompanyColumn], metric_keys: list[str], period_request: str) -> str:
     headers = ["metric"] + [c.ticker for c in columns]
     rows: list[list[str]] = []
     for m in metric_keys:
@@ -231,7 +244,7 @@ def _format_table(columns: list[CompanyColumn], metric_keys: list[str]) -> str:
         rows.append(row)
 
     widths = [max(len(str(r[i])) for r in [headers] + rows) for i in range(len(headers))]
-    lines: list[str] = []
+    lines: list[str] = [_period_header(period_request, columns), ""]
     lines.append("  ".join(headers[i].ljust(widths[i]) for i in range(len(headers))))
     lines.append("  ".join("-" * widths[i] for i in range(len(headers))))
     for row in rows:
@@ -242,9 +255,12 @@ def _format_table(columns: list[CompanyColumn], metric_keys: list[str]) -> str:
     return "\n".join(lines)
 
 
-def _format_markdown(columns: list[CompanyColumn], metric_keys: list[str]) -> str:
+def _format_markdown(
+    columns: list[CompanyColumn], metric_keys: list[str], period_request: str
+) -> str:
     headers = ["metric"] + [c.ticker for c in columns]
-    lines = ["| " + " | ".join(headers) + " |"]
+    lines: list[str] = [f"**{_period_header(period_request, columns)}**", ""]
+    lines.append("| " + " | ".join(headers) + " |")
     lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
     for m in metric_keys:
         row = [m] + [_format_value(c.metrics.get(m)) for c in columns]
@@ -255,9 +271,10 @@ def _format_markdown(columns: list[CompanyColumn], metric_keys: list[str]) -> st
     return "\n".join(lines)
 
 
-def _format_json(columns: list[CompanyColumn]) -> str:
+def _format_json(columns: list[CompanyColumn], period_request: str) -> str:
     return json.dumps(
         {
+            "period_request": period_request,
             "companies": [
                 {
                     "ticker": c.ticker,
@@ -267,7 +284,7 @@ def _format_json(columns: list[CompanyColumn]) -> str:
                     "metrics": c.metrics,
                 }
                 for c in columns
-            ]
+            ],
         },
         indent=2,
         default=str,
@@ -321,9 +338,9 @@ def cmd_compare(args: Any) -> int:
 
     fmt = getattr(args, "compare_format", None) or "table"
     if fmt == "json":
-        print(_format_json(columns))
+        print(_format_json(columns, period))
     elif fmt == "markdown":
-        print(_format_markdown(columns, metric_keys))
+        print(_format_markdown(columns, metric_keys, period))
     else:
-        print(_format_table(columns, metric_keys))
+        print(_format_table(columns, metric_keys, period))
     return 0

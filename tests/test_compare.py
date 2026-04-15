@@ -88,3 +88,36 @@ def test_compare_headcount_only_falls_back_to_usd():
     out = r.stdout
     assert "reported in headcount" not in out
     assert "reported in USD" in out
+
+
+def test_compare_header_states_period_and_resolved_fy():
+    """Output must always lead with the requested period and the resolved
+    fiscal year(s). No silent defaults."""
+    r = _run("minimax", "zhipu", "--metrics", "revenue", "--format", "table")
+    out = r.stdout
+    # First non-empty line is the period header.
+    first_line = next(line for line in out.splitlines() if line.strip())
+    assert first_line.startswith("Period: lfy")
+    assert "FY2024" in first_line
+
+
+def test_compare_json_includes_period_request():
+    """JSON output must carry the requested period as a top-level field."""
+    import json as _json
+
+    r = _run("minimax", "zhipu", "--metrics", "revenue", "--period", "annual:3", "--format", "json")
+    data = _json.loads(r.stdout)
+    assert data["period_request"] == "annual:3"
+
+
+def test_compare_header_flags_mismatched_fiscal_years():
+    """When companies resolve lfy/lfy-N to different fiscal years the
+    header must surface the divergence, not paper over it."""
+    r = _run("NVDA", "AMD", "--metrics", "revenue", "--period", "lfy-1", "--format", "table")
+    out = r.stdout
+    first_line = next(line for line in out.splitlines() if line.strip())
+    # NVIDIA's fiscal year ends January; AMD's ends December. lfy-1 resolves
+    # to different calendar fiscal years, which the header must call out.
+    assert "fiscal years differ" in first_line
+    assert "NVDA=" in first_line
+    assert "AMD=" in first_line
