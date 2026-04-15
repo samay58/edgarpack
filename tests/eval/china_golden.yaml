@@ -93,3 +93,111 @@ companies:
           usd: null
           xfail: edgarpack-483
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug, LTM proxy: annual-only filer, mirrors LFY)"
+  - ticker: "02513.HK"
+    company: "Zhipu (Knowledge Atlas Technology)"
+    accounting_standard: HKFRS
+    reporting_currency: CNY
+    fiscal_year: 2024
+    metrics:
+      revenue:
+        lfy:
+          native: 312414000
+          usd: 42910063
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: 312414000
+          usd: 42910063
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
+      gross_profit:
+        lfy:
+          native: 175889000
+          usd: 24158252
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: 175889000
+          usd: 24158252
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
+      operating_income:
+        lfy:
+          native: -2538352000
+          usd: -348642646
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: -2538352000
+          usd: -348642646
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
+      net_income:
+        lfy:
+          native: -2958007000
+          usd: -406292261
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: -2958007000
+          usd: -406292261
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
+      operating_cash_flow:
+        lfy:
+          native: -2244919000
+          usd: -308339426
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Cash Flow Statement"
+        ltm:
+          native: -2244919000
+          usd: -308339426
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Cash Flow Statement (LTM proxy: annual-only filer, mirrors LFY)"
+      cash_and_equivalents:
+        lfy:
+          native: 2269222000
+          usd: 310880061
+          fx_rate: 0.136999
+          fx_convention: spot
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet"
+        ltm:
+          native: 2269222000
+          usd: 310880061
+          fx_rate: 0.136999
+          fx_convention: spot
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet (LTM proxy: annual-only filer, mirrors LFY)"
+      total_equity:
+        lfy:
+          native: -974767000
+          usd: -133562306
+          fx_rate: 0.136999
+          fx_convention: spot
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet"
+        ltm:
+          native: -974767000
+          usd: -133562306
+          fx_rate: 0.136999
+          fx_convention: spot
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet (LTM proxy: annual-only filer, mirrors LFY)"
+      r_and_d_expense:
+        lfy:
+          native: null
+          usd: null
+          xfail: edgarpack-483
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug)"
+        ltm:
+          native: null
+          usd: null
+          xfail: edgarpack-483
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug, LTM proxy: annual-only filer, mirrors LFY)"
