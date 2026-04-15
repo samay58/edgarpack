@@ -64,4 +64,5 @@ testpaths = ["tests"]
 markers = [
     "live_sec: hits live SEC endpoints and requires --run-live-sec",
     "slow: slower-running test coverage",
+    "eval: golden-fixture evaluation tests for China query parity",
 ]
