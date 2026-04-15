@@ -364,7 +364,32 @@ def main(argv: list[str] | None = None) -> int:
         help="Clear everything (required if no filter is provided)",
     )
 
+    p_compare = sub.add_parser(
+        "compare", help="Side-by-side comparison of two or more companies"
+    )
+    p_compare.add_argument("companies", nargs="+", help="Two or more company tickers or aliases")
+    p_compare.add_argument("--metrics", help="Comma-separated metric names")
+    p_compare.add_argument("--period", default="lfy", help="Fiscal period (default: lfy)")
+    p_compare.add_argument(
+        "--currency",
+        choices=["native", "usd", "both"],
+        default="both",
+        help="Currency output mode",
+    )
+    p_compare.add_argument(
+        "--format",
+        dest="compare_format",
+        choices=["table", "json", "markdown"],
+        default="table",
+        help="Output format",
+    )
+
     args = parser.parse_args(argv)
+
+    if args.cmd == "compare":
+        from .compare import cmd_compare
+
+        return cmd_compare(args)
 
     if args.cmd == "build":
         return _cmd_build(args)
@@ -883,14 +908,6 @@ def _cmd_query(args: Any) -> int:
         print(
             f"Error: {resolved.ticker} is a private company with no public filings. "
             "Query is unsupported for private companies.",
-            file=sys.stderr,
-        )
-        return 2
-
-    if resolved.source == "HKEX":
-        print(
-            f"Error: HKEX metric extraction is not yet supported for {resolved.ticker}. "
-            "HKEX pack ingestion lands separately; query wiring is pending.",
             file=sys.stderr,
         )
         return 2

@@ -1,0 +1,116 @@
+{
+  "stock_code": "02513",
+  "company": "Zhipu (Knowledge Atlas Technology)",
+  "facts": {
+    "hkfrs": {
+      "TotalEquity": {
+        "label": "TotalEquity",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -974767000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            }
+          ]
+        }
+      },
+      "CashAndCashEquivalents": {
+        "label": "CashAndCashEquivalents",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 2269222000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            }
+          ]
+        }
+      },
+      "Revenue": {
+        "label": "Revenue",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 312414000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      },
+      "GrossProfit": {
+        "label": "GrossProfit",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 175889000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      },
+      "OperatingIncomeLoss": {
+        "label": "OperatingIncomeLoss",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -2538352000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      },
+      "ProfitLoss": {
+        "label": "ProfitLoss",
+        "units": {
+          "CNY": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -2958007000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

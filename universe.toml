@@ -1409,6 +1409,13 @@ aliases = ["meituan"]
 hk_stock_code = "03690"
 
 [[companies]]
-ticker = "MINIMAX-PRIVATE"
-listing = "PRIVATE"
-aliases = ["minimax"]
+ticker = "00100.HK"
+listing = "HKEX"
+aliases = ["minimax", "minimax ai"]
+hk_stock_code = "00100"
+
+[[companies]]
+ticker = "2513.HK"
+listing = "HKEX"
+aliases = ["zhipu", "zhipu ai", "z.ai", "glm", "chatglm"]
+hk_stock_code = "02513"

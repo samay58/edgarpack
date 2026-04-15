@@ -1,0 +1,98 @@
+{
+  "stock_code": "00100",
+  "company": "MiniMax Group Inc.",
+  "facts": {
+    "hkfrs": {
+      "TotalEquity": {
+        "label": "TotalEquity",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -799320000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            }
+          ]
+        }
+      },
+      "CashAndCashEquivalents": {
+        "label": "CashAndCashEquivalents",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 288912000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            }
+          ]
+        }
+      },
+      "Revenue": {
+        "label": "Revenue",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 30523000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      },
+      "GrossProfit": {
+        "label": "GrossProfit",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 3738000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      },
+      "ProfitLoss": {
+        "label": "ProfitLoss",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -465238000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_income_statement"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

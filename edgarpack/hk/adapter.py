@@ -29,6 +29,16 @@ _COMPANY_META: dict[str, dict[str, str]] = {
         "reporting_currency": "CNY",
         "accounting_standard": "IFRS",
     },
+    "00100": {
+        "name": "MiniMax Group Inc.",
+        "reporting_currency": "USD",
+        "accounting_standard": "HKFRS",
+    },
+    "02513": {
+        "name": "Zhipu (Knowledge Atlas Technology)",
+        "reporting_currency": "CNY",
+        "accounting_standard": "HKFRS",
+    },
 }
 
 
@@ -44,14 +54,6 @@ def _download_pdf(ref: HKFilingRef, out: Path) -> Path:
     return out
 
 
-def _section_id_for_page(text: str, section_map: dict[str, str]) -> str | None:
-    stripped = text.strip()
-    if not stripped:
-        return None
-    first_line = stripped.splitlines()[0].strip().upper().rstrip(".")
-    return section_map.get(first_line)
-
-
 def build_hk_pack(ref: HKFilingRef, out_dir: Path) -> PackRef:
     out_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = out_dir / f"{ref.stock_code}_{ref.fiscal_year}.pdf"
@@ -65,30 +67,58 @@ def build_hk_pack(ref: HKFilingRef, out_dir: Path) -> PackRef:
     current: dict | None = None
 
     for page in pages:
-        section_id = _section_id_for_page(page.text, section_map)
-        if section_id:
-            if current:
-                sections.append(current)
-            current = {
-                "section_id": section_id,
-                "text": page.text,
-                "page_start": page.page,
-                "page_end": page.page,
-            }
-        else:
-            if current:
-                current["text"] += "\n\n" + page.text
-                current["page_end"] = page.page
-            else:
-                unmapped_counter += 1
+        page_lines = page.text.split("\n")
+        buf: list[str] = []
+        for line in page_lines:
+            normalized = line.strip().upper().rstrip(".")
+            mapped = section_map.get(normalized) if normalized else None
+            if mapped:
+                if current and buf:
+                    current["text"] += "\n" + "\n".join(buf)
+                    current["page_end"] = page.page
+                if current:
+                    sections.append(current)
                 current = {
-                    "section_id": f"hkex_unmapped_{unmapped_counter:03d}",
-                    "text": page.text,
+                    "section_id": mapped,
+                    "text": line,
                     "page_start": page.page,
                     "page_end": page.page,
                 }
+                buf = []
+            else:
+                buf.append(line)
+
+        if buf:
+            if current is None:
+                unmapped_counter += 1
+                current = {
+                    "section_id": f"hkex_unmapped_{unmapped_counter:03d}",
+                    "text": "\n".join(buf),
+                    "page_start": page.page,
+                    "page_end": page.page,
+                }
+            else:
+                current["text"] += "\n" + "\n".join(buf)
+                current["page_end"] = page.page
+
     if current:
         sections.append(current)
+
+    merged: list[dict] = []
+    for s in sections:
+        if merged and merged[-1]["section_id"] == s["section_id"]:
+            merged[-1]["text"] += "\n" + s["text"]
+            merged[-1]["page_end"] = s["page_end"]
+        else:
+            merged.append(s)
+    sections = merged
+
+    name_counts: dict[str, int] = {}
+    for s in sections:
+        sid = s["section_id"]
+        name_counts[sid] = name_counts.get(sid, 0) + 1
+        if name_counts[sid] > 1:
+            s["section_id"] = f"{sid}_{name_counts[sid]:02d}"
 
     sections_dir = out_dir / "sections"
     sections_dir.mkdir(exist_ok=True)

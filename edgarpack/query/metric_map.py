@@ -28,6 +28,11 @@ CANONICAL_METRICS: tuple[CanonicalMetric, ...] = (
     "total_debt",
     "shares_outstanding_basic",
     "shares_outstanding_diluted",
+    "cash_burn",
+    "runway_months",
+    "r_and_d_intensity",
+    "revenue_growth_yoy",
+    "gross_margin_trend",
 )
 
 
@@ -56,6 +61,11 @@ METRIC_MAP: dict[AccountingStandard, dict[CanonicalMetric, list[str]]] = {
         "total_debt": ["LongTermDebt", "DebtCurrent"],
         "shares_outstanding_basic": ["WeightedAverageNumberOfSharesOutstandingBasic"],
         "shares_outstanding_diluted": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
+        "cash_burn": ["NetCashProvidedByUsedInOperatingActivities"],
+        "runway_months": [],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
     },
     "IFRS": {
         "revenue": ["Revenue", "RevenueFromContractsWithCustomers", "RevenueFromContracts"],
@@ -74,6 +84,11 @@ METRIC_MAP: dict[AccountingStandard, dict[CanonicalMetric, list[str]]] = {
         "total_debt": ["Borrowings", "LongTermBorrowings"],
         "shares_outstanding_basic": ["WeightedAverageShares"],
         "shares_outstanding_diluted": ["WeightedAverageDilutedShares"],
+        "cash_burn": ["CashFlowsFromUsedInOperatingActivities"],
+        "runway_months": [],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
     },
     "HKFRS": {
         "revenue": ["Revenue", "Turnover", "RevenueFromContracts"],
@@ -92,6 +107,11 @@ METRIC_MAP: dict[AccountingStandard, dict[CanonicalMetric, list[str]]] = {
         "total_debt": ["Borrowings", "BankBorrowings"],
         "shares_outstanding_basic": ["WeightedAverageNumberOfOrdinarySharesInIssue"],
         "shares_outstanding_diluted": ["WeightedAverageNumberOfOrdinarySharesDiluted"],
+        "cash_burn": ["CashFlowsFromUsedInOperatingActivities"],
+        "runway_months": [],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
     },
     "CAS": {m: [] for m in CANONICAL_METRICS},
 }
