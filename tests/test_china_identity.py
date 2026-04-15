@@ -131,9 +131,35 @@ def test_live_universe_resolves_every_alias():
         assert r.ticker == expected
 
 
-def test_live_universe_minimax_is_private():
+def test_minimax_routes_to_hkex():
     from pathlib import Path
+
+    from edgarpack.identity import load_identity, resolve
 
     index = load_identity(Path("universe.toml"))
     r = resolve(index, ticker=None, company="minimax")
-    assert r.private is True
+    assert r.source == "HKEX"
+    assert r.private is False
+    assert r.hk_stock_code == "00100"
+
+
+def test_zhipu_routes_to_hkex():
+    from pathlib import Path
+
+    from edgarpack.identity import load_identity, resolve
+
+    index = load_identity(Path("universe.toml"))
+    r = resolve(index, ticker=None, company="zhipu")
+    assert r.source == "HKEX"
+    assert r.private is False
+    assert r.hk_stock_code == "02513"
+
+
+def test_zhipu_alias_z_ai_resolves():
+    from pathlib import Path
+
+    from edgarpack.identity import load_identity, resolve
+
+    index = load_identity(Path("universe.toml"))
+    r = resolve(index, ticker=None, company="z.ai")
+    assert r.ticker == "2513.HK"

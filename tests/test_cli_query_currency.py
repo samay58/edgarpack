@@ -27,19 +27,6 @@ def test_query_rejects_unknown_currency_choice():
     assert "invalid choice" in result.stderr.lower() or "invalid" in result.stderr.lower()
 
 
-def test_query_private_company_exits_with_clear_message():
-    result = _run("MINIMAX-PRIVATE", "revenue")
-    assert result.returncode == 2
-    err = result.stderr.lower()
-    assert "private" in err
-    assert "no public filings" in err or "unsupported" in err
-
-
-def test_query_private_company_via_alias_also_exits():
-    result = _run("minimax", "revenue")
-    assert result.returncode == 2
-    assert "private" in result.stderr.lower()
-
 
 def test_query_hkex_ticker_exits_with_not_yet_supported_message():
     result = _run("0700.HK", "revenue")
