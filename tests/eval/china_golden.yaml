@@ -1,0 +1,15 @@
+version: 1
+companies:
+  - ticker: "00100.HK"
+    company: "MiniMax Group Inc."
+    accounting_standard: HKFRS
+    reporting_currency: USD
+    fiscal_year: 2024
+    metrics:
+      revenue:
+        lfy:
+          native: 30523000
+          usd: 30523000
+          fx_rate: 1.0
+          fx_convention: identity
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss"
