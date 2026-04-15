@@ -66,9 +66,15 @@ def test_fill_missing_with_llm_does_not_call_for_already_extracted(tmp_path):
     (sections_dir / "hkex_income_statement.md").write_text("Revenue 71200000")
 
     existing = [
-        HKFact(metric="revenue", concept="Revenue", value=71_200_000, unit="USD",
-               section_id="hkex_income_statement", extraction_method="regex",
-               matched_label="Revenue"),
+        HKFact(
+            metric="revenue",
+            concept="Revenue",
+            value=71_200_000,
+            unit="USD",
+            section_id="hkex_income_statement",
+            extraction_method="regex",
+            matched_label="Revenue",
+        ),
     ]
 
     cache_dir = tmp_path / "cache"

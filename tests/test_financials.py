@@ -208,7 +208,9 @@ class TestFinancials(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")
     @patch(f"{_P}.resolve_ticker")
-    async def test_unknown_metric_raises_metric_not_found(self, mock_resolve, mock_facts, mock_subs) -> None:
+    async def test_unknown_metric_raises_metric_not_found(
+        self, mock_resolve, mock_facts, mock_subs
+    ) -> None:
         """As of self-heal v1, unknown metric names raise instead of silently
         returning None. Layer 0 dereferences aliases first and the caller
         (financials()) raises MetricNotFound with suggestions for anything
@@ -1301,19 +1303,23 @@ class TestAliasDereferencing(unittest.TestCase):
         # 'fcf' should resolve to 'free_cash_flow' via alias; free_cash_flow
         # is already in METRIC_MAP as a derived metric.
         from edgarpack.query.concepts import METRIC_MAP
+
         self.assertIn("free_cash_flow", METRIC_MAP)
 
     def test_unknown_metric_raises_metric_not_found(self) -> None:
         import asyncio as _asyncio
+
         from edgarpack.query.layer_zero import MetricNotFound
 
         async def _run() -> None:
-            with patch(f"{_P}.resolve_ticker",
-                       new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
-                 patch(f"{_P}.fetch_company_facts",
-                       new=AsyncMock(return_value={"facts": {}})), \
-                 patch(f"{_P}._build_doc_map",
-                       new=AsyncMock(return_value={})):
+            with (
+                patch(
+                    f"{_P}.resolve_ticker",
+                    new=AsyncMock(return_value=("0001045810", "NVIDIA CORP")),
+                ),
+                patch(f"{_P}.fetch_company_facts", new=AsyncMock(return_value={"facts": {}})),
+                patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+            ):
                 with self.assertRaises(MetricNotFound) as ctx:
                     await financials("NVDA", metrics="xyzzy_nothing", period="lfy")
                 self.assertEqual(ctx.exception.metric_name, "xyzzy_nothing")
@@ -1328,21 +1334,22 @@ class TestAliasDereferencing(unittest.TestCase):
         'no MetricNotFound' contract and assert the current None return.
         """
         import asyncio as _asyncio
+
         from edgarpack.query.layer_zero import MetricNotFound
 
         async def _run() -> None:
-            with patch(f"{_P}.resolve_ticker",
-                       new=AsyncMock(return_value=("0001535527", "CrowdStrike"))), \
-                 patch(f"{_P}.fetch_company_facts",
-                       new=AsyncMock(return_value={"facts": {}})), \
-                 patch(f"{_P}._build_doc_map",
-                       new=AsyncMock(return_value={})):
+            with (
+                patch(
+                    f"{_P}.resolve_ticker",
+                    new=AsyncMock(return_value=("0001535527", "CrowdStrike")),
+                ),
+                patch(f"{_P}.fetch_company_facts", new=AsyncMock(return_value={"facts": {}})),
+                patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+            ):
                 try:
                     result = await financials("CRWD", metrics="arr", period="lfy")
                 except MetricNotFound:
-                    self.fail(
-                        "KPI_CATALOG name 'arr' must not raise MetricNotFound"
-                    )
+                    self.fail("KPI_CATALOG name 'arr' must not raise MetricNotFound")
                 self.assertIn("arr", result.metrics)
                 # Task 12 will change this to an extracted CitedValue.
                 self.assertIsNone(result.metrics["arr"])
@@ -1356,6 +1363,7 @@ class TestLayerBWireUp(unittest.TestCase):
         must call try_extract_kpi instead of returning None silently."""
         import asyncio as _asyncio
         from datetime import date as _date
+
         from edgarpack.query.models import CitedValue
 
         async def _run() -> None:
@@ -1375,14 +1383,14 @@ class TestLayerBWireUp(unittest.TestCase):
                 source="learned:kpi-llm",
             )
 
-            with patch(f"{_P}.resolve_ticker",
-                       new=AsyncMock(return_value=("0001535527", "CRWD"))), \
-                 patch(f"{_P}.fetch_company_facts",
-                       new=AsyncMock(return_value={"facts": {}})), \
-                 patch(f"{_P}._build_doc_map",
-                       new=AsyncMock(return_value={})), \
-                 patch("edgarpack.query.kpi_extract.try_extract_kpi",
-                       return_value=fake_cited) as mock_extract:
+            with (
+                patch(f"{_P}.resolve_ticker", new=AsyncMock(return_value=("0001535527", "CRWD"))),
+                patch(f"{_P}.fetch_company_facts", new=AsyncMock(return_value={"facts": {}})),
+                patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+                patch(
+                    "edgarpack.query.kpi_extract.try_extract_kpi", return_value=fake_cited
+                ) as mock_extract,
+            ):
                 result = await financials("CRWD", metrics="arr", period="lfy")
                 mock_extract.assert_called_once()
                 self.assertIsNotNone(result.metrics["arr"])
@@ -1397,14 +1405,12 @@ class TestLayerBWireUp(unittest.TestCase):
         import asyncio as _asyncio
 
         async def _run() -> None:
-            with patch(f"{_P}.resolve_ticker",
-                       new=AsyncMock(return_value=("0001535527", "CRWD"))), \
-                 patch(f"{_P}.fetch_company_facts",
-                       new=AsyncMock(return_value={"facts": {}})), \
-                 patch(f"{_P}._build_doc_map",
-                       new=AsyncMock(return_value={})), \
-                 patch("edgarpack.query.kpi_extract.try_extract_kpi",
-                       return_value=None):
+            with (
+                patch(f"{_P}.resolve_ticker", new=AsyncMock(return_value=("0001535527", "CRWD"))),
+                patch(f"{_P}.fetch_company_facts", new=AsyncMock(return_value={"facts": {}})),
+                patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+                patch("edgarpack.query.kpi_extract.try_extract_kpi", return_value=None),
+            ):
                 result = await financials("CRWD", metrics="arr", period="lfy")
                 self.assertIsNone(result.metrics["arr"])
                 self.assertTrue(
@@ -1420,13 +1426,15 @@ class TestLayerBWireUp(unittest.TestCase):
         import asyncio as _asyncio
 
         async def _run() -> None:
-            with patch(f"{_P}.resolve_ticker",
-                       new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
-                 patch(f"{_P}.fetch_company_facts",
-                       new=AsyncMock(return_value={"facts": {}})), \
-                 patch(f"{_P}._build_doc_map",
-                       new=AsyncMock(return_value={})), \
-                 patch("edgarpack.query.kpi_extract.try_extract_kpi") as mock_extract:
+            with (
+                patch(
+                    f"{_P}.resolve_ticker",
+                    new=AsyncMock(return_value=("0001045810", "NVIDIA CORP")),
+                ),
+                patch(f"{_P}.fetch_company_facts", new=AsyncMock(return_value={"facts": {}})),
+                patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+                patch("edgarpack.query.kpi_extract.try_extract_kpi") as mock_extract,
+            ):
                 # 'revenue' is in METRIC_MAP, not KPI_CATALOG
                 await financials("NVDA", metrics="revenue", period="lfy")
                 mock_extract.assert_not_called()

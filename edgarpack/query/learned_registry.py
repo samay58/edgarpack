@@ -135,13 +135,12 @@ class LearnedRegistry:
         current_version = conn.execute("PRAGMA user_version").fetchone()[0]
         if current_version < 1:
             # v0 -> v1: add accession column and (cik, accession, metric) unique index
-            existing_cols = {row[1] for row in conn.execute(
-                "PRAGMA table_info(learned_concepts)"
-            ).fetchall()}
+            existing_cols = {
+                row[1] for row in conn.execute("PRAGMA table_info(learned_concepts)").fetchall()
+            }
             if "accession" not in existing_cols:
                 conn.execute(
-                    "ALTER TABLE learned_concepts "
-                    "ADD COLUMN accession TEXT NOT NULL DEFAULT ''"
+                    "ALTER TABLE learned_concepts ADD COLUMN accession TEXT NOT NULL DEFAULT ''"
                 )
             conn.execute(
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_learned_cik_accn_metric "
@@ -180,14 +179,12 @@ class LearnedRegistry:
         conn = self._get_conn()
         if accession is None:
             cur = conn.execute(
-                "SELECT * FROM learned_concepts "
-                "WHERE cik = ? AND metric = ? AND accession = ''",
+                "SELECT * FROM learned_concepts WHERE cik = ? AND metric = ? AND accession = ''",
                 (cik, metric),
             )
         else:
             cur = conn.execute(
-                "SELECT * FROM learned_concepts "
-                "WHERE cik = ? AND metric = ? AND accession = ?",
+                "SELECT * FROM learned_concepts WHERE cik = ? AND metric = ? AND accession = ?",
                 (cik, metric, accession),
             )
         row = cur.fetchone()
@@ -226,9 +223,16 @@ class LearnedRegistry:
                 learned_at   = excluded.learned_at
             """,
             (
-                cik, metric, concept, taxonomy, source,
-                1 if verified else 0, verif_method, value_sample,
-                datetime.now(UTC).isoformat(), accession,
+                cik,
+                metric,
+                concept,
+                taxonomy,
+                source,
+                1 if verified else 0,
+                verif_method,
+                value_sample,
+                datetime.now(UTC).isoformat(),
+                accession,
             ),
         )
         conn.commit()

@@ -16,7 +16,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self.db_path = Path(self._tmp.name) / "registry.db"
 
     def _create_pre_migration_schema_with_row(self) -> None:
-        """Write a pre-migration v0 schema + one row (user_version=0), as it would look before any self-heal migration ran."""
+        """Write a pre-migration v0 schema and one row."""
         conn = sqlite3.connect(str(self.db_path))
         conn.execute("""
             CREATE TABLE IF NOT EXISTS learned_concepts (
@@ -37,9 +37,18 @@ class TestLearnedRegistryMigration(unittest.TestCase):
             "INSERT INTO learned_concepts (cik, metric, concept, taxonomy, "
             "source, verified, verif_method, value_sample, learned_at, hit_count) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            ("0001045810", "revenue", "Revenues", "us-gaap",
-             "fuzzy", 1, "order_of_magnitude", 130e9,
-             datetime.now(UTC).isoformat(), 0),
+            (
+                "0001045810",
+                "revenue",
+                "Revenues",
+                "us-gaap",
+                "fuzzy",
+                1,
+                "order_of_magnitude",
+                130e9,
+                datetime.now(UTC).isoformat(),
+                0,
+            ),
         )
         conn.execute("PRAGMA user_version = 0")
         conn.commit()
@@ -49,6 +58,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self._create_pre_migration_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.db_path)
 
         # Check schema has new column
@@ -66,6 +76,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self._create_pre_migration_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.db_path)
         reg.close()
 
@@ -96,6 +107,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self._create_pre_migration_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
+
         LearnedRegistry(db_path=self.db_path).close()  # first open: migrates
         LearnedRegistry(db_path=self.db_path).close()  # second open: no-op
 
@@ -110,6 +122,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
     def test_fresh_install_has_migrated_schema(self) -> None:
         """A fresh DB (no pre-existing table) should still end up at user_version=2."""
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.db_path)
 
         conn = sqlite3.connect(str(self.db_path))
@@ -150,9 +163,19 @@ class TestLearnedRegistryMigration(unittest.TestCase):
             "source, verified, verif_method, value_sample, learned_at, "
             "hit_count, accession) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            ("0001535527", "arr", "annual recurring revenue", "kpi-prose",
-             "kpi-llm", 1, "prior_filing_crosscheck", 3.44e9,
-             datetime.now(UTC).isoformat(), 5, "0001535527-24-000123"),
+            (
+                "0001535527",
+                "arr",
+                "annual recurring revenue",
+                "kpi-prose",
+                "kpi-llm",
+                1,
+                "prior_filing_crosscheck",
+                3.44e9,
+                datetime.now(UTC).isoformat(),
+                5,
+                "0001535527-24-000123",
+            ),
         )
         conn.execute("PRAGMA user_version = 1")
         conn.commit()
@@ -165,6 +188,7 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self._create_v1_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.db_path)
         reg.close()
 
@@ -198,9 +222,19 @@ class TestLearnedRegistryMigration(unittest.TestCase):
             "source, verified, verif_method, value_sample, learned_at, "
             "hit_count, accession) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            ("0001535527", "arr", "annual recurring revenue", "kpi-prose",
-             "kpi-llm", 1, "prior_filing_crosscheck", 2.56e9,
-             datetime.now(UTC).isoformat(), 0, "0001535527-23-000045"),
+            (
+                "0001535527",
+                "arr",
+                "annual recurring revenue",
+                "kpi-prose",
+                "kpi-llm",
+                1,
+                "prior_filing_crosscheck",
+                2.56e9,
+                datetime.now(UTC).isoformat(),
+                0,
+                "0001535527-23-000045",
+            ),
         )
         conn.commit()
 

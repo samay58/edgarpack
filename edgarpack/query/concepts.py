@@ -10,9 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .kpi_extract import KPI_CATALOG, KpiDef
+
 # Re-export Layer 0 helpers for callers that only import from concepts.
 from .layer_zero import METRIC_ALIASES, MetricNotFound, resolve_alias, suggest_metrics
-from .kpi_extract import KPI_CATALOG, KpiDef
 
 __all__ = [
     "METRIC_ALIASES",

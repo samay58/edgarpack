@@ -12,6 +12,8 @@ def test_common_hk_headings_map_to_canonical_sections():
 
 def test_heading_lookup_is_normalized():
     m = load_section_map()
+
     def normalize(s: str) -> str:
         return s.strip().upper().rstrip(".")
+
     assert m[normalize("Chairman's Statement")] == "hkex_chairman_statement"

@@ -80,9 +80,7 @@ def _parse_filing_date_safe(filing_date: str | None) -> tuple[int, _date]:
 def _load_pack_manifest(pack_dir: Path) -> dict:
     manifest_path = pack_dir / "manifest.json"
     if not manifest_path.exists():
-        raise FileNotFoundError(
-            f"No manifest.json at {manifest_path}. Pack may be incomplete."
-        )
+        raise FileNotFoundError(f"No manifest.json at {manifest_path}. Pack may be incomplete.")
     return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
@@ -155,14 +153,18 @@ def _resolve_filing_for_period(
 KPI_CATALOG: dict[str, KpiDef] = {
     # SaaS / subscription
     "arr": KpiDef(
-        phrases=("annual recurring revenue", "ARR", "ending ARR",
-                 "ARR of approximately"),
+        phrases=("annual recurring revenue", "ARR", "ending ARR", "ARR of approximately"),
         unit_hint="USD",
         description="Annualized subscription revenue at period end.",
     ),
     "nrr": KpiDef(
-        phrases=("net revenue retention", "dollar-based net retention",
-                 "net dollar retention", "NRR", "NDR"),
+        phrases=(
+            "net revenue retention",
+            "dollar-based net retention",
+            "net dollar retention",
+            "NRR",
+            "NDR",
+        ),
         unit_hint="percent",
         description="Cohort-based revenue retention, typically >100% for healthy SaaS.",
     ),
@@ -175,8 +177,7 @@ KPI_CATALOG: dict[str, KpiDef] = {
         unit_hint="USD",
     ),
     "crpo": KpiDef(
-        phrases=("current remaining performance obligations", "cRPO",
-                 "current RPO"),
+        phrases=("current remaining performance obligations", "cRPO", "current RPO"),
         unit_hint="USD",
     ),
     "billings": KpiDef(
@@ -188,8 +189,7 @@ KPI_CATALOG: dict[str, KpiDef] = {
         unit_hint="USD",
     ),
     "customer_count": KpiDef(
-        phrases=("total customers", "number of customers",
-                 "customers with ARR over"),
+        phrases=("total customers", "number of customers", "customers with ARR over"),
         unit_hint="count",
     ),
     # Consumer / internet
@@ -217,11 +217,14 @@ KPI_CATALOG: dict[str, KpiDef] = {
         phrases=("paying users", "paid users", "paying subscribers"),
         unit_hint="count",
     ),
-
     # Marketplace / platform
     "gmv": KpiDef(
-        phrases=("gross merchandise volume", "GMV", "gross transaction value",
-                 "gross booking value"),
+        phrases=(
+            "gross merchandise volume",
+            "GMV",
+            "gross transaction value",
+            "gross booking value",
+        ),
         unit_hint="USD",
     ),
     "gross_bookings": KpiDef(
@@ -233,15 +236,12 @@ KPI_CATALOG: dict[str, KpiDef] = {
         unit_hint="percent",
     ),
     "transactions": KpiDef(
-        phrases=("number of transactions", "total transactions",
-                 "transactions processed"),
+        phrases=("number of transactions", "total transactions", "transactions processed"),
         unit_hint="count",
     ),
-
     # Retail / consumer goods
     "same_store_sales": KpiDef(
-        phrases=("same-store sales", "comparable store sales",
-                 "comparable sales"),
+        phrases=("same-store sales", "comparable store sales", "comparable sales"),
         unit_hint="percent",
     ),
     "store_count": KpiDef(
@@ -252,7 +252,6 @@ KPI_CATALOG: dict[str, KpiDef] = {
         phrases=("average ticket", "average transaction value", "average check"),
         unit_hint="USD",
     ),
-
     # Fintech / payments
     "tpv": KpiDef(
         phrases=("total payment volume", "TPV", "payment volume"),
@@ -279,15 +278,15 @@ _VALID_LLM_UNITS: frozenset[str] = frozenset({"USD", "count", "percent", "days",
 _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
     # MD&A is Part II Item 7 in a 10-K. Match both "parti_" and "partii_"
     # so we also catch any Part I Item 7 edge case from unusual filers.
-    re.compile(r"^10k_parti+_item7(?=_|$)"),   # MD&A (10-K, Part I or II)
+    re.compile(r"^10k_parti+_item7(?=_|$)"),  # MD&A (10-K, Part I or II)
     re.compile(r"^10k_parti+_item7a(?=_|$)"),  # Quant/Qual market risk
-    re.compile(r"^10q_parti+_item2(?=_|$)"),   # MD&A (10-Q, Part I)
+    re.compile(r"^10q_parti+_item2(?=_|$)"),  # MD&A (10-Q, Part I)
     # Item 1 Business often contains the "Key Operating Metrics" narrative
     # where tech companies report DAU, ARR, NRR, and similar KPIs. The
     # sectionizer sometimes captures a thin MD&A stub while the actual
     # metrics live in Item 1. Including it costs ~30-50K chars but stays
     # within the 60K budget for most filings.
-    re.compile(r"^10k_parti+_item1(?=_|$)"),   # Business (10-K, Part I)
+    re.compile(r"^10k_parti+_item1(?=_|$)"),  # Business (10-K, Part I)
     # Unanchored: slug patterns fire anywhere in the section ID.
     # A segment overview nested inside Item 1 Business is a valid target.
     re.compile(r"_segment"),
@@ -328,9 +327,7 @@ def _read_section_text(pack_dir: Path, sections: list[dict]) -> str:
             continue
         section_file = pack_dir / rel_path
         if not section_file.exists():
-            logger.warning(
-                "Section file missing: %s (pack=%s)", section_file, pack_dir
-            )
+            logger.warning("Section file missing: %s (pack=%s)", section_file, pack_dir)
             continue
         try:
             content = section_file.read_text(encoding="utf-8")
@@ -649,7 +646,9 @@ def _verify_against_prior_filing(
     learned_reg = LearnedRegistry(db_path=registry_path)
     try:
         cached = learned_reg.lookup(
-            cik=cik, metric=metric, accession=prior_pack.accession,
+            cik=cik,
+            metric=metric,
+            accession=prior_pack.accession,
         )
     finally:
         learned_reg.close()
@@ -755,15 +754,12 @@ def try_extract_kpi(
                 except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
                     logger.warning(
                         "Layer B cache hit but pack manifest unreadable at %s: %s",
-                        pack_dir, e,
+                        pack_dir,
+                        e,
                     )
                     return None
-                primary_doc = manifest.get("filing", {}).get(
-                    "primary_document", ""
-                )
-                fiscal_year_cached, filed_cached = _parse_filing_date_safe(
-                    pack_record.filing_date
-                )
+                primary_doc = manifest.get("filing", {}).get("primary_document", "")
+                fiscal_year_cached, filed_cached = _parse_filing_date_safe(pack_record.filing_date)
                 # Note: excerpt_text is not persisted in learned_concepts (v2
                 # schema), so cached CitedValues fall back to the concept-label
                 # text fragment in document_url rather than the tight excerpt
@@ -794,7 +790,9 @@ def try_extract_kpi(
                         f"Verify manually: edgarpack learned verify {cik} {metric}"
                     )
                 learned_reg.bump_hit_count(
-                    cik=cik, metric=metric, accession=accession,
+                    cik=cik,
+                    metric=metric,
+                    accession=accession,
                 )
                 return cited
         finally:
@@ -807,7 +805,8 @@ def try_extract_kpi(
         except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
             logger.warning(
                 "Layer B cache hit but pack manifest unreadable at %s: %s",
-                pack_dir, e,
+                pack_dir,
+                e,
             )
             return None
 
@@ -850,7 +849,9 @@ def try_extract_kpi(
         if not _verify_excerpt_in_text(excerpt, text):
             logger.warning(
                 "Layer B rejected hallucinated excerpt for %s/%s: %s",
-                cik, metric, excerpt[:100],
+                cik,
+                metric,
+                excerpt[:100],
             )
             return None
 
@@ -899,7 +900,9 @@ def try_extract_kpi(
                     source="kpi-llm",
                     verified=verified,
                     verif_method=verif_method,
-                    value_sample=float(cited.value) if isinstance(cited.value, (int, float)) else None,
+                    value_sample=float(cited.value)
+                    if isinstance(cited.value, (int, float))
+                    else None,
                     accession=accession,
                 )
             finally:
@@ -911,7 +914,9 @@ def try_extract_kpi(
                 "no_prior_filing": "No prior filing available for cross-check.",
                 "prior_extract_failed": "Prior-filing extraction failed; could not cross-check.",
                 "prior_extract_unavailable": "Prior-filing extractor unavailable.",
-                "prior_filing_crosscheck": "Value was outside the expected order of magnitude vs. prior filing.",
+                "prior_filing_crosscheck": (
+                    "Value was outside the expected order of magnitude vs. prior filing."
+                ),
             }.get(verif_method or "", "Unverified learned KPI mapping.")
             cited.warnings.append(f"Unverified: {reason}")
 

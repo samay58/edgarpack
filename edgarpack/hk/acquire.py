@@ -6,9 +6,7 @@ from pathlib import Path
 
 import httpx
 
-_INDEX_URL = (
-    "https://www1.hkexnews.hk/listedco/listconews/advancedsearch/search_active_main.aspx"
-)
+_INDEX_URL = "https://www1.hkexnews.hk/listedco/listconews/advancedsearch/search_active_main.aspx"
 _BASE = "https://www1.hkexnews.hk"
 
 
@@ -39,9 +37,7 @@ def find_annual_report(stock_code: str, fiscal_year: int) -> HKFilingRef:
     )
     m = pattern.search(html)
     if not m:
-        raise FileNotFoundError(
-            f"No Annual Report {fiscal_year} found for stock code {stock_code}"
-        )
+        raise FileNotFoundError(f"No Annual Report {fiscal_year} found for stock code {stock_code}")
     announcement_date, href = m.group(1), m.group(2)
     pdf_url = href if href.startswith("http") else _BASE + href
     return HKFilingRef(

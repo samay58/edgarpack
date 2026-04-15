@@ -37,10 +37,10 @@ export function AppShell({ companyId, companyLabel, children }: AppShellProps) {
       href: `/${companyId}/packs`,
     },
     {
-      id: "open-latest-pack",
-      label: "Open latest Pack",
-      description: "Jump to current investor pack",
-      href: `/${companyId}/packs/pack_demo_001`,
+      id: "open-pack-builder",
+      label: "Open Pack Builder",
+      description: "Create or resume a citation-backed pack",
+      href: `/${companyId}/packs`,
     },
     {
       id: "search-evidence",
@@ -89,7 +89,11 @@ export function AppShell({ companyId, companyLabel, children }: AppShellProps) {
           <span className="muted">China Lens Workspace</span>
         </div>
         <div className="topbar-actions">
-          <button className="primary-btn" type="button" onClick={() => router.push(`/${companyId}/packs`)}>
+          <button
+            className="primary-btn"
+            type="button"
+            onClick={() => router.push(`/${companyId}/packs`)}
+          >
             Generate Pack
           </button>
           <button className="secondary-btn" type="button" onClick={() => setPaletteOpen(true)}>

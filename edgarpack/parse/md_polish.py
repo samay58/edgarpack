@@ -178,10 +178,7 @@ def _recover_bullet_tables(md: str) -> str:
         # Find which column index is the bullet column
         bullet_col = None
         for col in range(ncols):
-            if all(
-                col < len(row) and row[col] in _BULLET_CHARS
-                for row in data_rows
-            ):
+            if all(col < len(row) and row[col] in _BULLET_CHARS for row in data_rows):
                 bullet_col = col
                 break
 
@@ -205,8 +202,7 @@ def _recover_bullet_tables(md: str) -> str:
 
         # Build list lines
         list_lines = [
-            f"- {row[content_col]}" if content_col < len(row) else "-"
-            for row in data_rows
+            f"- {row[content_col]}" if content_col < len(row) else "-" for row in data_rows
         ]
 
         lines[start:end] = list_lines
@@ -253,8 +249,7 @@ def _simplify_empty_columns(md: str) -> str:
 
         # Build filtered data rows (drop empty columns)
         filtered_rows = [
-            [cell for ci, cell in enumerate(row) if ci not in empty_cols]
-            for row in data_rows
+            [cell for ci, cell in enumerate(row) if ci not in empty_cols] for row in data_rows
         ]
 
         remaining_cols = ncols - len(empty_cols)

@@ -224,8 +224,7 @@ def format_comps_table(
                 form_type = record.get("form_type")
                 filed = record.get("filed")
                 summary = (
-                    f"[{cid}] {form_type} {fiscal} | period {period} | "
-                    f"accn {accn} | filed {filed}"
+                    f"[{cid}] {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
                 )
                 lines.extend(_with_width(summary, indent="       "))
                 if show_links == "primary":
@@ -269,9 +268,7 @@ def format_comps_table(
                             value = comp.get("value")
                             unit = comp.get("unit")
                             fiscal = comp.get("fiscal_label")
-                            comp_line = (
-                                f"     {role}[{cid}] value={value} {unit} | {fiscal}"
-                            )
+                            comp_line = f"     {role}[{cid}] value={value} {unit} | {fiscal}"
                             lines.extend(_with_width(comp_line, indent="       "))
 
     if warnings:

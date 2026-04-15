@@ -7,7 +7,7 @@ import type { DocumentView, EvidenceTarget } from "@/types/china-lens";
 
 type EvidencePageShellProps = {
   documents: DocumentView[];
-  evidenceTarget: EvidenceTarget;
+  evidenceTarget?: EvidenceTarget | null;
 };
 
 export function EvidencePageShell({ documents, evidenceTarget }: EvidencePageShellProps) {

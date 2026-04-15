@@ -34,6 +34,14 @@ class TestChinaLensService(unittest.TestCase):
         pack = self.service.get_pack(created.pack_id)
         self.assertIn(pack.status.value, {"ready", "partial"})
         self.assertGreater(len(pack.sections), 0)
+        findings = [finding for section in pack.sections for finding in section.findings]
+        self.assertGreater(len(findings), 0)
+        self.assertTrue(
+            all(finding.citations for finding in findings if finding.status.value == "supported")
+        )
+        self.assertFalse(
+            any("long-term cloud demand" in finding.claim_text for finding in findings)
+        )
 
     def test_search_evidence_returns_hits_for_customer_query(self) -> None:
         result = self.service.search_evidence(
@@ -55,6 +63,24 @@ class TestChinaLensService(unittest.TestCase):
         self.assertTrue(answer.not_found)
         self.assertIn("Not found", answer.answer[0].text)
 
+    def test_ask_returns_indexed_evidence_without_canned_answer(self) -> None:
+        answer = self.service.ask(
+            AskRequest(
+                company_id=self.company_id,
+                question="top customers concentration disclosed by name",
+            )
+        )
+
+        self.assertFalse(answer.not_found)
+        self.assertEqual(
+            answer.answer[0].text,
+            (
+                "Top five customers represented 24.3% of group revenue; "
+                "customer names were not disclosed."
+            ),
+        )
+        self.assertEqual(answer.answer[0].citations[0].chunk_id, "chunk_top_customers")
+
     def test_cninfo_sync_manifest_ingests_snippets_and_indexes_search(self) -> None:
         payload = {
             "company_id": self.company_id,
@@ -70,8 +96,7 @@ class TestChinaLensService(unittest.TestCase):
                             "page": 3,
                             "text_zh": "董事会成员调整，新增两名独立董事。",
                             "text_en": (
-                                "Board composition changed with two new "
-                                "independent directors."
+                                "Board composition changed with two new independent directors."
                             ),
                         },
                         {

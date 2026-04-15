@@ -35,6 +35,27 @@ export type PackView = {
   build_logs: string[];
 };
 
+export type CreatePackResponse = {
+  pack_id: string;
+  job_id: string;
+  status: PackView["status"];
+};
+
+export type PackJobStatus = "queued" | "running" | "completed" | "failed" | "canceled";
+
+export type PackPipelineStage = "download" | "extract" | "translate" | "summarize" | "index";
+
+export type PackStatusResponse = {
+  pack_id: string;
+  job_id: string;
+  status: PackJobStatus;
+  stage: PackPipelineStage;
+  progress_pct: number;
+  stage_progress: Record<PackPipelineStage, number>;
+  cancel_requested: boolean;
+  logs: string[];
+};
+
 export type EvidenceTarget = {
   chunk_id: string;
   doc_id: string;

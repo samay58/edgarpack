@@ -78,7 +78,9 @@ class TestCitedValueExcerptText(unittest.TestCase):
         self.assertEqual(cv.excerpt_text, "")
 
     def test_excerpt_text_can_be_set(self) -> None:
-        cv = _make_cited(excerpt_text="Annual recurring revenue of $1.2 billion as of fiscal year end.")
+        cv = _make_cited(
+            excerpt_text="Annual recurring revenue of $1.2 billion as of fiscal year end."
+        )
         self.assertEqual(
             cv.excerpt_text,
             "Annual recurring revenue of $1.2 billion as of fiscal year end.",
@@ -121,14 +123,19 @@ class TestCitedValueExcerptText(unittest.TestCase):
 
 class TestQueryResultDiagnostics(unittest.TestCase):
     def test_default_diagnostics_is_empty_list(self) -> None:
-        from edgarpack.query.models import Diagnostic, QueryResult
+        from edgarpack.query.models import QueryResult
+
         qr = QueryResult(company="X", cik="0", period="lfy", metrics={})
         self.assertEqual(qr.diagnostics, [])
 
     def test_diagnostics_can_hold_structured_entries(self) -> None:
         from edgarpack.query.models import Diagnostic, QueryResult
+
         qr = QueryResult(
-            company="X", cik="0", period="lfy", metrics={},
+            company="X",
+            cik="0",
+            period="lfy",
+            metrics={},
             diagnostics=[
                 Diagnostic(
                     metric="arr",
@@ -144,7 +151,9 @@ class TestQueryResultDiagnostics(unittest.TestCase):
     def test_invalid_kind_raises_validation_error(self) -> None:
         """A typoed kind should be rejected by Pydantic at construction."""
         from pydantic import ValidationError
+
         from edgarpack.query.models import Diagnostic
+
         with self.assertRaises(ValidationError):
             Diagnostic(
                 metric="arr",

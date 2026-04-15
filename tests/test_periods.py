@@ -401,9 +401,7 @@ class TestSelectLtm(unittest.TestCase):
             },
         ]
         facts = _make_facts("EarningsPerShareDiluted", values)
-        result = select_ltm(
-            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
-        )
+        result = select_ltm(facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertNotIsInstance(result, DerivedValue)
         self.assertEqual(result.value, 6.20)

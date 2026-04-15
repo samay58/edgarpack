@@ -122,9 +122,7 @@ class TestStripBoldNoise(unittest.TestCase):
 class TestRecoverBulletTables(unittest.TestCase):
     def test_converts_bullet_table_to_list(self) -> None:
         md = (
-            "| | \u2022 | | First item |\n"
-            "| --- | --- | --- | --- |\n"
-            "| | \u2022 | | Second item |\n"
+            "| | \u2022 | | First item |\n| --- | --- | --- | --- |\n| | \u2022 | | Second item |\n"
         )
         result = _recover_bullet_tables(md)
         self.assertIn("- First item", result)
@@ -132,21 +130,13 @@ class TestRecoverBulletTables(unittest.TestCase):
         self.assertNotIn("|", result)
 
     def test_ignores_normal_tables(self) -> None:
-        md = (
-            "| Name | Value |\n"
-            "| --- | --- |\n"
-            "| Alpha | 100 |\n"
-        )
+        md = "| Name | Value |\n| --- | --- |\n| Alpha | 100 |\n"
         result = _recover_bullet_tables(md)
         self.assertIn("|", result)
         self.assertIn("Alpha", result)
 
     def test_converts_dash_bullet_table(self) -> None:
-        md = (
-            "| - | Item one |\n"
-            "| --- | --- |\n"
-            "| - | Item two |\n"
-        )
+        md = "| - | Item one |\n| --- | --- |\n| - | Item two |\n"
         result = _recover_bullet_tables(md)
         self.assertIn("- Item one", result)
         self.assertIn("- Item two", result)
@@ -154,11 +144,7 @@ class TestRecoverBulletTables(unittest.TestCase):
 
 class TestSimplifyEmptyColumns(unittest.TestCase):
     def test_removes_all_empty_columns(self) -> None:
-        md = (
-            "| | Name | | Value | |\n"
-            "| --- | --- | --- | --- | --- |\n"
-            "| | Alpha | | 100 | |\n"
-        )
+        md = "| | Name | | Value | |\n| --- | --- | --- | --- | --- |\n| | Alpha | | 100 | |\n"
         result = _simplify_empty_columns(md)
         lines = [row for row in result.strip().split("\n") if row.startswith("|")]
         for line in lines:
@@ -168,22 +154,14 @@ class TestSimplifyEmptyColumns(unittest.TestCase):
             self.assertLessEqual(len(cells), 2)
 
     def test_converts_single_column_to_text(self) -> None:
-        md = (
-            "| | Content here | |\n"
-            "| --- | --- | --- |\n"
-            "| | More content | |\n"
-        )
+        md = "| | Content here | |\n| --- | --- | --- |\n| | More content | |\n"
         result = _simplify_empty_columns(md)
         self.assertIn("Content here", result)
         self.assertIn("More content", result)
         self.assertNotIn("| --- |", result)
 
     def test_no_empty_columns_unchanged(self) -> None:
-        md = (
-            "| A | B |\n"
-            "| --- | --- |\n"
-            "| 1 | 2 |\n"
-        )
+        md = "| A | B |\n| --- | --- |\n| 1 | 2 |\n"
         result = _simplify_empty_columns(md)
         self.assertEqual(result, md)
 
@@ -227,11 +205,7 @@ class TestNormalizeHeadings(unittest.TestCase):
 
 class TestSimplifyComplexTables(unittest.TestCase):
     def test_leaves_simple_table_alone(self) -> None:
-        md = (
-            "| Metric | Q1 | Q2 |\n"
-            "| --- | --- | --- |\n"
-            "| Revenue | 100 | 200 |\n"
-        )
+        md = "| Metric | Q1 | Q2 |\n| --- | --- | --- |\n| Revenue | 100 | 200 |\n"
         result = _simplify_complex_tables(md)
         self.assertIn("| Metric |", result)
 

@@ -13,23 +13,23 @@ from __future__ import annotations
 import difflib
 
 METRIC_ALIASES: dict[str, str] = {
-    "fcf":    "free_cash_flow",
-    "opinc":  "operating_income",
-    "opi":    "operating_income",
-    "rev":    "revenue",
-    "ni":     "net_income",
-    "da":     "depreciation_amortization",
-    "d&a":    "depreciation_amortization",
-    "sbc":    "stock_based_compensation",
-    "rd":     "rd_expense",
-    "r&d":    "rd_expense",
-    "sga":    "sga_expense",
-    "s&ga":   "sga_expense",
-    "cogs":   "cost_of_revenue",
-    "gp":     "gross_profit",
-    "ocf":    "operating_cash_flow",
-    "capex":  "capex",
-    "eps":    "eps_diluted",
+    "fcf": "free_cash_flow",
+    "opinc": "operating_income",
+    "opi": "operating_income",
+    "rev": "revenue",
+    "ni": "net_income",
+    "da": "depreciation_amortization",
+    "d&a": "depreciation_amortization",
+    "sbc": "stock_based_compensation",
+    "rd": "rd_expense",
+    "r&d": "rd_expense",
+    "sga": "sga_expense",
+    "s&ga": "sga_expense",
+    "cogs": "cost_of_revenue",
+    "gp": "gross_profit",
+    "ocf": "operating_cash_flow",
+    "capex": "capex",
+    "eps": "eps_diluted",
     "shares": "shares_diluted",
 }
 
@@ -54,7 +54,7 @@ def suggest_metrics(name: str, known: set[str] | frozenset[str], n: int = 3) -> 
     return difflib.get_close_matches(name, sorted(known), n=n, cutoff=0.6)
 
 
-class MetricNotFound(ValueError):
+class MetricNotFoundError(ValueError):
     """Raised when a metric name cannot be resolved after alias lookup."""
 
     def __init__(self, metric_name: str, suggestions: list[str] | None = None) -> None:
@@ -64,3 +64,6 @@ class MetricNotFound(ValueError):
         if self.suggestions:
             hint = f" Did you mean: {', '.join(self.suggestions)}?"
         super().__init__(f"Unknown metric: {metric_name!r}.{hint}")
+
+
+MetricNotFound = MetricNotFoundError

@@ -163,9 +163,7 @@ class ChinaLensRepository(Protocol):
     def append_acquisition_event(self, event: AcquisitionEvent) -> None:
         """Append an acquisition event."""
 
-    def list_acquisition_events(
-        self, company_id: str | None = None
-    ) -> list[AcquisitionEvent]:
+    def list_acquisition_events(self, company_id: str | None = None) -> list[AcquisitionEvent]:
         """List acquisition events, optionally filtered by company."""
 
 
@@ -269,9 +267,7 @@ class _DictBackedRepository:
         self._acquisition_events.append(event)
         self._on_write()
 
-    def list_acquisition_events(
-        self, company_id: str | None = None
-    ) -> list[AcquisitionEvent]:
+    def list_acquisition_events(self, company_id: str | None = None) -> list[AcquisitionEvent]:
         if company_id is None:
             return list(self._acquisition_events)
         return [event for event in self._acquisition_events if event.company_id == company_id]
@@ -682,9 +678,7 @@ class PostgresChinaLensRepository:
                 )
             conn.commit()
 
-    def list_acquisition_events(
-        self, company_id: str | None = None
-    ) -> list[AcquisitionEvent]:
+    def list_acquisition_events(self, company_id: str | None = None) -> list[AcquisitionEvent]:
         sql = "SELECT payload FROM china_acquisition_events"
         params: tuple[Any, ...] = ()
         if company_id:

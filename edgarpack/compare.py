@@ -11,15 +11,17 @@ from typing import Any
 
 from .query.models import CitedValue
 
-_BALANCE_SHEET_METRICS: frozenset[str] = frozenset({
-    "total_assets",
-    "total_liabilities",
-    "total_equity",
-    "cash_and_equivalents",
-    "total_debt",
-    "shares_outstanding_basic",
-    "shares_outstanding_diluted",
-})
+_BALANCE_SHEET_METRICS: frozenset[str] = frozenset(
+    {
+        "total_assets",
+        "total_liabilities",
+        "total_equity",
+        "cash_and_equivalents",
+        "total_debt",
+        "shares_outstanding_basic",
+        "shares_outstanding_diluted",
+    }
+)
 
 
 def _convention_for(metric: str) -> str:
@@ -169,9 +171,7 @@ def _format_table(columns: list[CompanyColumn], metric_keys: list[str]) -> str:
             row.append(_format_value(c.metrics.get(m)))
         rows.append(row)
 
-    widths = [
-        max(len(str(r[i])) for r in [headers] + rows) for i in range(len(headers))
-    ]
+    widths = [max(len(str(r[i])) for r in [headers] + rows) for i in range(len(headers))]
     lines: list[str] = []
     lines.append("  ".join(headers[i].ljust(widths[i]) for i in range(len(headers))))
     lines.append("  ".join("-" * widths[i] for i in range(len(headers))))

@@ -36,17 +36,23 @@ FACTS_WITH_NOVEL_CONCEPT = {
                     "USD": [
                         {
                             "val": 130_000_000_000,
-                            "fy": 2025, "fp": "FY",
-                            "start": "2024-01-29", "end": "2025-01-26",
-                            "form": "10-K", "filed": "2025-02-21",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "start": "2024-01-29",
+                            "end": "2025-01-26",
+                            "form": "10-K",
+                            "filed": "2025-02-21",
                             "accn": "0001045810-25-000001",
                             "frame": "CY2025",
                         },
                         {
                             "val": 60_000_000_000,
-                            "fy": 2024, "fp": "FY",
-                            "start": "2023-01-30", "end": "2024-01-28",
-                            "form": "10-K", "filed": "2024-02-21",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "start": "2023-01-30",
+                            "end": "2024-01-28",
+                            "form": "10-K",
+                            "filed": "2024-02-21",
                             "accn": "0001045810-24-000001",
                             "frame": "CY2024",
                         },
@@ -58,16 +64,22 @@ FACTS_WITH_NOVEL_CONCEPT = {
                     "USD": [
                         {
                             "val": 28_000_000_000,
-                            "fy": 2025, "fp": "FY",
-                            "start": "2024-01-29", "end": "2025-01-26",
-                            "form": "10-K", "filed": "2025-02-21",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "start": "2024-01-29",
+                            "end": "2025-01-26",
+                            "form": "10-K",
+                            "filed": "2025-02-21",
                             "accn": "0001045810-25-000001",
                         },
                         {
                             "val": 25_000_000_000,
-                            "fy": 2024, "fp": "FY",
-                            "start": "2023-01-30", "end": "2024-01-28",
-                            "form": "10-K", "filed": "2024-02-21",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "start": "2023-01-30",
+                            "end": "2024-01-28",
+                            "form": "10-K",
+                            "filed": "2024-02-21",
                             "accn": "0001045810-24-000001",
                         },
                     ]
@@ -87,16 +99,24 @@ class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
     async def test_alias_only_query_goes_through_hardcoded(self) -> None:
         from edgarpack.query.financials import financials
 
-        with patch(f"{_P}.resolve_ticker",
-                   new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
-             patch(f"{_P}.fetch_company_facts",
-                   new=AsyncMock(return_value=FACTS_WITH_NOVEL_CONCEPT)), \
-             patch(f"{_P}._build_doc_map",
-                   new=AsyncMock(return_value={
-                       "0001045810-25-000001": "nvda-20250126.htm",
-                       "0001045810-24-000001": "nvda-20240128.htm",
-                   })), \
-             patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", self.db_path):
+        with (
+            patch(
+                f"{_P}.resolve_ticker", new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))
+            ),
+            patch(
+                f"{_P}.fetch_company_facts", new=AsyncMock(return_value=FACTS_WITH_NOVEL_CONCEPT)
+            ),
+            patch(
+                f"{_P}._build_doc_map",
+                new=AsyncMock(
+                    return_value={
+                        "0001045810-25-000001": "nvda-20250126.htm",
+                        "0001045810-24-000001": "nvda-20240128.htm",
+                    }
+                ),
+            ),
+            patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", self.db_path),
+        ):
             # 'rev' -> 'revenue' via alias. Revenue resolves through METRIC_MAP.
             result = await financials("NVDA", metrics="rev", period="lfy")
 
@@ -112,12 +132,16 @@ class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
         # not touch self-heal at all.
         from edgarpack.query.financials import financials
 
-        with patch(f"{_P}.resolve_ticker",
-                   new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
-             patch(f"{_P}.fetch_company_facts",
-                   new=AsyncMock(return_value=FACTS_WITH_NOVEL_CONCEPT)), \
-             patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})), \
-             patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", self.db_path):
+        with (
+            patch(
+                f"{_P}.resolve_ticker", new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))
+            ),
+            patch(
+                f"{_P}.fetch_company_facts", new=AsyncMock(return_value=FACTS_WITH_NOVEL_CONCEPT)
+            ),
+            patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+            patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", self.db_path),
+        ):
             result = await financials("NVDA", metrics="revenue", period="lfy")
 
         rev = result.metrics["revenue"]
@@ -146,6 +170,7 @@ class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
         # Force METRIC_MAP's operating_cash_flow to a concepts tuple that
         # doesn't match FACTS_WITH_NOVEL_CONCEPT, forcing fallback.
         from edgarpack.query import concepts as _concepts_mod
+
         patched_meta = _concepts_mod.MetricMeta(
             concepts=("NonexistentOpCfConcept",),
             duration=True,
@@ -153,23 +178,29 @@ class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
 
         from edgarpack.query.financials import financials
 
-        with patch.dict(
+        with (
+            patch.dict(
                 _concepts_mod.METRIC_MAP,
                 {"operating_cash_flow": patched_meta},
                 clear=False,
-             ), \
-             patch(f"{_P}.resolve_ticker",
-                   new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
-             patch(f"{_P}.fetch_company_facts",
-                   new=AsyncMock(return_value=FACTS_WITH_NOVEL_CONCEPT)), \
-             patch(f"{_P}._build_doc_map",
-                   new=AsyncMock(return_value={
-                       "0001045810-25-000001": "nvda-20250126.htm",
-                   })), \
-             patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH",
-                   self.db_path):
-            result = await financials("NVDA", metrics="operating_cash_flow",
-                                       period="lfy")
+            ),
+            patch(
+                f"{_P}.resolve_ticker", new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))
+            ),
+            patch(
+                f"{_P}.fetch_company_facts", new=AsyncMock(return_value=FACTS_WITH_NOVEL_CONCEPT)
+            ),
+            patch(
+                f"{_P}._build_doc_map",
+                new=AsyncMock(
+                    return_value={
+                        "0001045810-25-000001": "nvda-20250126.htm",
+                    }
+                ),
+            ),
+            patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", self.db_path),
+        ):
+            result = await financials("NVDA", metrics="operating_cash_flow", period="lfy")
 
         ocf = result.metrics["operating_cash_flow"]
         self.assertIsNotNone(ocf)

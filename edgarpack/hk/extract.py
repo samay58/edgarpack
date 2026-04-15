@@ -109,6 +109,7 @@ def _scope_for_section(section_id: str) -> set[str] | None:
         return None
     return set(metrics)
 
+
 _CONCEPT_NAME: dict[str, str] = {
     "revenue": "Revenue",
     "gross_profit": "GrossProfit",
@@ -299,14 +300,16 @@ def _extract_metric_from_section(
     return None
 
 
-_MUST_BE_POSITIVE: frozenset[str] = frozenset({
-    "revenue",
-    "total_assets",
-    "total_liabilities",
-    "cash_and_equivalents",
-    "shares_outstanding_basic",
-    "shares_outstanding_diluted",
-})
+_MUST_BE_POSITIVE: frozenset[str] = frozenset(
+    {
+        "revenue",
+        "total_assets",
+        "total_liabilities",
+        "cash_and_equivalents",
+        "shares_outstanding_basic",
+        "shares_outstanding_diluted",
+    }
+)
 
 
 def extract_with_regex(

@@ -2,12 +2,24 @@
 
 from __future__ import annotations
 
+import json
+import tempfile
 import unittest
+from datetime import date
+from pathlib import Path
+from unittest.mock import patch
 
+from edgarpack.query.concepts import MetricMeta
+from edgarpack.query.learned_registry import LearnedRegistry
+from edgarpack.query.models import CitedValue
 from edgarpack.query.self_heal import (
     METRIC_HINTS,
     _company_concepts,
     _fuzzy_match,
+    _llm_backend_available,
+    _llm_propose,
+    try_learn,
+    verify_order_of_magnitude,
 )
 
 # Small synthetic companyfacts fragment for fuzzy-match tests
@@ -50,7 +62,7 @@ class TestCompanyConcepts(unittest.TestCase):
         facts = {
             "us-gaap": {
                 "AllNone": {"units": {"USD": [{"val": None}]}},
-                "OK":      {"units": {"USD": [{"val": 100}]}},
+                "OK": {"units": {"USD": [{"val": 100}]}},
             }
         }
         concepts = _company_concepts(facts)
@@ -98,14 +110,6 @@ class TestFuzzyMatch(unittest.TestCase):
             self.assertIn(m, METRIC_HINTS)
 
 
-from edgarpack.query.self_heal import verify_order_of_magnitude
-
-import json
-from unittest.mock import patch
-
-from edgarpack.query.self_heal import _llm_backend_available, _llm_propose
-
-
 class TestLlmPropose(unittest.TestCase):
     def test_llm_backend_available_returns_bool(self) -> None:
         # Don't assert which backend; only that the function returns bool cleanly.
@@ -129,9 +133,12 @@ class TestLlmPropose(unittest.TestCase):
                 self.stderr = ""
                 self.returncode = 0
 
-        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
-             patch("edgarpack.query.self_heal.subprocess.run",
-                   return_value=_FakeCompleted(fake_stdout)):
+        with (
+            patch("edgarpack.query.self_heal._LLM_CMD", "codex"),
+            patch(
+                "edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted(fake_stdout)
+            ),
+        ):
             out = _llm_propose(
                 metric="revenue",
                 company="Test Co",
@@ -147,8 +154,10 @@ class TestLlmPropose(unittest.TestCase):
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
-             patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted):
+        with (
+            patch("edgarpack.query.self_heal._LLM_CMD", "codex"),
+            patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted),
+        ):
             out = _llm_propose(
                 metric="revenue",
                 company="Test Co",
@@ -162,8 +171,10 @@ class TestLlmPropose(unittest.TestCase):
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
-             patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted):
+        with (
+            patch("edgarpack.query.self_heal._LLM_CMD", "codex"),
+            patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted),
+        ):
             out = _llm_propose(
                 metric="revenue",
                 company="Test Co",
@@ -177,8 +188,10 @@ class TestLlmPropose(unittest.TestCase):
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.self_heal._LLM_CMD", "codex"), \
-             patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted):
+        with (
+            patch("edgarpack.query.self_heal._LLM_CMD", "codex"),
+            patch("edgarpack.query.self_heal.subprocess.run", return_value=_FakeCompleted),
+        ):
             out = _llm_propose(
                 metric="revenue",
                 company="Test Co",
@@ -216,16 +229,6 @@ class TestVerifyOrderOfMagnitude(unittest.TestCase):
         self.assertTrue(verify_order_of_magnitude(100.0, -150.0))
 
 
-import tempfile
-from datetime import date
-from pathlib import Path
-
-from edgarpack.query.concepts import MetricMeta
-from edgarpack.query.learned_registry import LearnedRegistry
-from edgarpack.query.models import CitedValue
-from edgarpack.query.self_heal import try_learn
-
-
 def _prior_year_cited(value: float = 100_000_000_000.0) -> CitedValue:
     return CitedValue(
         value=value,
@@ -252,9 +255,12 @@ class TestTryLearn(unittest.TestCase):
     def test_registry_hit_short_circuits(self) -> None:
         reg = LearnedRegistry(db_path=self.db_path)
         reg.upsert(
-            cik="0001045810", metric="revenue",
-            concept="Revenues", taxonomy="us-gaap",
-            source="fuzzy", verified=True,
+            cik="0001045810",
+            metric="revenue",
+            concept="Revenues",
+            taxonomy="us-gaap",
+            source="fuzzy",
+            verified=True,
             verif_method="order_of_magnitude",
             value_sample=130e9,
         )

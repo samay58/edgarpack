@@ -17,8 +17,7 @@ def test_every_standard_covers_every_canonical_metric():
 def test_resolve_concepts_us_gaap_revenue():
     concepts = resolve_concepts("revenue", "US-GAAP")
     assert (
-        "Revenues" in concepts
-        or "RevenueFromContractWithCustomerExcludingAssessedTax" in concepts
+        "Revenues" in concepts or "RevenueFromContractWithCustomerExcludingAssessedTax" in concepts
     )
 
 

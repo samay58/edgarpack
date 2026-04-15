@@ -6,7 +6,7 @@ export type ReadingMode = "en" | "bilingual" | "cn";
 
 type EvidenceExplorerProps = {
   documents: DocumentView[];
-  evidenceTarget: EvidenceTarget;
+  evidenceTarget?: EvidenceTarget | null;
   readingMode: ReadingMode;
   onReadingModeChange: (mode: ReadingMode) => void;
   isLoading?: boolean;
@@ -25,7 +25,7 @@ export function EvidenceExplorer({
         <h3>Documents</h3>
         <ul>
           {documents.map((doc) => (
-            <li key={doc.id} className={doc.id === evidenceTarget.doc_id ? "active" : ""}>
+            <li key={doc.id} className={doc.id === evidenceTarget?.doc_id ? "active" : ""}>
               <div>{doc.title}</div>
               <small>{doc.filing_date}</small>
             </li>
@@ -35,8 +35,12 @@ export function EvidenceExplorer({
       <div className="evidence-viewer">
         <h3>PDF View</h3>
         <div className="pdf-placeholder">
-          <span>{isLoading ? "Resolving citation..." : evidenceTarget.citation_label}</span>
-          <small>Page {evidenceTarget.page}</small>
+          <span>
+            {isLoading
+              ? "Resolving citation..."
+              : evidenceTarget?.citation_label ?? "Select a citation"}
+          </span>
+          <small>{evidenceTarget ? `Page ${evidenceTarget.page}` : "No source selected"}</small>
         </div>
       </div>
       <aside className="evidence-snippet">
@@ -66,34 +70,45 @@ export function EvidenceExplorer({
             </button>
           </div>
         </div>
-        {readingMode !== "cn" ? (
+        {evidenceTarget && readingMode !== "cn" ? (
           <div className="snippet-toggle">
             <span className="tag">EN</span>
             <p>{evidenceTarget.text_en}</p>
           </div>
         ) : null}
-        {readingMode !== "en" ? (
+        {evidenceTarget && readingMode !== "en" ? (
           <div className="snippet-toggle">
             <span className="tag">CN</span>
             <p>{evidenceTarget.text_zh}</p>
           </div>
         ) : null}
+        {!evidenceTarget && !isLoading ? (
+          <p className="muted">Open a citation to inspect the indexed source snippet.</p>
+        ) : null}
         <div className="evidence-actions">
           <button
             type="button"
             className="secondary-btn"
-            onClick={() => navigator.clipboard.writeText(evidenceTarget.citation_label)}
+            disabled={!evidenceTarget}
+            onClick={() => {
+              if (evidenceTarget) {
+                navigator.clipboard.writeText(evidenceTarget.citation_label);
+              }
+            }}
           >
             Copy citation
           </button>
           <button
             type="button"
             className="secondary-btn"
-            onClick={() =>
-              navigator.clipboard.writeText(
-                readingMode === "cn" ? evidenceTarget.text_zh : evidenceTarget.text_en,
-              )
-            }
+            disabled={!evidenceTarget}
+            onClick={() => {
+              if (evidenceTarget) {
+                navigator.clipboard.writeText(
+                  readingMode === "cn" ? evidenceTarget.text_zh : evidenceTarget.text_en,
+                );
+              }
+            }}
           >
             Copy snippet
           </button>

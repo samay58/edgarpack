@@ -12,33 +12,43 @@ design rationale.
 
 from __future__ import annotations
 
+import json
+import logging
 import re
+import shutil
+import subprocess
+from datetime import date
+from pathlib import Path
 from typing import Any
+
+from .concepts import MetricMeta
+from .learned_registry import LearnedRegistry, LearnedRow
+from .models import CitedValue
 
 # Synonym hints for fuzzy-matching metric names against GAAP concept names.
 # Each hint tuple is OR'd into the token pool when scoring candidates.
 METRIC_HINTS: dict[str, tuple[str, ...]] = {
-    "revenue":                ("revenue", "revenues", "sales", "contract"),
-    "cost_of_revenue":        ("cost", "revenue", "goods", "sold"),
-    "gross_profit":           ("gross", "profit"),
-    "operating_income":       ("operating", "income", "profit", "loss"),
-    "net_income":             ("net", "income", "profit", "loss"),
-    "rd_expense":             ("research", "development"),
-    "sga_expense":            ("selling", "general", "administrative"),
+    "revenue": ("revenue", "revenues", "sales", "contract"),
+    "cost_of_revenue": ("cost", "revenue", "goods", "sold"),
+    "gross_profit": ("gross", "profit"),
+    "operating_income": ("operating", "income", "profit", "loss"),
+    "net_income": ("net", "income", "profit", "loss"),
+    "rd_expense": ("research", "development"),
+    "sga_expense": ("selling", "general", "administrative"),
     "stock_based_compensation": ("share", "based", "compensation"),
     "depreciation_amortization": ("depreciation", "amortization"),
-    "operating_cash_flow":    ("cash", "provided", "used", "operating", "activities"),
-    "investing_cash_flow":    ("cash", "provided", "used", "investing", "activities"),
-    "financing_cash_flow":    ("cash", "provided", "used", "financing", "activities"),
-    "free_cash_flow":         ("free", "cash", "flow"),
-    "capex":                  ("payments", "acquire", "property", "plant", "equipment"),
-    "total_assets":           ("assets",),
-    "total_liabilities":      ("liabilities",),
-    "total_equity":           ("stockholders", "equity"),
-    "cash_and_equivalents":   ("cash", "equivalents"),
-    "total_debt":             ("debt", "longtermdebt", "notespayable"),
-    "eps_basic":              ("earnings", "per", "share", "basic"),
-    "eps_diluted":            ("earnings", "per", "share", "diluted"),
+    "operating_cash_flow": ("cash", "provided", "used", "operating", "activities"),
+    "investing_cash_flow": ("cash", "provided", "used", "investing", "activities"),
+    "financing_cash_flow": ("cash", "provided", "used", "financing", "activities"),
+    "free_cash_flow": ("free", "cash", "flow"),
+    "capex": ("payments", "acquire", "property", "plant", "equipment"),
+    "total_assets": ("assets",),
+    "total_liabilities": ("liabilities",),
+    "total_equity": ("stockholders", "equity"),
+    "cash_and_equivalents": ("cash", "equivalents"),
+    "total_debt": ("debt", "longtermdebt", "notespayable"),
+    "eps_basic": ("earnings", "per", "share", "basic"),
+    "eps_diluted": ("earnings", "per", "share", "diluted"),
 }
 
 _ALLOWED_TAXONOMIES = ("us-gaap", "ifrs-full")
@@ -156,11 +166,6 @@ def verify_order_of_magnitude(
     ratio = abs(proposed_value) / abs(prior_year_value)
     return min_ratio <= ratio <= max_ratio
 
-
-import json
-import logging
-import shutil
-import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -306,14 +311,6 @@ def _llm_propose(
     return (concept, taxonomy)
 
 
-from datetime import date
-from pathlib import Path
-
-from .concepts import MetricMeta
-from .learned_registry import LearnedRegistry, LearnedRow
-from .models import CitedValue
-
-
 def try_learn(
     metric: str,
     meta: MetricMeta,
@@ -343,9 +340,7 @@ def try_learn(
         cached = reg.lookup(cik, metric)
         if cached is not None:
             reg.bump_hit_count(cik, metric)
-            cited = _build_cited_from_learned(
-                cached, facts, metric, company, cik, doc_map
-            )
+            cited = _build_cited_from_learned(cached, facts, metric, company, cik, doc_map)
             if cited is not None:
                 cited.source = "learned:cached"
                 if not cached.verified:
@@ -376,9 +371,7 @@ def try_learn(
         concept, taxonomy = proposed
 
         # 5. Build CitedValue from the latest reported value for this concept
-        cited = _build_cited_for_concept(
-            concept, taxonomy, facts, metric, company, cik, doc_map
-        )
+        cited = _build_cited_for_concept(concept, taxonomy, facts, metric, company, cik, doc_map)
         if cited is None:
             return None
 
@@ -494,9 +487,7 @@ def _build_cited_from_learned(
     cik: str,
     doc_map: dict[str, str] | None,
 ) -> CitedValue | None:
-    return _build_cited_for_concept(
-        row.concept, row.taxonomy, facts, metric, company, cik, doc_map
-    )
+    return _build_cited_for_concept(row.concept, row.taxonomy, facts, metric, company, cik, doc_map)
 
 
 def _parse_iso_date(s: str) -> date | None:

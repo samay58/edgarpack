@@ -77,7 +77,10 @@ def companies_index(rows: Iterable[CompanyRow]) -> str:
     count = len(row_list)
     lines = [
         h2("COMPANIES"),
-        f'<input id="filter" type="text" placeholder="Filter by name, ticker, or CIK ({count} companies)" autofocus>',
+        (
+            f'<input id="filter" type="text" placeholder="Filter by name, ticker, '
+            f'or CIK ({count} companies)" autofocus>'
+        ),
         '<ul id="company-list" class="list">',
     ]
     for r in row_list:

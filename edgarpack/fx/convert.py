@@ -33,9 +33,7 @@ class ConvertedValue:
 
 def _find_row(rows: tuple[MonthlyRate, ...], as_of: dt.date) -> MonthlyRate:
     candidates = [
-        r
-        for r in rows
-        if r.month_end.year == as_of.year and r.month_end.month == as_of.month
+        r for r in rows if r.month_end.year == as_of.year and r.month_end.month == as_of.month
     ]
     if candidates:
         return candidates[0]

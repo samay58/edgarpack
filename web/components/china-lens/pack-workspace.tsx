@@ -9,11 +9,15 @@ import {
 } from "@/components/china-lens/evidence-explorer";
 import { PackSection } from "@/components/china-lens/pack-section";
 import { askEvidence, resolveCitation } from "@/lib/api-client";
-import { demoAskResponse, demoEvidenceTarget } from "@/lib/sample-data";
 import type { AskResponse, DocumentView, EvidenceTarget, PackView } from "@/types/china-lens";
 
 const DEMO_ASK_PLACEHOLDER =
   "Top customers, concentration, and whether disclosed by name?";
+const EMPTY_ASK_RESPONSE: AskResponse = {
+  answer: [],
+  not_found: false,
+  guidance: "Ask a question to search indexed evidence for this pack.",
+};
 
 type PackWorkspaceProps = {
   companyId: string;
@@ -22,9 +26,9 @@ type PackWorkspaceProps = {
 };
 
 export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps) {
-  const [activeEvidence, setActiveEvidence] = useState<EvidenceTarget>(demoEvidenceTarget);
+  const [activeEvidence, setActiveEvidence] = useState<EvidenceTarget | null>(null);
   const [askInput, setAskInput] = useState(DEMO_ASK_PLACEHOLDER);
-  const [askResult, setAskResult] = useState<AskResponse>(demoAskResponse);
+  const [askResult, setAskResult] = useState<AskResponse>(EMPTY_ASK_RESPONSE);
   const [readingMode, setReadingMode] = useState<ReadingMode>("en");
   const [findingFilter, setFindingFilter] = useState<"all" | "supported" | "unsupported">(
     "supported",
@@ -77,6 +81,9 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
     startTransition(async () => {
       try {
         const resolved = await resolveCitation(chunkId);
+        if (!resolved) {
+          return;
+        }
         citationCache.current[chunkId] = resolved;
         setActiveEvidence(resolved);
       } finally {
@@ -86,8 +93,12 @@ export function PackWorkspace({ companyId, pack, documents }: PackWorkspaceProps
   };
 
   const runAsk = () => {
+    const question = askInput.trim();
+    if (!question) {
+      return;
+    }
     startTransition(async () => {
-      const result = await askEvidence(askInput, companyId);
+      const result = await askEvidence(question, companyId, pack.id);
       setAskResult(result);
     });
   };

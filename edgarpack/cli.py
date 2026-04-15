@@ -364,9 +364,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Clear everything (required if no filter is provided)",
     )
 
-    p_compare = sub.add_parser(
-        "compare", help="Side-by-side comparison of two or more companies"
-    )
+    p_compare = sub.add_parser("compare", help="Side-by-side comparison of two or more companies")
     p_compare.add_argument("companies", nargs="+", help="Two or more company tickers or aliases")
     p_compare.add_argument("--metrics", help="Comma-separated metric names")
     p_compare.add_argument("--period", default="lfy", help="Fiscal period (default: lfy)")

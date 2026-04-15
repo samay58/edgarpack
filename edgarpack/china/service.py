@@ -7,7 +7,9 @@ behind repository/object-store adapters.
 from __future__ import annotations
 
 import os
+import re
 from datetime import date
+from hashlib import sha256
 from threading import RLock
 from uuid import uuid4
 
@@ -61,8 +63,9 @@ from .synthesis.pack_builder import (
     build_empty_sections,
     citation_label,
     inject_findings,
-    make_citation,
 )
+
+_NUMERIC_TOKEN_RE = re.compile(r"\d+[\d,.%]*")
 
 
 class ChinaLensService:
@@ -268,85 +271,133 @@ class ChinaLensService:
 
             return CreatePackResponse(pack_id=pack.id, job_id=job.id, status=pack.status)
 
-    def _build_fixture_findings(self, pack: Pack) -> list[Finding]:
-        tencent_label = citation_label("CNINFO", "2024", 87, table="Table 12")
-        risk_label = citation_label("CNINFO", "2024", 15)
-        governance_label = citation_label("CNINFO", "2024", 121)
+    @staticmethod
+    def _finding_id(pack_id: str, section_id: str, chunk_id: str) -> str:
+        payload = f"{pack_id}|{section_id}|{chunk_id}".encode()
+        return f"finding_{sha256(payload).hexdigest()[:12]}"
 
-        findings = [
-            Finding(
-                id=f"finding_{uuid4().hex[:10]}",
-                pack_id=pack.id,
-                section_id="customers_suppliers",
-                claim_text=(
-                    "Top five customers represented 24.3% of revenue; customer names "
-                    "were not disclosed."
-                ),
-                claim_type="customer_concentration",
-                key_numbers=["24.3%"],
-                citations=[
-                    make_citation(
-                        "chunk_top_customers", "doc_tencent_2024_annual", 87, tencent_label
-                    )
-                ],
-                status=FindingStatus.SUPPORTED,
+    @staticmethod
+    def _claim_text_from_chunk(chunk: EvidenceChunk) -> str:
+        text = " ".join((chunk.text_en or chunk.text_zh).split())
+        if not text:
+            return ""
+        if text[-1] not in {".", "!", "?", "。"}:
+            return f"{text}."
+        return text
+
+    @staticmethod
+    def _key_numbers(text: str) -> list[str]:
+        return _NUMERIC_TOKEN_RE.findall(text)
+
+    @staticmethod
+    def _section_for_chunk(chunk: EvidenceChunk) -> tuple[str, str]:
+        haystack = f"{chunk.text_en} {chunk.text_zh}".lower()
+        classifiers: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+            (
+                "customers_suppliers",
+                "customer_supplier_disclosure",
+                ("customer", "supplier", "concentration", "客户", "供应商"),
             ),
-            Finding(
-                id=f"finding_{uuid4().hex[:10]}",
-                pack_id=pack.id,
-                section_id="risk_register",
-                claim_text=(
-                    "Regulatory policy changes may affect commercialization cadence in "
-                    "value-added services."
-                ),
-                claim_type="regulatory_risk",
-                citations=[
-                    make_citation(
-                        "chunk_risk_regulation", "doc_tencent_2024_interim", 15, risk_label
-                    )
-                ],
-                status=FindingStatus.SUPPORTED,
+            (
+                "financials",
+                "financial_disclosure",
+                ("revenue", "profit", "income", "cash flow", "收入", "利润", "现金"),
             ),
-            Finding(
-                id=f"finding_{uuid4().hex[:10]}",
-                pack_id=pack.id,
-                section_id="ownership_governance",
-                claim_text="The board has nine directors, including four independent directors.",
-                claim_type="governance_structure",
-                key_numbers=["9", "4"],
-                citations=[
-                    make_citation(
-                        "chunk_governance", "doc_tencent_2024_annual", 121, governance_label
-                    )
-                ],
-                status=FindingStatus.SUPPORTED,
+            (
+                "ownership_governance",
+                "governance_disclosure",
+                ("board", "director", "independent", "shareholder", "董事", "治理", "股东"),
             ),
-            Finding(
-                id=f"finding_{uuid4().hex[:10]}",
-                pack_id=pack.id,
-                section_id="summary",
-                claim_text="Management disclosed confidence in long-term cloud demand.",
-                claim_type="management_outlook",
-                citations=[],
-                status=FindingStatus.SUPPORTED,
+            (
+                "risk_register",
+                "risk_disclosure",
+                ("risk", "regulat", "compliance", "policy", "风险", "监管", "合规", "政策"),
             ),
+        )
+        for section_id, claim_type, terms in classifiers:
+            if any(term in haystack for term in terms):
+                return section_id, claim_type
+        return "summary", "indexed_disclosure"
+
+    def _finding_from_chunk(
+        self,
+        pack: Pack,
+        chunk: EvidenceChunk,
+        section_id: str,
+        claim_type: str,
+    ) -> Finding | None:
+        claim_text = self._claim_text_from_chunk(chunk)
+        if not claim_text:
+            return None
+        return Finding(
+            id=self._finding_id(pack.id, section_id, chunk.id),
+            pack_id=pack.id,
+            section_id=section_id,
+            claim_text=claim_text,
+            claim_type=claim_type,
+            key_numbers=self._key_numbers(claim_text),
+            citations=[
+                CitationRef(
+                    chunk_id=chunk.id,
+                    doc_id=chunk.doc_id,
+                    page=chunk.page_start,
+                    quote_start=0,
+                    quote_end=0,
+                    citation_label=self._citation_label_for_chunk(chunk),
+                )
+            ],
+            status=FindingStatus.SUPPORTED,
+        )
+
+    def _build_findings_from_evidence(self, pack: Pack) -> list[Finding]:
+        allowed_doc_ids = set(pack.doc_set)
+        chunks = [
+            chunk
+            for chunk in self._repository.list_chunks()
+            if chunk.doc_id in allowed_doc_ids and (chunk.text_en or chunk.text_zh).strip()
         ]
+        chunks.sort(key=lambda chunk: (chunk.doc_id, chunk.page_start, chunk.id))
+
+        findings: list[Finding] = []
+        finding_keys: set[tuple[str, str]] = set()
+        for chunk in chunks:
+            section_id, claim_type = self._section_for_chunk(chunk)
+            finding = self._finding_from_chunk(pack, chunk, section_id, claim_type)
+            if finding is not None:
+                findings.append(finding)
+                finding_keys.add((section_id, chunk.id))
+
+        for chunk in chunks[:2]:
+            if ("summary", chunk.id) in finding_keys:
+                continue
+            summary = self._finding_from_chunk(pack, chunk, "summary", "summary_signal")
+            if summary is not None:
+                findings.append(summary)
+                finding_keys.add(("summary", chunk.id))
+
         return findings
 
     def _finalize_pack(self, pack_id: str) -> None:
         pack = self.get_pack(pack_id)
-        findings = self._build_fixture_findings(pack)
+        for section in pack.sections:
+            section.findings = []
+            section.key_points = []
+            section.unknowns = []
+
+        findings = self._build_findings_from_evidence(pack)
         inject_findings(pack, findings)
 
         chunks_by_id = {chunk.id: chunk for chunk in self._repository.list_chunks()}
         report = run_publish_checks(pack, chunks_by_id=chunks_by_id, min_citations_per_section=2)
         pack.updated_at = utc_now()
 
-        if report.passed:
+        if report.passed and findings:
             pack.status = PackStatus.READY
             pack.build_logs.append("Pack QA checks passed.")
         else:
             pack.status = PackStatus.PARTIAL
+            if not findings:
+                pack.errors.append("No indexed evidence was available for the selected documents.")
             pack.errors.extend(issue.message for issue in report.issues)
             pack.build_logs.append(
                 "Pack QA checks reported "
@@ -354,8 +405,8 @@ class ChinaLensService:
             )
 
         for section in pack.sections:
-            if section.id == "summary" and not section.unknowns:
-                section.unknowns.append("Not disclosed: named top customers in annual filing")
+            if not section.findings and not section.unknowns:
+                section.unknowns.append("No indexed evidence matched this section.")
             section.updated_at = utc_now()
         self._repository.upsert_pack(pack)
 
@@ -507,59 +558,45 @@ class ChinaLensService:
                 ),
             )
 
-        question_lc = req.question.lower()
         blocks: list[AskAnswerBlock] = []
-
-        if "customer" in question_lc or "concentration" in question_lc:
-            customer_hits = [hit for hit in search.hits if "customer" in hit.text_en.lower()]
-            if customer_hits:
-                refs = [
-                    CitationRef(
-                        chunk_id=hit.chunk_id,
-                        doc_id=hit.doc_id,
-                        page=hit.page,
-                        quote_start=0,
-                        quote_end=0,
-                        citation_label=hit.citation_label,
-                    )
-                    for hit in customer_hits[:2]
-                ]
-                blocks.append(
-                    AskAnswerBlock(
-                        text=(
-                            "Top customer concentration is disclosed as 24.3% for the "
-                            "top five customers, "
-                            "and customer names are not disclosed by name."
-                        ),
-                        citations=refs,
-                    )
-                )
-
-        if not blocks:
-            top = search.hits[0]
+        for hit in search.hits:
+            snippet = " ".join((hit.text_en or hit.text_zh).split())
+            if not snippet:
+                continue
             blocks.append(
                 AskAnswerBlock(
-                    text=f"Best available evidence: {top.text_en}",
+                    text=snippet,
                     citations=[
                         CitationRef(
-                            chunk_id=top.chunk_id,
-                            doc_id=top.doc_id,
-                            page=top.page,
+                            chunk_id=hit.chunk_id,
+                            doc_id=hit.doc_id,
+                            page=hit.page,
                             quote_start=0,
                             quote_end=0,
-                            citation_label=top.citation_label,
+                            citation_label=hit.citation_label,
                         )
                     ],
                 )
+            )
+            if len(blocks) >= 3:
+                break
+
+        if not blocks:
+            return AskResponse(
+                answer=[
+                    AskAnswerBlock(
+                        text="Not found in indexed sources.",
+                        citations=[],
+                    )
+                ],
+                not_found=True,
+                guidance="Try Evidence Explorer search with terms from the source filing.",
             )
 
         return AskResponse(
             answer=blocks,
             not_found=False,
-            guidance=(
-                "Open citations to verify the original Chinese source "
-                "in Evidence Explorer."
-            ),
+            guidance=("Open citations to verify the original Chinese source in Evidence Explorer."),
         )
 
     def _remove_company_documents(self, company_id: str) -> None:

@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
+import io
+import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import date
+from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
-from edgarpack.cli import _render_query_table
+from edgarpack.cli import _render_query_table, main
 from edgarpack.query.models import CitedValue, QueryResult
 
 
-def _cited(metric: str, concept: str, value: float, source: str = "hardcoded",
-           warnings: list[str] | None = None) -> CitedValue:
+def _cited(
+    metric: str,
+    concept: str,
+    value: float,
+    source: str = "hardcoded",
+    warnings: list[str] | None = None,
+) -> CitedValue:
     return CitedValue(
         value=value,
         unit="USD",
@@ -67,7 +77,9 @@ class TestRenderQueryTable(unittest.TestCase):
 
     def test_learned_unverified_shows_warning_mark(self) -> None:
         cv = _cited(
-            "revenue", "Revenues", 130e9,
+            "revenue",
+            "Revenues",
+            130e9,
             source="learned:llm",
             warnings=["Unverified learned mapping (llm)."],
         )
@@ -106,32 +118,25 @@ class TestRenderQueryTable(unittest.TestCase):
         self.assertNotIn("N/A", out)
 
 
-import io
-from contextlib import redirect_stderr
-from unittest.mock import AsyncMock, patch
-
-from edgarpack.cli import main
-
-
 class TestCliMetricNotFound(unittest.TestCase):
     def test_unknown_metric_prints_suggestions_and_exits_nonzero(self) -> None:
         stderr = io.StringIO()
-        with patch("edgarpack.query.financials.resolve_ticker",
-                   new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))), \
-             patch("edgarpack.query.financials.fetch_company_facts",
-                   new=AsyncMock(return_value={"facts": {}})), \
-             patch("edgarpack.query.financials._build_doc_map",
-                   new=AsyncMock(return_value={})), \
-             redirect_stderr(stderr):
+        with (
+            patch(
+                "edgarpack.query.financials.resolve_ticker",
+                new=AsyncMock(return_value=("0001045810", "NVIDIA CORP")),
+            ),
+            patch(
+                "edgarpack.query.financials.fetch_company_facts",
+                new=AsyncMock(return_value={"facts": {}}),
+            ),
+            patch("edgarpack.query.financials._build_doc_map", new=AsyncMock(return_value={})),
+            redirect_stderr(stderr),
+        ):
             rc = main(["query", "NVDA", "xyzzy", "--period", "lfy"])
         self.assertEqual(rc, 2)  # 2 = usage-ish error
         err = stderr.getvalue()
         self.assertIn("Unknown metric", err)
-
-
-import tempfile
-from contextlib import redirect_stdout
-from pathlib import Path
 
 
 class TestLearnedSubcommand(unittest.TestCase):
@@ -147,12 +152,17 @@ class TestLearnedSubcommand(unittest.TestCase):
 
     def test_list_after_upsert(self) -> None:
         from edgarpack.query.learned_registry import LearnedRegistry
+
         with tempfile.TemporaryDirectory() as td:
             db = Path(td) / "registry.db"
             reg = LearnedRegistry(db_path=db)
             reg.upsert(
-                cik="0001045810", metric="revenue", concept="Revenues",
-                taxonomy="us-gaap", source="fuzzy", verified=True,
+                cik="0001045810",
+                metric="revenue",
+                concept="Revenues",
+                taxonomy="us-gaap",
+                source="fuzzy",
+                verified=True,
             )
             reg.close()
             with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db):
@@ -167,12 +177,17 @@ class TestLearnedSubcommand(unittest.TestCase):
 
     def test_verify_promotes_unverified_row(self) -> None:
         from edgarpack.query.learned_registry import LearnedRegistry
+
         with tempfile.TemporaryDirectory() as td:
             db = Path(td) / "registry.db"
             reg = LearnedRegistry(db_path=db)
             reg.upsert(
-                cik="A", metric="rev", concept="X", taxonomy="us-gaap",
-                source="llm", verified=False,
+                cik="A",
+                metric="rev",
+                concept="X",
+                taxonomy="us-gaap",
+                source="llm",
+                verified=False,
             )
             reg.close()
             with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db):
@@ -199,6 +214,7 @@ class TestLearnedSubcommand(unittest.TestCase):
 class TestDiagnosticsFooter(unittest.TestCase):
     def test_diagnostics_rendered_as_footer(self) -> None:
         from edgarpack.query.models import Diagnostic
+
         qr = QueryResult(
             company="CRWD",
             cik="0001535527",
@@ -219,7 +235,9 @@ class TestDiagnosticsFooter(unittest.TestCase):
 
     def test_no_diagnostics_no_footer(self) -> None:
         qr = QueryResult(
-            company="CRWD", cik="0001535527", period="lfy",
+            company="CRWD",
+            cik="0001535527",
+            period="lfy",
             metrics={"revenue": _cited("revenue", "Revenues", 5e9)},
         )
         out = _render_query_table(qr, _args())

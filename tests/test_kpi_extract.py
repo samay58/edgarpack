@@ -5,18 +5,24 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
+from unittest.mock import patch
 
 from edgarpack.harvest.registry import PackRecord, PackRegistry
 from edgarpack.query.kpi_extract import (
     KPI_CATALOG,
     KpiDef,
+    _build_cited_from_extraction,
+    _build_extraction_prompt,
+    _extract_via_llm,
     _load_pack_manifest,
     _read_section_text,
     _resolve_filing_for_period,
     _select_sections,
     _trim_to_budget,
+    _verify_against_prior_filing,
+    _verify_excerpt_in_text,
 )
 
 
@@ -47,19 +53,20 @@ class TestKpiCatalog(unittest.TestCase):
     def test_every_kpi_has_non_empty_phrases(self) -> None:
         for name, kpi in KPI_CATALOG.items():
             self.assertGreater(
-                len(kpi.phrases), 0,
+                len(kpi.phrases),
+                0,
                 f"{name} has no phrases",
             )
             for phrase in kpi.phrases:
                 self.assertIsInstance(phrase, str)
-                self.assertTrue(phrase.strip(),
-                                f"{name} has an empty phrase")
+                self.assertTrue(phrase.strip(), f"{name} has an empty phrase")
 
     def test_every_kpi_has_valid_unit_hint(self) -> None:
         valid_units = {"USD", "count", "percent", "days", "pure"}
         for name, kpi in KPI_CATALOG.items():
-            self.assertIn(kpi.unit_hint, valid_units,
-                          f"{name} has invalid unit_hint={kpi.unit_hint!r}")
+            self.assertIn(
+                kpi.unit_hint, valid_units, f"{name} has invalid unit_hint={kpi.unit_hint!r}"
+            )
 
 
 class TestKpiDef(unittest.TestCase):
@@ -109,18 +116,20 @@ class TestResolveFilingForPeriod(unittest.TestCase):
     def _register(self, accession: str, form_type: str, filing_date: str) -> Path:
         pack_dir = self.packs_dir / "0001535527" / accession
         _write_manifest(pack_dir, sections=[])
-        self.registry.register_pack(PackRecord(
-            accession=accession,
-            cik="0001535527",
-            ticker="CRWD",
-            company_name="CrowdStrike Holdings, Inc.",
-            form_type=form_type,
-            filing_date=filing_date,
-            sections_count=0,
-            tokens_total=0,
-            pack_dir=str(pack_dir),
-            built_at=datetime.now(UTC).isoformat(),
-        ))
+        self.registry.register_pack(
+            PackRecord(
+                accession=accession,
+                cik="0001535527",
+                ticker="CRWD",
+                company_name="CrowdStrike Holdings, Inc.",
+                form_type=form_type,
+                filing_date=filing_date,
+                sections_count=0,
+                tokens_total=0,
+                pack_dir=str(pack_dir),
+                built_at=datetime.now(UTC).isoformat(),
+            )
+        )
         return pack_dir
 
     def test_lfy_returns_most_recent_10k(self) -> None:
@@ -188,15 +197,23 @@ class TestResolveFilingForPeriod(unittest.TestCase):
 
 
 class TestLoadPackManifest(unittest.TestCase):
-    def test_loads_manifest_json_from_pack_dir(self) -> None:
+    def test_loads_manifestjson_from_pack_dir(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             pack_dir = Path(td) / "pack"
-            _write_manifest(pack_dir, sections=[
-                {"id": "10k_parti_item7_mda", "title": "MD&A",
-                 "path": "sections/10k_parti_item7_mda.md",
-                 "char_start": 0, "char_end": 1000,
-                 "tokens_approx": 200, "sha256": "deadbeef"}
-            ])
+            _write_manifest(
+                pack_dir,
+                sections=[
+                    {
+                        "id": "10k_parti_item7_mda",
+                        "title": "MD&A",
+                        "path": "sections/10k_parti_item7_mda.md",
+                        "char_start": 0,
+                        "char_end": 1000,
+                        "tokens_approx": 200,
+                        "sha256": "deadbeef",
+                    }
+                ],
+            )
             manifest = _load_pack_manifest(pack_dir)
             self.assertIn("sections", manifest)
             self.assertEqual(len(manifest["sections"]), 1)
@@ -213,14 +230,27 @@ class TestLoadPackManifest(unittest.TestCase):
 class TestSelectSections(unittest.TestCase):
     def test_matches_mda_section(self) -> None:
         sections = [
-            {"id": "10k_parti_item1_business", "path": "sections/item1.md",
-             "title": "Business", "char_start": 0, "char_end": 100},
-            {"id": "10k_parti_item7_managements_discussion_and_analysis",
-             "path": "sections/item7.md", "title": "MD&A",
-             "char_start": 100, "char_end": 5000},
-            {"id": "10k_parti_item8_financial_statements",
-             "path": "sections/item8.md", "title": "Financials",
-             "char_start": 5000, "char_end": 10000},
+            {
+                "id": "10k_parti_item1_business",
+                "path": "sections/item1.md",
+                "title": "Business",
+                "char_start": 0,
+                "char_end": 100,
+            },
+            {
+                "id": "10k_parti_item7_managements_discussion_and_analysis",
+                "path": "sections/item7.md",
+                "title": "MD&A",
+                "char_start": 100,
+                "char_end": 5000,
+            },
+            {
+                "id": "10k_parti_item8_financial_statements",
+                "path": "sections/item8.md",
+                "title": "Financials",
+                "char_start": 5000,
+                "char_end": 10000,
+            },
         ]
         selected = _select_sections(sections)
         ids = {s["id"] for s in selected}
@@ -230,24 +260,40 @@ class TestSelectSections(unittest.TestCase):
 
     def test_matches_key_metrics_section_by_slug(self) -> None:
         sections = [
-            {"id": "10k_key_metrics_nontraditional",
-             "path": "sections/key.md", "title": "Key Metrics",
-             "char_start": 0, "char_end": 500},
-            {"id": "10k_operating_data_north_america",
-             "path": "sections/ops.md", "title": "Operating Data",
-             "char_start": 500, "char_end": 1000},
+            {
+                "id": "10k_key_metrics_nontraditional",
+                "path": "sections/key.md",
+                "title": "Key Metrics",
+                "char_start": 0,
+                "char_end": 500,
+            },
+            {
+                "id": "10k_operating_data_north_america",
+                "path": "sections/ops.md",
+                "title": "Operating Data",
+                "char_start": 500,
+                "char_end": 1000,
+            },
         ]
         selected = _select_sections(sections)
         self.assertEqual(len(selected), 2)
 
     def test_matches_10q_mda(self) -> None:
         sections = [
-            {"id": "10q_parti_item1_financial_statements",
-             "path": "sections/q1.md", "title": "Financials",
-             "char_start": 0, "char_end": 100},
-            {"id": "10q_parti_item2_managements_discussion",
-             "path": "sections/q2.md", "title": "MD&A",
-             "char_start": 100, "char_end": 2000},
+            {
+                "id": "10q_parti_item1_financial_statements",
+                "path": "sections/q1.md",
+                "title": "Financials",
+                "char_start": 0,
+                "char_end": 100,
+            },
+            {
+                "id": "10q_parti_item2_managements_discussion",
+                "path": "sections/q2.md",
+                "title": "MD&A",
+                "char_start": 100,
+                "char_end": 2000,
+            },
         ]
         selected = _select_sections(sections)
         ids = {s["id"] for s in selected}
@@ -255,8 +301,13 @@ class TestSelectSections(unittest.TestCase):
 
     def test_returns_empty_when_no_matches(self) -> None:
         sections = [
-            {"id": "10k_parti_item3_legal_proceedings", "path": "sections/item3.md",
-             "title": "Legal Proceedings", "char_start": 0, "char_end": 100},
+            {
+                "id": "10k_parti_item3_legal_proceedings",
+                "path": "sections/item3.md",
+                "title": "Legal Proceedings",
+                "char_start": 0,
+                "char_end": 100,
+            },
         ]
         self.assertEqual(_select_sections(sections), [])
 
@@ -267,23 +318,52 @@ class TestSelectSections(unittest.TestCase):
         """Sections in the output must appear in the same order as the input,
         regardless of which pattern matched which entry."""
         sections = [
-            {"id": "10k_parti_item7_mda", "path": "p1",
-             "title": "MD&A", "char_start": 0, "char_end": 100},
-            {"id": "10k_parti_item1_business", "path": "p2",
-             "title": "Business", "char_start": 100, "char_end": 200},
-            {"id": "10k_parti_item3_legal_proceedings", "path": "p2b",
-             "title": "Legal", "char_start": 200, "char_end": 250},  # filtered out
-            {"id": "10k_segment_data", "path": "p3",
-             "title": "Segments", "char_start": 250, "char_end": 350},
-            {"id": "10k_key_metric_nontraditional", "path": "p4",
-             "title": "Key Metrics", "char_start": 350, "char_end": 450},
+            {
+                "id": "10k_parti_item7_mda",
+                "path": "p1",
+                "title": "MD&A",
+                "char_start": 0,
+                "char_end": 100,
+            },
+            {
+                "id": "10k_parti_item1_business",
+                "path": "p2",
+                "title": "Business",
+                "char_start": 100,
+                "char_end": 200,
+            },
+            {
+                "id": "10k_parti_item3_legal_proceedings",
+                "path": "p2b",
+                "title": "Legal",
+                "char_start": 200,
+                "char_end": 250,
+            },  # filtered out
+            {
+                "id": "10k_segment_data",
+                "path": "p3",
+                "title": "Segments",
+                "char_start": 250,
+                "char_end": 350,
+            },
+            {
+                "id": "10k_key_metric_nontraditional",
+                "path": "p4",
+                "title": "Key Metrics",
+                "char_start": 350,
+                "char_end": 450,
+            },
         ]
         selected = _select_sections(sections)
         ids = [s["id"] for s in selected]
         self.assertEqual(
             ids,
-            ["10k_parti_item7_mda", "10k_parti_item1_business",
-             "10k_segment_data", "10k_key_metric_nontraditional"],
+            [
+                "10k_parti_item7_mda",
+                "10k_parti_item1_business",
+                "10k_segment_data",
+                "10k_key_metric_nontraditional",
+            ],
         )
 
 
@@ -296,10 +376,20 @@ class TestReadSectionText(unittest.TestCase):
             (sections_dir / "a.md").write_text("Alpha content", encoding="utf-8")
             (sections_dir / "b.md").write_text("Beta content", encoding="utf-8")
             sections = [
-                {"id": "sec_a", "path": "sections/a.md", "title": "A",
-                 "char_start": 0, "char_end": 100},
-                {"id": "sec_b", "path": "sections/b.md", "title": "B",
-                 "char_start": 100, "char_end": 200},
+                {
+                    "id": "sec_a",
+                    "path": "sections/a.md",
+                    "title": "A",
+                    "char_start": 0,
+                    "char_end": 100,
+                },
+                {
+                    "id": "sec_b",
+                    "path": "sections/b.md",
+                    "title": "B",
+                    "char_start": 100,
+                    "char_end": 200,
+                },
             ]
             text = _read_section_text(pack_dir, sections)
             self.assertIn("Alpha content", text)
@@ -312,8 +402,13 @@ class TestReadSectionText(unittest.TestCase):
             pack_dir = Path(td)
             (pack_dir / "sections").mkdir()
             sections = [
-                {"id": "missing_sec", "path": "sections/missing.md", "title": "Gone",
-                 "char_start": 0, "char_end": 100},
+                {
+                    "id": "missing_sec",
+                    "path": "sections/missing.md",
+                    "title": "Gone",
+                    "char_start": 0,
+                    "char_end": 100,
+                },
             ]
             text = _read_section_text(pack_dir, sections)
             self.assertEqual(text, "")
@@ -327,10 +422,20 @@ class TestReadSectionText(unittest.TestCase):
             (sections_dir / "bad.md").write_bytes(b"\xff\xfe\xff bad")
             (sections_dir / "good.md").write_text("Good content", encoding="utf-8")
             sections = [
-                {"id": "bad_sec", "path": "sections/bad.md", "title": "Bad",
-                 "char_start": 0, "char_end": 100},
-                {"id": "good_sec", "path": "sections/good.md", "title": "Good",
-                 "char_start": 100, "char_end": 200},
+                {
+                    "id": "bad_sec",
+                    "path": "sections/bad.md",
+                    "title": "Bad",
+                    "char_start": 0,
+                    "char_end": 100,
+                },
+                {
+                    "id": "good_sec",
+                    "path": "sections/good.md",
+                    "title": "Good",
+                    "char_start": 100,
+                    "char_end": 200,
+                },
             ]
             # Must not raise; should return only the good section's content.
             text = _read_section_text(pack_dir, sections)
@@ -358,16 +463,6 @@ class TestTrimToBudget(unittest.TestCase):
         self.assertEqual(trimmed, text)  # unmodified
 
 
-import json as _json
-from unittest.mock import patch
-
-from edgarpack.query.kpi_extract import (
-    _build_extraction_prompt,
-    _extract_via_llm,
-    _llm_backend_available_kpi,
-)
-
-
 class TestBuildExtractionPrompt(unittest.TestCase):
     def test_prompt_contains_metric_phrases(self) -> None:
         kpi = KpiDef(
@@ -375,8 +470,10 @@ class TestBuildExtractionPrompt(unittest.TestCase):
             unit_hint="USD",
         )
         prompt = _build_extraction_prompt(
-            metric="arr", kpi_def=kpi,
-            company="CrowdStrike", form_type="10-K",
+            metric="arr",
+            kpi_def=kpi,
+            company="CrowdStrike",
+            form_type="10-K",
             filing_date="2024-03-07",
             text="MD&A says ARR was $3.44B at year end.",
         )
@@ -387,11 +484,14 @@ class TestBuildExtractionPrompt(unittest.TestCase):
         self.assertIn("2024-03-07", prompt)
         self.assertIn("MD&A says ARR was $3.44B at year end.", prompt)
 
-    def test_prompt_requests_strict_json(self) -> None:
+    def test_prompt_requests_strictjson(self) -> None:
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
         prompt = _build_extraction_prompt(
-            metric="arr", kpi_def=kpi,
-            company="X", form_type="10-K", filing_date="2024-01-01",
+            metric="arr",
+            kpi_def=kpi,
+            company="X",
+            form_type="10-K",
+            filing_date="2024-01-01",
             text="text",
         )
         self.assertIn("JSON", prompt)
@@ -401,8 +501,11 @@ class TestBuildExtractionPrompt(unittest.TestCase):
     def test_prompt_includes_unit_hint(self) -> None:
         kpi = KpiDef(phrases=("NRR",), unit_hint="percent")
         prompt = _build_extraction_prompt(
-            metric="nrr", kpi_def=kpi,
-            company="X", form_type="10-K", filing_date="2024-01-01",
+            metric="nrr",
+            kpi_def=kpi,
+            company="X",
+            form_type="10-K",
+            filing_date="2024-01-01",
             text="text",
         )
         self.assertIn("percent", prompt)
@@ -411,8 +514,10 @@ class TestBuildExtractionPrompt(unittest.TestCase):
         """Prompt builds correctly from a real KPI_CATALOG entry."""
         kpi = KPI_CATALOG["arr"]
         prompt = _build_extraction_prompt(
-            metric="arr", kpi_def=kpi,
-            company="CrowdStrike", form_type="10-K",
+            metric="arr",
+            kpi_def=kpi,
+            company="CrowdStrike",
+            form_type="10-K",
             filing_date="2024-03-07",
             text="Our ARR was $3.44 billion at year end.",
         )
@@ -432,21 +537,25 @@ class TestExtractViaLlm(unittest.TestCase):
             self.assertIsNone(result)
 
     def test_parses_valid_response(self) -> None:
-        fake = _json.dumps({
-            "value": 3440000000,
-            "unit": "USD",
-            "excerpt": "Annual recurring revenue of $3.44 billion",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+        fake = json.dumps(
+            {
+                "value": 3440000000,
+                "unit": "USD",
+                "excerpt": "Annual recurring revenue of $3.44 billion",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             result = _extract_via_llm("prompt")
             self.assertIsNotNone(result)
             assert result is not None
@@ -454,14 +563,16 @@ class TestExtractViaLlm(unittest.TestCase):
             self.assertEqual(result["value"], 3440000000)
             self.assertEqual(result["unit"], "USD")
 
-    def test_returns_none_on_malformed_json(self) -> None:
+    def test_returns_none_on_malformedjson(self) -> None:
         class _Fake:
             stdout = "not json at all"
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_returns_none_on_nonzero_exit(self) -> None:
@@ -470,55 +581,82 @@ class TestExtractViaLlm(unittest.TestCase):
             stderr = "error"
             returncode = 1
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_returns_none_on_timeout(self) -> None:
         import subprocess as _sp
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   side_effect=_sp.TimeoutExpired(cmd="codex", timeout=45)):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch(
+                "edgarpack.query.kpi_extract.subprocess.run",
+                side_effect=_sp.TimeoutExpired(cmd="codex", timeout=45),
+            ),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_parses_dict_object_field_types(self) -> None:
         """Reject responses missing required keys or with wrong types."""
         bad_responses = [
             {"confidence": "high"},  # missing value/unit/excerpt/section_id
-            {"value": None, "unit": "USD", "excerpt": "x", "section_id": "y",
-             "confidence": "high"},  # value is None but confidence is high
-            {"value": "not a number", "unit": "USD", "excerpt": "x",
-             "section_id": "y", "confidence": "high"},
+            {
+                "value": None,
+                "unit": "USD",
+                "excerpt": "x",
+                "section_id": "y",
+                "confidence": "high",
+            },  # value is None but confidence is high
+            {
+                "value": "not a number",
+                "unit": "USD",
+                "excerpt": "x",
+                "section_id": "y",
+                "confidence": "high",
+            },
         ]
         for resp in bad_responses:
+
             class _Fake:
-                stdout = _json.dumps(resp)
+                stdout = json.dumps(resp)
                 stderr = ""
                 returncode = 0
-            with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-                 patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+
+            with (
+                patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+                patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+            ):
                 self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_passes_through_not_found_confidence(self) -> None:
-        fake = _json.dumps({
-            "value": None, "unit": None, "excerpt": "",
-            "section_id": "", "confidence": "not_found",
-        })
+        fake = json.dumps(
+            {
+                "value": None,
+                "unit": None,
+                "excerpt": "",
+                "section_id": "",
+                "confidence": "not_found",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             result = _extract_via_llm("prompt")
             self.assertIsNotNone(result)
             assert result is not None
             self.assertEqual(result["confidence"], "not_found")
 
-    def test_parses_json_wrapped_in_markdown_fences(self) -> None:
+    def test_parsesjson_wrapped_in_markdown_fences(self) -> None:
         """If the LLM wraps its response in ```json ... ```, the salvage
         regex should extract and parse the inner object."""
         wrapped = (
@@ -534,9 +672,10 @@ class TestExtractViaLlm(unittest.TestCase):
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             result = _extract_via_llm("prompt")
             self.assertIsNotNone(result)
             assert result is not None
@@ -546,107 +685,124 @@ class TestExtractViaLlm(unittest.TestCase):
     def test_rejects_bool_value(self) -> None:
         """bool is a subclass of int in Python; must not pass numeric validation."""
         import json as _j
-        fake = _j.dumps({
-            "value": True,
-            "unit": "USD",
-            "excerpt": "Revenue",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+
+        fake = _j.dumps(
+            {
+                "value": True,
+                "unit": "USD",
+                "excerpt": "Revenue",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_rejects_empty_section_id(self) -> None:
         """section_id must be a non-empty string."""
         import json as _j
-        fake = _j.dumps({
-            "value": 3440000000,
-            "unit": "USD",
-            "excerpt": "Annual recurring revenue of $3.44 billion",
-            "section_id": "",
-            "confidence": "high",
-        })
+
+        fake = _j.dumps(
+            {
+                "value": 3440000000,
+                "unit": "USD",
+                "excerpt": "Annual recurring revenue of $3.44 billion",
+                "section_id": "",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_rejects_nan_value(self) -> None:
         import json as _j
-        fake = _j.dumps({
-            "value": float("nan"),
-            "unit": "USD",
-            "excerpt": "Revenue of NaN",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+
+        fake = _j.dumps(
+            {
+                "value": float("nan"),
+                "unit": "USD",
+                "excerpt": "Revenue of NaN",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_rejects_negative_value(self) -> None:
         import json as _j
-        fake = _j.dumps({
-            "value": -3440000000,
-            "unit": "USD",
-            "excerpt": "ARR was minus something",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+
+        fake = _j.dumps(
+            {
+                "value": -3440000000,
+                "unit": "USD",
+                "excerpt": "ARR was minus something",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
 
     def test_rejects_unit_not_in_enum(self) -> None:
         import json as _j
-        fake = _j.dumps({
-            "value": 3440000000,
-            "unit": "dollars",  # not in _VALID_LLM_UNITS
-            "excerpt": "ARR of $3.44 billion",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+
+        fake = _j.dumps(
+            {
+                "value": 3440000000,
+                "unit": "dollars",  # not in _VALID_LLM_UNITS
+                "excerpt": "ARR of $3.44 billion",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake
             stderr = ""
             returncode = 0
 
-        with patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             patch("edgarpack.query.kpi_extract.subprocess.run",
-                   return_value=_Fake):
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             self.assertIsNone(_extract_via_llm("prompt"))
-
-
-from edgarpack.query.kpi_extract import _verify_excerpt_in_text
 
 
 class TestVerifyExcerptInText(unittest.TestCase):
@@ -686,20 +842,16 @@ class TestVerifyExcerptInText(unittest.TestCase):
         from elsewhere in the source. Must be rejected."""
         text = "Revenue was $3.44 billion. Separately, deferred revenue grew to $1.2 billion."
         excerpt = "Revenue was $3.44 billion"
-        self.assertFalse(
-            _verify_excerpt_in_text(excerpt, text, expected_value="$1.2 billion")
-        )
+        self.assertFalse(_verify_excerpt_in_text(excerpt, text, expected_value="$1.2 billion"))
 
     def test_value_in_excerpt_normalized_whitespace(self) -> None:
         text = "ARR of $3.44 billion."
         excerpt = "ARR of $3.44 billion"
-        self.assertTrue(
-            _verify_excerpt_in_text(excerpt, text, expected_value="$3.44  billion")
-        )
+        self.assertTrue(_verify_excerpt_in_text(excerpt, text, expected_value="$3.44  billion"))
 
     def test_handles_zero_width_characters(self) -> None:
         """Zero-width spaces in the source must not cause false negatives."""
-        text = "Our ARR was $3.44\u200Bbillion at year end."
+        text = "Our ARR was $3.44\u200bbillion at year end."
         excerpt = "ARR was $3.44 billion"
         self.assertTrue(_verify_excerpt_in_text(excerpt, text))
 
@@ -719,11 +871,6 @@ class TestVerifyExcerptInText(unittest.TestCase):
         text = "Straße revenue was $100 million"
         excerpt = "STRASSE REVENUE WAS $100 MILLION"
         self.assertTrue(_verify_excerpt_in_text(excerpt, text))
-
-
-from datetime import date
-
-from edgarpack.query.kpi_extract import _build_cited_from_extraction
 
 
 class TestBuildCitedFromExtraction(unittest.TestCase):
@@ -751,7 +898,7 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
             pack_dir="/tmp/packs/0001535527/0001535527-24-000123",
             built_at=datetime.now(UTC).isoformat(),
             manifest_hash=None,
-            warnings_json=None,
+            warningsjson=None,
         )
         pack_manifest = {
             "filing": {
@@ -791,19 +938,32 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
         """Layer B extractions must be tagged source='learned:kpi-llm'
         so they don't get silently persisted as 'hardcoded' rows."""
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
-        response = {"value": 1000, "unit": "USD",
-                    "excerpt": "ARR of $1,000", "section_id": "s",
-                    "confidence": "high"}
+        response = {
+            "value": 1000,
+            "unit": "USD",
+            "excerpt": "ARR of $1,000",
+            "section_id": "s",
+            "confidence": "high",
+        }
         pack_record = PackRecord(
-            accession="A-1", cik="C-1", ticker="X", company_name="X",
-            form_type="10-K", filing_date="2024-03-07",
-            sections_count=0, tokens_total=0, pack_dir="/tmp",
+            accession="A-1",
+            cik="C-1",
+            ticker="X",
+            company_name="X",
+            form_type="10-K",
+            filing_date="2024-03-07",
+            sections_count=0,
+            tokens_total=0,
+            pack_dir="/tmp",
             built_at="2024-03-08T00:00:00+00:00",
         )
         manifest = {"filing": {"filing_date": "2024-03-07"}}
         cited = _build_cited_from_extraction(
-            response=response, metric="arr", kpi_def=kpi,
-            pack_record=pack_record, pack_manifest=manifest,
+            response=response,
+            metric="arr",
+            kpi_def=kpi,
+            pack_record=pack_record,
+            pack_manifest=manifest,
             primary_document="doc.htm",
         )
         self.assertEqual(cited.source, "learned:kpi-llm")
@@ -812,19 +972,32 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
         """period_end should be date.min (unknown) rather than the filing
         date, which is semantically different from the fiscal period end."""
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
-        response = {"value": 1000, "unit": "USD",
-                    "excerpt": "ARR of $1,000", "section_id": "s",
-                    "confidence": "high"}
+        response = {
+            "value": 1000,
+            "unit": "USD",
+            "excerpt": "ARR of $1,000",
+            "section_id": "s",
+            "confidence": "high",
+        }
         pack_record = PackRecord(
-            accession="A-1", cik="C-1", ticker="X", company_name="X",
-            form_type="10-K", filing_date="2024-03-07",
-            sections_count=0, tokens_total=0, pack_dir="/tmp",
+            accession="A-1",
+            cik="C-1",
+            ticker="X",
+            company_name="X",
+            form_type="10-K",
+            filing_date="2024-03-07",
+            sections_count=0,
+            tokens_total=0,
+            pack_dir="/tmp",
             built_at="2024-03-08T00:00:00+00:00",
         )
         manifest = {"filing": {"filing_date": "2024-03-07"}}
         cited = _build_cited_from_extraction(
-            response=response, metric="arr", kpi_def=kpi,
-            pack_record=pack_record, pack_manifest=manifest,
+            response=response,
+            metric="arr",
+            kpi_def=kpi,
+            pack_record=pack_record,
+            pack_manifest=manifest,
             primary_document="doc.htm",
         )
         self.assertEqual(cited.period_end, date.min)
@@ -834,27 +1007,39 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
     def test_document_url_uses_excerpt(self) -> None:
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
         response = {
-            "value": 1000, "unit": "USD",
+            "value": 1000,
+            "unit": "USD",
             "excerpt": "Annual recurring revenue of $1,000",
-            "section_id": "sec", "confidence": "high",
+            "section_id": "sec",
+            "confidence": "high",
         }
         pack_record = PackRecord(
-            accession="0001535527-24-000123", cik="0001535527",
-            ticker="CRWD", company_name="CRWD",
-            form_type="10-K", filing_date="2024-03-07",
-            sections_count=0, tokens_total=0,
-            pack_dir="/tmp/p", built_at="2024-03-08T00:00:00+00:00",
+            accession="0001535527-24-000123",
+            cik="0001535527",
+            ticker="CRWD",
+            company_name="CRWD",
+            form_type="10-K",
+            filing_date="2024-03-07",
+            sections_count=0,
+            tokens_total=0,
+            pack_dir="/tmp/p",
+            built_at="2024-03-08T00:00:00+00:00",
         )
-        manifest = {"filing": {
-            "cik": "0001535527",
-            "accession": "0001535527-24-000123",
-            "form_type": "10-K",
-            "filing_date": "2024-03-07",
-            "company_name": "CRWD",
-        }}
+        manifest = {
+            "filing": {
+                "cik": "0001535527",
+                "accession": "0001535527-24-000123",
+                "form_type": "10-K",
+                "filing_date": "2024-03-07",
+                "company_name": "CRWD",
+            }
+        }
         cited = _build_cited_from_extraction(
-            response=response, metric="arr", kpi_def=kpi,
-            pack_record=pack_record, pack_manifest=manifest,
+            response=response,
+            metric="arr",
+            kpi_def=kpi,
+            pack_record=pack_record,
+            pack_manifest=manifest,
             primary_document="doc.htm",
         )
         url = cited.document_url
@@ -863,9 +1048,6 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
         # Should use the excerpt-based text fragment
         self.assertIn("#:~:text=", url)
         self.assertIn("Annual", url)
-
-
-from edgarpack.query.kpi_extract import _verify_against_prior_filing
 
 
 class TestVerifyAgainstPriorFiling(unittest.TestCase):
@@ -878,18 +1060,20 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
     def _register(self, accession: str, filing_date: str) -> None:
         pack_dir = Path(self._tmp.name) / "packs" / "A" / accession
         _write_manifest(pack_dir, sections=[])
-        self.registry.register_pack(PackRecord(
-            accession=accession,
-            cik="0001535527",
-            ticker="CRWD",
-            company_name="CRWD",
-            form_type="10-K",
-            filing_date=filing_date,
-            sections_count=0,
-            tokens_total=0,
-            pack_dir=str(pack_dir),
-            built_at=datetime.now(UTC).isoformat(),
-        ))
+        self.registry.register_pack(
+            PackRecord(
+                accession=accession,
+                cik="0001535527",
+                ticker="CRWD",
+                company_name="CRWD",
+                form_type="10-K",
+                filing_date=filing_date,
+                sections_count=0,
+                tokens_total=0,
+                pack_dir=str(pack_dir),
+                built_at=datetime.now(UTC).isoformat(),
+            )
+        )
 
     def test_returns_false_when_no_prior_filing(self) -> None:
         # Only one filing registered
@@ -919,9 +1103,12 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
         # cache hit instead of a live LLM call.
         reg = LearnedRegistry(db_path=self.registry_db)
         reg.upsert(
-            cik="0001535527", metric="arr",
-            concept="annual recurring revenue", taxonomy="kpi-prose",
-            source="kpi-llm", verified=True,
+            cik="0001535527",
+            metric="arr",
+            concept="annual recurring revenue",
+            taxonomy="kpi-prose",
+            source="kpi-llm",
+            verified=True,
             verif_method="order_of_magnitude",
             value_sample=2.56e9,  # prior year
             accession="ACC-23",
@@ -946,6 +1133,7 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
         with verified=False — it's a verification helper, not a user-facing
         extraction."""
         from unittest.mock import patch as _patch
+
         from edgarpack.query.learned_registry import LearnedRegistry
 
         # Register two 10-Ks (current + prior), no cache seeded
@@ -977,35 +1165,42 @@ class TestVerifyAgainstPriorFiling(unittest.TestCase):
                     "primary_document": "crwd.htm",
                 },
                 "sections": [
-                    {"id": "10k_parti_item7_mda", "path": "sections/mda.md",
-                     "title": "MD&A", "char_start": 0, "char_end": 100,
-                     "tokens_approx": 20, "sha256": "abc"},
+                    {
+                        "id": "10k_parti_item7_mda",
+                        "path": "sections/mda.md",
+                        "title": "MD&A",
+                        "char_start": 0,
+                        "char_end": 100,
+                        "tokens_approx": 20,
+                        "sha256": "abc",
+                    },
                 ],
                 "artifacts": {},
                 "warnings": [],
                 "tokens_total": 20,
             }
-            (pack_dir / "manifest.json").write_text(
-                json.dumps(manifest), encoding="utf-8"
-            )
+            (pack_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
 
         # Mock LLM to return a consistent value for the prior filing
-        fake_response = _json.dumps({
-            "value": 2_560_000_000,
-            "unit": "USD",
-            "excerpt": "Annual recurring revenue of $2.56 billion",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+        fake_response = json.dumps(
+            {
+                "value": 2_560_000_000,
+                "unit": "USD",
+                "excerpt": "Annual recurring revenue of $2.56 billion",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake_response
             stderr = ""
             returncode = 0
 
-        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             _patch("edgarpack.query.kpi_extract.subprocess.run",
-                    return_value=_Fake):
+        with (
+            _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             verified, method = _verify_against_prior_filing(
                 current_value=3.44e9,  # within 4x of 2.56e9
                 metric="arr",
@@ -1042,9 +1237,15 @@ class TestTryExtractKpi(unittest.TestCase):
         _write_manifest(
             self.pack_dir,
             sections=[
-                {"id": "10k_parti_item7_mda", "path": "sections/mda.md",
-                 "title": "MD&A", "char_start": 0, "char_end": 1000,
-                 "tokens_approx": 100, "sha256": "abc"}
+                {
+                    "id": "10k_parti_item7_mda",
+                    "path": "sections/mda.md",
+                    "title": "MD&A",
+                    "char_start": 0,
+                    "char_end": 1000,
+                    "tokens_approx": 100,
+                    "sha256": "abc",
+                }
             ],
         )
         (self.pack_dir / "sections").mkdir(exist_ok=True)
@@ -1052,21 +1253,24 @@ class TestTryExtractKpi(unittest.TestCase):
             "Annual recurring revenue of $3.44 billion at fiscal year end.",
             encoding="utf-8",
         )
-        self.pack_registry.register_pack(PackRecord(
-            accession="0001535527-24-000123",
-            cik="0001535527",
-            ticker="CRWD",
-            company_name="CrowdStrike Holdings, Inc.",
-            form_type="10-K",
-            filing_date="2024-03-07",
-            sections_count=1,
-            tokens_total=100,
-            pack_dir=str(self.pack_dir),
-            built_at=datetime.now(UTC).isoformat(),
-        ))
+        self.pack_registry.register_pack(
+            PackRecord(
+                accession="0001535527-24-000123",
+                cik="0001535527",
+                ticker="CRWD",
+                company_name="CrowdStrike Holdings, Inc.",
+                form_type="10-K",
+                filing_date="2024-03-07",
+                sections_count=1,
+                tokens_total=100,
+                pack_dir=str(self.pack_dir),
+                built_at=datetime.now(UTC).isoformat(),
+            )
+        )
 
     def test_returns_none_for_metric_not_in_catalog(self) -> None:
         from edgarpack.query.kpi_extract import try_extract_kpi
+
         result = try_extract_kpi(
             metric="not_a_kpi",
             cik="0001535527",
@@ -1080,6 +1284,7 @@ class TestTryExtractKpi(unittest.TestCase):
     def test_returns_none_when_no_pack(self) -> None:
         """No pack registered -> None (caller renders diagnostic)."""
         from edgarpack.query.kpi_extract import try_extract_kpi
+
         result = try_extract_kpi(
             metric="arr",
             cik="9999999",
@@ -1092,24 +1297,30 @@ class TestTryExtractKpi(unittest.TestCase):
 
     def test_successful_extraction_returns_cited_value(self) -> None:
         from unittest.mock import patch as _patch
+
         from edgarpack.query.kpi_extract import try_extract_kpi
+
         self._build_pack()
 
-        fake_response = _json.dumps({
-            "value": 3_440_000_000,
-            "unit": "USD",
-            "excerpt": "Annual recurring revenue of $3.44 billion",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+        fake_response = json.dumps(
+            {
+                "value": 3_440_000_000,
+                "unit": "USD",
+                "excerpt": "Annual recurring revenue of $3.44 billion",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake_response
             stderr = ""
             returncode = 0
 
-        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             cited = try_extract_kpi(
                 metric="arr",
                 cik="0001535527",
@@ -1128,33 +1339,42 @@ class TestTryExtractKpi(unittest.TestCase):
 
         # Row persisted to learned_concepts
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.registry_db)
-        row = reg.lookup("0001535527", "arr",
-                          accession="0001535527-24-000123")
+        row = reg.lookup("0001535527", "arr", accession="0001535527-24-000123")
         self.assertIsNotNone(row)
         reg.close()
 
     def test_second_call_hits_cache(self) -> None:
         """Second call with the same args should not touch the LLM at all."""
         from unittest.mock import patch as _patch
+
         from edgarpack.query.kpi_extract import try_extract_kpi
+
         self._build_pack()
 
         # Seed the registry with the expected result
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.registry_db)
         reg.upsert(
-            cik="0001535527", metric="arr",
+            cik="0001535527",
+            metric="arr",
             concept="annual recurring revenue",
-            taxonomy="kpi-prose", source="kpi-llm", verified=True,
-            verif_method="prior_filing_crosscheck", value_sample=3.44e9,
+            taxonomy="kpi-prose",
+            source="kpi-llm",
+            verified=True,
+            verif_method="prior_filing_crosscheck",
+            value_sample=3.44e9,
             accession="0001535527-24-000123",
         )
         reg.close()
 
         # Patch subprocess to blow up if called; cache hit means no call
-        with _patch("edgarpack.query.kpi_extract.subprocess.run",
-                    side_effect=AssertionError("should not be called")):
+        with _patch(
+            "edgarpack.query.kpi_extract.subprocess.run",
+            side_effect=AssertionError("should not be called"),
+        ):
             cited = try_extract_kpi(
                 metric="arr",
                 cik="0001535527",
@@ -1170,21 +1390,30 @@ class TestTryExtractKpi(unittest.TestCase):
 
     def test_llm_returns_not_found_returns_none_without_cache(self) -> None:
         from unittest.mock import patch as _patch
+
         from edgarpack.query.kpi_extract import try_extract_kpi
+
         self._build_pack()
 
-        fake_response = _json.dumps({
-            "value": None, "unit": None, "excerpt": "",
-            "section_id": "", "confidence": "not_found",
-        })
+        fake_response = json.dumps(
+            {
+                "value": None,
+                "unit": None,
+                "excerpt": "",
+                "section_id": "",
+                "confidence": "not_found",
+            }
+        )
 
         class _Fake:
             stdout = fake_response
             stderr = ""
             returncode = 0
 
-        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             cited = try_extract_kpi(
                 metric="arr",
                 cik="0001535527",
@@ -1196,6 +1425,7 @@ class TestTryExtractKpi(unittest.TestCase):
 
         self.assertIsNone(cited)
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.registry_db)
         row = reg.lookup("0001535527", "arr", accession="0001535527-24-000123")
         self.assertIsNone(row)
@@ -1203,24 +1433,30 @@ class TestTryExtractKpi(unittest.TestCase):
 
     def test_hallucinated_excerpt_is_rejected(self) -> None:
         from unittest.mock import patch as _patch
+
         from edgarpack.query.kpi_extract import try_extract_kpi
+
         self._build_pack()
 
-        fake_response = _json.dumps({
-            "value": 99_999_999_999,  # nonsense number
-            "unit": "USD",
-            "excerpt": "This sentence is not in the source text at all",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+        fake_response = json.dumps(
+            {
+                "value": 99_999_999_999,  # nonsense number
+                "unit": "USD",
+                "excerpt": "This sentence is not in the source text at all",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake_response
             stderr = ""
             returncode = 0
 
-        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             cited = try_extract_kpi(
                 metric="arr",
                 cik="0001535527",
@@ -1240,6 +1476,7 @@ class TestTryExtractKpi(unittest.TestCase):
         # Manually tamper with the pack_record by re-registering with a bad date
         # (the registry won't let us do this directly, so we use raw SQL)
         import sqlite3
+
         conn = sqlite3.connect(str(self.registry_db))
         conn.execute(
             "UPDATE packs SET filing_date = ? WHERE accession = ?",
@@ -1249,12 +1486,17 @@ class TestTryExtractKpi(unittest.TestCase):
         conn.close()
 
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.registry_db)
         reg.upsert(
-            cik="0001535527", metric="arr",
+            cik="0001535527",
+            metric="arr",
             concept="annual recurring revenue",
-            taxonomy="kpi-prose", source="kpi-llm", verified=True,
-            verif_method="prior_filing_crosscheck", value_sample=3.44e9,
+            taxonomy="kpi-prose",
+            source="kpi-llm",
+            verified=True,
+            verif_method="prior_filing_crosscheck",
+            value_sample=3.44e9,
             accession="0001535527-24-000123",
         )
         reg.close()
@@ -1295,12 +1537,17 @@ class TestTryExtractKpi(unittest.TestCase):
 
         from edgarpack.query.kpi_extract import try_extract_kpi
         from edgarpack.query.learned_registry import LearnedRegistry
+
         reg = LearnedRegistry(db_path=self.registry_db)
         reg.upsert(
-            cik="0001535527", metric="arr",
+            cik="0001535527",
+            metric="arr",
             concept="annual recurring revenue",
-            taxonomy="kpi-prose", source="kpi-llm", verified=True,
-            verif_method="prior_filing_crosscheck", value_sample=3.44e9,
+            taxonomy="kpi-prose",
+            source="kpi-llm",
+            verified=True,
+            verif_method="prior_filing_crosscheck",
+            value_sample=3.44e9,
             accession="0001535527-24-000123",
         )
         reg.close()
@@ -1319,8 +1566,7 @@ class TestTryExtractKpi(unittest.TestCase):
 
         # Hit count should NOT have been bumped (Fix 3)
         reg = LearnedRegistry(db_path=self.registry_db)
-        row = reg.lookup("0001535527", "arr",
-                          accession="0001535527-24-000123")
+        row = reg.lookup("0001535527", "arr", accession="0001535527-24-000123")
         reg.close()
         self.assertIsNotNone(row)
         assert row is not None
@@ -1331,25 +1577,31 @@ class TestTryExtractKpi(unittest.TestCase):
         to learned_concepts. Used by the recursive prior-filing verification
         to avoid polluting the cache with verified=False rows."""
         from unittest.mock import patch as _patch
+
         from edgarpack.query.kpi_extract import try_extract_kpi
         from edgarpack.query.learned_registry import LearnedRegistry
+
         self._build_pack()
 
-        fake_response = _json.dumps({
-            "value": 3_440_000_000,
-            "unit": "USD",
-            "excerpt": "Annual recurring revenue of $3.44 billion",
-            "section_id": "10k_parti_item7_mda",
-            "confidence": "high",
-        })
+        fake_response = json.dumps(
+            {
+                "value": 3_440_000_000,
+                "unit": "USD",
+                "excerpt": "Annual recurring revenue of $3.44 billion",
+                "section_id": "10k_parti_item7_mda",
+                "confidence": "high",
+            }
+        )
 
         class _Fake:
             stdout = fake_response
             stderr = ""
             returncode = 0
 
-        with _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"), \
-             _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake):
+        with (
+            _patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            _patch("edgarpack.query.kpi_extract.subprocess.run", return_value=_Fake),
+        ):
             cited = try_extract_kpi(
                 metric="arr",
                 cik="0001535527",
@@ -1364,8 +1616,7 @@ class TestTryExtractKpi(unittest.TestCase):
         self.assertIsNotNone(cited)
         # ...but nothing was written to learned_concepts
         reg = LearnedRegistry(db_path=self.registry_db)
-        row = reg.lookup("0001535527", "arr",
-                          accession="0001535527-24-000123")
+        row = reg.lookup("0001535527", "arr", accession="0001535527-24-000123")
         reg.close()
         self.assertIsNone(row)
 
