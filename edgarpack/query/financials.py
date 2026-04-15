@@ -332,6 +332,31 @@ async def financials(
                 )
                 result_metrics[metric] = learned
 
+    if "headcount" in metric_list and result_metrics.get("headcount") is None:
+        accessions_sorted = sorted(doc_map.keys(), reverse=True)
+        fallback = await _scan_headcount_fallback(cik, doc_map, accessions_sorted, force=force)
+        if fallback is not None:
+            value, accn = fallback
+            result_metrics["headcount"] = CitedValue(
+                value=value,
+                unit="headcount",
+                metric="headcount",
+                concept="EntityNumberOfEmployees",
+                period_end=_date.today(),
+                period_start=None,
+                fiscal_year=_date.today().year,
+                fiscal_period="FY",
+                form_type="10-K",
+                filed=_date.today(),
+                accession=accn,
+                cik=cik,
+                company=company_name,
+                taxonomy="dei",
+                accounting_standard="US-GAAP",
+                reporting_currency="USD",
+                source="text-scan",
+            )
+
     # Post-resolution sanity check: flag anomalously low total_debt relative
     # to total_liabilities.  Companies with captive finance subsidiaries
     # (e.g. Ford) may stop tagging consolidated debt in standard XBRL while
@@ -439,6 +464,40 @@ def _check_low_debt(
             f"total liabilities ({liab_val / 1e9:.1f}B). May be missing "
             f"captive finance or financial services subsidiary debt."
         )
+
+
+async def _scan_headcount_fallback(
+    cik: str,
+    doc_map: dict[str, str],
+    accessions: list[str],
+    force: bool = False,
+) -> tuple[int, str] | None:
+    """Return (value, accession) for the first in-bounds headcount match."""
+    from ..sec.headcount_text import scan_headcount_from_text
+
+    cik_bare = cik.lstrip("0")
+    for accn in accessions:
+        primary_doc = doc_map.get(accn, "")
+        if not primary_doc:
+            continue
+        meta = FilingMeta(
+            cik=cik_bare,
+            accession=accn,
+            form_type="",
+            filing_date=_date.min,
+            primary_document=primary_doc,
+            company_name="",
+        )
+        try:
+            html_bytes = await fetch_file(meta, primary_doc)
+        except (HTTPError, OSError, ValueError) as e:
+            logger.warning("headcount fallback fetch failed for %s: %s", accn, e)
+            continue
+        text = html_bytes.decode("utf-8", errors="replace")
+        value = scan_headcount_from_text(text)
+        if value is not None:
+            return value, accn
+    return None
 
 
 def _compute_derived(
@@ -647,6 +706,8 @@ _HKEX_CONCEPT_CANONICAL: dict[str, str] = {
     "CashAndCashEquivalents": "cash_and_equivalents",
     "ResearchAndDevelopmentExpense": "rd_expense",
     "NetCashProvidedByUsedInOperatingActivities": "operating_cash_flow",
+    "EntityNumberOfEmployees": "headcount",
+    "NumberOfEmployees": "headcount",
 }
 
 

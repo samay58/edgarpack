@@ -128,6 +128,24 @@
             }
           ]
         }
+      },
+      "EntityNumberOfEmployees": {
+        "label": "EntityNumberOfEmployees",
+        "units": {
+          "headcount": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 385,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "00100_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_risk_factors"
+            }
+          ]
+        }
       }
     }
   }

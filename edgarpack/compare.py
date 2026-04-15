@@ -105,7 +105,9 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
             "currency": cv.reporting_currency or "",
             "extraction_method": cv.source or "",
         }
-        if cv.reporting_currency and cv.reporting_currency != "USD":
+        if cv.unit == "headcount":
+            entry["headcount"] = int(cv.value)
+        elif cv.reporting_currency and cv.reporting_currency != "USD":
             if rates is None:
                 rates = _load_rates()
             conv = _convert_to_usd(cv.value, cv.reporting_currency, m, cv.fiscal_year, rates)
@@ -149,6 +151,8 @@ def _abbrev_usd(val: float) -> str:
 def _format_value(v: dict[str, Any] | None) -> str:
     if v is None or v.get("value") is None:
         return "n/a"
+    if "headcount" in (v or {}):
+        return f"{int(v['headcount']):,}"
     val = v["value"]
     cur = v.get("currency", "")
     usd = v.get("usd_value")

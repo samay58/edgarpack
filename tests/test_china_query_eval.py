@@ -42,6 +42,7 @@ class GoldenCase:
     fx_convention: str | None
     source: str
     xfail: str | None
+    unit: str | None  # set to "headcount" for non-currency metrics
 
 
 def _load_cases() -> list[GoldenCase]:
@@ -52,7 +53,9 @@ def _load_cases() -> list[GoldenCase]:
     for company in doc.get("companies", []):
         for metric_name, periods in company["metrics"].items():
             for period_name, block in periods.items():
-                for currency in ("native", "usd"):
+                unit = block.get("unit")
+                if unit == "headcount":
+                    # Non-currency metric: only one case, no FX conversion
                     cases.append(
                         GoldenCase(
                             ticker=company["ticker"],
@@ -62,13 +65,33 @@ def _load_cases() -> list[GoldenCase]:
                             fiscal_year=company["fiscal_year"],
                             period=period_name,
                             metric=metric_name,
-                            currency=currency,
-                            expected=block.get(currency),
-                            fx_convention=block.get("fx_convention"),
+                            currency="native",
+                            expected=block.get("native"),
+                            fx_convention=None,
                             source=block.get("source", ""),
                             xfail=block.get("xfail"),
+                            unit=unit,
                         )
                     )
+                else:
+                    for currency in ("native", "usd"):
+                        cases.append(
+                            GoldenCase(
+                                ticker=company["ticker"],
+                                company=company["company"],
+                                accounting_standard=company["accounting_standard"],
+                                reporting_currency=company["reporting_currency"],
+                                fiscal_year=company["fiscal_year"],
+                                period=period_name,
+                                metric=metric_name,
+                                currency=currency,
+                                expected=block.get(currency),
+                                fx_convention=block.get("fx_convention"),
+                                source=block.get("source", ""),
+                                xfail=block.get("xfail"),
+                                unit=unit,
+                            )
+                        )
     return cases
 
 
@@ -89,8 +112,16 @@ def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
     assert cited is not None, f"{case.metric} not returned by query"
     assert cited.value is not None, f"{case.metric} value is None"
 
-    if case.currency == "native":
+    if case.unit == "headcount":
+        # Non-currency metric: compare raw integer value directly, no FX
         actual: float = float(cited.value)
+        if actual != case.expected:
+            pytest.fail(
+                _fail_block(case, actual, rate_used=None),
+                pytrace=False,
+            )
+    elif case.currency == "native":
+        actual = float(cited.value)
         if actual != case.expected:
             pytest.fail(
                 _fail_block(case, actual, rate_used=None),

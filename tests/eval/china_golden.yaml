@@ -93,6 +93,11 @@ companies:
           usd: null
           xfail: edgarpack-483
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug, LTM proxy: annual-only filer, mirrors LFY)"
+      headcount:
+        lfy:
+          native: 385
+          unit: headcount
+          source: "MiniMax 00100.HK FY2024 pack, hkex_risk_factors section"
   - ticker: "02513.HK"
     company: "Zhipu (Knowledge Atlas Technology)"
     accounting_standard: HKFRS
@@ -201,3 +206,8 @@ companies:
           usd: null
           xfail: edgarpack-483
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug, LTM proxy: annual-only filer, mirrors LFY)"
+      headcount:
+        lfy:
+          native: 883
+          unit: headcount
+          source: "Zhipu 02513.HK FY2024 pack, hkex_risk_factors section"

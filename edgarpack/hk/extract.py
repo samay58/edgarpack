@@ -395,6 +395,52 @@ def extract_with_regex(
     return out
 
 
+_HEADCOUNT_PATTERN = re.compile(
+    r"(?<!less than )(?<!fewer than )(?<!more than )(?<!over )"
+    r"(\d{1,3}(?:,\d{3})*|\d+)[^\S\n]+(?:full[^\S\n]*-?[^\S\n]*time[^\S\n]+)?employees",
+    re.IGNORECASE,
+)
+
+_HEADCOUNT_MIN = 50
+_HEADCOUNT_MAX = 5_000_000
+
+
+def extract_headcount_from_pack(pack_dir: Path) -> HKFact | None:
+    import logging
+
+    logger = logging.getLogger(__name__)
+    sections_dir = pack_dir / "sections"
+    if not sections_dir.exists():
+        return None
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        return None
+    manifest = json.loads(manifest_path.read_text())
+    fy: int = manifest["fiscal_year"]
+
+    for section_file in sorted(sections_dir.glob("*.md")):
+        text = section_file.read_text()
+        for m in _HEADCOUNT_PATTERN.finditer(text):
+            raw = m.group(1).replace(",", "")
+            try:
+                value = int(raw)
+            except ValueError:
+                continue
+            if _HEADCOUNT_MIN <= value <= _HEADCOUNT_MAX:
+                return HKFact(
+                    metric="headcount",
+                    concept="EntityNumberOfEmployees",
+                    value=value,
+                    unit="headcount",
+                    section_id=section_file.stem,
+                    extraction_method="regex",
+                    matched_label=m.group(0),
+                )
+            logger.warning("headcount candidate %s out of bounds in %s", value, section_file.name)
+    _ = fy  # reserved for future per-period attribution
+    return None
+
+
 def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
     manifest = json.loads((pack_dir / "manifest.json").read_text())
     standard: AccountingStandard = manifest["accounting_standard"]
@@ -430,6 +476,10 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
                 )
             )
 
+    headcount_fact = extract_headcount_from_pack(pack_dir)
+    if headcount_fact is not None:
+        all_facts.append(headcount_fact)
+
     if llm_fallback:
         from .llm_extract import fill_missing_with_llm
 
@@ -438,11 +488,12 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
     nested: dict = {standard.lower(): {}}
     for fact in all_facts:
         concept_key = fact.concept
+        fact_unit = fact.unit if fact.unit == "headcount" else currency
         nested[standard.lower()].setdefault(
             concept_key,
-            {"label": concept_key, "units": {currency: []}},
+            {"label": concept_key, "units": {}},
         )
-        nested[standard.lower()][concept_key]["units"].setdefault(currency, []).append(
+        nested[standard.lower()][concept_key]["units"].setdefault(fact_unit, []).append(
             {
                 "start": f"{fy}-01-01",
                 "end": f"{fy}-12-31",

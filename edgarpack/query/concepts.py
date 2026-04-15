@@ -318,6 +318,10 @@ METRIC_MAP: dict[str, MetricMeta] = {
         ),
         duration=False,
     ),
+    "headcount": MetricMeta(
+        concepts=("EntityNumberOfEmployees", "NumberOfEmployees"),
+        duration=False,
+    ),
     "shares_basic_wavg": MetricMeta(
         concepts=("WeightedAverageNumberOfSharesOutstandingBasic",),
         duration=True,
