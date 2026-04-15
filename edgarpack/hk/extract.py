@@ -82,6 +82,13 @@ _SECTION_METRICS: dict[str, list[str]] = {
     "hkex_equity_changes": [],
 }
 
+
+def _scope_for_section(section_id: str) -> set[str] | None:
+    metrics = _SECTION_METRICS.get(section_id)
+    if metrics is None:
+        return None
+    return set(metrics)
+
 _CONCEPT_NAME: dict[str, str] = {
     "revenue": "Revenue",
     "gross_profit": "GrossProfit",
