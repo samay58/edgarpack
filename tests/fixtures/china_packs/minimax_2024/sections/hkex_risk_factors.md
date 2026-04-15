@@ -36,7 +36,6 @@ unfair-competition laws in the PRC and other jurisdictions, and (ii) contractual
 as confidentiality undertakings, invention-assignment covenants and license agreements. All
 SUMMARY
 –1 5–
-
 employment and key commercial contracts expressly delineate ownership of, and obligations
 to protect, intellectual property created or used in the course of our business. During the Track
 Record Period, our core technologies were patented. Such patents are typically valid for 10 to
@@ -75,7 +74,6 @@ to the vote at general meetings of the Company, subject to Rule 8A.24 of the Lis
 requires the Reserved Matters to be voted on a one vote per share basis.
 SUMMARY
 –1 6–
-
 The table below sets out the beneficial interests entitled to and voting rights to be held
 by the WVR Beneficiaries upon the completion of the Global Offering (assuming the Offer
 Size Adjustment Option and the Over-allotment Option are not exercised):
@@ -127,7 +125,6 @@ see “Summary of the Constitution of our Company and Cayman Islands Company Law
 Articles of Association” in Appendix III to this Prospectus for further details.
 SUMMARY
 –1 7–
-
 OUR CONTROLLING SHAREHOLDERS
 Immediately following the completion of the Global Offering (assuming the Offer Size
 Adjustment Option and the Over-allotment Option are not exercised), an aggregate of
@@ -167,7 +164,6 @@ information included in the Accountants’ Report set out in Appendix I, includi
 accompanying notes, and the information set forth in “Financial Information.”
 SUMMARY
 –1 8–
-
 Summary of Consolidated Statements of Profit or Loss
 The following table sets forth a summary of our consolidated statements of profit or loss,
 in absolute amounts and as a percentage of our total revenue, for the periods indicated. See
@@ -212,7 +208,6 @@ Basic and diluted
 year/period (US$) /H1118/H1118/H1118/H1118(0.74) (2.56) (4.28) (2.80) (4.71)
 SUMMARY
 –1 9–
-
 Non-IFRS Financial Measure
 We use adjusted net loss (non-IFRS measure), which is a non-IFRS financial measure, in
 evaluating our operating results and for financial and operational decision-making purposes.
@@ -259,7 +254,6 @@ Adjusted net loss for the year/period (non-
 IFRS measure) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(12,150) (89,074) (244,243) (170,179) (186,280)
 SUMMARY
 –2 0–
-
 We recorded US$73.7 million, US$269.2 million, US$465.2 million, US$304.3 million
 and US$512.0 million in loss for the year/period in 2022, 2023, 2024 and for the nine months
 ended September 30, 2024 and 2025, respectively, due to significant initial investment in
@@ -301,7 +295,6 @@ Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,22
 Cash and cash equivalents /H1118/H11184,691 206,295 288,912 362,647
 SUMMARY
 –2 1–
-
 As of December 31,
 As of
 September 30,
@@ -344,7 +337,6 @@ US$4.7 million as of December 31, 2022 to US$206.3 million as of December 31, 20
 (ii) the recognition of time deposits of US$91.7 million.
 SUMMARY
 –2 2–
-
 Our net current liabilities increased from US$343.3 million as of December 31, 2023 to
 US$902.0 million as of December 31, 2024, primarily due to (i) an increase in convertible
 redeemable preferred shares from US$629.0 million as of December 31, 2023 to US$1,581.9
@@ -385,7 +377,6 @@ million as of December 31, 2024, primarily due to an increase of US$465.2 millio
 accumulated losses for the period, partially offset by (i) an increase of US$6.8 million in the
 SUMMARY
 –2 3–
-
 recognition of share-based payment expenses, (ii) an increase of US$0.4 million in the
 exchange differences on translation of foreign operations, and (iii) an increase of US$0.7
 million of change in fair value of equity investments at fair value through other comprehensive,
@@ -427,7 +418,6 @@ early stages of commercialization. In particular, our operating cash outflows we
 attributable to (i) significant research and development expenses, including staff costs for our
 SUMMARY
 –2 4–
-
 R&D and AI infrastructure teams and substantial third-party cloud services and other
 computing-related costs incurred for training and operating our foundation models, (ii) our
 early stage of commercialisation, during which our AI-native products and Open Platform only
@@ -465,7 +455,6 @@ approximately until March 2030.
 See “Financial Information — Cash Burn” for details.
 SUMMARY
 –2 5–
-
 COMMERCIALIZATION AND BUSINESS SUSTAINABILITY
 Commercialization of our Specialist Technology Products
 Since our inception, our commercial strategy has centered on two key areas: developing
@@ -507,7 +496,6 @@ intelligence level of our models, improved model and system efficiency, optimiza
 infrastructure allocation, and increased scale of revenue relative to compute intensity, in line
 SUMMARY
 –2 6–
-
 with our strategy to enhance efficiency of our AI infrastructure. In particular, gross margin of
 AI-native products significantly improved during the Track Record Period due to
 improvements in user engagement and monetization and introduction of new monetized
@@ -551,7 +539,6 @@ Based on the foregoing, our Directors believe, and the Joint Sponsors concur, th
 business is sustainable. See “Business — Commercialization and Business Sustainability.”
 SUMMARY
 –2 7–
-
 KEY FINANCIAL RATIOS
 The following table sets forth certain of our key financial ratios for the periods indicated:
 For the year ended December 31,
@@ -587,7 +574,6 @@ Rules, with reference to our expected market capitalization at the time of Listi
 exceeds HK$40 billion based on the low-end of the indicative Offer Price range.
 SUMMARY
 –2 8–
-
 GLOBAL OFFERING STATISTICS
 All statistics in the following table are based on the assumption that the Offer Size
 Adjustment Option and the Over-allotment Option are not exercised.
@@ -636,7 +622,6 @@ expected to be charged to our consolidated statements of profit or loss, and app
 HK$134.7 million is expected to be accounted for as a deduction from equity upon the Listing.
 SUMMARY
 –2 9–
-
 Future Plans and Use of Proceeds
 We estimate that we will receive net proceeds from the Global Offering of approximately
 HK$3,818.3 million, after deducting underwriting commissions, fees and estimated expenses
@@ -675,7 +660,6 @@ any material project delays, customer cancellations, revenue shortfalls or credi
 attributable to the pandemic.
 SUMMARY
 –3 0–
-
 RECENT DEVELOPMENTS
 As of the Latest Practicable Date, we had not experienced any material impact from
 tariffs, export controls, or other trade-related measures imposed by governmental authorities in
@@ -718,7 +702,6 @@ restriction measures may adversely impact our business, financial condition and 
 operations.”
 SUMMARY
 –3 1–
-
 Export Control Regulations
 In recent years, the United States has expanded export controls restrictions on China
 through the Export Administration Regulations (the “ EAR”), administered by the Bureau of
@@ -759,7 +742,6 @@ self-harm. For example, California’s law, effective January 2026, includes spe
 for minors and establishes a private right of action allowing for statutory damages.
 SUMMARY
 –3 2–
-
 We are in the process of reviewing these regulations to ensure the continued compliance
 of our Talkie application. Based on (i) an assessment of the current features and functionalities
 of Talkie and (ii) research conducted on existing state legislation and regulations governing
@@ -788,7 +770,6 @@ ongoing efforts to ensure responsible AI development, please refer to the sectio
 “Business — Research and Development.”
 SUMMARY
 –3 3–
-
 In this Prospectus, unless the context otherwise requires, the following terms shall
 have the meanings set out below. Certain other terms are explained in the section headed
 “Glossary of Technical Terms” in this Prospectus.
@@ -826,7 +807,6 @@ Saturday, Sunday or public holiday in Hong Kong
 “BVI” the British Virgin Islands
 DEFINITIONS
 –3 4–
-
 “Capital Market Intermediaries”
 or “capital market
 intermediary(ies)” or “CMI(s)”
@@ -865,7 +845,6 @@ share basis
 “close associate(s)” has the meaning ascribed thereto under the Listing Rules
 DEFINITIONS
 –3 5–
-
 “Companies (Winding Up and
 Miscellaneous Provisions)
 Ordinance”
@@ -906,7 +885,6 @@ the corporate governance committee of the Board
 “Director(s)” the director(s) of our Company
 DEFINITIONS
 –3 6–
-
 “Dr. Y an” Dr. Y an Junjie (௫), the founder, the chairman of the
 Board, chief executive officer, chief technology officer
 and one of our Controlling Shareholders
@@ -944,7 +922,6 @@ subsidiaries and Consolidated Affiliated Entity of our
 Company at the relevant time
 DEFINITIONS
 –3 7–
-
 “HK eIPO White Form ” the application for Hong Kong Offer Shares to be issued
 in the applicant’s own name by submitting applications
 online through the designated website at www.hkeipo.hk
@@ -986,7 +963,6 @@ permits, shall include the Operational Procedures of
 HKSCC
 DEFINITIONS
 –3 8–
-
 “Hong Kong” or “HK” the Hong Kong Special Administrative Region of the
 PRC
 “Hong Kong Offer Shares” the 1,269,480 Class A Ordinary Shares (subject to
@@ -1026,7 +1002,6 @@ Underwriting Arrangements and Expenses — Hong Kong
 Public Offering — Hong Kong Underwriting Agreement”
 DEFINITIONS
 –3 9–
-
 “ICP License(s)” the value-added telecommunications business operation
 licence (ุਕ຾ᐄ஢̙ᗇ) issued by MIIT with a
 service scope of Internet information service, a
@@ -1067,7 +1042,6 @@ to enter into the International Underwriting Agreement to
 underwrite the International Offering
 DEFINITIONS
 –4 0–
-
 “International Underwriting
 Agreement”
 the underwriting agreement relating to the International
@@ -1104,7 +1078,6 @@ Enterprises by Foreign Investors (Իᒅ
 )
 DEFINITIONS
 –4 1–
-
 “Main Board” the stock exchange (excluding the option market)
 operated by the Stock Exchange which is independent
 from and operated in parallel with the GEM of the Hong
@@ -1143,7 +1116,6 @@ and our chief operating officer
 ɽึ)
 DEFINITIONS
 –4 2–
-
 “Offer Price” the final offer price per Offer Share (exclusive of
 brokerage of 1%, SFC transaction levy of 0.0027%, Hong
 Kong Stock Exchange trading fee of 0.00565% and
@@ -1186,7 +1158,6 @@ which are described in “Structure of the Global Offering
 — Over-allotment Option”
 DEFINITIONS
 –4 3–
-
 “Overseas Listing Trial
 Measures”
 The Trial Administrative Measures of Overseas
@@ -1227,7 +1198,6 @@ Shares, the Series Pre-B+ Preferred Shares and the Series
 Pre-B++ Preferred Shares
 DEFINITIONS
 –4 4–
-
 “Price Determination Agreement” the agreement to be entered into between our Company
 and the Overall Coordinators (for themselves and on
 behalf of the Underwriters) on the Price Determination
@@ -1264,7 +1234,6 @@ Company
 (̮ි၍ଣ҅)
 DEFINITIONS
 –4 5–
-
 “SAMR” the State Administration for Market Regulation of the
 PRC (̹ఙ္ຖ၍ଣᐼ҅)
 “Sanctioned Target” any person or entity (i) designated on any list of targeted
@@ -1304,7 +1273,6 @@ the PRC on November 3, 2021, a wholly owned
 subsidiary of the Company
 DEFINITIONS
 –4 6–
-
 “Share(s)” ordinary and/or preferred shares in the share capital of
 our Company of US$0.0001 each
 “Shareholder(s)” holder(s) of our Share(s)
@@ -1335,7 +1303,6 @@ States
 “V A T” value-added tax
 DEFINITIONS
 –4 7–
-
 “WVR Beneficiary(ies)” has the meaning ascribed to it under the Hong Kong
 Listing Rules and unless the context otherwise requires,
 refers to each of Dr. Y an and Ms. Y un, being the holder
@@ -1345,7 +1312,6 @@ Listing Rules
 “%” per cent
 DEFINITIONS
 –4 8–
-
 This glossary of technical terms contains explanations of certain technical terms
 used in this Prospectus. As such, these terms and their meanings may not correspond to
 standard industry meanings or usage of these terms.
@@ -1384,7 +1350,6 @@ developers to access and integrate a company’s services
 or data into their own applications
 GLOSSARY OF TECHNICAL TERMS
 –4 9–
-
 “app” or “application” application software designed to run on smartphones and
 other mobile devices
 “Asia-Pacific” A geographic region comprising countries in East Asia,
@@ -1420,7 +1385,6 @@ and text, by gradually adding noise to a data point and
 then learning to reverse this process
 GLOSSARY OF TECHNICAL TERMS
 –5 0–
-
 “DiT” diffusion models with transformers, a type of diffusion
 model that utilizes the transformer architecture as its
 backbone for image generation
@@ -1457,7 +1421,6 @@ tasks at once, widely used in AI to speed up model
 training and data processing
 GLOSSARY OF TECHNICAL TERMS
 –5 1–
-
 “High and New Technology
 Enterprise”
 refers to an enterprise established in the PRC that is
@@ -1501,7 +1464,6 @@ computation constitutes an inference activity
 trained AI model to process inputs and generate outputs
 GLOSSARY OF TECHNICAL TERMS
 –5 2–
-
 “inference latency” the time delay between providing inputs to an AI model
 and receiving outputs from the model
 “Intelligent Agent Application” a software application powered by AI that can understand
@@ -1544,7 +1506,6 @@ maintain context and coherence over extended
 interactions with users
 GLOSSARY OF TECHNICAL TERMS
 –5 3–
-
 “MAU” monthly active user, the number of unique devices that
 performed at least one action on our AI-native
 applications and the number of registered user accounts
@@ -1582,7 +1543,6 @@ generation models create original musical compositions
 or continuations in various styles and formats
 GLOSSARY OF TECHNICAL TERMS
 –5 4–
-
 “MoE” or “Mixture-of-Experts
 architecture”
 Mixture-of-Experts, an AI model architecture that uses a
@@ -1621,7 +1581,6 @@ problems based on input data, often across multiple steps
 or contexts
 GLOSSARY OF TECHNICAL TERMS
 –5 5–
-
 “reinforcement learning from
 human feedback” or “RLHF”
 the process that reinforces the model with human
@@ -1661,7 +1620,6 @@ a task after it has been trained
 processing and output generation for models
 GLOSSARY OF TECHNICAL TERMS
 –5 6–
-
 “Transformer” the sophisticated neural network architecture that can
 efficiently processes sequential data, such as text, by
 utilizing attention mechanisms to prioritize key input
@@ -1679,7 +1637,6 @@ learns motion, visual consistency, and temporal
 coherence to produce realistic or stylized video outputs
 GLOSSARY OF TECHNICAL TERMS
 –5 7–
-
 We have included in this Prospectus forward-looking statements. Statements that are
 not historical facts, including statements about our intentions, beliefs, expectations or
 predictions for the future, are forward-looking statements.
@@ -1715,7 +1672,6 @@ specifications;
  our ability to retain senior management and key personnel and recruit qualified staff;
 FORW ARD-LOOKING STATEMENTS
 –5 8–
-
  our business strategies and plans to achieve these strategies;
  the effectiveness of our quality control systems;
  change or volatility in interest rates, foreign exchange rates, equity prices, trading
@@ -1742,7 +1698,6 @@ were made as of the date of this Prospectus. Any such information may change in 
 developments.
 FORW ARD-LOOKING STATEMENTS
 –5 9–
-
 An investment in our Class A Ordinary Shares involves significant risks. You should
 carefully consider all of the information in this Prospectus, including the risks and
 uncertainties described below, before deciding to invest in our Class A Ordinary Shares.
@@ -1782,7 +1737,6 @@ We anticipate that our operating expenses, net losses, net liabilities and cash 
 operations will continue to increase in the foreseeable future as we continue to expand our
 RISK FACTORS
 –6 0–
-
 business and operations, invest in our foundation model research and development, and carry
 out sales and marketing activities. If we fail to manage such increases, our business operations,
 results of operations, financial position and profitability would be materially adversely
@@ -1825,7 +1779,6 @@ direct infringement, on the basis that the Company itself, through Hailuo AI, cr
 displayed videos and images depicting a number of well-known film and animation characters
 RISK FACTORS
 –6 1–
-
 owned by the Plaintiffs, and (ii) secondary infringement, under contributory and vicarious
 infringement doctrines, on the basis that the Company knew or should have known that users
 could create content depicting the Plaintiffs’ characters, and because the Company is allegedly
@@ -1869,7 +1822,6 @@ clarity and standardization. While such developments may reduce certain areas of
 they may also result in a more active IP enforcement environment. For example, holders of
 RISK FACTORS
 –6 2–
-
 exclusive licenses, or future exclusive licensees of copyrighted works, may seek to assert or
 enforce their licensed rights against third parties, including through infringement claims, which
 could expose us to additional legal risks.
@@ -1911,7 +1863,6 @@ model algorithm, computing infrastructure, alignment and safety features built a
 general-use models.
 RISK FACTORS
 –6 3–
-
 The foundation model market is expanding at an unprecedented pace, rapidly reshaping
 human society. According to CIC, the global foundation model market is projected to exceed
 US$300 billion by 2030. IDC estimates that AI will cumulatively contribute US$19.9 trillion
@@ -1953,7 +1904,6 @@ views of policymakers and regulators and result in decreased adoption of foundat
 technologies.
 RISK FACTORS
 –6 4–
-
 In addition, flaws or deficiencies in foundation model technologies could compromise the
 accuracy, reliability, integrity and thoroughness of the recommendations, forecasts or analyses
 generated by our products. If the recommendations, forecasts or analyses that our foundation
@@ -1998,7 +1948,6 @@ difficulties in commercializing our research and development results. In additio
 successfully developed products may not achieve market acceptance to the extent we
 RISK FACTORS
 –6 5–
-
 anticipate. Moreover, given the rapid pace of innovation in the global foundation model
 industry, new technological developments could render our current or future technologies
 obsolete or less competitive, thereby limiting our ability to recover related development costs,
@@ -2031,7 +1980,6 @@ talents as well as staff with in-depth industry know-how;
  adapt to evolving regulatory environment; and
 RISK FACTORS
 –6 6–
-
  defend ourselves against litigation, regulatory, intellectual property, privacy, data
 protection or other claims.
 All of these initiatives involve inherent risks and will require significant research and
@@ -2067,7 +2015,6 @@ our foundation model products;
 programs and reporting systems; and
 RISK FACTORS
 –6 7–
-
  addressing new markets and potentially unforeseen challenges as they arise.
 If we fail to efficiently manage our business expansion, our costs and expenses may
 increase faster than anticipated, and we may not be able to respond promptly to competitive
@@ -2110,7 +2057,6 @@ revenues, and failure to expand successfully could have a material adverse effec
 business and prospects. We may also experience downward pressure on our operating margin
 RISK FACTORS
 –6 8–
-
 as a result of such business expansion of our business into new areas, which may have margins
 much lower than that of our existing business lines. Our operating margin may also be
 negatively impacted from a greater proportion of revenue contributed by new business areas,
@@ -2151,7 +2097,6 @@ competitive position would be impacted and our business, financial condition and
 operations may be materially and adversely affected.”
 RISK FACTORS
 –6 9–
-
 In particular, our business growth relies on our ability to identify and adapt to the needs
 of our users and develop products that meet their demands. Our ability to retain existing users,
 attract new users, and increase revenue from both new and existing users will depend on a
@@ -2195,7 +2140,6 @@ and operating margin for our products, our business, results of operations and f
 condition would be adversely affected.
 RISK FACTORS
 –7 0–
-
 The execution of our growth strategies will also require substantial capital investment and
 resource allocation. In particular, we may fund some of our expansion plans through our
 internal financial resources, and may also seek external equity or debt financings to implement
@@ -2230,7 +2174,6 @@ the overall business environment of our company; and
  the overall business environment of the industry.
 RISK FACTORS
 –7 1–
-
 In addition, we deliver certain products on a subscription basis. As a result, our future
 revenue depends in part on our ability to retain existing users and encourage renewals of
 subscriptions, which is in turn dependent on our ability to scale and adapt our products to meet
@@ -2267,7 +2210,6 @@ Assets Control and other relevant authorities;
 or export certain technologies or limit our ability to raise capital; and
 RISK FACTORS
 –7 2–
-
  more limited protection for intellectual property rights in some countries.
 Our failure to manage any of these risks successfully could harm our international
 operations, and adversely affect our business, operating results and financial condition.
@@ -2309,7 +2251,6 @@ other enforcement actions, product changes or usage restrictions. Even if such c
 ultimately unsuccessful, defending against them could be costly and time-consuming, could
 RISK FACTORS
 –7 3–
-
 divert management attention, could require increased spending on safety, compliance and
 customer support, and could cause reputational harm, any of which could materially and
 adversely affect our business, operations and financial performance.
@@ -2352,7 +2293,6 @@ our current market share, and successfully differentiate our products from those
 competitors.
 RISK FACTORS
 –7 4–
-
 Achieving these goals require substantial expenditures, and we anticipate expenses to
 increase as we expand into new markets. In addition to marketing and advertising costs, we
 may need to invest in customer support, public relations, community engagement, and
@@ -2396,7 +2336,6 @@ our cybersecurity measures or those of our users fail to protect against unautho
 attacks (which may include sophisticated cyber-attacks), the compromise or mishandling of
 RISK FACTORS
 –7 5–
-
 data, or other misconduct or malfeasance, including by computer hackers, employees,
 contractors, vendors, users and business partners, as well as software bugs, human error or
 technical malfunctions, then our reputation, business, operating results and financial condition
@@ -2436,7 +2375,6 @@ Specifically, our competitors may develop their own products using our open-sour
 technology to compete with us, potentially reducing the demand for our products.
 RISK FACTORS
 –7 6–
-
 In addition, we may from time to time, use open-source technology in certain of our
 operations and expect to continue using certain open-source technology in the future. There
 remains a risk that third parties may assert claims of ownership or seek to enforce the terms
@@ -2481,7 +2419,6 @@ to the Internet generally or these distribution channels for reasons of security
 data privacy or other concerns, and there is no assurance that we will be able to maintain stable
 RISK FACTORS
 –7 7–
-
 relationships with these distribution channels. Any restriction on access to the Internet in
 general or these distribution channels or the failure to maintain relationship with these
 distribution channels could result in the loss of existing users, slower user growth, or increased
@@ -2520,7 +2457,6 @@ could fail to retain them, which could have a material adverse impact on our fut
 operations, results of operations and financial condition.
 RISK FACTORS
 –7 8–
-
 We face risks related to changes in global and regional macroeconomic conditions,
 geopolitical tensions, regional conflicts, terrorist activities, natural disasters, health
 epidemics and other outbreaks of contagious diseases, and other force majeure events, any
@@ -2563,7 +2499,6 @@ global or PRC economy may materially and adversely affect our business, results 
 and financial condition.
 RISK FACTORS
 –7 9–
-
 In addition, natural disasters such as floods, earthquakes, sandstorms, snowstorms, fire or
 drought, the outbreak of a widespread health epidemic or any severe epidemic disease such as
 SARS, Ebola, Zika or the COVID-19, acts of war, terrorism or other force majeure events
@@ -2608,7 +2543,6 @@ manufacturing items. Separately, BIS issued the so-called “Affiliate Rule” t
 scope of the Entity List and Military End-User List to include entities owned 50 percent or
 RISK FACTORS
 –8 0–
-
 more directly or indirectly, individually or in the aggregate, by one or more listed parties. The
 U.S. Government has indicated that implementation of the Affiliate Rule will be delayed for
 at least one year (i.e., until November 2026). These recent measures together with the U.S.
@@ -2652,7 +2586,6 @@ international investment policies, particularly with regard to China, could mate
 adversely impact our business and operating results. In particular, in January 2025, a U.S. rule
 RISK FACTORS
 –8 1–
-
 went into effect that prohibits or requires the submission of notifications in connection with
 U.S. outbound investment in Chinese-affiliated companies engaged in certain activities
 involving specified sensitive technologies sectors (artificial intelligence (“AI”),
@@ -2697,7 +2630,6 @@ Class A Ordinary Shares. In extreme cases, such conflicts could result in econom
 that materially and adversely impact our operations. It is unclear whether these challenges and
 RISK FACTORS
 –8 2–
-
 uncertainties will be contained or resolved, and what effects they may have on the global
 political and economic conditions in the long term and the ability of Chinese companies to
 raise capital from U.S. investors.
@@ -2737,7 +2669,6 @@ copyright. Given the amount of user-supplied contents, the way they were inputte
 the passage of time since they were initially inputted, it is generally impracticable for us to
 RISK FACTORS
 –8 3–
-
 accurately identify and verify the individual users that inputted or provided such content, the
 copyright status of such content, and the appropriate copyright owners from whom copyright
 licenses should have been obtained.
@@ -2780,7 +2711,6 @@ information is involved, shall obtain the individual’s consent or meet other
 circumstances prescribed by laws and administrative regulations; (iv) Take
 RISK FACTORS
 –8 4–
-
 effective measures to improve the quality of training data and enhance the
 authenticity, accuracy, objectivity, and diversity of training data; (v) Other
 relevant provisions of laws and administrative regulations such as the
@@ -2822,7 +2752,6 @@ addition, individual users who supply infringing content on certain of our produ
 sufficient resources to fully indemnify us, if at all, for any such claims. Also, such measures
 RISK FACTORS
 –8 5–
-
 may fail or be considered insufficient by courts or other relevant regulatory authorities. We
 may be subject to joint infringement liability with the users, which may materially and
 adversely affect our business, financial position, and reputation.
@@ -2866,7 +2795,6 @@ intellectual property rights, which may expose us to greater risk of infringemen
 parties.
 RISK FACTORS
 –8 6–
-
 In addition, any litigation initiated by us concerning the infringement by third parties of
 our intellectual property rights is likely to be expensive and time consuming and could lead to
 the invalidation of, or render unenforceable, our intellectual property rights, or could otherwise
@@ -2911,7 +2839,6 @@ independently develop similar techniques, our competitive advantage may be mater
 harmed, and we may have limited legal remedies to enforce our rights.
 RISK FACTORS
 –8 7–
-
 Moreover, our intellectual property strategy is closely linked to our ability to maintain
 and enhance our brand reputation. Adverse publicity, with or without merits, relating to events
 or activities attributed to us, our management, directors, employees, shareholders, business
@@ -2956,7 +2883,6 @@ infringement of third-party patents, copyrights or trade secrets. For example, o
 2025, a group of major U.S. movie studio companies, including Disney, Universal and Warner
 RISK FACTORS
 –8 8–
-
 Bros. Discovery (the “ Plaintiffs ”), filed a civil complaint (the “ Complaint ”) in the United
 States District Court for the Central District of California, against our Group in relation to
 Hailuo AI, our visual generation platform. As this case is still at an early stage, we cannot
@@ -3002,7 +2928,6 @@ aggressive and opportunistic actions of non-practicing entities whose business m
 obtain patent-licensing revenues from operating companies such as us. Any such assertion,
 RISK FACTORS
 –8 9–
-
 regardless of merit, may be time consuming and expensive to resolve and result in litigation
 or may require us to obtain a license for the intellectual property rights of third parties. Such
 licenses may not be available or they may not be available on commercially reasonable terms.
@@ -3045,7 +2970,6 @@ require a commitment of management and personnel resources that will be diverted
 normal business operations. There may also be negative publicity associated with litigation that
 RISK FACTORS
 –9 0–
-
 could decrease consumer acceptance of our products, regardless of whether the allegations are
 valid or whether we are ultimately found liable. If any of these happens, our business, financial
 condition, results of operations or liquidity could be materially and adversely affected. In
@@ -3081,7 +3005,6 @@ necessary to enforce and determine the scope of our proprietary rights, and fail
 maintain trade secret protection could adversely affect our competitive position.
 RISK FACTORS
 –9 1–
-
 Any investments or future acquisitions may have a material adverse effect on our
 business, reputation, financial condition and results of operations.
 We may evaluate and consider a wide array of investment and acquisition opportunities
@@ -3116,7 +3039,6 @@ does not close;
  the costs of identifying and consummating investments and acquisitions;
 RISK FACTORS
 –9 2–
-
  the use of substantial amounts of cash and potentially dilutive issuances of equity
 securities;
  the occurrence of significant amortization expenses for other intangible assets; and
@@ -3157,7 +3079,6 @@ Industry and Security (“BIS”) has issued an entity list (the “Entity List�
 frequently updating the Entity List to include more PRC-based hi-tech companies. New
 RISK FACTORS
 –9 3–
-
 persons and entities are regularly added to the Entity List and the list of Sanctioned Targets.
 PRC-based companies on the Entity List are subject to trade sanctions and export controls on
 a number of components and technologies developed by U.S. companies. Further, new
@@ -3204,7 +3125,6 @@ Treasury or by any court or other regulatory, judicial or legal authority to spe
 In addition, the technologies of our business could change such that we are engaged in “covered
 RISK FACTORS
 –9 4–
-
 activities” that trigger the OIP’s prohibitions, or the OIP may be changed by executive actions
 of the U.S. government, including modifications to the scope of activities and technologies that
 are subject to prohibitions or notification requirements, or changes to the scope and availability
@@ -3245,7 +3165,6 @@ which we operate may not support the demands associated with continued growth in
 usage.
 RISK FACTORS
 –9 5–
-
 The failure of telecommunications network operators to provide us with the requisite
 bandwidth could also interfere with the speed and availability of our products. We have no
 control over the costs of the services provided by the telecommunications operators. If the
@@ -3283,7 +3202,6 @@ potential liability, any of which could have an adverse impact on our business, 
 operations and financial conditions.
 RISK FACTORS
 –9 6–
-
 Disruptions and unauthorized access such as cyberattacks on our IT systems or those of
 third-party service providers could have a material adverse effect on our business
 operations, results of operations, reputation and financial condition.
@@ -3324,7 +3242,6 @@ or events could materially and adversely affect our business operations, results
 and financial condition.
 RISK FACTORS
 –9 7–
-
 We may not have sufficient insurance coverage to cover our business risks.
 We believe we maintain insurance policies in line with industry standards. We do not
 maintain business interruption insurance, key-man life insurance or litigation insurance. Any
@@ -3361,7 +3278,6 @@ including, but not limited to:
  enhancements to our systems and facilities;
 RISK FACTORS
 –9 8–
-
  potential acquisitions of businesses and solution lines; and
  general economic conditions, including the effects of international conflicts and
 their impact on the global foundation model industry in particular.
@@ -3399,7 +3315,6 @@ provisions and write-off the relevant receivables and hence our liquidity and fi
 condition would be adversely affected.
 RISK FACTORS
 –9 9–
-
 Fluctuations in changes in fair value of our financial assets at fair value through profit or
 loss would affect our financial results.
 We have invested in, and intend to continue to selectively invest in, businesses, assets and
@@ -3441,7 +3356,6 @@ cannot assure you that the PRC policies on preferential tax treatments will not 
 the current preferential tax treatments we enjoy or will be entitled to enjoy will not be
 RISK FACTORS
 – 100 –
-
 canceled. Moreover, we cannot assure you that our PRC subsidiaries will be able to renew the
 same preferential tax treatments upon expiration. If any such change, cancelation or
 discontinuation of preferential tax treatment occurs, the relevant PRC subsidiaries will be
@@ -3482,7 +3396,6 @@ impose restrictions on access to computing infrastructure, or introduce national
 reviews of AI and foundation model technologies, which could adversely affect our
 RISK FACTORS
 – 101 –
-
 commercialization pace, product deployment or international expansion. Actions taken by
 governments to manage inflation, devalue currencies, impose capital controls, or regulate
 technology exports or imports may also materially impact our operations.
@@ -3525,7 +3438,6 @@ approval or complete such administrative procedures and these regulatory authori
 impose fines and penalties on us or our shareholders, limit our operating activities in the PRC,
 RISK FACTORS
 – 102 –
-
 limit our ability to pay dividends outside the PRC, delay or restrict the repatriation of the
 proceeds from the Global Offering into the PRC or take other actions to restrict our financing
 activities, which could have a material adverse effect on our business.
@@ -3566,7 +3478,6 @@ against the foreign currency could adversely affect our business, results of ope
 financial condition, and the value of any dividends payable in foreign currencies.
 RISK FACTORS
 – 103 –
-
 Y ou may experience difficulties in effecting service of legal process, enforcing foreign
 judgments or bringing actions in China against us or our management named in the
 document based on foreign laws.
@@ -3611,7 +3522,6 @@ public interest, the PRC court may not enforce the foreign judgment against our 
 managements in China.
 RISK FACTORS
 – 104 –
-
 We may rely on dividends and other distributions on equity paid by our subsidiaries to
 fund any cash and financing requirements we may have, and any limitation on the ability
 of our subsidiaries to make payments to us could have a material and adverse effect on
@@ -3655,7 +3565,6 @@ foreign-invested real estate enterprises). See “Regulatory Overview — Regula
 Foreign Exchange” for details on foreign exchange related regulations.
 RISK FACTORS
 – 105 –
-
 In light of the various requirements imposed by PRC regulations on loans to and direct
 investment in PRC entities by offshore holding companies, we cannot assure you that we will
 be able to complete the necessary government registrations or obtain the necessary government
@@ -3699,7 +3608,6 @@ devaluation of the Renminbi against the Hong Kong dollar could reduce the amount
 dividends on our Class A Ordinary Shares in Hong Kong dollar terms. In addition, there are
 RISK FACTORS
 – 106 –
-
 limited instruments available for us to reduce our exposure to foreign currency risk at
 reasonable costs. Any of the foregoing factors may materially and adversely affect our
 businesses, results of operations, financial condition and prospects.
@@ -3741,7 +3649,6 @@ complete such transactions, which could affect our ability to expand our busines
 our market share.
 RISK FACTORS
 – 107 –
-
 PRC regulations relating to the establishment of offshore special purpose companies by
 PRC residents may subject our PRC resident beneficial owners or our PRC subsidiaries
 to liability or penalties, limit our ability to inject capital into our PRC subsidiaries, limit
@@ -3784,7 +3691,6 @@ result, our business operations and our ability to make distributions to you cou
 and adversely affected.
 RISK FACTORS
 – 108 –
-
 Furthermore, with the promulgation of new laws, regulations and standards concerning
 foreign exchange regulations in the future, we are required to comply with these laws,
 regulations and standards concerning offshore or cross-border transactions, otherwise we may
@@ -3829,7 +3735,6 @@ income at the rate of 25%. Furthermore, if we are treated as a PRC tax resident 
 will be required to withhold a 10% tax from dividends we pay to our shareholders that are
 RISK FACTORS
 – 109 –
-
 non-resident enterprises. In addition, non-resident enterprise shareholders may be subject to
 PRC tax at a rate of 10% on gains realized on the sale or other disposition of Offer Shares, if
 such gain is treated as derived from a PRC source. Furthermore, if we are deemed a PRC
@@ -3872,7 +3777,6 @@ to establish that our Company should not be taxed under these circulars, which m
 material adverse effect on our financial condition and results of operations.
 RISK FACTORS
 –1 1 0–
-
 RISKS RELATED TO THE WVR STRUCTURE
 The concentration of the voting power of our Class B Ordinary Shares limits our
 Shareholders’ ability to influence corporate matters.
@@ -3913,7 +3817,6 @@ power may also have the effect of delaying, deferring or preventing a change in 
 Company.
 RISK FACTORS
 – 111 –
-
 RISKS RELATED TO THE GLOBAL OFFERING AND OUR SHARES
 There has been no prior public market for our Class A Ordinary Shares and the liquidity
 and market price of our Class A Ordinary Shares may be volatile.
@@ -3953,7 +3856,6 @@ dilution and reduction in their earnings per share, (ii) such newly issued secur
 rights, preferences or privileges superior to those of the Shares of the existing Shareholders
 RISK FACTORS
 –1 1 2–
-
 and/or (iii) subscribers and purchasers of our Class A Ordinary Shares may experience dilution
 in the net tangible assets value per Share if we issue additional Shares in the future at a price
 which is lower than our net tangible assets value per Share.
@@ -3992,7 +3894,6 @@ not unduly rely upon such facts, forecasts, estimates and statistics while makin
 decisions.
 RISK FACTORS
 –1 1 3–
-
 If securities or industry analysts do not publish research reports about our business, or
 if they adversely change their recommendations regarding our Class A Ordinary Shares,
 the market price and trading volume of our Class A Ordinary Shares may decline.
@@ -4031,7 +3932,6 @@ would as shareholders of a Hong Kong company or company incorporated in other
 jurisdictions.
 RISK FACTORS
 –1 1 4–
-
 Y ou should read the entire Prospectus carefully and should not place any reliance on any
 information contained in press articles or other media regarding the Global Offering.
 There may have been, prior to the publication of this Prospectus, and there may be,
@@ -4070,7 +3970,6 @@ reliance on any forward-looking information. All forward-looking statements in t
 are qualified by reference to this cautionary statement.
 RISK FACTORS
 –1 1 5–
-
 In preparation of the Listing, the Company has sought the following waivers from strict
 compliance with the relevant provisions of the Listing Rules and exemption from the
 Companies (Winding Up and Miscellaneous Provisions) Ordinance:
@@ -4109,7 +4008,6 @@ representatives. We have provided the Hong Kong Stock Exchange with the contact
 details (i.e. mobile phone number, office phone number and email address) of all
 W AIVERS AND EXEMPTION
 –1 1 6–
-
 Directors to facilitate communication with the Hong Kong Stock Exchange. Our
 Directors will also provide the phone number of the place of his/her accommodation
 to the Authorized Representatives in the event that any Director expects to travel or
@@ -4148,7 +4046,6 @@ of the Laws of Hong Kong); and
 (Chapter 50 of the Laws of Hong Kong).
 W AIVERS AND EXEMPTION
 –1 1 7–
-
 Note 2 to Rule 3.28 of the Listing Rules provides that in assessing “relevant experience,”
 the Stock Exchange will consider the individual’s:
 (i) length of employment with the issuer and other issuers and the roles he/she played;
@@ -4190,7 +4087,6 @@ the Listing Rules. Ms. Chan will also assist Mr. Xue in organizing Board meeting
 Shareholders’ meetings of our Company as well as other matters of our Company which are
 W AIVERS AND EXEMPTION
 –1 1 8–
-
 incidental to the duties of a company secretary. Ms. Chan is expected to work closely with
 Mr. Xue and will maintain regular contact with Mr. Xue, the Directors and the senior
 management of our Company. The waiver will be revoked immediately if Ms. Chan ceases to
@@ -4231,7 +4127,6 @@ for which the option was or will be granted and the price and duration of the op
 name and address of the grantee, or an appropriate negative statement, provided that where
 W AIVERS AND EXEMPTION
 –1 1 9–
-
 options have been granted or agreed to be granted to all the members or debenture holders or
 to any class thereof, or to employees under a share option scheme, it shall be sufficient, so far
 as the names and addresses are concerned, to record that fact without giving the names and
@@ -4272,7 +4167,6 @@ Offering assuming the Offer Size Adjustment Option and the Over-allotment Option
 exercised.
 W AIVERS AND EXEMPTION
 – 120 –
-
 It is expected that no options or share awards under the Pre-IPO Share Incentive Plan will
 be further granted after the Listing. For more details of the Pre-IPO Share Incentive Plan, see
 “Statutory and General information — D. Pre-IPO Share Incentive Plan — 1. Pre-IPO Share
@@ -4314,7 +4208,6 @@ potential investors to make an informed assessment of the Company in their
 investment decision making process has been included in this Prospectus.
 W AIVERS AND EXEMPTION
 – 121 –
-
 In light of the above, our Directors believe that the grant of the waiver and exemption
 sought under this application and the non-disclosure of the required information will not hinder
 potential investors from making an informed assessment of the activities, assets and liabilities,
@@ -4353,7 +4246,6 @@ Plan” in Appendix IV to this Prospectus;
 (f) the particulars of this waiver and exemption are set out in this Prospectus; and
 W AIVERS AND EXEMPTION
 – 122 –
-
 (g) a full list of all the Grantees who had been granted options to subscribe for the
 Shares under the Pre-IPO Share Incentive Plan, containing all details as required
 under Rule 17.02(1)(b) of and paragraph 27 of Appendix D1A to the Listing Rules
@@ -4391,7 +4283,6 @@ Prospectus; and
 Prospectus will be issued on or before December 31, 2025.
 W AIVERS AND EXEMPTION
 – 123 –
-
 Further details of the Pre-IPO Share Incentive Plan are set out in the section headed
 “Statutory and General Information — D. Share Incentive Plans — 1. Pre-IPO Share Incentive
 Plan” in Appendix IV to this Prospectus.
@@ -4433,7 +4324,6 @@ Company as of the Latest Practicable Date (collectively, the “ Existing Shareh
 Participants ”), has entered into a cornerstone investment agreement with the Company, the
 W AIVERS AND EXEMPTION
 – 124 –
-
 Joint Sponsors and the Overall Coordinators, pursuant to which the Existing Shareholder CI
 Participants have agreed to participate as cornerstone investors in the Global Offering to
 subscribe for the Offer Shares to be issued by the Company under the International Offering.
@@ -4459,7 +4349,6 @@ For further information about the relevant cornerstone investments, please refer
 section headed “Cornerstone Investors” in this Prospectus.
 W AIVERS AND EXEMPTION
 – 125 –
-
 DIRECTORS’ RESPONSIBILITY FOR THE CONTENTS OF THIS PROSPECTUS
 This Prospectus, for which our Directors (including any proposed director who is named
 as such in this Prospectus) collectively and individually accept full responsibility, includes
@@ -4498,7 +4387,6 @@ change in our affairs since the date of this Prospectus or that the information 
 is correct as of any subsequent time.
 INFORMATION ABOUT THIS PROSPECTUS AND THE GLOBAL OFFERING
 – 126 –
-
 For details of the structure of the Global Offering, including its conditions and the
 arrangements relating to the Offer Size Adjustment Option, the Over-allotment Option and
 stabilization, see “Structure of the Global Offering.”
@@ -4537,7 +4425,6 @@ subject to the Offer Price being agreed. The International Offering will be full
 by the International Underwriters under the terms of the International Underwriting Agreement
 INFORMATION ABOUT THIS PROSPECTUS AND THE GLOBAL OFFERING
 – 127 –
-
 to be entered into. If, for any reason, the Offer Price is not agreed among the Overall
 Coordinators (for themselves and on behalf of the Underwriters) and us on or before the Price
 Determination Date, the Global Offering will not proceed and will lapse. For full information
@@ -4577,7 +4464,6 @@ deposit, clearance and settlement in CCASS with effect from the Listing Date or 
 as determined by HKSCC. Settlement of transactions between Exchange Participants (as
 INFORMATION ABOUT THIS PROSPECTUS AND THE GLOBAL OFFERING
 – 128 –
-
 defined in the Listing Rules) is required to take place in CCASS on the second settlement day
 after any trading day. All activities under CCASS are subject to the HKSCC Rules and HKSCC
 Operational Procedures in effect from time to time. Investors should seek the advice of their
@@ -4618,7 +4504,6 @@ be or could have been at the relevant dates converted at the above rates or any 
 at all.
 INFORMATION ABOUT THIS PROSPECTUS AND THE GLOBAL OFFERING
 – 129 –
-
 LANGUAGE
 Translated English names of Chinese laws and regulations, governmental authorities,
 departments, entities (including subsidiaries of our Group), institutions, natural persons,
@@ -4633,7 +4518,6 @@ them. Any discrepancies in any table, chart or elsewhere between totals and sums
 listed therein are due to rounding.
 INFORMATION ABOUT THIS PROSPECTUS AND THE GLOBAL OFFERING
 – 130 –
-
 DIRECTORS
 Name Address Nationality
 Executive Directors
@@ -4671,7 +4555,6 @@ Shanghai, PRC
 Chinese
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 131 –
-
 Independent non-executive Directors
 Mr. Huang Guobin ( ර਷Ᏽ) 17 MacDonnell Road
 Central, Hong Kong
@@ -4703,7 +4586,6 @@ Hong Kong
 (in alphabetical order)
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 132 –
-
 Overall Coordinators China International Capital Corporation
 Hong Kong Securities Limited
 29/F, One International Finance Centre
@@ -4728,7 +4610,6 @@ Kowloon, Hong Kong
 (in alphabetical order)
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 133 –
-
 Joint Global Coordinators China International Capital Corporation
 Hong Kong Securities Limited
 29/F One International Finance Centre
@@ -4754,7 +4635,6 @@ Hong Kong
 (in alphabetical order)
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 134 –
-
 Joint Bookrunners China International Capital Corporation
 Hong Kong Securities Limited
 29/F One International Finance Centre
@@ -4791,7 +4671,6 @@ Hong Kong
 (in alphabetical order)
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 135 –
-
 Joint Lead Managers China International Capital Corporation
 Hong Kong Securities Limited
 29/F One International Finance Centre
@@ -4828,7 +4707,6 @@ Hong Kong
 (in alphabetical order)
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 136 –
-
 Capital Market Intermediaries China International Capital Corporation
 Hong Kong Securities Limited
 29/F One International Finance Centre
@@ -4865,7 +4743,6 @@ Hong Kong
 (in alphabetical order)
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 137 –
-
 Legal advisors to our Company As to Hong Kong and United States laws:
 Davis Polk & Wardwell
 10/F, The Hong Kong Club Building
@@ -4902,7 +4779,6 @@ AIA Tower
 Singapore 048542
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 138 –
-
 As to Cayman Islands laws:
 Maples and Calder (Hong Kong) LLP
 26th Floor, Central Plaza
@@ -4938,7 +4814,6 @@ Shanghai
 PRC
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 139 –
-
 Compliance Adviser Somerley Capital Limited
 20/F, China Building
 29 Queen’s Road Central
@@ -4950,7 +4825,6 @@ Limited
 Hong Kong
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING
 – 140 –
-
 Registered Office Maples Corporate Services Limited
 PO Box 309, Ugland House
 Grand Cayman, KY1-1104
@@ -4986,7 +4860,6 @@ Lee Garden One
 Hong Kong
 CORPORATE INFORMATION
 – 141 –
-
 Authorized Representatives Ms. Y un Y eyi ( 㮭⮶❙)
 11th Floor, Building B
 Xinyan Mansion
@@ -5021,7 +4894,6 @@ Hong Kong Share Registrar Tricor Investor Services Limited
 Hong Kong
 CORPORATE INFORMATION
 – 142 –
-
 Principal Banks Citibank NA, Hong Kong Branch
 Ground Floor, E1
 One Bay East, Citi Tower
@@ -5036,7 +4908,6 @@ Pudong New Area
 Shanghai
 CORPORATE INFORMATION
 – 143 –
-
 The information and statistics set out in this section and other sections of this
 prospectus were extracted from different official government publications, available
 sources from public market research and other sources from independent suppliers, and
@@ -5076,7 +4947,6 @@ simulated bar exam versus GPT-3.5’s bottom 10%, indicating near-human reasonin
 comprehension capabilities.
 INDUSTRY OVERVIEW
 – 144 –
-
 Since then, more advanced models like GPT-4o, Gemini 2.5 Pro, and Claude 3.7 have
 pushed the boundaries of scale and intelligence further. A major breakthrough was the
 emergence of the Mixture-of-Experts (MoE) architecture, which uses expert sub-networks and
@@ -5114,7 +4984,6 @@ performance on complex reasoning tasks, such as mathematical problem-solving, an
 sense reasoning, by generating intermediate steps.
 INDUSTRY OVERVIEW
 – 145 –
-
 A major shift in 2024 saw models trained to break down problems step-by-step during
 inference, allocating more compute to iterative reasoning, reflection, and output refinement.
 Reasoning is increasingly regarded as a computable process rather than merely an emergent
@@ -5153,7 +5022,6 @@ competitive open-source models, including Alibaba’s Qwen3, DeepSeek’s V3 and
 MiniMax’s M1 and M2.
 INDUSTRY OVERVIEW
 – 146 –
-
 Acceleration of progress
 The intelligence level of foundation models worldwide continues to advance. According
 to OpenAI’s five-level roadmap, current models have now reached the threshold of Level 3.
@@ -5186,7 +5054,6 @@ translates audio in 97 languages, achieving near-human accuracy in English trans
 enables developers to convert audio into text for further processing.
 INDUSTRY OVERVIEW
 – 147 –
-
 Audio synthesis has also advanced rapidly. In 2023, service providers such as ElevenLabs
 and MiniMax enabled models to speak with human-like voices. That same year, OpenAI added
 audio-based conversation to ChatGPT, allowing real-time spoken input and synthesized output,
@@ -5224,7 +5091,6 @@ rate surpassing all previous technological waves in human history, such as the i
 industrial revolution.
 INDUSTRY OVERVIEW
 – 148 –
-
 ChatGPT became the fastest growing product in history to reach 800 million users, taking
 only 17 months, while achieving a global reach with more than 90% of users from outside
 North America. Commercially, the new generation of AI-native products reached levels of
@@ -5262,7 +5128,6 @@ Productivity
 Source: CIC
 INDUSTRY OVERVIEW
 – 149 –
-
 Productivity
 The productivity segment represents a massive opportunity with broad downstream use
 cases. Users often engage with multiple models simultaneously. Top use cases include
@@ -5303,7 +5168,6 @@ model optimization and inspire users’ creativity with rich multi-modal creativ
 combination drives high engagement, user stickiness, and highly interactive experiences.
 INDUSTRY OVERVIEW
 – 150 –
-
 The new generation of AI-native users are naturally inclined to interact with AI
 companions. As societal productivity continues to rise and material needs are increasingly met,
 entertainment AI products will tap into users’ emotional and psychological needs and unlock
@@ -5343,7 +5207,6 @@ video generation engine”, lowering barriers for anyone to create and consume p
 content.
 INDUSTRY OVERVIEW
 – 151 –
-
 Audio generation
 Audio is the universal interface of interaction in the AI era, with a broad downstream
 application market. For enterprises, AI voice agents overcome the limit of human capacity in
@@ -5381,7 +5244,6 @@ range of end-user applications such as AI chatbots, social and entertainment AI 
 generation and audio generation products, that are offered to both consumers and enterprises
 INDUSTRY OVERVIEW
 – 152 –
-
 mainly via subscriptions, and (ii) MaaS (model-as-a-service), which refers to the provision of
 foundation model capabilities via cloud-based APIs and licensing, enabling developers and
 enterprises to access and integrate model functions into their own products or systems on a
@@ -5429,7 +5291,6 @@ Note: Model-based revenues primarily include income generated from foundation mo
 and foundation model API calls and licensing.
 INDUSTRY OVERVIEW
 – 153 –
-
 Market drivers
 Technological leaps
 The foundation model market is characterized by disruptive technological breakthroughs,
@@ -5472,7 +5333,6 @@ breakthroughs in video and audio generation technologies have similarly benefite
 scaling up of both model scale and training data size.
 INDUSTRY OVERVIEW
 – 154 –
-
 Moreover, beginning with OpenAI’s o1, the industry witnessed a new scaling law focused
 on test-time compute. The model’s reasoning capability enhances as the computational load in
 inference extends — the longer the time that the model spends on thinking, the better the
@@ -5509,7 +5369,6 @@ the proximity to agents being the inflection point that is positioned to unleash
 commercial values.
 INDUSTRY OVERVIEW
 – 155 –
-
 Agent applications: agents are capable of operating at a professional level, acting
 autonomously, and delivering end-to-end results, ultimately driving GDP of trillions of
 dollars’ worth
@@ -5550,7 +5409,6 @@ from professional tools to widely accessible creative engines, significantly cha
 content supply landscape. Meanwhile, audio generation and interaction capabilities are
 INDUSTRY OVERVIEW
 – 156 –
-
 gradually becoming standard across AI applications, advancing from basic command-response
 functions toward more emotionally expressive communication. This evolution is enabling more
 natural interactions between human and machines, positioning the voice interface as a central
@@ -5589,7 +5447,6 @@ globally in terms of model-based revenues in 2024, with a market share of 0.3%, 
 in the table below. The global foundation model market is expected to reach US$22.0 billion
 INDUSTRY OVERVIEW
 – 157 –
-
 in 2025, and MiniMax is expected to capture a market share of approximately 0.3%. Given that
 most of the peers are large publicly listed companies with vast resources, ranking among the
 global top ten and competing effectively with these industry giants is a remarkable
@@ -5626,7 +5483,6 @@ services. It is a listed company on the NASDAQ Stock Exchange.
 cloud services, and AI products and services. It is a listed company on the NASDAQ Stock Exchange.
 INDUSTRY OVERVIEW
 – 158 –
-
 (5) Company D is a foundation model company founded in the United States in 2021. It mainly provides large
 language model products. It is an unlisted company.
 (6) Company E is a foundation model company founded in the United States in 2021. It mainly provides AI image
@@ -5670,7 +5526,6 @@ Company H General 2B services Subscriptions, API calls
 Company I Productivity, general 2B services Subscriptions, API calls
 INDUSTRY OVERVIEW
 – 159 –
-
 Company Main product types Main monetisation method
 MiniMax Entertainment, visual generation,
 productivity
@@ -5753,7 +5608,6 @@ based V ocoder,
 MoE
 INDUSTRY OVERVIEW
 – 160 –
-
 Company
 Model Modalities
 Text Image Video Audio
@@ -5847,7 +5701,6 @@ based V ocoder,
 MoE
 INDUSTRY OVERVIEW
 – 161 –
-
 Notes:
 1. RLHF (Reinforcement Learning from Human Feedback) refers to a training method where the model learns to
 produce responses that align with human preferences, by being rewarded for outputs that human rate as better.
@@ -5888,7 +5741,6 @@ non-pureplay companies that have entered the foundation model space in addition 
 existing businesses, such as major internet platforms and cloud service providers.
 INDUSTRY OVERVIEW
 – 162 –
-
 Pureplay companies concentrate their core resources, accumulated technological
 know-how and business models around foundation models. This high degree of focus and
 resource investment enables them to drive rapid innovation and positions them as key forces
@@ -5915,7 +5767,6 @@ Note:
 and foundation model API calls and licensing.
 INDUSTRY OVERVIEW
 – 163 –
-
 Model benchmarks
 Upon release, MiniMax’s foundation models have achieved leading performance across
 text, video and speech modalities, ranking at the top across the Artificial Analysis benchmarks
@@ -5946,7 +5797,6 @@ Pro, HLE, and GPQA Diamond), mathematical reasoning (equally weighted between MA
 2024), and coding ability combination (equally weighted between SciCode and LiveCodeBench).
 INDUSTRY OVERVIEW
 – 164 –
-
 Artificial Analysis Video Arena Leaderboard (evaluation of video models)
 Rank Company Model Arena ELO
 1 ByteDance Seedance 1.0 1,355
@@ -5987,7 +5837,6 @@ Note: As of June 22, 2025, shortly after the release of Speech-02. The Arena ELO
 from users in the Artificial Analysis Video Arena.
 INDUSTRY OVERVIEW
 – 165 –
-
 Competitive barriers
 R&D capabilities of foundation models
 The competitiveness of foundation model products is fundamentally based on the
@@ -6026,7 +5875,6 @@ below US$0.1 per million tokens by the end of 2024, and is expected to further d
 approximate rate of 10 times per year.
 INDUSTRY OVERVIEW
 – 166 –
-
 SOURCE OF INFORMATION
 CIC was commissioned to conduct research and analysis of, and produce a report on the
 global foundation model industry at a fee of US$115,000. The commissioned report has been
@@ -6050,7 +5898,6 @@ dramatically or fundamentally during the forecast period. Except as otherwise no
 data and forecasts contained in this section are derived from the CIC Report.
 INDUSTRY OVERVIEW
 – 167 –
-
 OVERVIEW
 This section sets forth a summary of the principal laws, rules and regulations that may
 have material impact on our business.
@@ -6092,7 +5939,6 @@ mobilization shall, in accordance with the law, complete filing procedures and c
 security assessments in compliance with relevant national regulations.
 REGULATORY OVERVIEW
 – 168 –
-
 On November 25, 2022, the CAC and two other departments jointly issued the Provisions
 on the Administration of Deep Synthesis of Internet-Based Information Services (ڦ
 ), which came into effect on January 10, 2023. These Provisions
@@ -6139,7 +5985,6 @@ AI services, the AIGC Administration Measures require generative AI service prov
 effective measures to prevent underage users from becoming overly dependent on or addicted
 REGULATORY OVERVIEW
 – 169 –
-
 to generative AI services; to lawfully assume the responsibilities of personal information
 processors; and to fulfill obligations to protect the input information and usage records of
 generative AI service users. Providers shall promptly accept and handle individuals’ requests
@@ -6185,7 +6030,6 @@ services to others for carrying out such malicious acts. It is also prohibited t
 lawful rights and interests of others through improper means of identification.
 REGULATORY OVERVIEW
 – 170 –
-
 Guidance Catalogue for the Industrial Structure Adjustment
 According to the Guidance Catalogue for the Industrial Structure Adjustment (2024
 Edition) (ኬͦ፽(2024 ϋ͉)), which was issued by the National
@@ -6225,7 +6069,6 @@ are generally considered to be in the “Permitted” category unless otherwise 
 by other PRC laws and regulations.
 REGULATORY OVERVIEW
 – 171 –
-
 The Law of the PRC on Foreign Investment () (the
 “Foreign Investment Law ”), which was promulgated by the NPC Standing Committee on
 March 15, 2019 and came into effect on January 1, 2020, and the Regulations for the
@@ -6269,7 +6112,6 @@ controlling shareholder or actual controller has committed a criminal crime of c
 bribery, embezzlement, misappropriation of property or disrupting the economic order of the
 REGULATORY OVERVIEW
 – 172 –
-
 socialist market in the last three years; (iv) a domestic enterprise is under formal investigation
 according to the law for being suspected of any crime or major violation of laws and
 regulations, but no clear conclusions have been made; or (v) there is a major dispute over
@@ -6313,7 +6155,6 @@ in its production or operation activity, a business operator disrupts the order 
 competition and causes damage to the lawful rights and interests of other business operators
 REGULATORY OVERVIEW
 – 173 –
-
 or consumers, in violation of the Anti-unfair Competition Law of the PRC. Pursuant to the
 Anti-unfair Competition Law of the PRC, business operators shall follow the principles of
 voluntariness, equality, fairness, and good faith in market transactions, and abide by laws and
@@ -6355,7 +6196,6 @@ whether an enterprise has acquired control over another enterprise or may exert 
 influence on another enterprise.
 REGULATORY OVERVIEW
 – 174 –
-
 Regulations Relating to Consumer Protection
 The Law of the PRC on Protecting Consumers’ Rights and Interests ( ʕശɛ͏΍ձ਷
 ) (the “ Law on Protecting Consumers’ Rights and Interests ”) was first
@@ -6399,7 +6239,6 @@ protect cybersecurity. Service providers operating via the network are required 
 technical measures and other necessary measures, in accordance with laws, administrative
 REGULATORY OVERVIEW
 – 175 –
-
 regulations, and mandatory national standards, to ensure the safe and stable operation of the
 network, effectively respond to cybersecurity incidents, prevent illegal criminal activities
 committed on the network, and maintain the integrity, confidentiality and availability of
@@ -6443,7 +6282,6 @@ departments. Additionally, the Data Security Law subjects activities involving t
 important data to overseas parties by data processors other than critical information
 REGULATORY OVERVIEW
 – 176 –
-
 infrastructure operators to special regulatory procedures for data export, and restricts the
 transfer of data stored within the territory of China to any overseas judicial or law enforcement
 body without the approval of the competent authorities of the PRC.
@@ -6489,7 +6327,6 @@ cross-border human resources management in accordance with legally established l
 regulations and legally signed collective contracts; (v) the outbound provision of personal
 REGULATORY OVERVIEW
 – 177 –
-
 information when it is truly necessary to protect the life, health, and property safety of natural
 persons in emergency situations; and (vi) the cumulative outbound provision of personal
 information of less than 100,000 individuals (excluding sensitive personal information) by data
@@ -6527,7 +6364,6 @@ parties. The licensor shall supervise the quality of the products, and the licen
 the quality of the products when using the registered trademark.
 REGULATORY OVERVIEW
 – 178 –
-
 Patent
 The patent activities in China are regulated by the Patent Law of the PRC ( ʕശɛ͏
 )( “ Patent Law ”) and the Detailed Rules for the Implementation of the Patent
@@ -6569,7 +6405,6 @@ infringing copyright depending on the circumstances, bear civil liabilities such
 infringement, eliminating the effects, making an apology, or compensating for losses.
 REGULATORY OVERVIEW
 – 179 –
-
 According to the Civil Code of the People’s Republic of China (ج
 Պ) issued by the NPC on May 28, 2020, and became effective on January 1, 2021, where
 a network user commits an infringing act by using network services, the right holder shall have
@@ -6612,7 +6447,6 @@ registered, and the Copyright Protection Center of China shall issue the corresp
 registration certificates.
 REGULATORY OVERVIEW
 – 180 –
-
 Domain Name
 According to the Measures for the Administration of Internet Domain Names ( ʝᑌၣ
 ) promulgated by the Ministry of Industry and Information Technology on
@@ -6653,7 +6487,6 @@ to register and record the lease contract in accordance with laws and administra
 it does not affect the validity of the contract.
 REGULATORY OVERVIEW
 – 181 –
-
 Regulations Relating to Labor and Social Security
 Labor Law and Labor Contract Law
 According to the Labor Law of the PRC (), which was
@@ -6696,7 +6529,6 @@ insurance premiums on their behalf. If an employer fails to complete such regist
 social insurance administrative department will order a rectification within a specified period.
 REGULATORY OVERVIEW
 – 182 –
-
 If the employer does not comply within the deadline, it may be fined between one and three
 times the amount of the social insurance premium payable. Employers failing to promptly
 contribute social security premiums in full amount shall be ordered by the social security
@@ -6741,7 +6573,6 @@ insurance and housing provident fund contribution requirements under PRC laws an
 regulations.
 REGULATORY OVERVIEW
 – 183 –
-
 Laws and Regulations Relating to Foreign Exchange Registration for Overseas Investment
 by PRC Residents
 Pursuant to the Notice of the State Administration of Foreign Exchange (“SAFE”) on
@@ -6783,7 +6614,6 @@ employees, directors, supervisors, and other senior management personnel who are
 citizens or non-Chinese citizens who have continuously resided in China for not less than one
 REGULATORY OVERVIEW
 – 184 –
-
 year and who participate in equity incentive plans of overseas listed companies, are, except in
 a few exceptional cases, required to register with SAFE through a qualified domestic agent
 (which may be the Chinese affiliate of the overseas listed company) and complete a series of
@@ -6819,7 +6649,6 @@ on important high- and new-tech enterprises that are necessary to be supported b
 government shall be levied at the reduced tax rate of 15%.
 REGULATORY OVERVIEW
 – 185 –
-
 Income Tax on Dividend Distribution
 Pursuant to the Enterprise Income Tax Law of the PRC and its implementation
 regulations, dividends paid by foreign-invested enterprises in China to foreign investors that
@@ -6863,7 +6692,6 @@ retain the relevant data in accordance with the regulations for potential future
 shall be subject to subsequent administrative oversight by the tax authorities.
 REGULATORY OVERVIEW
 – 186 –
-
 V alue-Added Tax (VAT)
 Pursuant to the Provisional Regulations of the PRC on V alue-added Tax ( ʕശɛ͏΍
 ೼ᅲБૢԷ), promulgated by the State Council on December 13, 1993 and last
@@ -6906,7 +6734,6 @@ of goods, the previous 16% V A T rate was reduced to 13%, and the previous 10% V
 reduced to 9%.
 REGULATORY OVERVIEW
 – 187 –
-
 Regulations Relating to Foreign Exchange
 The primary regulation governing foreign exchange in China is the Regulation of the PRC
 on Foreign Exchange Administration ( ʕശɛ͏΍ձ਷̮ි၍ଣૢԷ), promulgated by the
@@ -6949,7 +6776,6 @@ Simplifying and Improving the Policy on Foreign Exchange Management of Direct In
 amended on December 30, 2019. This circular allows entities and individuals to apply for
 REGULATORY OVERVIEW
 – 188 –
-
 foreign exchange registration with qualified banks. Under the supervision of SAFE, such
 qualified banks may directly review and approve the applications. On March 30, 2015, the
 SAFE promulgated the Circular of the SAFE Concerning Reform of the Administrative
@@ -6991,7 +6817,6 @@ deposited into capital account settlement accounts. Funds in such capital accoun
 accounts may be settled and used at the entity’s discretion.
 REGULATORY OVERVIEW
 – 189 –
-
 According to the Notice by the SAFE of Optimizing Foreign Exchange Administration to
 Support Foreign Business Development (ऒุ̮ਕ೯
 ), promulgated by the SAFE and became effective on April 10, 2020, the reform of
@@ -7026,7 +6851,6 @@ otherwise exempted;
  Provide a local address as the registered address of the private company; and
 REGULATORY OVERVIEW
 – 190 –
-
  Put in place a constitution for the private company.
 Personal Data Protection Act 2012
 The Personal Data Protection Act 2012 of Singapore (“ PDPA”) governs the collection,
@@ -7063,7 +6887,6 @@ territory from which the income is received is at least 15.0%; and
 beneficial to the recipient of the specified foreign income.
 REGULATORY OVERVIEW
 – 191 –
-
 The prevailing corporate income tax rate in Singapore is 17.0%, which applies to both
 local and foreign companies. With effect from the year of assessment 2020, 75.0% of the first
 S$10,000, and 50.0% of the next S$190,000 of a company’s chargeable income (otherwise
@@ -7103,7 +6926,6 @@ tax laws of their respective home countries/countries of residence and the appli
 double taxation agreement which their country of residence may have with Singapore.
 REGULATORY OVERVIEW
 – 192 –
-
 Regulations on Anti-Money Laundering and Prevention of Terrorism Financing
 The primary anti-money laundering legislation in Singapore is the Corruption, Drug
 Trafficking and Other Serious Crimes (Confiscation of Benefits) Act 1992 of Singapore (the
@@ -7145,7 +6967,6 @@ effective January 1, 2026. SB 942 mandates that “Covered Providers” — AI s
 accessible within California with more than one million monthly visitors or users — implement
 REGULATORY OVERVIEW
 – 193 –
-
 comprehensive measures to disclose AI-generated or modified content. It also establishes
 requirements for AI detection tools, content disclosures, and licensing practices, with
 violations carrying penalties of US$5,000 per day. SB 2013 requires developers of generative
@@ -7190,7 +7011,6 @@ content, and the foreign direct product of certain U.S. software and technology.
 the nature of the hardware, software or technology, destination country, end-use, and end-user,
 REGULATORY OVERVIEW
 – 194 –
-
 prior authorization may be required to export, reexport, or transfer items subject to the EAR.
 The ITAR are implemented by the Department of State’s Directorate of Defense Trade Controls
 (DDTC). These regulations apply to exports, reexports, transfers, temporary imports and
@@ -7231,7 +7051,6 @@ effect, but the COINS Act requires Treasury to propose certain revisions to the 
 within 450 days of December 18, 2025. Those revisions ultimately will include, among other
 REGULATORY OVERVIEW
 – 195 –
-
 changes to the Final Rule, an expansion of the countries of concern, an expansion of the
 technologies covered to include hypersonic systems, revisions to key defined terms, and the
 establishment of a formal advisory opinion process.
@@ -7269,7 +7088,6 @@ damages (including lost profits or royalties), and, in exceptional cases, treble
 attorneys’ fees.
 REGULATORY OVERVIEW
 – 196 –
-
 Intellectual Property Rights Governed by both Federal and State Law
 Trademarks and service marks
 A “mark” is the use of one or more words, symbols, or logos to identify and distinguish
@@ -7307,7 +7125,6 @@ almost all fifty states within the U.S. A trade secret owner may often have a ch
 its trade secret rights under the DTSA or a relevant state’s version of the UTSA.
 REGULATORY OVERVIEW
 – 197 –
-
 United States Data Privacy and Security Laws and Regulations
 The U.S. does not have a comprehensive federal law that governs data privacy or data
 security. Instead, the U.S. has a complex patchwork of sector-specific data privacy and data
@@ -7346,7 +7163,6 @@ authority to issue injunctive and monetary penalties under state unfair and dece
 practices laws.
 REGULATORY OVERVIEW
 – 198 –
-
 On the federal level, privacy laws are sectoral in nature, and there are currently federal
 privacy laws governing financial data (the Gramm-Leach Bliley Act or “GLBA”), children’s
 data (the Children’s Online Privacy Protection Act or “COPPA”), credit worthiness data (the
@@ -7387,7 +7203,6 @@ under the state data breach law. Penalties vary widely under the state breach la
 $500 per violation up to $5000 per violation.
 REGULATORY OVERVIEW
 – 199 –
-
 On the federal level, the FTC has authority to bring enforcement actions against
 companies that experience data breaches, under the theory that a company experienced a
 breach may have unfairly processed a consumer’s data, leading to the breach incident. In
@@ -7412,7 +7227,6 @@ involving children’s data, financial data, and/or health data tend to result i
 penalties.
 REGULATORY OVERVIEW
 – 200 –
-
 OVERVIEW
 Our Company was incorporated in the Cayman Islands as an exempted company with
 limited liability on June 30, 2021. It is common for pure-play foundation AI model companies
@@ -7453,7 +7267,6 @@ towards performing the full range of human intellectual tasks, from learning and
 planning and generalizing knowledge across diverse domains.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 201 –
-
 OUR KEY MILESTONES
 The following is a summary of our Group’s key business development milestones:
 Y ear Month Milestone
@@ -7480,7 +7293,6 @@ launched.
 MiniMax MCP was launched.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 202 –
-
 Y ear Month Milestone
 June MiniMax-M1, an open-source, large-scale hybrid-
 attention reasoning model was launched.
@@ -7528,7 +7340,6 @@ MiniMax HongKong /H1118Hong Kong April 10, 2025 Operation of Open
 Platform
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 203 –
-
 For capital changes of our major subsidiaries with respect to the Reorganization and
 during the two years immediately preceding the date of this Prospectus, please refer to “—
 Corporate Reorganization” in this section and “Statutory and General Information — A.
@@ -7567,7 +7378,6 @@ also interested in 343,195 Class A Ordinary Shares through his controlled entiti
 preferred shares are held by our Pre-IPO Investors.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 204 –
-
 (4) Adjustment of our WVR Beneficiaries’ Shareholding Structure
 To comply with Chapter 8A of the Listing Rules, and to streamline its shareholding
 structure, between April 2025 and June 2025, our Company has undergone the following
@@ -7598,7 +7408,6 @@ settlor. In October 2025, MiniMax Gene transferred all shares it held in MiniMax
 MiniMax Awakening.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 205 –
-
 Upon completion of the aforesaid shareholding structure adjustment and establishment of
 our employee shareholding platform, the following chart sets out the shareholding structure
 and beneficial interests of our WVR Beneficiaries in the Company:
@@ -7656,7 +7465,6 @@ to streamline our business and shareholding structure, we underwent the Reorgani
 involving the following steps:
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 206 –
-
 (1) Establishment of Shanghai Jizhi Wujie and Shanghai Jizhi Zongheng
 On April 18, 2025, Shanghai Jizhi Wujie was established in the PRC with a registered
 share capital of RMB1 million. It is held by Dr. Y an as to 99% and Ms. Pan Lin as to 1%.
@@ -7697,7 +7505,6 @@ maintenance, contents uploading, promotion and marketing on the abovementioned
 applications and websites, while the Group is primarily responsible for the operation and
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 207 –
-
 management of the underlying and basic technology development, function development,
 designing and technology upgrades of the applications and websites. The Group does not rely
 on the supportive services as an essential part of its operations, given their availability in the
@@ -7741,7 +7548,6 @@ necessary regulatory approvals and permits and completed all necessary filings i
 such transfers that our Group had to obtain from PRC regulatory authorities.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 208 –
-
 PRE-IPO INVESTMENTS
 1. Overview
 We have received several rounds of Pre-IPO Investments since our inception. The following table summarizes the key terms of the Pre-IPO
@@ -7773,7 +7579,6 @@ The Company plans to utilise the remaining proceeds from the Pre-IPO Investments
 training and inferencing, human resources matters and marketing activities.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 209 –
-
 Pre-IPO Investment Series Angel Series Pre-A Series A Series A+ Series Pre-B Series Pre-B+ Series Pre-B++
 Strategic benefits the Pre-IPO
 Investments brought to our
@@ -7796,7 +7601,6 @@ see the section headed “Underwriting — Underwriting Arrangements and Expense
 Undertaking by the other existing shareholders”.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 210 –
-
 Pre-IPO Investment Series Angel Series Pre-A Series A Series A+ Series Pre-B Series Pre-B+ Series Pre-B++
 Reasons for fluctuations in
 valuation as compared to
@@ -7827,7 +7631,6 @@ Note:
 range and the exchange rates as disclosed in the section headed “Information about this Prospectus and the Global Offering — Exchange Rate Conversion ”.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 –2 1 1–
-
 2. Special rights of the Pre-IPO Investors
 The Pre-IPO Investors have been granted certain special rights in relation to our
 Company, including but not limited to redemption rights, the pre-emptive rights, right of
@@ -7868,7 +7671,6 @@ New Y ork Stock Exchange (symbol: BABA), and its ordinary shares listed on the S
 Exchange (stock code: 9988). Alibaba Group’s mission is to make it easy to do business
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 212 –
-
 anywhere. Alibaba Group aims to build the future infrastructure of commerce and
 envisions that its customers will meet, work and live at Alibaba, and that it aspires to be
 a good company that will last for 102 years. Alibaba Group’s core businesses are
@@ -7910,7 +7712,6 @@ Technology Co., Ltd shall be aggregated as one Pathfinder SII pursuant to Chapte
 the Guide for New Listing Applicants issued by the Stock Exchange.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 213 –
-
 Such private enterprise groups focus on video game development and publishing and
 their key video game products include Genshin Impact (ग़), the video game with
 highest overseas revenue in the PRC from 2021 to 2023 according to Sensor Tower, which
@@ -7957,7 +7758,6 @@ and conduct of the funds’ business and affairs. IDG Capital Fund Management Lt
 controlled by the senior management of IDG Capital. Cosmic Station and Seasonal Charm
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 214 –
-
 collectively held approximately 3.21% beneficial interests in the Company as of the date
 of 12 months prior to the date of the listing application and their beneficial interests were
 decreased to 3.08% in the Company as of the listing application. Relevant considerations
@@ -8001,7 +7801,6 @@ China’s cloud computing market in both 2023 and 2024, with a market share of
 approximately 13% in both years.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 215 –
-
 Other key Pre-IPO Investors
 We set out below descriptions of our other key Pre-IPO Investors which are of
 strategic importance and provided long-term support to our Group in the issued share
@@ -8041,7 +7840,6 @@ no individual who directly or indirectly holds an interest of 30% or more in Bei
 Miheng.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 216 –
-
 HSG
 HSG Growth VII Holdco E, Ltd. and Himalia Holding Limited are companies
 incorporated in the Cayman Islands with limited liability. The sole shareholder of HSG
@@ -8082,7 +7880,6 @@ outstanding shares of Astrend X Partners GP Limited, and Mr. Koh Tuck Lye, an
 Independent Third Party, is the sole shareholder of Silver Unicorn V entures Limited.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 217 –
-
 Astrend X-2 Limited is a company incorporated under the laws of the British Virgin
 Islands, which is wholly owned by Astrend X Fund, L.P .
 Golden Horizon Limited is a company incorporated under the laws of the British
@@ -8122,7 +7919,6 @@ the indicative Offer Price range and such Sophisticated Independent Investors wi
 in aggregate, no less than 15% in the total issued share capital of our Company.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 218 –
-
 CAPITALIZATION OF OUR COMPANY
 The following table sets out our shareholding structure (a) as of the Latest Practicable Date and (b) immediately upon the completion of the
 Global Offering (assuming that (i) the Offer Size Adjustment Option and the Over-allotment Option are not exercised, (ii) all Preferred Shares have
@@ -8171,7 +7967,6 @@ Our Employee Shareholding Platform
 MiniMax Gene /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111820,890,736 – – 20,890,736 7.46% 1.99% 6.84% 2.02%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 219 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8221,7 +8016,6 @@ Image Frame Investment (HK)
 Limited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 7,232,084 7,232,084 2.58% 0.69% 2.37% 0.70%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 220 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8270,7 +8064,6 @@ Golden Horizon Limited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–
 Sub-total (4) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 4,932,039 4,932,039 1.76% 0.47% 1.61% 0.48%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 221 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8315,7 +8108,6 @@ Sub-total
 (8) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 5,295,451 5,295,451 1.89% 0.50% 1.73% 0.51%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 222 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8369,7 +8161,6 @@ Planetree Partners III-A, L.P . /H1118/H1118/H1118/H1118/H1118/H1118/H1118– �
 Sub-total (6) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,885,562 2,885,562 1.03% 0.27% 0.94% 0.28%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 223 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8423,7 +8214,6 @@ Partnership (Limited Partnership) ( τ
 Υྫ)) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 217,000 217,000 0.08% 0.02% 0.07% 0.02%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 224 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8478,7 +8268,6 @@ Partnership (Limited Partnership) ( ଉ
 Άุ(Υྫ)) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 552,394 552,394 0.20% 0.05% 0.18% 0.05%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 225 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8537,7 +8326,6 @@ Investment Fund Partnership
 Υྫ)) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 891,599 891,599 0.32% 0.08% 0.29% 0.09%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 226 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8596,7 +8384,6 @@ Charoen Pokphand Robot Limited /H1118/H1118/H1118/H1118– – 1,981,333 1,981,3
 Futron Capital Limited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 330,222 330,222 0.12% 0.03% 0.11% 0.03%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 227 –
-
 As of the Latest
 Practicable Date
 Upon Completion of
@@ -8635,7 +8422,6 @@ Public shareholders /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
 Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111852,936,761 81,102,534 171,407,993 305,447,288 100.0% 100.0% 100.00% 100.00%
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 228 –
-
 Notes:
 (1) On the basis that each Class A Ordinary Share and Preferred Shares entitles the Shareholder to one vote per Share and each Class B Ordinary Share enti tles the Shareholder
 to ten votes per Share.
@@ -8658,7 +8444,6 @@ Limited is wholly-owned by Trident Trust Company (Hong Kong) Limited, which acts
 (as settlor) for the benefit of herself.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 229 –
-
 PUBLIC FLOAT
 Upon completion of the Global Offering, the Shares held by (i) entities controlled by Dr.
 Y an and Ms. Y un, namely MiniMax Matrix, MiniMax Limited, MiniMax Awakening, Alpha
@@ -8688,7 +8473,6 @@ Listing Rules based on the market capitalization of the Shares listed on the Sto
 that are not subject to any disposal restrictions at the time of Listing.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 230 –
-
 LOCK-UP PERIODS
 The table below sets out the list of persons who are, together with their respective close
 associates, subject to lock-up requirements pursuant to Rule 18C.14 of the Listing Rules:
@@ -8776,7 +8560,6 @@ on the removal of designation as a Pre-Commercial Company as required under Rule
 Rules.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 231 –
-
 In addition, outstanding options granted to Ms. Y un, Mr. Pengyu Zhao and Mr. Y ucong
 Zhou under the Pre-IPO Share Incentive Plan as disclosed under the section headed “Statutory
 and General Information — D. Share Incentive Plans — 1. Pre-IPO Share Incentive Plan —
@@ -8786,7 +8569,6 @@ from the Listing Date, subject to Rule 18C.23 of the Listing Rules, in view of t
 personnel responsible for the Company’s technical operations and/or R&D activities.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 232 –
-
 CORPORATE STRUCTURE OF OUR GROUP IMMEDIATELY UPON COMPLETION OF THE REORGANIZATION
 The following diagram illustrates the shareholding structure of our Company immediately prior to the completion of the Global Offering:
 Ms. Yun
@@ -8838,7 +8620,6 @@ Notes:
 (4) for details, please refer to note 3 and note 12 in “— Capitalization” in this section.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 233 –
-
 CORPORATE STRUCTURE OF OUR GROUP IMMEDIATELY UPON COMPLETION OF THE GLOBAL OFFERING
 The following diagram illustrates the shareholding structure of our Company immediately after the Global Offering assuming the Offer Size
 Adjustment Option and the Over-Allotment Option are not exercised:
@@ -8889,7 +8670,6 @@ Jizhi
 Notes: Please see “— Corporate Structure of our Group Immediately Upon Completion of the Reorganization” above.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 234 –
-
 PRC LEGAL COMPLIANCE
 M&A RULES
 According to the Regulations on Merger with and Acquisition of Domestic Enterprises by
@@ -8933,7 +8713,6 @@ As advised by our PRC Legal Advisor, Dr. Y an and Ms. Y un who are PRC residents
 completed the registration as required by SAFE Circular 37.
 HISTORY, REORGANIZATION AND CORPORATE STRUCTURE
 – 235 –
-
 OVERVIEW
 MiniMax is a global AI foundation model company. Founded by a group of forward-
 thinking engineers, we are committed to driving AI innovation towards performing the full
@@ -8976,7 +8755,6 @@ MiniMax
 Speech-01
 BUSINESS
 – 236 –
-
 We have been consistently iterating our models to higher intelligence levels. Today, our
 proprietary foundation model suite, led by MiniMax-M2, Hailuo-02, and Speech-02, has long
 context processing capacity and can understand, generate, and integrate a wide range of
@@ -9016,7 +8794,6 @@ commercial value, which further allows us to continuously reinvest in original r
 and development.
 BUSINESS
 – 237 –
-
  Global Operations . From day one, we have launched all our foundation models and
 products across international markets with one goal: to make next-generation AI
 technologies truly broadly accessible at compelling value proposition. Our concurrent
@@ -9050,7 +8827,6 @@ substantially faster inference speeds compared with MiniMax-M1, while maintainin
 optimized profile across model intelligence, responsiveness and cost-efficiency.
 BUSINESS
 – 238 –
-
 Video Generation Model: Hailuo-02
 The Hailuo-02 series model generates high-quality video content from a variety form of
 information inputs. Commercialized at scale with competitive results on global benchmarks
@@ -9086,7 +8862,6 @@ model to support interactive audio synthesis and generate natural, high-quality 
 text input.
 BUSINESS
 – 239 –
-
 Talkie/Xingye: Multi-modal Entertainment Platform
 Talkie (for international markets)/ Xingye (for Chinese domestic market) is a globally
 recognized AI-native multi-modal entertainment platform. Users of Talkie/Xingye can engage
@@ -9124,7 +8899,6 @@ Our number of paying users for AI-native products expanded from around 119,700 i
 ended September 30, 2025.
 BUSINESS
 – 240 –
-
 Complementing our growing individual paying user base, we have also cultivated a
 portfolio of enterprise customers and developers. Enterprise customers and developers access
 our core AI models via our Open Platform, which supports growing business needs across key
@@ -9162,7 +8936,6 @@ As a result, we are currently not able to reliably distinguish whether an Open P
 developer or an enterprise customer.
 BUSINESS
 – 241 –
-
 The following chart sets forth the number of paying users within each period of the Track
 Record Period 1:
 For the year ended December 31,
@@ -9205,7 +8978,6 @@ made API calls during a given month on our Open Platform including both paying a
 customers. Customers who have registered but not made API calls are not included.
 BUSINESS
 – 242 –
-
 Our suite of AI-native products has attracted a broad user base, with average MAU rising
 more than six times from 3.1 million in 2023 to 19.1 million in 2024 and further to 27.6 million
 in the nine months ended September 30, 2025. Specifically, the average MAU of Talkie/Xingye
@@ -9251,7 +9023,6 @@ activated devices for our app-based AI-native products.
 Customers who have registered but not made API calls are not included.
 BUSINESS
 – 243 –
-
 The number of new users of our AI-native products increased more than nine-fold from
 11.1 million in 2023 to 104.2 million in 2024, and also grew from 65.4 million for the nine
 months ended September 30, 2024 to 96.9 million for the same period in 2025. The number of
@@ -9297,7 +9068,6 @@ increasing market reach and growing appeal among a wider spectrum of users, whic
 expected to provide a more sustainable foundation for long-term monetization.
 BUSINESS
 – 244 –
-
 The average spending per paying customer of Open Platform decreased from 2023 to
 2024 and from the nine months ended September 30, 2024 to the same period in 2025,
 primarily attributable to the rapid expansion of the user base following the official launch of
@@ -9335,7 +9105,6 @@ comprehensive approach to foundation model development, we offer competitive
 commercial-scale foundation models across text, video and audio.
 BUSINESS
 – 245 –
-
  Our multi-modal models have achieved both notable commercial success and recognition
 from independent model benchmarking providers. These models have consistently
 delivered top-tier results across text, video and speech, benchmarks, in both model
@@ -9377,7 +9146,6 @@ computing resources. Our training and inference framework features automated fun
 as scaling, descaling, and dynamic parallel strategy adjustment, with deep integration into
 BUSINESS
 – 246 –
-
 underlying hardware and networks. Together, these measures yield a stable and high-
 performance model training and inference environment tailored for our foundation models. We
 have achieved more than 75% inference Model Flop Utilization (MFU), a key measure of how
@@ -9420,7 +9188,6 @@ customers at a global scale has tremendously aided in the enhancement of our pro
 technology, enabling us to develop competitive product offerings. We are currently one of the
 BUSINESS
 – 247 –
-
 two companies founded in the Asia-Pacific region to achieve global-scale commercialization
 of multiple AI native products. Our offerings serve both individual users and enterprise
 customers across the globe. Our unified model architecture and organic user acquisition
@@ -9458,7 +9225,6 @@ model integration. Sustained investment based on technological insights will all
 multi-modality integration and real-world application.
 BUSINESS
 – 248 –
-
 Deliver “Technology as Products” with Commercial Potential
 We will continue to develop and deliver our “technology as products” approach to provide
 positive experiences to both individual users and enterprise customers. By leveraging our
@@ -9498,7 +9264,6 @@ multi-modal, we strive to enhance user engagement and content accessibility by d
 multi-modal foundation model solutions that maximize reach and impact.
 BUSINESS
 – 249 –
-
 Our foundation models are artificial intelligence systems designed to interpret human
 inputs and generate high-quality outputs across multiple formats, including text, video, and
 audio. These models are built using advanced deep learning techniques. Their primary function
@@ -9538,7 +9303,6 @@ critical thinking, problem-solving, and the ability to connect disparate pieces 
 produce actionable or explanatory results.
 BUSINESS
 – 250 –
-
 MiniMax-M1 Highlights
 Upon its release, MiniMax-M1 outperforms several prominent reasoning models in
 independent benchmark testing, including benchmarks on mathematical reasoning, code
@@ -9577,7 +9341,6 @@ model inference stage. These attributes make MiniMax-M1 particularly well-suited
 complex tasks that require processing long inputs and deep reasoning.
 BUSINESS
 – 251 –
-
 Beyond its performance in comprehensive evaluations, we have made the training of our
 MiniMax-M1 significantly cost-efficient through two key innovations. Our first breakthrough
 is CISPO (or Clipped IS-weight Policy Optimization), a novel algorithm that dramatically
@@ -9612,7 +9375,6 @@ self-correction and transparency, and supports its broader goal of enabling reli
 behaviour.
 BUSINESS
 – 252 –
-
 68
 Artificial Analysis Intelligence Index1
 GPT-5 Codex
@@ -9661,7 +9423,6 @@ real-world programming environments and multiple programming languages, enabling
 more reliable software development.
 BUSINESS
 – 253 –
-
  Agentic Capability: MiniMax-M2 exhibits enhanced agentic capabilities, capable of
 planning and executing complex, long-horizon toolchains involving shell, browser, search
 and code-execution. In real-world application, the model consistently identified relevant
@@ -9695,7 +9456,6 @@ of video generation models. For example, upon its release, our Hailuo-02 ranked 
 on the Artificial Analysis benchmark for image-to-video generation.
 BUSINESS
 – 254 –
-
 1,355 1,331
 1,244
 1,195
@@ -9737,7 +9497,6 @@ series, we also quadrupled the training data volume while significantly enhancin
 and diversity.
 BUSINESS
 – 255 –
-
 The synergy of this architecture, expanded parameters, and enriched data has yielded
 improvements in model capabilities, with high-degree of physical accuracy and ability to
 generate highly complex video scenarios:
@@ -9770,7 +9529,6 @@ continuity. Hailuo 2.3 is capable of achieving near-photorealistic lighting, ton
 color effects even under dynamic camera shifts.
 BUSINESS
 – 256 –
-
  Broader Artistic and Stylization Capabilities. The model expands support for
 diverse visual styles, including animation, illustration, ink painting graphics,
 offering more vivid and stable performance across use cases from entertainment to
@@ -9801,7 +9559,6 @@ speech models. Upon its release and as of the Latest Practical Date, our Speech-
 has achieved a competitive position globally, distinguished by its outstanding voice quality.
 BUSINESS
 – 257 –
-
 1,174
 1,146
 1,132
@@ -9843,7 +9600,6 @@ Flow-V AE, a technology that enhance overall audio synthesis quality. Though the
 speaker encoder and Flow-V AE, Speech-02 refines voice synthesis to closely mimic human
 BUSINESS
 – 258 –
-
 speech, making it functionally comparable to a native speaker immersed in a real-world
 linguistic environment. It deeply understands content and context, dynamically adjusts
 emotional tone, and accurately replicates specialized speech patterns and accents.
@@ -9877,7 +9633,6 @@ context-aware voice experiences for virtual assistants, audiobooks, and creative
 worldwide.
 BUSINESS
 – 259 –
-
 Other Models: Music Generation and Image Generation
 Music-02
 Launched in October 2025, MiniMax Music 2.0 is the latest generation of our music
@@ -9914,7 +9669,6 @@ across multiple platforms, enabling us to provide high quality, scalable AI tool
 worldwide.
 BUSINESS
 – 260 –
-
 The table below summarizes our major product offerings:
 Product Name Target Users Key Underlying Models PRC Release Dates Primary Use Cases Monetization Model
 MiniMax Individual (B2C) Text, Video, Speech and Music1
@@ -9981,7 +9735,6 @@ execution. Tasks are executed in an organized sequence and rendered in a results
 allowing users to review structured outputs with embedded text, code, and images.
 BUSINESS
 – 261 –
-
 MiniMax – Main Page
 Recommended 
 tasks for starter
@@ -10010,7 +9763,6 @@ organized into step-by-step updates, providing clear traceability across plannin
 and output.
 BUSINESS
 – 262 –
-
 Agent working 
 process
 MiniMax – Task Page
@@ -10037,7 +9789,6 @@ Agent offers a team plan under which users are charged US$15 per seat per month,
 each team with a shared monthly credit pool and enhanced features.
 BUSINESS
 – 263 –
-
 Hailuo AI: Flagship Visual Generation Platform
 Hailuo AI is our flagship visual generation platform, available in both web and mobile
 app formats, designed for real-time, high-definition video and image synthesis. Hailuo AI
@@ -10067,7 +9818,6 @@ previously generated frame to maintain consistent appearance and personality acr
 subsequent scenes.
 BUSINESS
 – 264 –
-
 Hailuo AI – Image to Video Creation
 Prompt input 
 bar
@@ -10092,7 +9842,6 @@ library of presets with different emotions and styles, adjust pitch and speed, a
 own voice profiles, and preview/export voice outputs.
 BUSINESS
 – 265 –
-
 MiniMax Audio – Main Page
 Text to speech/ 
 music 
@@ -10125,7 +9874,6 @@ human-AI interaction experience. Talkie/Xingye enables users to co-create, custo
 interact with virtual themes and characters that exhibit memory, emotion, and dynamic
 BUSINESS
 – 266 –
-
 personality. According to CIC, Talkie/Xingye ranked top five respectively among global
 foundation model apps, in terms of average daily usage time in the nine months ended
 September 30, 2025, with users spending an average of more than 70 minutes per day on these
@@ -10157,7 +9905,6 @@ displays periodic reminder prompts during extended sessions to help users remain
 they are interacting with a virtual character rather than a human.
 BUSINESS
 – 267 –
-
 To further align with regulatory requirements for youth protection in digital
 environments, Talkie and Xingye include a Teen Mode that enforces stricter controls for
 underage users. When activated, the application becomes inaccessible between 10:00 p.m. and
@@ -10200,7 +9947,6 @@ monetization strategy has yielded a diversified revenue stream, while preserving
 access model that maintains high monthly activity.
 BUSINESS
 – 268 –
-
 Open Platform
 Our Open Platform offers scalable, customizable AI services to global enterprise
 customers. Through public APIs and services and cloud SDKs, enterprise and developer
@@ -10265,7 +10011,6 @@ or music based on prompts or uploaded references, supporting personalized creati
 workflows.
 BUSINESS
 – 269 –
-
  MCP (Model Context Protocol) API: A standardized orchestration protocol that
 enables third-party tools and services to call our proprietary foundation models.
 Through MCP-compatible plug-in, developers can create agentic task flows that
@@ -10302,7 +10047,6 @@ solely for legitimate purposes, including: (i) product and service enhancement a
 optimisation; and (ii) brand promotion and lawful marketing activities.
 BUSINESS
 – 270 –
-
 OUR CORE TECHNOLOGIES
 Highlight of Model Algorithm Innovation
 MoE Architecture
@@ -10342,7 +10086,6 @@ improvement in efficiency means we can not only tackle extremely long-context ta
 deliver powerful AI capabilities to our customers at a competitive price-to-performance ratio.
 BUSINESS
 – 271 –
-
 Independent benchmarks validate the strength of our algorithm, with our models consistently
 ranking among the top global performers in widely recognized tests such as AIME,
 LiveCodeBench, SWE-bench, TAU-bench and OpenAI-MRCR.
@@ -10383,7 +10126,6 @@ Together, these measures yield a stable and high-performance model training and 
 environment tailored for our foundation models.
 BUSINESS
 – 272 –
-
 Unified Training and Inference Computing Resources
 Maximizing the utilization of large-scale computing clusters — large, interconnected
 computing resources designed to support training and inference workload — requires breaking
@@ -10417,7 +10159,6 @@ outcomes through cross-sector innovation. Led by our visionary founder and CEO D
 Y an, we operate at the cutting edge, advancing AI from research to deployment.
 BUSINESS
 – 273 –
-
 Our Flat and Nimble Organizational Structure
 Our organizational structure is intentionally flat and nimble, with no more than three
 layers beneath the CEO and structure teams around project-based missions rather than rigid
@@ -10455,7 +10196,6 @@ insurance, maternity insurance, unemployment insurance, work-related injury insu
 insurance, and housing provident funds.
 BUSINESS
 – 274 –
-
 We enter into standard employment contracts and agreements with our executives and
 full-time employees, covering confidentiality, non-competition, intellectual property rights,
 employment terms, and business ethics. These contracts generally include non-competition
@@ -10500,7 +10240,6 @@ selecting high-quality data for training. We collaborate with third-party provid
 for data storage and database services.
 BUSINESS
 – 275 –
-
  Model Architecture Design : Once the data is prepared, the design of the model
 architecture becomes a critical focus. Through extensive experimentation and
 iterative refinement, we engineer architectures that not only deliver enhanced
@@ -10537,7 +10276,6 @@ data-driven iterations and human oversight, resulting in enhanced capabilities f
 foundation models and AI-native products in refusing to assist in illegal or harmful tasks.
 BUSINESS
 – 276 –
-
 In general, our AI safety and alignment measures are implemented across the following
 stages:
  Data Curation Stage: We embed safety directly into the foundational model from
@@ -10577,7 +10315,6 @@ foundation models or products from generating inappropriate, harmful or manipula
 and to prevent users from engaging in harmful or illegal behaviours.
 BUSINESS
 – 277 –
-
 From the perspective of model safety, we maintain a high level of investment and R&D
 intensity and embed safety governance requirements throughout model and product
 development. At an early stage, we conduct risk identification and assessment, manage risks
@@ -10615,7 +10352,6 @@ social stability, explicit sexual or violent content, or content involving self-
 contrary to public order and good morals.
 BUSINESS
 – 278 –
-
 Based on the design of our safety architecture, content moderation, and benchmarking
 methodology, the Directors are of the view that the measures adopted are adequate and
 effective as well as consistent with industry standards, given (i) the presence of automated
@@ -10650,7 +10386,6 @@ such as MoE and Linear Attention, which are crucial to the
 industry.
 BUSINESS
 – 279 –
-
 Core R&D team member Profile
 Dr. Y an obtained a bachelor of mathematics in Southeast
 University (ɽኪ) in the PRC in June 2010. He then
@@ -10681,7 +10416,6 @@ August 2023. He is primarily responsible for the research
 and development of large language models.
 BUSINESS
 – 280 –
-
 Core R&D team member Profile
 Mr. Zhao obtained his bachelor’s degree and master’s degrees
 in computer science and technology from Peking
@@ -10722,7 +10456,6 @@ develops during their employment, shall be kept confidential and only used for o
 business purposes.
 BUSINESS
 – 281 –
-
  Confidentiality. Employees shall maintain the confidentiality of our technology
 secrets, trade secrets and any confidential business information both during and after
 employment.
@@ -10760,7 +10493,6 @@ R&D employees of the Group have not violated any non-compete agreements with the
 previous employers.
 BUSINESS
 – 282 –
-
 Research and Development Process
 Our R&D process is designed to foster innovation, ensure technical excellence, and drive
 the commercialization of our foundation models and AI-native products. This process,
@@ -10802,7 +10534,6 @@ the full-scale development and comprehensive internal testing to ensure product�
 functionality, scalability, and performance, in preparation for eventual release.
 BUSINESS
 – 283 –
-
  Release and Commercialization Stage : The final stage encompasses the rigorous
 steps from foundation model and AI-native product finalization to market launch
 and subsequent commercialization. This includes comprehensive quality assurance,
@@ -10843,7 +10574,6 @@ confidentiality protocols, restricted access to sensitive information, and enter
 disclosure agreements with employees involved in model development.
 BUSINESS
 – 284 –
-
 We accord importance to intellectual property rights and has established a rigorous IP
 protection and management framework designed to safeguard both our proprietary intellectual
 property and that of third parties. This framework encompasses the acquisition of authorised
@@ -10885,7 +10615,6 @@ implemented and continue to enhance a series of internal control and compliance 
 including the following:
 BUSINESS
 – 285 –
-
  Enhanced internal awareness and communication on intellectual property matters.
 We have strengthened internal communications to reinforce the importance of
 intellectual property compliance across relevant teams, including management,
@@ -10988,7 +10717,6 @@ December
 29, 2043
 BUSINESS
 – 286 –
-
 No. Name of Patent Type
 Covered
 Region
@@ -11086,7 +10814,6 @@ legitimate purposes, including: (i) product and service enhancement and
 optimisation; and (ii) brand promotion and lawful marketing activities.
 BUSINESS
 – 287 –
-
 As a general matter, our legal advisors have advised that the ownership of user-generated
 content created by users using our AI models and products keeps evolving within the PRC,
 U.S., and Singapore. Therefore, determining ownership is fact-dependent, involving factors
@@ -11130,7 +10857,6 @@ Tiers reflect amount of
 credits available
 BUSINESS
 – 288 –
-
 Monetization Method Product Currency Price Range Pricing Tier/Package Key Pricing Factors
 Hailuo AI USD 9.99-199.99 Monthly Subscription
 (5 Tiers)
@@ -11199,7 +10925,6 @@ whether 02-hd or
 02-turbo is used
 BUSINESS
 – 289 –
-
 Notes:
 1. All of our products offer subscription-based membership plans featuring recurring, automatic billing. All
 subscriptions may be freely cancelled by the user at any time. In addition, Hailuo AI, MiniMax Audio and
@@ -11239,7 +10964,6 @@ terms of the contracts entered into with these key opinion leaders and influenti
 figures, see “— Our Suppliers”.
 BUSINESS
 – 290 –
-
 Our marketing strategy further incorporates targeted community-focused marketing
 events and campaigns. For example, we conduct online and offline meet-ups and workshops in
 major international technology hubs such as Shanghai, New Y ork, San Francisco, Tokyo,
@@ -11280,7 +11004,6 @@ the overall quality of user interaction with the application. These adjustments 
 with the aim of creating a more secure and engaging environment for all users.
 BUSINESS
 – 291 –
-
 Since mid-February 2025, the updated Talkie app has been made available for download
 on Apple’s App Store in the affected jurisdictions. We believe that the temporary removal of
 the Talkie app is not material to its business for the following reasons: (i) during the period of
@@ -11322,7 +11045,6 @@ publicly. By opening our technologies, we foster trust, transparency, and broad 
 engagement, significantly enhancing our global market positioning and developer ecosystem.
 BUSINESS
 – 292 –
-
 We actively collaborate with prominent partners for co-development of advanced AI solutions
 and the establishment of shared technical standards. We also maintain strategic relationships to
 foster innovation, interoperability, and responsible AI governance.
@@ -11360,7 +11082,6 @@ of further customer activity. Preferential pricing is conditional and may not ap
 relevant criteria are not met, in which case standard rates shall apply;
 BUSINESS
 – 293 –
-
  Duration : We typically do not assign a set duration to our framework agreement
 with our customers. Our framework agreement shall remain effective unless
 terminated by either party or by operation of law;
@@ -11392,7 +11113,6 @@ Directors owned more than 5% of our issued share capital) had any interest in an
 largest customers in each period during the Track Record Period.
 BUSINESS
 – 294 –
-
 The following tables set forth details about our five largest customers in each period
 during the Track Record Period:
 Rank Customers
@@ -11465,7 +11185,6 @@ development at its core.
 since 2023 Net 30 days 1.1 3.7
 BUSINESS
 – 295 –
-
 Rank Customers
 Type of
 Products
@@ -11550,7 +11269,6 @@ worldwide.
 since 2024 Net 60 days 0.7 1.4
 BUSINESS
 – 296 –
-
 Our Suppliers
 We maintain stable and long-standing relationships with a select group of suppliers,
 principally in the areas of cloud infrastructure services. Our procurement strategy emphasizes
@@ -11586,7 +11304,6 @@ Directors owned more than 5% of our issued share capital) had any interest in an
 largest suppliers in each period during the Track Record Period except Supplier J.
 BUSINESS
 – 297 –
-
 The following tables set forth details about our five largest suppliers in each period during
 the Track Record Period:
 Rank Suppliers
@@ -11666,7 +11383,6 @@ days
 12.2 15.5
 BUSINESS
 – 298 –
-
 Rank Suppliers
 Type of
 Products/Services
@@ -11760,7 +11476,6 @@ days
 13.0 5.7
 BUSINESS
 – 299 –
-
 Rank Suppliers
 Type of
 Products/Services
@@ -11820,7 +11535,6 @@ rates. While the revenue and purchase amounts attributable to Customer F/Supplie
 Customer G/Supplier I during the Track Record Period were significant in the context of our
 BUSINESS
 – 300 –
-
 top five customers and suppliers, these overlapping relationships have not resulted in any
 reliance on a single party for the provision of critical goods or services, nor have they
 compromised our operational independence.
@@ -11863,7 +11577,6 @@ needs, ensuring that transitioning from U.S. providers would not result in signi
 disruptions.
 BUSINESS
 – 301 –
-
 Salient Terms of Agreements with Suppliers
 We typically enter into framework agreements with major suppliers for cloud
 infrastructure and computing services, the salient terms of which are set forth below:
@@ -11900,7 +11613,6 @@ services. The salient terms of such agreements are summarized below:
  Duration : One year.
 BUSINESS
 – 302 –
-
  Scope of Services and Marketing Models : Suppliers place promotional content
 related to our products across designated digital platforms, such as mobile app
 stores, social media platforms and websites, to drive user interaction and product
@@ -11938,7 +11650,6 @@ the promotional content.
 exposures to the promotional content.
 BUSINESS
 – 303 –
-
 /H18537Under the CPV model, our suppliers are paid based on the number of playbacks
 of the promotional video.
  Termination and Remedies : We may terminate the agreement at any time. In cases
@@ -11975,7 +11686,6 @@ mutual consent. We may terminate it at any time for breach or with three days’
 notice, with unused prepaid amounts refunded within ten days.
 BUSINESS
 – 304 –
-
 Additionally, we typically enter into framework agreements with major overseas suppliers
 through KOL direct engagements, and the salient terms of which are set forth below:
  Social Media Posts : Suppliers are required to publish original and truthful social
@@ -12014,7 +11724,6 @@ forth a summary of how all of our products fall within an acceptable sector of a
 Technology Industry as defined under Chapter 18C of the Listing Rules:
 BUSINESS
 – 305 –
-
  Foundation Models : We have built several integrated foundation models across
 various modalities. Our foundation model suite includes large language models,
 video generation models, and models for speech and music generation.
@@ -12087,7 +11796,6 @@ and our Open
 Platform.
 BUSINESS
 – 306 –
-
 Specialist Technology
 Products
 Specialist Technology
@@ -12172,7 +11880,6 @@ token-based in-
 app purchases.
 BUSINESS
 – 307 –
-
 Specialist
 Technology
 Products
@@ -12266,7 +11973,6 @@ Track Record Period, we have scaled our product offerings and therefore have exp
 rapid revenue growth, reflecting our ability to advance proprietary foundation models while
 BUSINESS
 – 308 –
-
 rapidly scaling the usage of our AI-native products across individual users, developers, and
 enterprise customers. Our revenue increased from US$3.5 million in 2023 to US$30.5 million
 in 2024, as a result of growth momentum from both our developer and enterprise-facing Open
@@ -12308,7 +12014,6 @@ we expand the scale and scope of our business, we expect to make continuous impr
 our operational efficiency.
 BUSINESS
 – 309 –
-
 During the Track Record Period, we funded our cash requirements primarily through
 capital contributions from shareholders and financing activities, including issuances of
 convertible redeemable preferred shares and convertible bonds. See “History, Reorganization
@@ -12354,7 +12059,6 @@ angel round financing and increasing value, which resulted in a fair value loss 
 liabilities by remeasuring losses on our preferred shares.
 BUSINESS
 – 310 –
-
 Path to the Commercialization of our Specialist Technology Products
 Leveraging the Rapid Growth of the Foundation Model Industry
 Since our inception, we have capitalized on the tailwinds of the rapidly expanding
@@ -12396,7 +12100,6 @@ demonstrated autonomous decision-making and execution capabilities applicable to
 workflow automation, coding and other productivity scenarios. Upon its release,
 BUSINESS
 –3 1 1–
-
 MiniMax-M2 ranked first in the Artificial Analysis Intelligence Index among all
 open-source models globally, reflecting its cognitive and reasoning capabilities and
 further reinforcing our technological leadership in agentic applications.
@@ -12439,7 +12142,6 @@ infrastructure, including upgrades with cloud partners, to support larger, faste
 models while driving down training and inference costs.
 BUSINESS
 – 312 –
-
 Enhancing the Affordability of Our AI Technologies
 Since our inception, we have recognized that the accessibility and affordability of our AI
 technologies, primarily driven by cost, will be a key determinant of our long-term revenue
@@ -12481,7 +12183,6 @@ development to scaled commercial deployment. Meanwhile, the inference cost of ou
 foundation models has been decreasing steadily enabling broader adoption across high-volume
 BUSINESS
 – 313 –
-
 industry scenarios. This decline has been driven by a combination of model architecture
 innovations, inference efficiency improvements, engineering optimizations, and reductions in
 the cost of compute. These factors are expected to continually lower our costs at a predictable
@@ -12523,7 +12224,6 @@ approximately US$7 in the nine months ended September 30, 2024 to approximately 
 during the same period in 2025. As a result, our revenues from AI-native products rose notably,
 BUSINESS
 – 314 –
-
 increasing from US$0.8 million in 2023 to US$21.8 million in 2024, and from US$13.5 million
 in the nine months ended September 30, 2024 to US$38.0 million in the nine months ended
 September 30, 2025, underscoring the commercial traction and user loyalty generated by our
@@ -12567,7 +12267,6 @@ ended September 30, 2024 to 73.6% of revenue in the nine months ended September 
 demonstrating effective cost management.
 BUSINESS
 – 315 –
-
 Looking forward, we plan to further optimize our operational efficiency by continuously
 refining our organizational structure and workflows and continue to adopt organic user
 acquisition strategy. We intend to leverage our established internal processes to rapidly scale
@@ -12609,7 +12308,6 @@ achieving, the revenue requirement under Rule 18C.03(4). Based on the foregoing,
 Directors believe, and the Joint Sponsors concur, that our business is sustainable.
 BUSINESS
 – 316 –
-
 DATA SECURITY AND PRIV ACY
 Data security and privacy protection are among our top priorities. We provide services
 based on proprietary AI models developed in-house, including applications targeted at
@@ -12645,7 +12343,6 @@ further rounds of training to enhance the model’s ability to recognize and app
 compliant content and potential risks.
 BUSINESS
 – 317 –
-
 Model and Application Security
 We have filed the requisite model registration for our proprietary models, including the
 “abab” model series, the “abab multi-modal” model series, and the “MiniMax” model series,
@@ -12682,7 +12379,6 @@ enhance user experience, conduct analytics to improve performance, detect harmfu
 and misuse, and comply with legal and regulatory obligations.
 BUSINESS
 – 318 –
-
 We outline below the categories of data involved during our operations. As the specific
 data types vary depending on product functionality, the principal categories are as follows:
 Data Type (Category) Examples of Data Fields
@@ -12728,7 +12424,6 @@ personal data level, our services and products do not involve any cross-border d
 between our PRC and overseas storage locations.
 BUSINESS
 – 319 –
-
 Governance Measures : We have also adopted organizational and governance measures
 to ensure data security. Recognizing the importance of employee awareness of data protection
 principles, we have formulated an information security training policy and conduct technical
@@ -12769,7 +12464,6 @@ their review of the Group’s business operations and the current regulatory unc
 U.S., the probability of a regulatory enforcement action against the Group is currently low.
 BUSINESS
 – 320 –
-
 Based on the relevant diligence findings, as advised by our U.S. data legal advisor, from
 a U.S. legal perspective, that our business operations in the U.S. have been carried out in
 material compliance with applicable data protection laws and regulations during the Track
@@ -12811,7 +12505,6 @@ commercial applications, ecosystem development, technological innovation, pricin
 talent acquisition, brand recognition and customer trust.
 BUSINESS
 – 321 –
-
 We differentiate ourselves through our technical focus on long-context modeling and
 scalable multi-modal architecture design, which allow us to build models capable of handling
 complex, multi-dimensional intersections across text, visual and audio.
@@ -12847,7 +12540,6 @@ from time to time and may adjust our coverage based on changes in our business o
 risk profile, and market conditions.
 BUSINESS
 – 322 –
-
 During the Track Record Period and up to the Latest Practicable Date, we did not
 experience any material incidents that would have resulted in a significant insurance claim, nor
 did we make any material insurance claims in relation to our business operations. For more
@@ -12884,7 +12576,6 @@ ensuring the effective execution and continuous improvement of our ESG managemen
 framework.
 BUSINESS
 – 323 –
-
 ESG-Related Risks and Management
 We place emphasis on the ESG-related risks, which we have integrated into our overall
 strategic planning. To this end, we have established clear ESG management principles and
@@ -12918,7 +12609,6 @@ through technological innovation and responsible operations, with the vision of 
 greener and more sustainable digital future.
 BUSINESS
 – 324 –
-
 Climate Risk Management
 We recognize the interconnection between our business and climate change, and have
 identified and assessed the climate-related risks that may affect our operations, supply chain
@@ -12979,7 +12669,6 @@ unit of operating revenue by 20% compared to 2023.
 practices.
 BUSINESS
 – 325 –
-
 Environment and Climate Related Targets and Metrics
 We have included our office premises within the scope of environmental and climate-
 related metrics calculation. Due to the nature of our business, we do not engage in physical
@@ -13026,7 +12715,6 @@ Notes:
 processing of wastewater discharge.
 BUSINESS
 – 326 –
-
 Indicators/Unit
 For the year ended December 31,
 For the nine
@@ -13078,7 +12766,6 @@ cooperate with our data center suppliers to achieve carbon-neutral operations, w
 reducing our overall environmental footprint.
 BUSINESS
 – 327 –
-
 In terms of energy conservation and emission reduction, we have formulated an energy
 management policy that governs energy consumption within our offices. We strive to reduce
 energy consumption per unit area, improve the energy efficiency of our products and services,
@@ -13118,7 +12805,6 @@ have formulated internal policies on occupational health and safety management a
 regular workplace safety inspections to identify and mitigate potential hazards. These measures
 BUSINESS
 – 328 –
-
 include routine maintenance and upgrades of fire safety equipment to ensure a safe working
 environment. During the Track Record Period and up to the Latest Practicable Date, there were
 no workplace injuries or fatalities, nor have we experienced any material operational or
@@ -13158,7 +12844,6 @@ and cultural exchange. By offering multilingual products, we strive to ensure th
 language is heard and every culture is understood.
 BUSINESS
 – 329 –
-
 As part of our community engagement efforts, we actively open-source our models and
 build open platforms to provide developers worldwide with accessible AI infrastructure,
 thereby lowering technological barriers and fostering a vibrant innovation ecosystem.
@@ -13195,7 +12880,6 @@ the market. Our Directors further confirm that should relocation be required, su
 will not materially affect the operation and financial conditions of us.
 BUSINESS
 – 330 –
-
 LEGAL PROCEEDINGS AND COMPLIANCE
 Legal Proceedings
 During the Track Record Period and up to the Latest Practicable Date, we had not been
@@ -13232,7 +12916,6 @@ protection measures in relation to Hailuo AI;
  such further legal or equitable relief as the court may deem just and proper.
 BUSINESS
 – 331 –
-
 Legal Analysis
 These claims are commercial disputes in nature, and having considered advice from our
 U.S. litigation advisor, our Directors believe, that they are without merit in all material respects
@@ -13271,7 +12954,6 @@ copyright protections claimed by the Plaintiffs and the underlying
 copyrightability of some of the characters identified by the Plaintiffs.
 BUSINESS
 – 332 –
-
  Use of materials in model development may qualify as “fair use.” The
 Company expects to argue that the type of use alleged, if reached at all, would
 be covered under the “fair use” defense. That defense is codified in § 107 of
@@ -13310,7 +12992,6 @@ service could be misused; there must also be sufficient knowledge and
 encouragement of specific infringing acts, which the Company denies.
 BUSINESS
 – 333 –
-
  The Company has no direct financial benefit tied to alleged infringements .
 According to the standard set in Perfect 10, Inc. v. Giganews, Inc. , 847 F.3d
 657, 673 (9th Cir. 2017), “to prevail on a claim for vicarious infringement, a
@@ -13355,7 +13036,6 @@ to those of its industry peers, there was no reasonable basis for the Joint Spon
 with the Directors’ view that the claims are without merits in all material respects.
 BUSINESS
 – 334 –
-
 Potential Liability Exposure and Impact on the Company
 Having considered advice from our U.S. litigation advisor, our Directors are of the view
 that the quantum of statutory damages in U.S. copyright claims is generally determined by two
@@ -13398,7 +13078,6 @@ character, and that subsequent registrations do not independently support additi
 awards.
 BUSINESS
 – 335 –
-
 Moreover, it would be possible that certain of the allegedly infringing videos
 contained in the Complaint were generated by the Plaintiffs themselves. For such
 video outputs, if the Plaintiff had not intentionally forced the tool to create those
@@ -13440,7 +13119,6 @@ the view that applicable U.S. copyright laws indicate that subscription revenue 
 it must be reduced by infrastructure, personnel, development, marketing, and operational costs.
 BUSINESS
 – 336 –
-
 Based on the independent due diligence steps performed by the Joint Sponsors, including
 interviewing and discussing with the Company’s U.S. litigation advisor, the Joint Sponsors
 have reasonable grounds to believe that the view of the Directors expressed above fairly
@@ -13483,7 +13161,6 @@ to implement enhanced content filtering for the Plaintiffs’ alleged copyrighte
 characters, the operational impact should be minimal. The core Hailuo AI service
 BUSINESS
 – 337 –
-
 would remain fully operational for all use cases except the alleged copyrighted
 characters, including video generation for marketing, education, entertainment, and
 creative expression using non-infringing content.
@@ -13529,7 +13206,6 @@ potential reductions where rates are excessive), with fee exposure being recipro
 such that, if we successfully defend against the claims, we would be eligible to seek
 BUSINESS
 – 338 –
-
 recovery of our own attorneys’ fees under the same discretionary framework.
 Accordingly, while attorneys’ fees are a component of risk, they do not
 fundamentally change the overall exposure profile described above.
@@ -13570,7 +13246,6 @@ proceedings or fines, which could have a material adverse effect on our business
 operations, financial condition and reputation.”
 BUSINESS
 – 339 –
-
 Additional Measures Adopted by the Group
 Despite our view that the Plaintiffs’ claims in the Lawsuit are without merit in all material
 respects, we have proactively implemented measures as part of our ongoing compliance and
@@ -13613,7 +13288,6 @@ by our safety team, and (iii) feedback from regulators, where applicable. For an
 identified, we (a) promptly implement blocking measures to prevent recurrence (including
 BUSINESS
 – 340 –
-
 taking down, blocking or restricting the relevant content/output, as appropriate), and (b)
 continuously improve our moderation controls based on root-cause analysis, including refining
 our review models and expanding our keyword libraries for filtering, with a view to further
@@ -13654,7 +13328,6 @@ to the Latest Practicable Date, our Group has not been subject to sanctions, and
 engaged in any material activities in comprehensively sanction countries, or entered into
 BUSINESS
 – 341 –
-
 material service contract or engaged in any material activities with any customers that are
 targets of U.S. sanctions. Therefore, as advised by our international sanctions legal advisor, we
 have been in compliance with rule and laws in US export control and sanctions in all material
@@ -13698,7 +13371,6 @@ in eligible for the Publicly Traded Securities Exception. Accordingly, it appear
 some U.S. persons that purchase our Shares in the Global Offering or are the parents of
 BUSINESS
 – 342 –
-
 non-U.S. person subsidiaries that purchase our Shares in the Global Offering would be required
 to file notifications regarding their or their subsidiaries’ purchases with Treasury no later than
 30 days after such purchases of the Shares.
@@ -13742,7 +13414,6 @@ during the Track Record Period and up to the Latest Practicable Date. Based on t
 PRC legal advisor and the Joint Sponsors’ discussion with their PRC legal advisor, the Joint
 BUSINESS
 – 343 –
-
 Sponsors concur with the Directors’ view above. We attach great importance to the protection
 of minors and have adopted a “Minor Protection Policy” to safeguard content safety for
 underage users. As providers of generative artificial intelligence services, We respect
@@ -13779,7 +13450,6 @@ See “Regulatory Overview — Laws and Regulations in the PRC — Regulations R
 to Cybersecurity and Data Protection” for details.
 BUSINESS
 – 344 –
-
 During the Track Record Period and as the Latest Practicable Date, (i) we have not been
 notified by the relevant industry regulatory or supervisory authorities that we are classified as
 operators of critical information infrastructure operator; (ii) the data processed under our
@@ -13814,7 +13484,6 @@ authorities in China in relation to social insurance and housing provident fund 
 matters during the Track Record Period is remote.
 BUSINESS
 – 345 –
-
 LICENSES AND PERMITS
 The following table sets forth the details of the material licenses and permits necessary
 for the business operations in which we engaged in China.
@@ -13860,7 +13529,6 @@ on content compliance, safety, and ethical responsibility. We uphold core values
 management practices, including the protection of minors, the safeguarding of intellectual
 BUSINESS
 – 346 –
-
 property rights, and the respect for lawful rights and interests of third parties. To improve the
 legality, safety, accuracy, and reliability of content generated by our AI services, we have
 developed and implemented multi-level content governance policies.
@@ -13897,7 +13565,6 @@ updates to the public, we conduct regulatory reviews to assess potential legal r
 necessary licenses or approvals from competent authorities.
 BUSINESS
 – 347 –
-
 We have also implemented a structured framework for intellectual property protection.
 This includes centralized management of our trademarks, patents, and copyrights, as well as
 regular audits to track renewal timelines and prevent unauthorized use. Our legal and product
@@ -13935,7 +13602,6 @@ ethics training for employees and external agents to reinforce awareness of appl
 our internal standards.
 BUSINESS
 – 348 –
-
 A W ARDS AND RECOGNITIONS
 Award/Recognition Award Authority Award Y ear
 Specialized and New” SME
@@ -13964,7 +13630,6 @@ and Technology Commission
 2023
 BUSINESS
 – 349 –
-
 BOARD OF DIRECTORS
 Upon Listing, the Board will consist of nine Directors, including four executive Directors,
 two non-executive Directors and three independent non-executive Directors. The following
@@ -14034,7 +13699,6 @@ development of large
 language models
 DIRECTORS AND SENIOR MANAGEMENT
 – 350 –
-
 Name Age Position/Title
 Time of Joining
 our Group
@@ -14123,7 +13787,6 @@ the Institute of Automation, Chinese Academy of Sciences (הin July
 2015 and conducted post-doctorate research at Tsinghua University ( ૶ശɽኪ). Dr. Y an has
 DIRECTORS AND SENIOR MANAGEMENT
 – 351 –
-
 published approximately 200 academic articles on top conferences and journals with over
 30,000 citations and won several awards and honors. Dr. Y an was awarded (i) the First Prize
 in the Guangdong Province Technology Invention Award (ᆤ) in February
@@ -14163,7 +13826,6 @@ model researcher and engineer since March 2022. He is primarily responsible for 
 development of visual models.
 DIRECTORS AND SENIOR MANAGEMENT
 – 352 –
-
 Prior to joining our Company, Mr. Zhou worked at SenseTime Group Inc. from April 2018
 to July 2019 and Huawei Technology Company Limited from August 2019 to March 2022,
 where he focused on algorithms. Mr. Zhou has also been the legal representative and director
@@ -14201,7 +13863,6 @@ international expansion through the worldwide success of games such as Genshin I
 ग़), the Honkai series ( ੥ᕸ), Tears of Themis (ԫ΁ᖤ) and Zenless Zone Zero ( ഒਜཧ).
 DIRECTORS AND SENIOR MANAGEMENT
 – 353 –
-
 Mr. Liu obtained a bachelor’s degree in information engineering and a master’s degree in
 communications and information systems from Shanghai Jiao Tong University ( ɪऎʹஷɽኪ)
 in the PRC in July 2009 and March 2012, respectively.
@@ -14242,7 +13903,6 @@ Director with effect from Listing Date. He is responsible for providing independ
 and judgment to the Board.
 DIRECTORS AND SENIOR MANAGEMENT
 – 354 –
-
 Dr. Wang has been a professor at Beijing Technology and Business University ( ̏ԯʈਠ
 ɽኪ) since July 2022. Prior to that, he was the managing partner of assurance services of
 Greater China of Ernst & Y oung from December 2014 to June 2022. From June 2005 to May
@@ -14281,7 +13941,6 @@ Asian Y oung Scientist Project in 2023 and the National Outstanding Y outh Fund 
 2024.
 DIRECTORS AND SENIOR MANAGEMENT
 – 355 –
-
 SENIOR MANAGEMENT
 The following table sets forth the key information about our senior management.
 Name Age Position/Title
@@ -14352,7 +14011,6 @@ For the biographical details of Dr. Y an, Ms. Y un, Mr. Zhao Pengyu and Mr. Zhou
 see “— Board of Directors — Executive Directors”
 DIRECTORS AND SENIOR MANAGEMENT
 – 356 –
-
 GENERAL
 Save as disclosed above, none of the Directors or members of senior management of our
 Company has been a director of any public company the securities of which are listed on any
@@ -14384,7 +14042,6 @@ Listing Rules as of the Latest Practicable Date, and (iii) that there are no oth
 affect his/her independence at the time of his/her appointments.
 DIRECTORS AND SENIOR MANAGEMENT
 – 357 –
-
 JOINT COMPANY SECRETARIES
 Mr. Xue Zizhao ( ᑡɿ১) aged 33, is our vice president of capital markets and
 investments since September 2023 and a joint company secretary. He is primarily responsible
@@ -14422,7 +14079,6 @@ primary duties of the Audit Committee include, but not limited to, the following
 monitoring the independence of external auditors and evaluating their performance;
 DIRECTORS AND SENIOR MANAGEMENT
 – 358 –
-
  examining the financial information of our Company and reviewing financial reports
 and statements of our Company;
  examining the financial reporting system, the risk management and internal control
@@ -14456,7 +14112,6 @@ board skills matrix and making recommendations on any proposed changes to our
 Board to complement the Company’s corporate strategy;
 DIRECTORS AND SENIOR MANAGEMENT
 – 359 –
-
  researching and developing standards and procedures for the election of our Board
 members, chief executive officer and members of the senior management, and
 making recommendations to our Board;
@@ -14490,7 +14145,6 @@ disclosure in the Corporate Governance Report;
 of all its Shareholders;
 DIRECTORS AND SENIOR MANAGEMENT
 – 360 –
-
 (g) to confirm, on an annual basis, that the beneficiaries of weighted voting rights have
 been members of the Board throughout the year and that no matters under Rule
 8A.17 of the Listing Rules have occurred during the relevant financial year;
@@ -14522,7 +14176,6 @@ by the Company for inclusion in our interim and annual reports after Listing wil
 summary of the work of the corporate governance committee for the relevant period.
 DIRECTORS AND SENIOR MANAGEMENT
 – 361 –
-
 ROLE OF OUR INDEPENDENT NON-EXECUTIVE DIRECTORS
 Pursuant to Rule 8A.26 of the Listing Rules, the role of the independent non-executive
 directors of a listed company with WVR structure must include, but is not limited to, the
@@ -14557,7 +14210,6 @@ taxation to be accrued to our Directors for the year ended December 31, 2025 to 
 approximately US$6.03 million.
 DIRECTORS AND SENIOR MANAGEMENT
 – 362 –
-
 The total emoluments for the remaining individuals among the five highest paid
 individuals amounted to US$0.54 million, US$1.20 million, US$1.22 million and US$4.70
 million for the years ended December 31, 2022, 2023 and 2024 and the nine months ended
@@ -14597,7 +14249,6 @@ industry experience. We have three independent non-executive Directors with diff
 industry backgrounds, representing one-third of the members of our Board. Our Company has
 DIRECTORS AND SENIOR MANAGEMENT
 – 363 –
-
 evaluated the structure, size and composition of our Board, and is of the opinion that the
 structure of our Board is reasonable, and the experience and skills of the Directors in various
 aspects and fields can enable our Company to maintain a high standard of operations.
@@ -14634,7 +14285,6 @@ in accordance with Rule 13.10 of the Listing Rules;
 (e) the WVR Structure;
 DIRECTORS AND SENIOR MANAGEMENT
 – 364 –
-
 (f) transactions in which any beneficiary of weighted voting rights in the Company has
 an interest; and
 (g) where there is a potential conflict of interest between the Company, its subsidiary
@@ -14645,7 +14295,6 @@ Pursuant to Rule 8A.33 of the Listing Rules, the Company is required to engage a
 adviser on a permanent basis.
 DIRECTORS AND SENIOR MANAGEMENT
 – 365 –
-
 OUR CONTROLLING SHAREHOLDERS
 Immediately following the completion of the Global Offering (assuming the Offer Size
 Adjustment Option and the Over-allotment Option are not exercised), an aggregate of
@@ -14681,7 +14330,6 @@ does not allow any conflict between his/her duties as a Director and his/her per
 interests;
 RELATIONSHIP WITH OUR CONTROLLING SHAREHOLDERS
 – 366 –
-
 (b) our daily management and operations are carried out by a senior management team,
 all of whom have substantial experience in the industry in which our Company is
 engaged, and will therefore be able to make business decisions that are in the best
@@ -14717,7 +14365,6 @@ Based on the above, our Directors believe that we are able to operate independen
 Controlling Shareholders and their close associates.
 RELATIONSHIP WITH OUR CONTROLLING SHAREHOLDERS
 – 367 –
-
 Financial Independence
 We have an independent financial system and make financial decisions according to our
 Group’s own business needs. We have internal control and accounting systems and an
@@ -14753,7 +14400,6 @@ where appropriate, the reporting, annual review by the independent non-executive
 Directors, announcement and independent shareholders’ approval;
 RELATIONSHIP WITH OUR CONTROLLING SHAREHOLDERS
 – 368 –
-
  our Board consists of a balanced composition of executive Directors, non-executive
 Directors and independent non-executive Directors, with independent non-executive
 Directors representing one-third of our Board to ensure that our Board is able to
@@ -14777,7 +14423,6 @@ Company and our Controlling Shareholders, and to protect our minority Shareholde
 after the Listing.
 RELATIONSHIP WITH OUR CONTROLLING SHAREHOLDERS
 – 369 –
-
 OVERVIEW
 Prior to the Listing, our Company has entered into a number of transactions with our
 connected persons in our ordinary and usual course of business. Upon the Listing, the
@@ -14818,7 +14463,6 @@ segment. Also, having considered, among others, the (i) the reputation of Alibab
 internet platform in the industry, (ii) the customer traffic in the platforms of Alibaba, and (iii)
 CONNECTED TRANSACTIONS
 – 370 –
-
 the variety of industries and scenarios we will be introduced to through the Alibaba ecosystem,
 the transactions with Alibaba enable our Group to expand our customer base and market
 penetration. Our Directors are of the view that the price of service fees payable by Alibaba is
@@ -14861,7 +14505,6 @@ to the annual reporting, annual review and announcement requirements under Chapt
 the Listing Rules.
 CONNECTED TRANSACTIONS
 – 371 –
-
 NON-EXEMPT CONTINUING CONNECTED TRANSACTIONS
 1. Alibaba Cloud Services Agreement
 Principal Terms
@@ -14895,7 +14538,6 @@ for the years ended December 31, 2022 and 2023 and 2024 and the nine months ende
 September 30, 2025, respectively.
 CONNECTED TRANSACTIONS
 – 372 –
-
 Annual Cap and Basis of Cap
 Our proposed annual caps of the transactions under the Alibaba Cloud Services
 Agreement for the years ending December 31, 2026, 2027 and 2028 are US$115 million,
@@ -14937,7 +14579,6 @@ marketing and data analysis services provided by Shanghai Jizhi Wujie and Shangh
 Jizhi Zongheng after Listing.
 CONNECTED TRANSACTIONS
 – 373 –
-
 Pricing Policy
 The price was determined on a cost-plus basis by adding a reasonable profit which
 is in line with market practice and industry peers. Relevant costs include but not limited
@@ -14979,7 +14620,6 @@ is primarily due to the expansion of our business scale and user base, which
 will lead to heightened requirements for security and compliance, as well as
 CONNECTED TRANSACTIONS
 – 374 –
-
 the continuous iteration of our applications, the rollout of new business
 modules, all of which will significantly increase the volume of operational
 support, routine maintenance, promotion and marketing work, and, in turn,
@@ -15016,7 +14656,6 @@ value of such continuing connected transactions for the years ended December 31,
 and 2028 shall not exceed relevant annual amounts stated above.
 CONNECTED TRANSACTIONS
 – 375 –
-
 SUBSTANTIAL SHAREHOLDERS
 So far as our Directors are aware, immediately following completion of the Global
 Offering, assuming the Offer Size Adjustment Option and the Over-allotment Option are not
@@ -15087,7 +14726,6 @@ corporations
 Alibaba China Holding Limited /H1118/H1118/H1118/H1118/H1118/H1118/H1118Beneficial owner 38,247,987 17.05% 12.52%
 SUBSTANTIAL SHAREHOLDERS
 – 376 –
-
 Name of substantial shareholder
 Capacity/Nature
 of Interest (1)
@@ -15165,7 +14803,6 @@ Company (Hong Kong) Limited, which acts as the trustee of Floating Sky Trust. Fl
 established by Ms. Y un (as settlor) for the benefit of herself.
 SUBSTANTIAL SHAREHOLDERS
 – 377 –
-
 Accordingly, under the SFO, Dr. Y an is deemed to be interested in the Shares held by MiniMax Awakening,
 MiniMax Limited, MiniMax Matrix and Alpha EXP . Local Linearity is deemed to be interested in the Shares
 held by MiniMax Awakening, MiniMax Limited and MiniMax Matrix. Scaling EXP Limited and Trident Trust
@@ -15200,7 +14837,6 @@ of share capital carrying rights to vote in all circumstances at general meeting
 or other members of the Group.
 SUBSTANTIAL SHAREHOLDERS
 – 378 –
-
 THE CORNERSTONE PLACING
 We have entered into cornerstone investment agreements (each a “ Cornerstone
 Investment Agreement ”, and together the “ Cornerstone Investment Agreements ”) with the
@@ -15316,7 +14952,6 @@ issue
 67.88% 5.64% 59.03% 5.57% 59.03% 5.57% 51.33% 5.50%
 CORNERSTONE INVESTORS
 – 379 –
-
 Assuming an Offer Price of HK$165.0, being the high-end of the Offer Price range set out
 in this Prospectus, the total number of Offer Shares to be subscribed by the Cornerstone
 Investors would be 16,504,040 Offer Shares. The table below reflects the shareholding
@@ -15397,7 +15032,6 @@ Offering to be placed to certain existing Shareholders and/or their close associ
 details, please see the section headed “Waivers and Exemption”.
 CORNERSTONE INVESTORS
 – 380 –
-
 The Cornerstone Placing will form part of the International Offering and the Cornerstone
 Investors will not subscribe for any Offer Shares under the Global Offering other than pursuant
 to the Cornerstone Investment Agreements. The Offer Shares to be subscribed by the
@@ -15432,7 +15066,6 @@ Cornerstone Investors will be disclosed in the allotment results announcement to
 us on or around January 8, 2026.
 CORNERSTONE INVESTORS
 – 381 –
-
 OUR CORNERSTONE INVESTORS
 Set out below in the aggregate number of Offer Shares, and the corresponding percentages
 to the Offer Shares and our Company’s total issued share capital under the Cornerstone
@@ -15518,7 +15151,6 @@ out in the section headed “Information about this Prospectus and the Global Of
 Conversion” in this Prospectus.
 CORNERSTONE INVESTORS
 – 382 –
-
 Based on the Offer Price of HK$158.0 (being the mid-point of the indicative Offer Price
 range)
 Assuming the Offer Size Adjustment Option
@@ -15600,7 +15232,6 @@ out in the section headed “Information about this Prospectus and the Global Of
 Conversion” in this Prospectus.
 CORNERSTONE INVESTORS
 – 383 –
-
 Based on the Offer Price of HK$165.0 (being the high-end of the indicative Offer Price
 range)
 Assuming the Offer Size Adjustment Option
@@ -15682,7 +15313,6 @@ out in the section headed “Information about this Prospectus and the Global Of
 Conversion” in this Prospectus.
 CORNERSTONE INVESTORS
 – 384 –
-
 The following information about the other Cornerstone Investors was provided to our
 Company by the Cornerstone Investors in relation to the Cornerstone Placing.
 ADIA
@@ -15718,7 +15348,6 @@ Independent Third Party to the Company. No other investor holds an ultimate bene
 ownership of 30% or more in AMF or Aspex Management.
 CORNERSTONE INVESTORS
 – 385 –
-
 Boyu
 Abstract Enigma Limited is a company incorporated under the laws of the Cayman
 Islands and a controlled subsidiary of Boyu Capital Offshore Fund. Boyu Capital Offshore
@@ -15759,7 +15388,6 @@ offers a diverse range of investment strategies for both Asian and non-Asian ins
 working closely with its local offices to deliver tailored solutions to institutional clients.
 CORNERSTONE INVESTORS
 – 386 –
-
 Eastspring, acting as the discretionary investment manager for and on behalf of two
 discretionary funds (the “ ESI Managed Funds ”), has agreed to participate in the Global
 Offering and for such ESI Managed Funds to invest as Cornerstone Investor. The ESI Managed
@@ -15800,7 +15428,6 @@ III (together “ Janchor Funds ”) are investment funds established in the Cay
 Janchor Partners Limited (“ Janchor Partners ”) serves as investment manager of the Janchor
 CORNERSTONE INVESTORS
 – 387 –
-
 Funds. Established in 2009, Janchor Partners is a long-term industrialist investor, partnering
 with companies that have superior business models, favourable growth prospects and the
 potential to be part of long-term positive structural dynamics of Asian countries and
@@ -15840,7 +15467,6 @@ more interests in MP VII L.P . or in MPC VII-A L.P .. To the best knowledge of M
 Su is an Independent Third Party.
 CORNERSTONE INVESTORS
 – 388 –
-
 Perseverance Asset Management
 Perseverance Asset Management International (Singapore) Pte. Ltd. (“ Perseverance
 Asset Management ”) acts as the investment advisor or investment manager on a discretionary
@@ -15876,7 +15502,6 @@ insurance, enterprise annuity, asset management, health and elderly care, health
 and commercial real estate, among others.
 CORNERSTONE INVESTORS
 – 389 –
-
 CLOSING CONDITIONS
 The obligation of each Cornerstone Investor to subscribe for the Offer Shares under the
 respective Cornerstone Investment Agreement is subject to, among other things, the following
@@ -15913,7 +15538,6 @@ transfers to any of its wholly-owned subsidiaries who will be bound by the same 
 of such Cornerstone Investor, including the Lock-up Period restriction.
 CORNERSTONE INVESTORS
 – 390 –
-
 AUTHORIZED AND ISSUED SHARE CAPITAL
 The following is a description of the authorized and issued share capital of our Company
 in issue and to be issued as fully paid or credited as fully paid upon Listing, assuming the
@@ -15957,7 +15581,6 @@ MiniMax Limited, MiniMax Matrix, MiniMax Awakening, Alpha EXP and Floating Sky, 
 as of the date of this Prospectus.
 SHARE CAPITAL
 – 391 –
-
 Share capital immediately following the completion of the Global Offering
 (i) Authorized share capital
 Number Description of Shares
@@ -15998,7 +15621,6 @@ US$2,538.9220
 305,447,288 Total US$30,544.7288
 SHARE CAPITAL
 – 392 –
-
 Notes:
 (1) representing 20,890,736 Class A Ordinary Shares and 1,656,805 Class A Ordinary Shares held by
 MiniMax Gene and Himalia Holding Limited, respectively, upon Listing.
@@ -16043,7 +15665,6 @@ Note: please refer to the section headed “— (ii) Issued and to be issued, fu
 (assuming the Offer Size Adjustment Option and the Over-allotment Option are not exercised)” above.
 SHARE CAPITAL
 – 393 –
-
 (iv) Issued and to be issued, fully paid or credited to be fully paid (assuming the Offer Size
 Adjustment Option is not exercised and the Over-allotment Option is fully exercised)
 Number Description of Shares
@@ -16078,7 +15699,6 @@ Note: please refer to the section headed “— (ii) Issued and to be issued, fu
 (assuming the Offer Size Adjustment Option and the Over-allotment Option are not exercised)” above.
 SHARE CAPITAL
 – 394 –
-
 (v) Issued and to be issued, fully paid or credited to be fully paid (assuming the Offer Size
 Adjustment Option and the Over-allotment Option are fully exercised)
 Number Description of Shares
@@ -16117,7 +15737,6 @@ Note: please refer to the section headed “— (ii) Issued and to be issued, fu
 (assuming the Offer Size Adjustment Option and the Over-allotment Option are not exercised)” above.
 SHARE CAPITAL
 – 395 –
-
 WEIGHTED VOTING RIGHTS STRUCTURE
 The Company has a weighted voting rights structure. Under our weighted voting rights
 structure, our share capital comprises Class A Ordinary Shares and Class B Ordinary Shares.
@@ -16154,7 +15773,6 @@ control over the voting rights attached to them, other than in the circumstances
 permitted by Rule 8A.18 of the Listing Rule;
 SHARE CAPITAL
 – 396 –
-
 (iii) where a vehicle holding Class B Ordinary Shares on behalf of a WVR Beneficiary
 no longer complies with Rule 8A.18(2) of the Listing Rule; or
 (iv) when all of the Class B Ordinary Shares have been converted to Class A Ordinary
@@ -16205,7 +15823,6 @@ tax planning purposes; or (c) a private company or other vehicle wholly owned an
 controlled by the WVR Beneficiary or by a trust referred to in paragraph (b) above.
 SHARE CAPITAL
 – 397 –
-
 To ensure that there will not be any circumvention of Rule 8A.18(1), each of the
 Company, Dr. Y an and Ms. Y un undertakes that so long there is any weighted voting rights
 attached to the Shares held by Alpha EXP , MiniMax Gene, Floating Sky, MiniMax Awakening,
@@ -16248,7 +15865,6 @@ model Hailuo-01 and music model Music-01 in 2024 as well as our open-source text
 MiniMax-Text-01, MiniMax-M1 and MiniMax-M2 in 2025. In addition, leveraging the
 SHARE CAPITAL
 – 398 –
-
 reputation and experience of Dr. Y an in the industry, the Company has been able to secure
 investments from numerous investors at a relatively early stage and before its significant
 commercialization. Dr. Y an has also led the Company to develop a suite of AI-native products
@@ -16293,7 +15909,6 @@ reached more than 100 thousand registered enterprise customers and developers, i
 range of well-known enterprise customers.
 SHARE CAPITAL
 – 399 –
-
 RANKING
 The Offer Shares will rank pari passu in all respects with all Class A Ordinary Shares
 currently in issue or to be issued as mentioned in this Prospectus, and will qualify and rank
@@ -16334,7 +15949,6 @@ disputes arising out of the Undertaking shall be subject to the exclusive jurisd
 courts of Hong Kong.
 SHARE CAPITAL
 – 400 –
-
 POTENTIAL CHANGES TO SHARE CAPITAL
 Circumstances under which general meetings are required
 Pursuant to the Cayman Companies Act and the terms of the Articles of Association, our
@@ -16372,7 +15986,6 @@ held; or
 Shareholders in a general meeting.
 SHARE CAPITAL
 – 401 –
-
 General mandate to repurchase shares
 Subject to the Global Offering becoming unconditional, our Directors have been granted
 a general unconditional mandate, to exercise all the powers of our Company to repurchase our
@@ -16406,7 +16019,6 @@ Incentive Plan. See “Statutory and General Information — D. Share Incentive 
 Appendix IV to this Prospectus for further details.
 SHARE CAPITAL
 – 402 –
-
 You should read the following discussion and analysis in conjunction with our
 consolidated financial statements and the accompanying notes included in the
 Accountants’ Report set forth in Appendix I to this Prospectus. Our consolidated financial
@@ -16441,7 +16053,6 @@ developer-facing Open Platform, delivering intelligent and dynamic experiences t
 globally.
 FINANCIAL INFORMATION
 – 403 –
-
 BASIS OF PREPARATION
 The historical financial information has been prepared in accordance with all applicable
 IFRS Accounting Standards as issued by the International Accounting Standards Board (the
@@ -16474,7 +16085,6 @@ adoption, market demand, product penetration, and pricing of our products, which
 affects our revenue growth and profitability.
 FINANCIAL INFORMATION
 – 404 –
-
 Ability to Diversify Product Offerings, Broaden Monetization Channels and Improve
 Accessibility
 Our revenue growth has been primarily driven by the rapid expansion of our AI-native
@@ -16518,7 +16128,6 @@ base with an organic user acquisition approach, without relying upon heavy brand
 and user acquisition spending.
 FINANCIAL INFORMATION
 – 405 –
-
 Ability to Optimize Costs Through Improving Model Computing Efficiency
 We believe that our ability to improve model computing efficiency, while supporting
 increasingly complex AI models, is a critical driver of achieving profitability. During the Track
@@ -16558,7 +16167,6 @@ support, workflow automation, and routine task processing. We expect to drive hi
 personnel efficiency to achieve greater outcomes by leveraging our AI capabilities.
 FINANCIAL INFORMATION
 – 406 –
-
 MATERIAL ACCOUNTING POLICY INFORMATION AND ESTIMATES
 Some of our accounting policies require us to apply estimates, assumptions, and complex
 judgments related to accounting items. These estimates, assumptions, and judgments have a
@@ -16590,7 +16198,6 @@ refundable. Revenue is recognised ratably over the membership period as service 
 rendered.
 FINANCIAL INFORMATION
 – 407 –
-
  Virtual items
 Our Group also offers individual users with virtual items in its AI-native Products
 to enhance the using experience. Users have option to pre-purchase additional credits to
@@ -16627,7 +16234,6 @@ of the financial instrument or a shorter period, when appropriate, to the net ca
 of the financial asset.
 FINANCIAL INFORMATION
 – 408 –
-
 Contract liabilities
 A contract liability is recognised when a payment is received or a payment is due
 (whichever is earlier) from a customer before our Group transfers the related goods or services.
@@ -16666,7 +16272,6 @@ the date of cancellation, and any expense not yet recognised for the award is re
 immediately.
 FINANCIAL INFORMATION
 – 409 –
-
 Financial liabilities
 Initial recognition and measurement
 Financial liabilities are classified, at initial recognition, as financial liabilities at fair
@@ -16704,7 +16309,6 @@ The net fair value gain or loss recognised in the statements of profit or loss d
 any interest charged on these financial liabilities.
 FINANCIAL INFORMATION
 – 410 –
-
 Fair value measurement
 Our Group measures its financial assets at fair value through profit or loss, financial
 assets at fair value through other comprehensive income, convertible redeemable preferred
@@ -16738,13346 +16342,3 @@ hierarchy by reassessing categorisation (based on the lowest level input that is
 the fair value measurement as a whole) at the end of each of the Relevant Periods.
 FINANCIAL INFORMATION
 –4 1 1–
-
-CONSOLIDATED STATEMENTS OF PROFIT OR LOSS
-The following table sets forth a summary of our consolidated statements of profit or loss,
-in absolute amounts and as a percentage of our total revenue, for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Revenue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
-Cost of sales /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – (4,314) (124.7) (26,785) (87.8) (18,944) (97.4) (40,961) (76.7)
-Gross (loss)/profit /H1118/H1118/H1118/H1118– – (854) (24.7) 3,738 12.2 510 2.6 12,476 23.3
-Other income and gains,
-net /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,155 – 8,942 258.4 36,151 118.4 25,278 129.9 31,232 58.4
-Selling and distribution
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(587) – (22,827) (659.7) (86,995) (285.0) (53,389) (274.4) (39,325) (73.6)
-Administrative expenses /H1118/H1118(3,213) – (7,615) (220.1) (14,384) (47.1) (9,610) (49.4) (22,074) (41.3)
-Research and development
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(10,560) – (70,002) (2,023.2) (188,979) (619.1) (138,684) (712.9) (180,312) (337.4)
-Fair value loss on financial
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(60,509) – (176,826) (5,110.6) (214,172) (701.7) (128,063) (658.3) (313,477) (586.6)
-Finance costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118(14) – (61) (1.8) (509) (1.7) (316) (1.6) (511) (1.0)
-Impairment losses on
-financial assets, net /H1118/H1118/H1118– – (3) (0.1) (88) (0.3) (68) (0.3) (22) –
-Loss before tax /H1118/H1118/H1118/H1118/H1118/H1118(73,728) – (269,246) (7,781.7) (465,238) (1,524.2) (304,342) (1,564.4) (512,013) (958.2)
-Income tax expense /H1118/H1118/H1118/H1118––––––––––
-Loss for the year/period /H1118(73,728) – (269,246) (7,781.7) (465,238) (1,524.2) (304,342) (1,564.4) (512,013) (958.2)
-Attributable to:
-Owners of the parent /H1118/H1118/H1118(73,728) – (269,246) (7,781.7) (465,238) (1,524.2) (304,342) (1,564.4) (512,013) (958.2)
-Non-controlling interests /H1118 ––––––––––
-Loss and total
-comprehensive income
-for the year /H1118/H1118/H1118/H1118/H1118/H1118(73,728) – (269,246) (7,781.7) (465,238) (1,524.2) (304,342) (1,564.4) (512,013) (958.2)
-Loss per share
-attributable to ordinary
-equity holders of the
-parent
-Basic and diluted
-–For loss for the
-year/period (US$) /H1118/H1118/H1118/H1118(0.74) (2.56) (4.28) (2.80) (4.71)
-FINANCIAL INFORMATION
-– 412 –
-
-NON-IFRS FINANCIAL MEASURE
-We use adjusted net loss (non-IFRS measure), which is a non-IFRS financial measure, in
-evaluating our operating results and for financial and operational decision-making purposes.
-We believe that adjusted net loss (non-IFRS measure) helps identify underlying trends in our
-business that could otherwise be distorted by the effect of certain expenses that we include in
-our net loss. We believe that adjusted net loss (non-IFRS measure) provides useful information
-about our results of operations, enhances the overall understanding of our past performance and
-future prospects and allows for greater visibility with respect to key metrics used by our
-management in its financial and operational decision-making.
-Adjusted net loss (non-IFRS measure) should not be considered in isolation or construed
-as an alternative to net loss or any other measure of performance or as an indicator of our
-operating performance. Investors are encouraged to review adjusted net loss (non-IFRS
-measure) and the reconciliation to its most directly comparable IFRS measure. Adjusted net
-loss (non-IFRS measure) presented here may not be comparable to similarly titled measures
-presented by other companies. Other companies may calculate similarly titled measures
-differently, limiting their usefulness as comparative measures to our data. We encourage
-investors and others to review our financial information in its entirety and not rely on a single
-financial measure.
-We define our adjusted net loss (non-IFRS measure) as net loss adjusted by adding back
-(i) share-based payment expenses that are included in cost of sales, general administrative,
-research and development, and sales and marketing expenses, relates to the share-based awards
-that we grant to participants of our share incentive schemes and is a non-cash expense, (ii) fair
-value losses on financial liabilities, comprising fair value changes of convertible redeemable
-preferred shares which will be re-designated from liabilities to equity as a result of the
-automatic conversion into ordinary shares upon Listing, and convertible bonds, which have
-subsequently been repaid in full as of the Latest Practicable Date, and (iii) listing expenses.
-FINANCIAL INFORMATION
-– 413 –
-
-The following table presents our non-IFRS financial measure for the years ended
-December 31, 2022, 2023, 2024 and the nine months ended September 30, 2024 and 2025.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ US$ US$ US$ US$
-(unaudited)
-(in thousands)
-Loss for the
-year/period /H1118/H1118/H1118/H1118/H1118/H1118(73,728) (269,246) (465,238) (304,342) (512,013)
-Add:
-Share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,069 3,346 6,823 6,100 8,581
-Fair value loss
-on financial
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H111860,509 176,826 214,172 128,063 313,477
-Listing expenses /H1118/H1118/H1118/H1118–––– 3,675
-Adjusted net loss for
-the year/period
-(non-IFRS
-measure) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(12,150) (89,074) (244,243) (170,179) (186,280)
-DESCRIPTION OF MAJOR COMPONENTS OF OUR RESULTS OF OPERATIONS
-Revenue
-Our revenue is derived from two primary sources — (i) AI-native products and (ii) Open
-Platform and other AI-based enterprise services, mainly consists of API usage as well as
-arrangements customized to enterprise requirements and licensed deliverables. For customised
-arrangements, we work with enterprise customers to set up dedicated inference resource pools
-tailored to their needs, helping ensure stable and predictable model inference performance. For
-licensed deliverables, we license our foundation models to enable customers to deploy and
-operate such models in their own systems. Each revenue stream reflects a distinct monetization
-pathway aligned with our product and platform strategies. The following table sets forth the
-breakdown of our revenue by nature, in absolute amounts and as a percentage of our total
-revenue, for the periods indicated.
-FINANCIAL INFORMATION
-– 414 –
-
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-AI-native products /H1118/H1118/H1118/H1118/H1118– – 758 21.9 21,805 71.4 13,529 69.5 38,020 71.1
-Open Platform and other
-AI-based enterprise
-services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,702 78.1 8,718 28.6 5,925 30.5 15,417 28.9
-Total revenue /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
-AI-native products. We generate revenue from individual users through subscription-
-based access to our monetized AI-native consumer applications, such as MiniMax, Hailuo AI,
-MiniMax Audio, and Talkie/Xingye. Subscriptions provide users with premium functionality
-across multi-modal generation, intelligent interaction, and personalized experiences. Revenue
-is recognised ratably over the subscription period, as we fulfill a stand-ready performance
-obligation to provide continuous access to content and services throughout the term. Users
-have option to pre-purchase additional credits to recharge their accounts and buy these virtual
-items. For consumable virtual items, revenue is recognised when the virtual items are
-consumed. For non-consumable virtual items, revenue is recognised over the estimated average
-acting period of the paying users. In addition, we generate online marketing service revenue
-by providing marketing services to mediation platform on certain of our AI-native applications.
-Revenue is recognised at a point in time, when a user views or clicks on an advertisement,
-thereby fulfilling our performance obligation. These services enable mediation platform to
-engage with end users in a contextually relevant and measurable manner. As our user base and
-engagement levels expand, this revenue stream is expected to continue contributing to our
-overall monetization.
-Open Platform and other AI-based enterprise services. We provide enterprise customers
-with access to our usage-based Open Platform and other AI-based enterprise services. Revenue
-from API usage is recognised at a point in time when the customers call APIs with tokens,
-which are billed under certain agreed fee schedule or usage-based structure. Revenue from
-other AI-based enterprise services, mainly consists of arrangements customized to enterprise
-requirements and licensed deliverables, is typically recognised at a point in time, when control
-is transferred or acceptance is confirmed. Specifically, for customised arrangements, we work
-with enterprise customers to set up dedicated inference resource pools tailored to their needs,
-helping ensure stable and predictable model inference performance. For licensed deliverables,
-we license our foundation models to enable customers to deploy and operate such models in
-their own systems. These services support enterprise use cases across sectors such as smart
-devices, healthcare, tourism, and finance.
-FINANCIAL INFORMATION
-– 415 –
-
-The tables below set forth breakdowns of revenue by product and further by monetization
-method:
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-AI-native products
-MiniMax /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––––– 7 5 6 1 . 4
-Hailuo AI /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 2,347 7.7 – – 17,464 32.6
-MiniMax Audio /H1118/H1118/H1118/H1118/H1118/H1118–––––––– 1,050 2.0
-Talkie/Xingye /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 758 21.9 19,458 63.7 13,529 69.5 18,750 35.1
-Open Platform and other
-AI-based enterprise
-services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,702 78.1 8,718 28.6 5,925 30.5 15,417 28.9
-Total revenue /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-AI-native products
-MiniMax /H1118/H1118/H1118/H1118In-app top-up –––––––– 204.0 0.4
-Subscriptions –––––––– 552.0 1.0
-Hailuo AI /H1118/H1118/H1118/H1118In-app top-up –––– 5 2 7 1 . 7–– 3,317 6.2
-Subscriptions –––– 1,820 6.0 – – 14,147 26.4
-MiniMax Audio /H1118In-app top-up –––––––– 1 9 6 0 . 4
-Subscriptions –––––––– 8 5 4 1 . 6
-Talkie/Xingye /H1118/H1118In-app top-up – – 164 4.8 897 3.0 712 3.7 958 1.8
-Subscriptions – – 594 17.1 3,960 12.9 2,917 14.9 6,604 12.4
-Online
-marketing
-service
-–––– 14,601 47.8 9,900 50.9 11,188 20.9
-Open Platform and other
-AI-based enterprise services /H1118/H1118
-– – 2,702 78.1 8,718 28.6 5,925 30.5 15,417 28.9
-Total revenue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
-FINANCIAL INFORMATION
-– 416 –
-
-In terms of geographic coverage, we generate revenue mainly in APAC, Americas, and
-EMEA. The following tables set out a breakdown of our revenue by geographical locations, in
-absolute amounts and as a percentage of our total revenue, for the periods indicated. For our
-AI-native products, revenue is based on users’ billing address. For Open Platform, revenue is
-based on customers’ jurisdiction of incorporation.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-APAC /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,822 81.5 21,631 70.9 14,739 75.7 32,676 61.1
-Americas /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 598 17.3 5,405 17.7 3,012 15.5 12,658 23.7
-EMEA /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 40 1.2 3,487 11.4 1,703 8.8 8,103 15.2
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Mainland China /H1118/H1118/H1118/H1118/H1118/H1118– – 2,797 80.8 9,217 30.2 6,768 34.8 14,400 26.9
-Singapore /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 1 0.0 11,455 37.5 7,664 39.4 12,980 24.3
-United States /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 575 16.6 4,999 16.4 2,871 14.8 10,913 20.4
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 87 2.6 4,852 15.9 2,151 11.0 15,144 28.4
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
-Note: Others included nil, 88, 189, 134, and 221 jurisdictions during 2022, 2023, 2024, and the nine months ended
-September 30, 2024 and 2025, respectively. Revenue contribution from others primarily includes Israel, South
-Korea, the United Kingdom, Spain, Germany, Ireland, Australia, India, Hong Kong, Turkey, Brazil, Canada,
-France, and other countries and regions.
-FINANCIAL INFORMATION
-– 417 –
-
-Cost of Sales
-Our cost of sales primarily consists of expenses associated with cloud services related to
-inference, as well as platform commission fees.
- Cloud service costs related to inference activities refer to real-time computation and
-inference activities that directly support the delivery of our commercialized
-products and services, such as real-time interactions through our applications and
-open platform. These costs include expenditures on third-party cloud platforms to
-handle user prompts, generate outputs, and serve results to end-users. In contrast,
-cloud service expenses related to training are recognised under research and
-development expenses.
- In addition, commission fees paid to third-party distribution channels are recorded
-as cost of sales. As our user activity and enterprise usage volumes increased, these
-variable costs grew in absolute terms.
- However, as a percentage of revenue, our cost of sales decreased from 124.7% in
-2023 to 87.8% in 2024 and also decreased from 97.4% in the nine months ended
-September 30, 2024 to 76.7% for the same period in 2025, reflecting increasing
-inference cost efficiency.
-The following table sets out a breakdown of our cost of sales by nature, in absolute
-amounts and as a percentage of our total cost of sales, for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Cloud services costs related
-to inference activities /H1118/H1118 – – 4,097 95.0 25,966 96.9 18,370 97.0 37,988 92.7
-Platform commission fees /H1118 – – 217 5.0 819 3.1 574 3.0 2,360 5.8
-Labor costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––––– 5 9 2 1 . 4
-Share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––––– 2 1 0 . 1
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 4,314 100.0 26,785 100.0 18,944 100.0 40,961 100.0
-FINANCIAL INFORMATION
-– 418 –
-
-The following table sets forth a breakdown of our cost of sales by revenue source, in
-absolute amounts and as a percentage of our total cost of sales, for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-AI-native products /H1118/H1118/H1118/H1118/H1118– – 3,640 84.4 23,581 88.0 16,711 88.2 36,246 88.5
-Open Platform and other
-AI-based enterprise
-services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 674 15.6 3,204 12.0 2,233 11.8 4,715 11.5
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 4,314 100.0 26,785 100.0 18,944 100.0 40,961 100.0
-Gross Profit and Gross Profit Margin
-As a result of the foregoing, we recorded gross profit of nil, negative US$0.9 million,
-US$3.7 million, US$0.5 million and US$12.5 million in 2022, 2023, 2024 and the nine months
-ended September 30, 2024 and 2025, respectively, representing gross profit margins of nil,
-negative 24.7%, 12.2%, 2.6% and 23.3%, respectively, during the same periods.
-The following table sets forth a breakdown of our gross profit and gross profit margin by
-revenue source for the periods indicated. Our gross profit and gross profit margin have been
-and will continue to be affected by a number of factors, including the intelligence level of our
-foundation models, our revenue mix, pricing strategies, and inference cost efficiency.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-Gross
-Profit
-Gross
-Profit
-Margin
-Gross
-Profit
-Gross
-Profit
-Margin
-Gross
-Profit
-Gross
-Profit
-Margin
-Gross
-Profit
-Gross
-Profit
-Margin
-Gross
-Profit
-Gross
-Profit
-Margin
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-AI-native products /H1118/H1118/H1118/H1118/H1118– – (2,882) (380.2) (1,776) (8.1) (3,182) (23.5) 1,774 4.7
-Open Platform and other
-AI-based enterprise
-services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,028 75.1 5,514 63.2 3,692 62.3 10,702 69.4
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – (854) (24.7) 3,738 12.2 510 2.6 12,476 23.3
-FINANCIAL INFORMATION
-– 419 –
-
-Other Income and Gains, Net
-Our other income and gains, net consist of (i) interest income, (ii) foreign exchange gains,
-net, (iii) fair value gain on financial assets at fair value through profit or loss, representing
-gains arising from the remeasurement of financial assets, including structured wealth
-management products designated at fair value through profit or loss, and (iv) others, which
-mainly consist of gain or loss on disposal of long-term assets and early termination of
-right-of-use assets and lease liabilities.
-The following table sets forth the breakdown of our income and gains, net for the periods
-indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Other income and
-gains, net
-Interest income /H1118/H1118/H1118/H1118/H1118/H111839 3.4 7,785 87.1 20,448 56.6 17,199 68.0 7,876 25.2
-Foreign exchange gains, net 175 15.2 311 3.5 2 0.0 1,415 5.7 1,600 5.1
-Fair value gain on financial
-assets at fair value
-through profit or loss /H1118/H1118941 81.4 788 8.8 15,710 43.4 6,682 26.4 20,414 65.4
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 58 0.6 (9) 0.0 (18) (0.1) 1,342 4.3
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,155 100.0 8,942 100.0 36,151 100.0 25,278 100.0 31,232 100.0
-Selling and Distribution Expenses
-Our selling and distribution expenses primarily consist of (i) business promotion
-expenses, including spending on brand campaigns, online and offline marketing, and user
-growth initiatives intended to enhance awareness and adoption of our AI-native products (ii)
-staff costs, including salaries, bonuses, and social insurance contributions paid to personnel
-engaged in marketing, and business development, (iii) share-based payment expenses, which
-includes the amortization of employee stock options granted to selling and distribution
-personnel, and (iv) others, including travel costs and public relations fees.
-FINANCIAL INFORMATION
-– 420 –
-
-The following table sets forth a breakdown of our selling and distribution expenses, in
-absolute amounts and as a percentage of our total selling and distribution expenses, for the
-periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Business promotion
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118345 58.8 22,035 96.5 84,861 97.5 52,122 97.6 36,190 92.0
-Staff costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118240 40.9 698 3.1 1,869 2.1 1,118 2.1 2,774 7.1
-Share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––4– 6 1 0 . 1 2 0 0 . 0 1 0 4 0 . 3
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182 0.3 90 0.4 204 0.3 129 0.3 257 0.6
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118587 100.0 22,827 100.0 86,995 100.0 53,389 100.0 39,325 100.0
-These expenses support the commercial adoption of our product offerings across
-individual and enterprise users and have increased in absolute amount in line with our growth
-in active user base and market presence from 2022 to 2024, and have decreased in absolute
-amount in the nine months ended September 30, 2025 due to the adoption of organic user
-growth strategy and the enhanced model intelligence. As a percentage of our total revenue, our
-selling and distribution expenses were 659.7%, 285.0%, 274.4% and 73.6% in 2023, 2024 and
-the nine months ended September 30, 2024 and 2025, respectively. This decrease was primarily
-driven by the success of our organic user acquisition strategy.
-Looking ahead, we expect our selling and distribution expenses to continue to decrease
-as a percentage of revenue as we focus more on organic growth of our user and customer base.
-Further information about the movement of our selling and distribution expenses during the
-Track Record Period is set forth in “— Period-to-Period Comparison of Results of Operations.”
-Administrative Expenses
-Our administrative expenses primarily consist of (i) staff costs, including salaries,
-bonuses, and social insurance contributions, for personnel engaging in administrative function,
-(ii) listing expenses, (iii) professional service fees, mainly for professional services and IT
-services, (iv) depreciation and amortization, relating to periodic expense recognition of
-right-of-use asset, office equipment and leasehold improvements, used in administrative
-functions, (v) share-based payment expenses, which includes the amortization of employee
-stock options granted to management personnel, (vi) travel and office expenses, comprising
-office operations and business travel expenses, and (vii) premise expenses, comprising
-short-term rental expense, premises maintenance fees and utilities fee related to core
-administrative activities, and (viii) others, mainly residual administrative items.
-FINANCIAL INFORMATION
-– 421 –
-
-The following table sets forth a breakdown of our administrative expenses, in absolute
-amounts and as a percentage of our total administrative expenses, for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Staff costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118661 20.6 2,392 31.3 5,502 38.3 3,710 38.6 9,997 45.3
-Listing expenses /H1118/H1118/H1118/H1118/H1118/H1118–––––––– 3,675 16.6
-Professional service fees /H1118 719 22.4 1,931 25.4 3,483 24.1 2,438 25.4 2,116 9.6
-Depreciation and
-amortization /H1118/H1118/H1118/H1118/H1118/H1118/H1118207 6.4 773 10.2 1,852 12.9 1,397 14.5 2,060 9.3
-Share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118981 30.6 1,516 19.9 2,059 14.3 1,358 14.1 2,109 9.6
-Travel and office expenses /H1118 181 5.6 546 7.2 556 3.9 183 1.9 609 2.8
-Premise expenses /H1118/H1118/H1118/H1118/H1118/H111872 2.2 365 4.8 374 2.6 255 2.7 375 1.7
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118392 12.2 92 1.2 558 3.9 269 2.8 1,133 5.1
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183,213 100.0 7,615 100.0 14,384 100.0 9,610 100.0 22,074 100.0
-Our administrative expenses increased in absolute amount during the Track Record Period
-as we expanded operations. As a percentage of our total revenue, our administrative expenses
-were 220.1%, 47.1%, 49.4% and 41.3% in 2023, 2024 and the nine months ended September
-30, 2024 and 2025, respectively. We expect our administrative expenses to continue increasing
-in absolute terms as we expand our operations, organization, and compliance framework.
-However, we expect that our administrative expenses as a percentage of total revenue will
-decrease as we improve our operational efficiency and benefit from economies of scale. Further
-information about the movement of our administrative expenses during the Track Record
-Period is set forth in “— Period-to-Period Comparison of Results of Operations.”
-Research and Development Expenses
-Our research and development expenses consist primarily of: (i) cloud services expenses
-related to training activities including foundational model training, architectural
-experimentation, large-scale evaluation, and early-stage prototyping; (ii) staff costs, including
-salaries, bonuses, and social insurance contributions for personnel engaging in research and
-development function; (iii) share-based payment expenses, which includes the amortization of
-employee stock options granted to research and development personnel; (iv) travel and
-professional expenses, outsourced technical services and mobility-related expenses incurred by
-our research and development teams; and (v) others, including general support expenses for
-research and development activities such as depreciation of office equipment.
-FINANCIAL INFORMATION
-– 422 –
-
-The following table sets forth the breakdown of our research and development expenses,
-in absolute amounts and as a percentage of our total research and development expenses, for
-the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Cloud services expenses
-related to training /H1118/H1118/H1118/H11184,149 39.4 47,229 67.6 140,642 74.4 103,114 74.4 142,397 79.0
-Staff costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11185,461 51.7 18,674 26.7 40,420 21.4 28,514 20.6 28,531 15.8
-Share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111888 0.8 1,826 2.6 4,703 2.5 4,722 3.4 6,347 3.5
-Travel and professional
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118457 4.3 1,467 2.1 2,842 1.5 2,066 1.5 2,670 1.5
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118405 3.8 806 1.0 372 0.2 268 0.1 367 0.2
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810,560 100.0 70,002 100.0 188,979 100.0 138,684 100.0 180,312 100.0
-Our research and development expenses increased in absolute amount throughout the
-Track Record Period, reflecting our strategic focus on advancing foundational AI model
-capabilities. As a percentage of total revenue, our research and development expenses
-decreased from over 2,000% in 2023 to 619.1% in 2024, and further decreased from 712.9%
-in the nine months ended September 30, 2024 to 337.4% in the nine months ended September
-30, 2025, reflecting revenue scale-up while maintaining a high level of technology investment.
-We expect our research and development expenses to continue increasing in absolute terms as
-we expand our model capabilities and pursue further innovation. As a percentage of our total
-revenue, however, our research and development expenses are expected to decrease overtime
-as we continue to enhance commercialization and improve our research and development
-efficiency, especially on foundational model training activities and organizational efficiency.
-Further information about the movement of our research and development expenses during the
-Track Record Period is set forth in “— Period-to-Period Comparison of Results of Operations.”
-Fair Value Loss on Financial Liabilities
-Our fair value loss on financial liabilities represents changes in the carrying amount of
-our convertible redeemable preferred shares and other financial liabilities. These fair value
-changes are non-cash in nature. We recorded fair value loss on financial liabilities of US$60.5
-million, US$176.8 million, US$214.2 million, US$128.1 million and US$313.5 million in
-2022, 2023, 2024 and the nine months ended September 30, 2024 and 2025, respectively.
-FINANCIAL INFORMATION
-– 423 –
-
-Finance Costs
-Our finance costs consist of (i) interest on bank and other borrowings, and (ii) interest on
-lease liabilities. We recorded finance costs of US$14.0 thousand, US$61.0 thousand, US$0.5
-million, US$0.3 million and US$0.5 million in 2022, 2023, 2024 and the nine months ended
-September 30, 2024 and 2025, respectively.
-The following table sets forth the breakdown of our finance costs, in absolute amounts
-and as a percentage of our total finance costs, for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-US$ % US$ % US$ % US$ % US$ %
-(unaudited)
-(in thousands, except for percentages)
-Interest on bank and other
-borrowings /H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 3 5 5 69.7 199 63.0 404 79.1
-Interest on lease liabilities /H1118 14 100.0 61 100.0 154 30.3 117 37.0 107 20.9
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814 100.0 61 100.0 509 100.0 316 100.0 511 100.0
-Impairment Losses on Financial Assets, Net
-Our impairment losses on financial assets, net represent the expected credit losses or
-reversal of the expected credit losses on our trade receivables and other receivables. We
-recorded impairment losses on financial assets, net of nil, US$3.0 thousand, US$88.0 thousand,
-US$68.0 thousand and US$22.0 thousand in 2022, 2023, 2024 and the nine months ended
-September 30, 2024 and 2025, respectively.
-Income Tax Expense
-Income tax expense refers to the aggregate amount of taxes credited or incurred in a given
-period, calculated in accordance with the applicable laws and regulations. It consists of current
-income tax, the tax payable on taxable profits for the current period, and deferred income tax,
-which arises from temporary differences between the accounting and tax treatment of certain
-items, recognised in accordance with applicable accounting standards. We are subject to
-various rates of income tax under different jurisdictions. The following summarizes major
-factors affecting our applicable tax rates in Mainland China, the Cayman Islands, Hong Kong
-and Singapore.
-FINANCIAL INFORMATION
-– 424 –
-
-Mainland China
-Entities located in the PRC are subject to a statutory income tax rate of 25%, in
-accordance with the PRC Corporate Income Tax Law. During the Track Record Period, certain
-subsidiaries within our Group qualified for preferential income tax treatment as High and New
-Technology Enterprises. Specifically, Beijing Jizhi qualified for a preferential tax rate of 15%
-from 2023 to 2025, and Shanghai Jizhi qualified for a 15% rate from 2024 to 2026, subject to
-review by the relevant PRC tax authorities every three years. We did not record any income tax
-expense during the Track Record Period. Our effective tax rate (calculated as income tax
-expense divided by profit before tax) was 0% for all periods presented, as we incurred losses
-before tax during the Track Record Period and did not record any material current or deferred
-income tax expense.
-Cayman Islands
-Under the current laws of the Cayman Islands, we and our subsidiaries are not subject to
-tax on income or capital gains.
-Hong Kong
-The subsidiary incorporated in Hong Kong is subject to Hong Kong profits tax at the rate
-of 16.5% on any estimated assessable profits arising in Hong Kong during the Relevant Periods
-and the nine months ended September 30, 2024 and 2025. The first HK$2,000,000 of
-assessable profits of each subsidiary are taxed at 8.25% and the remaining assessable profits
-are taxed at 16.5% during the Relevant Periods and the nine months ended September 30, 2024
-and 2025.
-Singapore
-The subsidiary incorporated in Singapore is subject to Singapore profits tax at the rate of
-17% on any estimated assessable profits arising in Singapore during the period presented.
-We recorded nil income tax expense during the Track Record Period. During the Track
-Record Period and as of the Latest Practicable Date, we did not have any disputes or unresolved
-tax issues with the relevant tax authorities.
-Loss for the Y ear/Period
-As a result of foregoing, we recorded loss for the year/period of US$73.7 million,
-US$269.2 million, US$465.2 million, US$304.3 million and US$512.0 million in 2022, 2023,
-2024 and the nine months ended September 30, 2024 and 2025, respectively.
-Adjusted Net Loss for the Y ear/Period (non-IFRS measure)
-We recorded adjusted net loss for the year/period (non-IFRS measure) of US$12.2
-million, US$89.1 million, US$244.2 million, US$170.2 million and US$186.3 million in 2022,
-2023, 2024 and the nine months ended September 30, 2024 and 2025, respectively.
-FINANCIAL INFORMATION
-– 425 –
-
-PERIOD-TO-PERIOD COMPARISON OF RESULTS OF OPERATIONS
-Nine Months Ended September 30, 2025 Compared with Nine Months Ended September
-30, 2024
-Revenue
-Our revenue increased by 174.7% from US$19.5 million for the nine months ended
-September 30, 2024 to US$53.4 million during the same period in 2025. This was primarily
-driven by the advancement in intelligence level of our foundation models, continued expansion
-of both of our monetization channels — AI-native products, as well as Open Platform and other
-AI-based enterprise services, — as we released our models, advanced the commercial rollout
-of our product suite and broadened our individual users and enterprise customers.
-AI-native products. Revenue from our AI-native products increased by 181.0% from
-US$13.5 million for the nine months ended September 30, 2024 to US$38.0 million during the
-same period in 2025, primarily driven by higher user engagement and increased customer
-willingness to pay for our products, as well as the successful launch of products such as Hailuo
-AI. Average MAUs grew substantially from approximately 14.6 million in the nine months
-ended September 30, 2024 to approximately 27.6 million during the same period in 2025.
-Paying users also rose significantly from approximately 489,100 in the nine months ended
-September 30, 2024 to approximately 1,771,600 during the same period in 2025. These growth
-figures reflect the development of our business and the expanding customer base, signaling the
-successful execution of our strategy to drive user engagement and retention.
-Open Platform and other AI-based enterprise services. Revenue generated from Open
-Platform and other AI-based enterprise services increased by 160.2% from US$5.9 million for
-the nine months ended September 30, 2024 to US$15.4 million during the same period in 2025,
-primarily fueled by a notable increase in paying users, defined as users who individually
-consumed no less than US$50 worth of API calls (or its equivalent in other currencies) from
-approximately 400 in the nine months ended September 30, 2024 to approximately 2,500
-during the same period in 2025. Moreover, revenue from overseas markets witnessed
-significant growth from US$0.1 million in the nine months ended September 30, 2024 to
-US$7.8 million during the same period in 2025, contributing to the overall revenue increase
-from Open Platform and other AI-based enterprise services, reflecting the broader global
-market acceptance and demand for our products.
-Cost of Sales
-Our cost of sales increased by 116.2% from US$18.9 million for the nine months ended
-September 30, 2024 to US$41.0 million during the same period in 2025, primarily attributable
-to a 116.9% increase in costs associated to our AI-native products, which rose from US$16.7
-million to US$36.2 million over the same period, consistent with our rapid business expansion.
-FINANCIAL INFORMATION
-– 426 –
-
-Gross Profit and Gross Profit Margin
-As a result of the foregoing, our gross profit improved from US$0.5 million for the nine
-months ended September 30, 2024 to a gross profit of US$12.5 million during the same period
-in 2025. Our gross profit margin increased from 2.6% for the nine months ended September 30,
-2024 to 23.3% during the same period in 2025.
-The increase in our overall gross profit margin was primarily driven by the continuous
-advancement of our foundation models’ intelligence and the significant improvements in the
-efficiency of our inference processes. In particular, the gross profit margin for AI-native
-products, which was the most significant contributor to our revenue during the Track Record
-Period, significantly improved from a gross profit margin of negative 23.5% for the nine
-months ended September 30, 2024 to a gross profit margin of 4.7% during the same period in
-2025.
-Other Income and Gains, Net
-Our other income and gains, net increased by 23.6% from US$25.3 million for the nine
-months ended September 30, 2024 to US$31.2 million during the same period in 2025,
-primarily due to an increase in fair value gain on financial assets at fair value through profit
-or loss from US$6.7 million in the nine months ended September 30, 2024 to US$20.4 million
-during the same period in 2025, driven by the rise in returns on financial investments resulting
-from a larger investment allocation.
-Selling and Distribution Expenses
-Our selling and distribution expenses decreased by 26.3% from US$53.4 million for the
-nine months ended September 30, 2024 to US$39.3 million during the same period in 2025.
-This decrease was primarily attributable to a 30.6% decrease in business promotion expenses
-from US$52.1 million in the nine months ended September 30, 2024 to US$36.2 million during
-the same period in 2025, as we have been adjusting our marketing strategies with focused
-efforts on an organic user acquisition approach, without relying heavily upon brand promotion
-and user acquisition spending.
-Administrative Expenses
-Our administrative expenses increased by 129.7% from US$9.6 million for the nine
-months ended September 30, 2024 to US$22.1 million during the same period in 2025, mainly
-driven by an increase in staff costs during the same period due to increasing headcount and
-share-based payment expenses for administrative personnel. Moreover, the listing expenses
-incurred in the nine months ended September 30, 2025 also contributed to the overall increase
-in administrative expenses, which did not occur during the same period in 2024.
-FINANCIAL INFORMATION
-– 427 –
-
-Research and Development Expenses
-Our research and development expenses increased by 30.0% from US$138.7 million for
-the nine months ended September 30, 2024 to US$180.3 million during the same period in
-2025, mainly attributed to an increase in cloud services expenses related to training activities,
-driven by the increased model iteration and upgrades as we continued to develop and refine our
-foundation models and multi-modal capabilities. The year over year growth rate of our research
-and development expenses in the nine months ended September 30, 2025 was 30.0%,
-significantly lower than our revenue growth rate of 174.7% during the same period,
-demonstrating our improved research and development efficiency.
-Fair V alue Loss on Financial Liabilities
-Our fair value loss on financial liabilities increased from US$128.1 million for the nine
-months ended September 30, 2024 to US$313.5 million during the same period in 2025, mainly
-driven by significant remeasurement losses on our preferred shares due to continued increases
-in our valuation.
-Finance Costs
-Our finance costs increased by 61.7% from US$0.3 million for the nine months ended
-September 30, 2024 to US$0.5 million during the same period in 2025, primarily due to an
-increase in interest on bank and other borrowings from US$0.2 million to US$0.4 million over
-the period.
-Impairment Losses on Financial Assets, Net
-We recorded impairment losses on financial assets, net of US$68.0 thousand for the nine
-months ended September 30, 2024 and US$22.0 thousand during the same period in 2025. The
-improvement over impairment losses on financial assets, net was primarily attributable to our
-effective collection efforts, which resulted in the release of previously recognised expected
-credit loss provisions.
-Loss for the Period
-As a result of the foregoing, our loss for the period increased by 68.2% from US$304.3
-million for the nine months ended September 30, 2024 to US$512.0 million during the same
-period in 2025.
-Y ear Ended December 31, 2024 Compared with Y ear Ended December 31, 2023
-Revenue
-Our revenue increased significantly by 782.2% from US$3.5 million in 2023 to US$30.5
-million in 2024. This increase was primarily driven by the advancement in intelligence level
-of our foundation model, which resulted in rapid growth across both of our monetization
-channels — Open Platform and other AI-based enterprise services and AI-native products —
-as we scaled up commercialization of our AI-native product suite and user base.
-FINANCIAL INFORMATION
-– 428 –
-
-AI-native products. Revenue from AI-native products increased by 2,776.6% from
-US$0.8 million in 2023 to US$21.8 million in 2024, as we began ramping up
-commercialization mainly through online marketing services and value-added premium
-features. Such initial monetization success was fueled by continued expansion in our
-consumer-facing product suite. Specifically, we expanded value-added premium features in
-core monetized products such as Hailuo AI and Talkie/Xingye, and actively optimized pricing
-tiers to enhance monetization efficiency. Average MAUs grew from approximately 3.1 million
-in 2023 to 19.1 million in 2024, and paying users for AI-native products rose from
-approximately 119,700 in 2023 to approximately 650,300 in 2024, reflecting increased user
-willingness to pay for premium and intelligent experiences. With an increasingly engaged user
-base, we were able to grow our online marketing services associated with certain AI-native
-products.
-Open Platform and other AI-based enterprise services. Revenue from our Open
-Platform and other AI-based enterprise services increased by 222.6% from US$2.7 million in
-2023 to US$8.7 million in 2024. This was driven primarily by increased adoption of our Open
-Platform, which experienced growth in token volume and enterprise developer subscriptions.
-The number of key paying users, defined as users who have individually consumed no less than
-US$50 worth of API calls (or its equivalent in other currencies) grew from approximately 100
-in 2023 to 700 in 2024.
-Cost of Sales
-Our cost of sales increased by 520.9% from US$4.3 million in 2023 to US$26.8 million
-in 2024, primarily attributable to a 533.8% increase in cloud service used to support inference
-workloads across our AI-native consumer applications and open platform, which rose from
-US$4.1 million to US$26.0 million over the same period. This increase was driven by greater
-infrastructure usage to support inference workloads across our AI-native consumer applications
-and enterprise-facing open platform, as cumulative user interactions and API token
-consumption surged during the year.
-Gross Profit and Gross Profit Margin
-As a result of the foregoing, our gross profit increased from negative US$0.9 million in
-2023 to US$3.7 million in 2024. Our gross profit margin increased from negative 24.7% in
-2023 to 12.2% in 2024, resulting from the changes in the mix of our revenue sources and their
-respective gross profit margins.
-The increase in our overall gross profit margin was primarily driven by improved
-intelligence level of our foundation models and model inference efficiency. In particular, the
-gross profit margin for AI-native products, which was the most significant contributor to our
-revenue during the Track Record Period, significantly improved from negative 380.2% in 2023
-to negative 8.1% in 2024, primarily attributed to improvements in the intelligence level of our
-foundation models, user engagement and monetization, and introduction of new monetized
-features.
-FINANCIAL INFORMATION
-– 429 –
-
-Other Income and Gains, Net
-Our other income and gains, net increased by 304.3% from US$8.9 million in 2023 to
-US$36.2 million in 2024, respectively. This increase was primarily attributable to a significant
-rise in fair value gains on financial assets at fair value through profit or loss, which increased
-by 1,893.7%, from US$0.8 million in 2023 to US$15.7 million in 2024. These gains primarily
-reflected unrealized mark-to-market increases in the carrying value of certain financial
-instruments, including investments designated at fair value. To a lesser extent, interest income
-increased by 162.7% from US$7.8 million in 2023 to US$20.4 million in 2024, mainly due to
-higher average cash balances.
-Selling and Distribution Expenses
-Our selling and distribution expenses increased by 281.1% from US$22.8 million in 2023
-to US$87.0 million in 2024. This increase was primarily driven by a 285.1% increase in
-business promotion expenses, which rose from US$22.0 million in 2023 to US$84.9 million in
-2024. The increase was due to our exploration of various user growth channels during our
-initial period of commercialization. To a lesser extent, staff costs increased by 168.0% from
-US$0.7 million in 2023 to US$1.9 million in 2024, attributable to increases in headcount for
-personnel engaged in sales and marketing.
-Administrative Expenses
-Our administrative expenses increased by 88.9% from US$7.6 million in 2023 to US$14.4
-million in 2024, mainly driven by (i) a 130.0% increase in staff costs from US$2.4 million in
-2023 to US$5.5 million in 2024 due to higher headcount for administrative personnel and (ii)
-a 80.4% increase in professional service fees from US$1.9 million in 2023 to US$3.5 million
-in 2024, mainly due to increased cost for legal, audit and advisory expenses and hiring
-expenses in connection with our growing operations.
-Research and Development Expenses
-Our research and development expenses increased by 170.0% from US$70.0 million in
-2023 to US$189.0 million in 2024, mainly attributed to (i) a 197.8% increase in cloud services
-expenses related to training activities from US$47.2 million in 2023 to US$140.6 million in
-2024 due to increased model training, evaluation, and architecture experimentation activities
-as we continued to develop our foundation models and multi-modal capabilities and (ii) a
-116.5% increase in staff costs, from US$18.7 million to US$40.4 million over the same period,
-attributable to higher headcount for our in-house research and engineering teams. The year
-over year growth rate of our research and development expense in 2024 was 170.0%,
-significantly lower than our revenue growth rate of 782.2% during the same period,
-demonstrating our improved research and development efficiency.
-FINANCIAL INFORMATION
-– 430 –
-
-Fair V alue Loss on Financial Liabilities
-Our fair value loss on financial liabilities increased by 21.1% from US$176.8 million in
-2023 to US$214.2 million in 2024, primarily due to continued remeasurement losses on our
-preferred shares in 2024, as our valuation increased during the year.
-Finance Costs
-Our finance costs increased by 734.4% from US$61 thousand in 2023 to US$0.5 million
-in 2024. This increase was primarily attributable to the incurrence of interest expenses of
-US$0.4 million in 2024 on bank loans and other borrowings, as we initiated financing
-arrangements to support our working capital and operating needs. Interest on lease liabilities
-also increased by 152.5%, from US$61.0 thousand in 2023 to US$0.2 million in 2024, as we
-expanded our office footprint and entered into new lease agreements to accommodate
-headcount growth across functions.
-Impairment Losses on Financial Assets, Net
-We recorded impairment losses on financial, net of US$3.0 thousand and US$88.0
-thousand in 2023 and 2024, respectively. The increase was primarily attributable to provisions
-recognised on trade receivables and contract assets in connection with our expanding revenue
-base and customer coverage. As we scaled up monetization activities, we implemented
-expected credit loss assessments across a broader set of accounts to align with our credit risk
-management policies.
-Loss for the Y ear
-As a result of the foregoing, our loss for the year increased by 72.8% from US$269.2
-million in 2023 to US$465.2 million in 2024.
-Y ear Ended December 31, 2023 Compared with Y ear Ended December 31, 2022
-Revenue
-Our revenue increased from nil in 2022 to US$3.5 million in 2023. This increase was
-primarily driven by initial commercialization across both monetization channels as we
-launched our AI-native products and began scaling user and enterprise adoption.
-AI-native products. We did not generate any revenue from our AI-native products in
-2022. In 2023, we recorded US$0.8 million revenue generated by our AI-native products,
-attributable to the introduction of paid tiers across our consumer-facing applications. Our
-average MAUs reached approximately 3.1 million during the year and our paying users for
-AI-native products reached approximately 119,700, as early monetization efforts, including for
-Talkie/Xingye, gained initial traction.
-FINANCIAL INFORMATION
-– 431 –
-
-Open Platform. Revenue from Open Platform mainly consists of API calls and other
-AI-based enterprise services, which includes arrangements customized to enterprise
-requirements and licensed deliverables. For customised arrangements, we work with enterprise
-customers to set up dedicated inference resource pools tailored to their needs, helping ensure
-stable and predictable model inference performance. For licensed deliverables, we license our
-foundation models to enable customers to deploy and operate such models in their own
-systems. We did not generate enterprise service revenue in 2022. In 2023, revenue from API
-and other AI-based enterprise services was US$2.7 million, primarily driven by the launch and
-adoption of our Open Platform by enterprise developers across initial use cases such as
-customer service, smart devices, and education. Our paying users, defined as users who have
-individually consumed no less than US$50 worth of API calls (or its equivalent in other
-currencies) reached approximately 100 in 2023.
-Cost of Sales
-Our cost of sales increased from nil in 2022 to US$4.3 million in 2023. The increase was
-primarily attributable to cloud service costs of US$4.1 million incurred to support inference
-workloads as we began commercializing our API services and consumer products, including
-expenditures on third-party cloud services.
-Gross Profit and Gross Profit Margin
-As a result of the foregoing, our gross profit amounted to nil in 2022 and negative US$0.9
-million in 2023. Our gross profit margin was nil in 2022 and negative 24.7% in 2023 (when
-our monetization was still at a nascent stage).
-Our overall gross profit margin was primarily driven by initial commercialization across
-both monetization channels as we launched our AI-native products suites and began scaling
-user and enterprise adoption.
-Other Income and Gains, Net
-Our other income and gains, net increased by 674.2% from US$1.2 million in 2022 to
-US$8.9 million in 2023. The increase was primarily attributable to a rise in interest income
-from US$39.0 thousand in 2022 to US$7.8 million in 2023, reflecting higher average cash
-balances.
-Selling and Distribution Expenses
-We did not record material selling and distribution expenses in 2022. In 2023, these
-expenses amounted to US$22.8 million, primarily driven by business promotion expenses of
-US$22.0 million, reflecting investments in user growth initiatives and brand campaigns to
-support our commercial launch.
-FINANCIAL INFORMATION
-– 432 –
-
-Administrative Expenses
-Our administrative expenses increased by 137.0% from US$3.2 million in 2022 to US$7.6
-million in 2023, mainly driven by (i) an increase in staff costs from US$0.7 million to US$2.4
-million due to headcount growth across administrative functions and (ii) a rise in professional
-service fees from US$0.7 million in 2022 to US$1.9 million in 2023, as we engaged legal,
-financial, and compliance consultants in connection with operational expansion and financing
-activities.
-Research and Development Expenses
-Our research and development expenses increased by 562.9% from US$10.6 million in
-2022 to US$70.0 million in 2023. This increase was primarily driven by (i) cloud services
-expenses related to training activities, which rose by from US$4.1 million in 2022 to US$47.2
-million in 2023, due to intensified model training and evaluation activity, and (ii) staff costs,
-which increased from US$5.5 million to US$18.7 million, due to growth in our research and
-engineering team headcount and compensation levels.
-Fair V alue Loss on Financial Liabilities
-Our fair value loss on financial liabilities increased by 192.2% from US$60.5 million in
-2022 to US$176.8 million in 2023, mainly driven by higher remeasurement losses on our
-preferred shares due to valuation appreciation during the period.
-Finance Costs
-Our finance costs increased by 335.7% from US$14.0 thousand in 2022 to US$61.0
-thousand in 2023, primarily due to higher interest on lease liabilities, reflecting additional lease
-arrangements entered into to support team expansion and infrastructure needs.
-Impairment Losses on Financial and Contract Assets, Net
-We did not record impairment losses on financial and contract assets in 2022. In 2023, we
-recognised US$3.0 thousand in impairment losses, primarily reflecting expected credit losses
-assessed on a limited set of customer accounts in our early revenue-generating activities.
-Loss for the Y ear
-As a result of the foregoing, our loss for the year increased by 265.2% from US$73.7
-million in 2022 to US$269.2 million in 2023.
-FINANCIAL INFORMATION
-– 433 –
-
-DISCUSSION OF CERTAIN KEY ITEMS FROM OUR CONSOLIDATED
-STATEMENTS OF FINANCIAL POSITION
-The table below sets forth selected information from our consolidated statements of
-financial position as of the dates indicated, which has been extracted from our consolidated
-financial statements included in Appendix I to this Prospectus.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-NON-CURRENT ASSETS
-Property, plant and
-equipment /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118231 709 1,093 1,134
-Right-of-use assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118458 3,313 3,077 2,746
-Prepayments, other
-receivables and other
-assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 435 561 731
-Financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H1118– – 95,331 70,228
-Financial assets at fair value
-through other
-comprehensive income /H1118/H1118/H1118– – 4,836 6,440
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–3 93 8 4 1
-Total non-current assets /H1118/H1118/H1118689 4,496 104,936 81,320
-CURRENT ASSETS
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,338 6,982 8,063
-Prepayments, other
-receivables and other
-assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118569 4,378 13,470 11,811
-Financial assets at amortised
-costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 147,444 –
-Financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H111865,791 15,802 295,220 644,154
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 91,698 26,327 –
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,221 – 27,293 25,097
-Cash and cash equivalents /H1118/H11184,691 206,295 288,912 362,647
-Total current assets /H1118/H1118/H1118/H1118/H1118/H1118/H111873,272 319,511 805,648 1,051,772
-FINANCIAL INFORMATION
-– 434 –
-
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-CURRENT LIABILITIES
-Interest-bearing bank
-borrowings /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 19,455 19,102
-Trade and bills payables /H1118/H1118/H1118/H11182,394 17,242 51,212 70,219
-Other payables, accruals and
-other liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,326 14,741 51,512 17,322
-Contract liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 559 1,553 4,657
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118349 1,248 1,964 1,694
-Convertible redeemable
-preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118145,175 629,001 1,581,949 2,321,193
-Total current liabilities /H1118/H1118/H1118/H1118150,244 662,791 1,707,645 2,434,187
-NET CURRENT
-LIABILITIES /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(76,972) (343,280) (901,997) (1,382,415)
-TOTAL ASSETS LESS
-CURRENT
-LIABILITIES /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(76,283) (338,784) (797,061) (1,301,095)
-NON-CURRENT
-LIABILITIES
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111891 1,912 1,059 937
-Other non-current liabilities /H1118 – 1,218 1,200 1,467
-Total non-current
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111891 3,130 2,259 2,404
-Net liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(76,374) (341,914) (799,320) (1,303,499)
-FINANCIAL INFORMATION
-– 435 –
-
-ASSETS
-Non-Current Assets
-Property, Plant and Equipment
-Our property, plant and equipment primarily consist of leasehold improvements and office
-equipment. Our property, plant and equipment increased from US$0.2 million as of December
-31, 2022 to US$0.7 million as of December 31, 2023. The increase was due to US$0.2 million
-in leasehold improvements and US$0.3 million in office equipment, which supported our
-infrastructure build-out during early commercialization. Our property, plant and equipment
-further increased to US$1.1 million as of December 31, 2024, mainly due to new leasehold
-improvements of US$0.4 million and office equipment of US$0.5 million to support headcount
-expansion and office upgrades, partially offset by depreciation of US$0.5 million recognised
-for the year. Our property, plant and equipment remained relatively stable at US$1.1 million
-as of September 30, 2025.
-The following table sets forth a breakdown of our property, plant and equipment as of the
-dates indicated.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-Leasehold improvements /H1118/H1118/H1118– 210 394 526
-Office equipment /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118231 499 699 608
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118231 709 1,093 1,134
-Right-of-Use Assets
-Our right-of-use assets primarily consist of leased office premises. Our right-of-use assets
-increased from US$0.5 million as of December 31, 2022 to US$3.3 million as of December 31,
-2023, mainly due to new office lease agreements of US$3.7 million entered into during the year
-to support business expansion and headcount growth. Our right-of-use assets decreased slightly
-to US$3.1 million as of December 31, 2024, primarily as a result of depreciation and lease
-amortization charges of US$1.5 million, partially offset by new office lease agreements of
-US$1.2 million. Our right-of-use assets decreased to US$2.7 million as of September 30, 2025,
-primarily due to the amortization of right-of-use assets and the early disposal of right-of-use
-assets being greater than the new additions.
-As at December 31, 2022, 2023, 2024 and September 30, 2025, no indicators of the
-impairment for our non-financial assets were identified because (i) our non-financial assets
-were no obsolete of physical damage, and (ii) our actual losses for the years ended December
-31, 2022, 2023, 2024 and the nine months ended September 30, 2025 did not exceed the
-estimated losses.
-FINANCIAL INFORMATION
-– 436 –
-
-Prepayments, Other Receivables and Other Assets
-The non-current asset portion of our prepayments, other receivables and other assets
-consist of long-term deposits, which are not expected to be utilized or settled within one year.
-Our prepayments, other receivables and other assets increased from nil as of December 31,
-2022 to US$0.4 million as of December 31, 2023. This increase was primarily due to a rise in
-deposits of US$0.4 million during the period. Our prepayments, other receivables and other
-assets further increased to US$0.6 million as of December 31, 2024, primarily driven by an
-increase in deposits from US$0.4 million to US$0.6 million. Our prepayments, other
-receivables and other assets increased to US$0.7 million as of September 30, 2025, primarily
-due to the increased rental deposits and property guarantee deposits resulting from the
-expansion of our leased properties.
-Financial Assets at Fair V alue through Profit or Loss
-The non-current asset portion of our financial assets at fair value through profit or loss
-primarily consist of long-term investments in structured wealth management products. We did
-not record any such long-term assets as of December 31, 2022 and 2023. Our financial assets
-at fair value increased to US$95.3 million as of December 31, 2024, mainly driven by larger
-cash reserves being deployed into wealth management products purchased from counterparties
-of well-known financial institutions to enhance returns on idle funds. Our financial assets at
-fair value through profit or loss decreased to US$70.2 million as of September 30, 2025,
-primarily due to the maturity of wealth management products with a term exceeding one year.
-We have established the treasury management policy, in which Chapter 8 has clarified the
-principles of our investment, the scope of investment and the decision-making process of
-investment.
-According to our treasury management policy, our investment scope includes, but is not
-limited to, wealth management products investment, equity investment, etc. The investment
-shall meet the requirements of our development strategy and business objectives. Sufficient
-market research, risk assessment and due diligence shall be conducted prior to any investment,
-and a detailed investment plan shall be formed before the investment is made, which shall be
-approved by the person in charge of the financial department, the person in charge of the
-investment and financing department and our COO and CEO for approval. Both the financial
-department and the investment and financing department carry out regular evaluation and
-preparation of investment reports and reported to our COO and CEO for final approval.
-Investment in financial assets at fair value through profit or loss after the listing will be
-subject to the compliance with Chapter 14 of the Listing Rules. We have also established the
-information disclosure in compliance with the Listing Rules, and we will make corresponding
-disclosure of all the investments to be disclosed in accordance with the requirements of the
-policy and the Listing Rules.
-Financial Assets at Fair V alue through Other Comprehensive Income
-Our financial assets at fair value through other comprehensive income primarily consist
-of long-term investments in equity instruments for non-trading purposes. We did not record any
-such assets as of December 31, 2022 and 2023. As of December 31, 2024, we recorded US$4.8
-million in financial assets at fair value through other comprehensive income, primarily due to
-equity investments made during the year. Our financial assets at fair value through other
-comprehensive income increased to US$6.4 million as of September 30, 2025, primarily due
-to the share price appreciation of the equity investments during the period.
-FINANCIAL INFORMATION
-– 437 –
-
-Current Assets
-Trade Receivables
-Our trade receivables represent amounts due from customers for services rendered for
-which payment has not yet been received.
-We did not record any trade receivables as of December 31, 2022. As of December 31,
-2023, our trade receivables increased to US$1.3 million, primarily attributable to initial
-monetization activities during the year as we began commercialization. Our trade receivables
-further increased to US$7.0 million as of December 31, 2024, driven by continued business
-expansion and increased customer adoption of our API products. Our trade receivables
-increased to US$8.1 million as of September 30, 2025, which was consistent with our revenue
-growth and business expansion.
-We typically grant credit periods of 15 to 60 days, and we seek to maintain strict control
-over our outstanding receivables and has a credit control process to minimize the credit risks.
-The following table sets forth an aging analysis of our trade receivables, based on the
-invoice date and net of loss allowance, as of the dates indicated.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-Within one year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,338 6,982 8,063
-The following table sets forth our trade receivables turnover days during the periods
-indicated.
-For the year ended December 31,
-For the nine
-months ended
-September 30,
-2022 2023 2024 2025
-(days)
-Trade receivables turnover
-days (1) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A 41 49 38
-Note:
-(1) Trade receivables turnover days for a period are calculated as the average of the opening and closing
-trade receivables balances divided by the revenue for the relevant period, and then multiplied by the
-number of days in that period.
-FINANCIAL INFORMATION
-– 438 –
-
-Our trade receivables turnover days increased from 41 days in 2023 to 49 days in 2024,
-mainly driven by rapid growth of revenue, which increased by 782.2% from US$3.5 million in
-2023 to US$30.5 million in 2024. Our trade receivables turnover days decreased from 49 days
-in 2024 to 38 days for the nine months ended September 30, 2025, primarily due to our
-effective collection of trade receivables from key customers.
-As of December 21, 2025, US$4.2 million, or 52.5% of our trade receivables outstanding
-as of September 30, 2025 had been subsequently settled. Our operational plan focuses on
-business expansion in the first three quarters and collection management in the fourth quarter.
-We do not anticipate any recoverability issues with trade receivables primarily because (i) most
-of our customers with granted credit days are well-known enterprises with strong credit records
-in credit assessments and past transactions, (ii) our receivables management policy includes
-rigorous credit assessment and an aging warning and collection process, (iii) our Management
-regularly reviews the recoverability of our outstanding balances and when appropriate,
-provides for impairment of these trade receivables, and (vi) as of November 30, 2025, US$6.0
-million, or 84.7% of our trade receivables outstanding as of December 31, 2024 had been
-subsequently settled. We believe there is no recoverability issue as of the Latest Practicable
-Date and the provision to our trade receivables as of September 30, 2025 is sufficient.
-Prepayments, Other Receivables and Other Assets
-The current asset portion of our prepayments, other receivables and other assets primarily
-consist of prepayments, V A T recoverable, and deposits and other receivables expected to be
-utilized or settled within one year. The following table sets forth the details of the current asset
-portion of our prepayments, other receivables and other assets as of the dates indicated.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-Prepayments /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111856 119 394 451
-V alue-added tax recoverable /H1118 387 3,854 7,144 1,500
-Deposits and other
-receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118126 405 5,932 9,438
-Deferred listing expenses /H1118/H1118 ––– 4 2 2
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118569 4,378 13,470 11,811
-FINANCIAL INFORMATION
-– 439 –
-
-Our current prepayments, other receivables and other assets increased from US$0.6
-million as of December 31, 2022 to US$4.4 million as of December 31, 2023, primarily due
-to (i) an increase in V A T recoverable from US$0.4 million to US$3.9 million, reflecting higher
-input V A T credits in line with increased procurement activities, and (ii) a rise in deposits and
-other receivables from US$0.1 million to US$0.4 million. This balance further increased to
-US$13.5 million as of December 31, 2024, driven by (i) an increase in deposits and other
-receivables expected to be settled within one year from US$0.4 million to US$5.9 million as
-of December 31, 2024, and (ii) an increase in V A T recoverable from US$3.9 million to US$7.1
-million as our V A T credits continued to increase commensurate to our increased procurement.
-The current portion of our prepayments, other receivables and other assets decreased to
-US$11.8 million as of September 30, 2025, primarily due to a decreased in V A T recoverable
-from US$7.1 to US$1.5 million as our V A T refund.
-As of December 21, 2025, US$3.5 million, or 29.4% of our prepayments, other
-receivables and other assets outstanding as of September 30, 2025 had been subsequently
-settled.
-Financial Assets at Amortised Costs
-Our financial assets at amortised cost primarily consist of short- to medium-term
-investments in debt instruments, such as fixed-income products, that are held to collect
-contractual cash flows. We did not record any financial assets at amortised cost as of December
-31, 2022 or 2023. Our financial assets at amortised cost increased to US$147.4 million as of
-December 31, 2024, as we continued to deploy available funds into stable yield-generating
-instruments in accordance with our cash management strategy. Our financial assets at
-amortised cost decreased to nil as of September 30, 2025, primarily due to the maturity and
-redemption of certain of these instruments during the period.
-Financial Assets at Fair V alue through Profit or Loss
-The current portion of our financial assets at fair value through profit or loss primarily
-consist of investments in short-term structured wealth management products. We recorded
-financial assets at fair value through profit of loss of US$65.8 million as of December 31, 2022,
-mainly due to the initiation of investments in short-term yield-oriented products for cash
-management purposes. Our financial assets at fair value through profit or loss decreased to
-US$15.8 million as of December 31, 2023, mainly due to redemption and temporary scaling
-down of investments in these products. This balance increased to US$295.2 million as of
-December 31, 2024, reflecting increased cash reserves deployed into wealth management
-products. Our financial assets at fair value through profit or loss further increased to US$644.2
-million as of September 30, 2025, primarily due to our increased investments in wealth
-management products during the period.
-We have established the treasury management policy, in which Chapter 8 has clarified the
-principles of our investment, the scope of investment and the decision-making process of
-investment.
-FINANCIAL INFORMATION
-– 440 –
-
-According to our treasury management policy , our investment scope includes, but is not
-limited to, wealth management products investment, equity investment, etc. The investment
-shall meet the requirements of our development strategy and business objectives. Sufficient
-market research, risk assessment and due diligence shall be conducted prior to any investment,
-and a detailed investment plan shall be formed before the investment is made, which shall be
-approved by the person in charge of the financial department, the person in charge of the
-investment and financing department and our COO and CEO for approval. Both the financial
-department and the investment and financing department carry out regular evaluation and
-preparation of investment reports and reported to our COO and CEO for final approval.
-Investment in financial assets at fair value through profit or loss after the listing will be
-subject to the compliance with Chapter 14 of the Listing Rules. We have also established the
-information disclosure in compliance with the Listing Rules, and we will make corresponding
-disclosure of all the investments to be disclosed in accordance with the requirements of the
-policy and the Listing Rules.
-Restricted Cash
-Our restricted cash consists primarily of cash balances not available for general corporate
-use, such as credit card deposits or security deposits for and bank acceptance bill. Our
-restricted cash decreased from US$2.2 million as of December 31, 2022 to nil as of December
-31, 2023, primarily due to the release of previously pledged deposits upon expiry or settlement
-of related financing arrangements and banking facilities. It then increased to US$27.3 million
-as of December 31, 2024, primarily due to the placement of pledged deposits to secure new
-financing arrangements and banking facilities to support our operational and growth needs. Our
-restricted cash decreased to US$25.1 million as of September 30, 2025, mainly due to the slight
-reduction in pledged loans and margin deposits for bills.
-Cash and Cash Equivalents
-We had cash and cash equivalents of US$4.7 million, US$206.3 million, US$288.9
-million and US$362.6 million as of December 31, 2022, 2023, 2024 and September 30, 2025,
-respectively. The fluctuation of our cash and cash equivalents positions at each period end was
-primarily due to the use of cash to support operating activities and funds raised from our
-financing activities. See “— Cash Burn — Cash Flow Analysis.”
-FINANCIAL INFORMATION
-– 441 –
-
-LIABILITIES
-Current Liabilities
-Interest-Bearing Bank Borrowings
-Our interest-bearing bank borrowings represent short-term loans obtained from
-commercial banks to fund working capital and operational expenditures. We did not have any
-interest-bearing bank borrowings as of December 31, 2022 or 2023. As of December 31, 2024,
-we recorded US$19.5 million in interest-bearing bank borrowings, primarily as a result of our
-decision to raise external debt financing to support increasing operational scale and
-infrastructure requirements. Our interest-bearing bank borrowings decreased to US$19.1
-million as of September 30, 2025, primarily due to the repayment of certain secured bank loans
-during the period.
-Trade and Bills Payables
-Our trade and bills payables primarily represent payments due to third-party vendors and
-service providers for the procurement of cloud services. These payables are not interest-bearing
-and are generally settled within standard credit terms of 30 to 90 days. Our trade and bills
-payables increased from US$2.4 million as of December 31, 2022 to US$17.2 million as of
-December 31, 2023, primarily due to increased procurement of cloud and technical services as
-we ramped up operations. Trade and bills payables further increased to US$51.2 million as of
-December 31, 2024, mainly driven by increased vendor activities supporting our expanded AI
-development and enterprise service offerings. Our trade and bills payables further increased to
-US$70.2 million as of September 30, 2025, primarily due to continued procurement of cloud
-services to support the ramp-up of our AI development and enterprise service offerings as we
-scaled up our business and continually increased investment in cloud services related to
-foundation model training.
-The following table sets forth the aging analysis of our trade and bills payables based on
-the invoice date as of the dates indicated.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-Within 1 year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 17,242 51,159 70,219
-Over 1 year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–– 5 3 –
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 17,242 51,212 70,219
-FINANCIAL INFORMATION
-– 442 –
-
-The following table sets forth our trade and bills payables turnover days for the periods
-indicated.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(days)
-Trade and bills payables
-turnover days (1) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–6 97 4 9 2
-Note:
-(1) Trade and bills payables turnover days for a period are calculated as the average of the opening and
-closing trade and bills payables balances divided by total count of cloud service costs in the cost of sales
-and cloud service expenses related to training activities in research and development expenses for the
-relevant period, and then multiplied by the number of days in that period.
-Our trade and bills payables turnover days increased from 69 days in 2023 to 74 days in
-2024, further increased to 92 days for the nine months ended September 30, 2025, primarily
-due to improved supply chain management.
-As of December 21, 2025, US$61.1 million, or 87.0% of our trade and bills payables
-outstanding as of September 30, 2025 had been subsequently settled.
-Other Payables, Accruals and Other Liabilities
-Our other payables, accruals and other liabilities mainly include (i) payroll payables, (ii)
-other tax payables, (iii) convertible bonds, and (iv) other payables and accruals, which include
-operational accruals and third-party service-related obligations.
-The following table sets forth the details of our other payables, accruals and other
-liabilities as of the dates indicated.
-As of December 31,
-As of
-September 30,
-2022 2023 2024 2025
-(US$ in thousands)
-Payroll payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,976 5,469 10,596 9,052
-Other tax payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111882 303 644 1,209
-Convertible bonds /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 14,722 –
-Other payables and accruals /H1118 268 8,969 25,550 7,061
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,326 14,741 51,512 17,322
-FINANCIAL INFORMATION
-– 443 –
-
-Our other payables, accruals and other liabilities increased from US$2.3 million as of
-December 31, 2022 to US$14.7 million as of December 31, 2023, primarily due to (i) an
-increase in other payables and accruals from US$0.3 million as of December 31, 2022 to
-US$9.0 million as of December 31, 2023, resulting from reflecting expanded operational
-activities, marketing spending, and professional services usage as our commercial operations
-scaled and (ii) an increase in payroll payables from US$2.0 million to US$5.5 million due to
-headcount expansion and year-end bonus accruals.
-Our other payables, accruals and other liabilities increased from US$14.7 million as of
-December 31, 2023 to US$51.5 million as of December 31, 2024, primarily due to (i) an
-increase in other payables and accruals from US$9.0 million to US$25.6 million, (ii) an
-increase in payroll payables from US$5.5 million to US$10.6 million, in line with workforce
-expansion and increased bonus accruals, and (iii) additional financing activities via convertible
-bonds, amounting to US$14.7 million.
-Our other payables, accruals and other liabilities significantly decreased to US$17.3
-million as of September 30, 2025, primarily due to (i) a decrease in other payables and accruals
-from US$25.6 million as of December 31, 2024 to US$7.1 million as of September 30, 2025,
-mainly due to the reduced investment in business promotion expenses, and (ii) a decrease in
-convertible bonds from US$14.7 million as of December 31, 2024 to nil as of September 30,
-2025, resulting from redemption of convertible bonds.
-As of December 21, 2025, US$9.7 million, or 56.2% of our other payables, accruals and
-other liabilities outstanding as of September 30, 2025 had been subsequently settled.
-Contract Liabilities
-Our contract liabilities primarily consist of short-term advances received from customers
-for the provision of enterprise services and membership subscriptions. We did not record any
-contract liabilities as of December 31, 2022. Our contract liabilities increased to US$0.6
-million as of December 31, 2023, primarily due to increased advance payments received from
-customers for membership subscription services rendered at the beginning of 2024. Our
-contract liabilities further increased to US$1.6 million as of December 31, 2024, mainly due
-to continued growth in advance receipts for both enterprise service and membership
-subscriptions booked near the end of the year.
-Our contract liabilities increased from US$1.6 million as of December 31, 2024 to US$4.7
-million as of September 30, 2025. The increase in contract liabilities was mainly due to
-continued expansion of both of our monetization channels — Al-native products, as well as
-Open Platform and other Al-based enterprise services. The significant increase in the number
-of paying users has led to an increase in the advance payments we received from our individual
-users and enterprise customers.
-As of December 21, 2025, US$2.0 million, or 43.4% of contract liabilities outstanding as
-of September 30, 2025 had been subsequently settled.
-FINANCIAL INFORMATION
-– 444 –
-
-Lease Liabilities
-The current portion of our lease liabilities represent payment obligations for office
-premises due within the next 12 months under lease agreements. Our current lease liabilities
-increased from US$0.3 million as of December 31, 2022 to US$1.2 million as of December 31,
-2023, mainly due to new leases entered into to support our operational expansion. Current lease
-liabilities further increased to US$2.0 million as of December 31, 2024, primarily due to the
-reclassification of amounts due under existing leases within one year. Our current lease
-liabilities decreased to US$1.7 million as of September 30, 2025, primarily due to the
-repayment of lease liabilities exceeding new lease additions and reallocation of lease
-obligations from non-current to current liabilities.
-Convertible Redeemable Preferred Shares
-Our convertible redeemable preferred shares consist of our Series Angel preferred shares
-to series Pre-B++ preferred shares. These preferred shares are redeemable upon the occurrence
-of specified events and will be automatically converted into ordinary shares of the Company
-upon the completion of the Listing. The convertible redeemable preferred shares were
-classified as current liabilities since the conversion options were not classified as equity and
-are exercisable at any time at the shareholders’ options.
-Our convertible redeemable preferred shares increased from US$145.2 million as of
-December 31, 2022 to US$629.0 million as of December 31, 2023, primarily due to the
-issuance of Series A and A+ preferred shares totaling US$307.0 million and a US$176.8 million
-increase in fair value. Our convertible redeemable preferred shares further increased to
-US$1,581.9 million as of December 31, 2024, mainly driven by the issuance of Series Pre-B
-and Pre-B+ shares totaling US$739.6 million and additional fair value adjustments of
-US$213.4 million, reflecting increased valuation of our Group. Our convertible redeemable
-preferred shares further increased to US$2,321.2 million as of September 30, 2025, primarily
-due to (i) additional issuances of Series Pre-B+ shares totaling US$35.8 million, (ii) issuances
-of Series Pre-B++ shares totaling US$390.5 million, and (iii) fair value adjustments of
-US$313.0 million, reflecting continued increases in our valuation.
-See Note 24 to the Accountants’ Report in Appendix I to this Prospectus for details of the
-fair value measurement of our convertible redeemable preferred shares, including the methods
-and key assumptions used in the measurement.
-FINANCIAL INFORMATION
-– 445 –
-
-Non-Current Liabilities
-Lease Liabilities
-The non-current portion of our lease liabilities represent obligations under office lease
-agreements with payment terms extending beyond 12 months. Our non-current lease liabilities
-increased from US$91 thousand as of December 31, 2022 to US$1.9 million as of December
-31, 2023, primarily due to the execution of long-term office leases to support headcount growth
-and operational expansion. Our non-current lease liabilities decreased to US$1.1 million as of
-December 31, 2024, primarily due to regular lease repayments and reclassification of a portion
-of the obligations into current liabilities as the maturity dates approached. Our non-current
-lease liabilities decreased to US$0.9 million as of September 30, 2025, mainly due to the
-approaching maturity of several long-term lease contracts within one year, leading to a
-reallocation of lease obligations from non-current to current liabilities.
-Other Non-Current Liabilities
-Our other non-current liabilities consist of government grants received in relation to our
-research and development and technology innovation activities. We did not record any such
-liabilities as of December 31, 2022. Our other non-current liabilities increased to US$1.2
-million as of December 31, 2023, primarily due to the recognition of government grants
-received for ongoing research and development projects which were deferred as income to be
-recognised when the relevant R&D projects completed. Our other non-current liabilities
-remained stable at US$1.2 million and US$1.5 million as of both December 31, 2024 and
-September 30, 2025.
-KEY FINANCIAL RATIOS
-For the year ended December 31,
-For the
-nine months
-ended
-September 30,
-2022 2023 2024 2025
-Revenue growth /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A N/A 782.2% 174.7%
-Gross margin /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A (24.7%) 12.2% 23.3%
-Net loss margin /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A (7,781.7%) (1,524.2%) (958.2%)
-Adjusted net loss margin
-(non-IFRS measure) /H1118/H1118/H1118/H1118/H1118N/A (2,574.4%) (800.2%) (348.6%)
-Research and development
-expenses growth rate /H1118/H1118/H1118/H1118N/A 562.9% 170.0% 30.0%
-Current ratio /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11180.49 0.48 0.47 0.43
-Note:
-1. Current ratio is calculated based on total current assets divided by total current liabilities.
-FINANCIAL INFORMATION
-– 446 –
-
-LIQUIDITY AND CAPITAL RESOURCES
-We have historically funded our cash requirements mainly from cash generated from cash
-received from financing activities. After the Global Offering, we intend to finance our future
-capital requirements through cash generated from our business operations and the net proceeds
-from the Global Offering. We currently do not anticipate any changes to the availability of
-financing to fund our operations in the near future. We had cash and cash equivalents of US$4.7
-million, US$206.3 million, US$288.9 million and US$362.6 million as of December 31, 2022,
-2023, 2024 and September 30, 2025, respectively.
-CASH BURN
-Our cash burn refers to the aggregate amount of (i) net cash used in operating activities,
-(ii) capital expenditures, and (iii) lease payment. Our historical cash burn was US$11.5 million,
-US$65.9 million, US$260.7 million and US$211.3 million in 2022, 2023, 2024 and the nine
-months ended September 30, 2025, respectively. Our cash burn increased throughout the Track
-Record Period primarily due to increases in net cash used in operating activities as we scale
-up R&D activities.
-As of September 30, 2025, our cash balance was US$1,046.2 million, including cash and
-cash equivalents US$362.6 million, current portion of financial assets at fair value through
-profit or loss US$644.2 million and unutilised banking facilities US$39.4 million, as they
-represent available liquidity to fund our operations. The current portion of our financial assets
-at fair value through profit or loss represents wealth management products we have purchased
-as part of our cash management policies which will mature within one year or less. They are
-readily convertible into cash and are hence considered as part of our cash balance. Unutilised
-banking facilities represent additional committed sources of liquidity that can be drawn to fund
-operating cash outflows as existing cash resources are utilised. Assuming an average monthly
-cash burn of US$28.1 million going forward at approximately 1.3 times of the average monthly
-cash burn of the twelve months ended December 31, 2024, although which is subject to change
-due to various factors such as our business development or investments in model training
-activities, we estimate that our cash balance is sufficient for us to operate for approximately
-37 months without IPO proceeds, lasting approximately until October 2028. With the estimated
-net IPO proceeds of US$468.7 million (assuming 25,389,220 new shares to be issued at the
-offer price of HK$151.0 per share, being the low-end of the Offer Price range, and the Offer
-Size Adjustment Option and the over-allotment option are not exercised, and deducting the
-estimated IPO expense), our cash is sufficient for us to operate for approximately 54 months
-with IPO proceeds, lasting approximately until March 2030. The expected average monthly
-cash burn of US$28.1 million going forward at approximately 1.3 times of the average monthly
-cash burn of the twelve months ended December 31, 2024 is primarily due to the expected
-increase in net cash used in operating activities, especially cash outflow related to increasing
-R&D expenses as we continue to scale up R&D activities to maintain technology leadership in
-model intelligence, expected to be partially offset by projected improving operating efficiency
-and decreasing selling and distribution expenses in the twelve months ending December 31,
-2025, primarily driven by the success of our organic user acquisition strategy.
-FINANCIAL INFORMATION
-– 447 –
-
-We have demonstrated the initial evidence of improving profitability. As we continue to
-roll out top ranking AI-native products and optimize model inference cost, we have
-significantly improved our gross profit margin, from negative 24.7% in 2023 to 12.2% in 2024,
-and further to 23.3% in the nine months ended September 30, 2025. Unit gross profit of our
-AI-native products per MAU increased by 129.5% from the nine months ended September 30,
-2024 to the same period in 2025. We have also improved our training efficiency and scalability
-of our infrastructure, as our R&D expenses as a percentage of revenue have decreased
-significantly, from over 2,000% in 2023 to 619.1% in 2024, and further decreased from 712.9%
-in the nine months ended September 30, 2024 to 337.4% in the nine months ended September
-30, 2025. The aforementioned trends align with the key features of our recently released
-foundation models. Launched in June 2025, for example, MiniMax-M1 demonstrates
-improvements in cost-efficiency across both model training and inference phases. With respect
-to model training, MiniMax-M1 achieves its cost-efficiency through two key innovations. The
-primary innovation is CISPO (Clipped IS-weight Policy Optimization), a novel algorithm that
-materially improves the efficiency of reinforcement learning, a critical component for
-foundation model training. Comparative tests demonstrate CISPO’s superiority over peer-
-developed reinforcement learning algorithms. In addition, MiniMax-M1’s “hybrid-attention”
-design, a refined approach to processing training data, inherently facilitates the scaling of
-reinforcement learning. As a direct result of these advancements, the reinforcement learning
-training for MiniMax-M1 was completed within approximately three weeks, achieving
-significantly lower costs than most industry peers. Regarding model inference, MiniMax-M1
-is powered by a hybrid MoE architecture combined with a “Lightning Attention”. This
-variation of Linear Attention is posited to significantly reduce the computational resources
-required during the model inference stage. As a result, while achieving top-tier model
-performance among open-source foundation models, MiniMax-M1 concurrently offers the
-industry’s best cost-effectiveness.
-FINANCIAL INFORMATION
-– 448 –
-
-Cash Flow Analysis
-The following table sets forth our cash flows for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-(unaudited)
-(US$ in thousands)
-Net cash flows used
-in operating
-activities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(11,019) (64,455) (258,483) (195,596) (209,396)
-Net cash flows used
-in investing
-activities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(35,156) (40,320) (431,300) (630,463) (126,231)
-Net cash flows
-generated from
-financing activities /H1118 49,786 306,243 771,092 718,827 407,913
-Net increase/
-(decrease) in cash
-and cash
-equivalents /H1118/H1118/H1118/H1118/H1118/H11183,611 201,468 81,309 (107,232) 72,286
-Cash and cash
-equivalents at the
-beginning of the
-year/period /H1118/H1118/H1118/H1118/H1118/H1118/H1118994 4,691 206,295 206,295 288,912
-Effect of foreign
-exchange
-differences, net /H1118/H1118/H111886 136 1,308 500 1,449
-Cash and cash
-equivalents at the
-end of the
-year/period /H1118/H1118/H1118/H1118/H1118/H11184,691 206,295 288,912 99,563 362,647
-FINANCIAL INFORMATION
-– 449 –
-
-Net Cash Flows Used in Operating Activities
-Net cash flows used in operating activities in the nine months ended September 30, 2025
-was US$209.4 million, which primarily consists of loss before tax of US$512.0 million,
-adjusted for certain non-cash and non-operating items. Adjustments for such non-cash and
-non-operating items primarily include (i) a fair value loss on financial liabilities of US$313.5
-million, and (ii) Share-based payment expenses of US$8.6 million. The amount was further
-adjusted by changes in working capital, primarily including (i) an increase in trade and bills
-payables of US$19.0 million, and (ii) an increase in contract liabilities of US$3.1 million,
-partially offset by a decrease in other payables, accruals and other liabilities of US$22.9
-million.
-Net cash flows used in operating activities in 2024 was US$258.5 million, which
-primarily consists of loss before tax of US$465.2 million, adjusted for certain non-cash and
-non-operating items. Adjustments for such non-cash and non-operating items primarily include
-fair value loss on financial liabilities of US$214.2 million. The amount was further adjusted by
-changes in working capital, primarily including (i) an increase in trade and bills payables of
-US$34.0 million, and (ii) an increase in other payables, accruals and other liabilities of
-US$21.0 million, partially offset by an increase in restricted cash of US$27.3 million.
-Net cash flows used in operating activities in 2023 was US$64.5 million, which consists
-primarily of loss before tax of US$269.2 million, adjusted for certain non-cash and
-non-operating items. Adjustments for such non-cash and non-operating items primarily include
-fair value loss on financial liabilities of US$176.8 million. The amount was further adjusted by
-changes in working capital, primarily including (i) an increase in trade and bills payables of
-US$14.8 million, and (ii) an increase in other payables, accruals and other liabilities of
-US$12.6 million, partially offset by an increase in prepayments, other receivables and other
-assets of US$4.2 million.
-Net cash flows used in operating activities in 2022 was US$11.0 million, which consists
-primarily of loss before tax of US$73.7 million, adjusted for certain non-cash and non-
-operating items. Adjustments for such non-cash and non-operating items primarily include (i)
-fair value loss on financial liabilities of US$60.5 million. The amount was further adjusted by
-changes in working capital, primarily including (i) an increase in other payables, accruals and
-other liabilities of US$2.2 million, and (ii) an increase in trade and bills payables of US$2.4
-million, partially offset by an increase in prepayments, other receivables and other assets of
-US$0.5 million.
-FINANCIAL INFORMATION
-– 450 –
-
-We are still at a nascent stage in terms of monetization and commercialization as
-historically we have been largely focused on developing and training our AI foundation
-models, growing our customer base, and expanding our AI-native product suite, rather than
-seeking immediate financial return or profitability, thus incurring net operating cash outflows
-throughout the Track Record Period. It is industry norm that the initial research and training
-of foundation model will take approximately 2-3 years, where investment in research and
-development is needed (mainly the cloud and services expenses related to training) before the
-models and products could generate commercial value in scale. In 2023, 2024 and the nine
-months ended September 30, 2025, our cloud services expense related to training were
-US$47.2 million, US$140.6 million and US$142.4 million. As model intelligence continues to
-elevate and gradually unlock more application scenarios, we have been gradually monetizing
-our models and products. For example, we commenced revenue generation of Open Platform
-in May 2023, Talkie in June 2023, Hailuo AI in October 2024, and MiniMax in January 2025.
-As we scaled up operations, our revenue increased from US$3.5 million in 2023 to
-US$30.5 million in 2024, and for the nine months ended September 30, 2025, our revenue
-further increased to US$53.4 million, compared to US$19.5 million in the nine months ended
-September 30, 2024. We also significantly improved our gross profit margin, from negative
-24.7% in 2023 to 12.2% in 2024, and further to 23.3% in the nine months ended September 30,
-2025, primarily driven by advancement in the intelligence level of our models, improved model
-and system efficiency, optimization of infrastructure allocation, and increased scale of revenue
-relative to compute intensity, in line with our strategy to enhance efficiency of our AI
-infrastructure. As a result, we significantly narrowed our adjusted net loss (non-IFRS measure)
-as a percentage of revenue, from over 2,500% in 2023 to 800.2% in 2024 and further to 348.6%
-in the nine months ended September 30, 2025.
-In the future, we aim to continue to enhance our profitability and improve our net
-operating cash outflows position through the following focus areas: (i) leveraging the rapid
-growth of the foundation model industry, (ii) continuing to enhance foundation model
-intelligence levels, (iii) enhancing the affordability of our AI technologies, (iv) broadening
-monetization of our AI-native product suite, and (v) optimizing organizational efficiency and
-scalability. Please refer to “Path to the Commercialization of our Specialist Technology
-Products” for our detailed strategies.
-Net Cash Flows Used in Investing Activities
-Net cash flows generated from investing activities in the nine months ended September
-30, 2025 was US$126.2 million, which consists primarily of (i) purchase of financial assets at
-amortized cost of US$2,380.3 million, and (ii) purchases of financial assets at fair value
-through profit or loss of US$1,822.8 million, partially offset by (i) proceeds from disposal of
-financial assets at amortized cost of US$2,531.5 million, and (ii) proceeds from disposal of
-financial assets at fair value through profit or loss of US$1,519.4 million.
-FINANCIAL INFORMATION
-– 451 –
-
-Net cash flows used in investing activities in 2024 was US$431.3 million, which consists
-primarily of (i) purchases of financial assets at fair value through profit or loss of US$2,210.4
-million and (ii) purchase of financial assets at amortised cost of US$1,121.8 million, partially
-offset by (i) proceeds from disposal of financial assets at fair value through profit or loss of
-US$1,851.3 million and (ii) proceeds from disposal of financial assets at amortised costs of
-$982.4 million.
-Net cash flows used in investing activities in 2023 was US$40.3 million, which consists
-primarily of (i) placement of time deposits of US$90.4 million and (ii) purchases of financial
-assets at fair value through profit or loss of US$85.3 million, partially offset by proceeds from
-disposal of financial assets at fair value through profit or loss of US$136.1 million.
-Net cash flows used in investing activities in 2022 was US$35.2 million, which consists
-primarily of purchases of financial assets at fair value through profit or loss of US$46.0
-million, partially offset by proceeds from disposal of financial assets at fair value through
-profit or loss of US$11.1 million.
-Net Cash Flows Generated from Financing Activities
-Net cash flows generated from financing activities in the nine months ended
-September 30, 2025 was US$407.9 million, which consists primarily of proceeds from issuance
-of convertible redeemable preferred shares of US$426.3 million.
-Net cash flows generated from financing activities in 2024 was US$771.1 million, which
-consists primarily of proceeds from issuance of convertible redeemable preferred shares of
-US$739.6 million.
-Net cash flows generated from financing activities in 2023 was US$306.2 million, which
-consists primarily of proceeds from issuance of convertible redeemable preferred shares of
-US$307.0 million.
-Net cash flows generated from financing activities in 2022 was US$49.8 million, which
-consists primarily of proceeds from issuance of convertible redeemable preferred shares of
-US$50.0 million.
-FINANCIAL INFORMATION
-– 452 –
-
-CASH OPERATING COSTS
-The following table sets forth key information relating to our cash operating costs for the
-periods indicated:
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-(unaudited)
-(US$ in thousands)
-Workforce
-employment (1) /H1118/H1118/H1118/H11184,406 15,861 38,270 30,793 43,397
-R&D costs (2) /H1118/H1118/H1118/H1118/H1118/H1118/H11182,697 37,517 114,622 93,120 131,872
-Direct procurement
-costs (3) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,767 23,562 13,545 36,855
-Marketing and
-promotion
-expenses
-(4) /H1118/H1118/H1118/H1118/H1118/H1118/H1118347 14,355 70,791 52,397 53,492
-Administrative
-expenses (5) /H1118/H1118/H1118/H1118/H1118/H1118/H11181,571 3,426 6,799 3,146 7,908
-Non-income taxes
-and other charges /H1118/H1118 52 74 33 18 7
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11189,026 74,953 254,087 193,032 273,611
-Notes:
-(1) Cash operating costs relating to workforce employment represent the sum of employee benefit expenses
-under R&D expenses, administrative expenses, cost of sales and selling and marketing expenses
-(excluding share-based compensation which is non-cash in nature), adjusted for changes in working
-capital relating to employee benefit expenses as of previous and current year end under the above
-operating expenses.
-(2) R&D costs under cash operating costs represent R&D expenses (excluding employee benefit expenses
-and non-cash items under R&D expenses), adjusted for changes in working capital relating to R&D
-activities as of previous and current year end.
-(3) Cash operating costs relating to direct procurement costs, including cloud services related to inference,
-as well as platform commission fees, adjusted for changes in working capital relating to cost of sales
-as of previous and current year end.
-(4) Cash operating costs relating to marketing and promotion expenses represent selling and marketing
-expenses (excluding employee benefit expenses and non-cash items under selling and marketing
-expenses), adjusted for changes in working capital relating to sales and marketing activities as of
-previous and current year end.
-(5) Cash operating costs relating to administrative activities represent administrative expenses (excluding
-employee benefit expenses and non-cash items under administrative expenses), adjusted for changes in
-working capital relating to administrative activities as of previous and current year end.
-FINANCIAL INFORMATION
-– 453 –
-
-Net Current Assets/Liabilities
-The following table sets forth our current assets and current liabilities as of the dates
-indicated.
-As of December 31,
-As of
-September 30,
-As of
-November 30,
-2022 2023 2024 2025 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Current Assets
-Trade receivables /H1118/H1118 – 1,338 6,982 8,063 9,283
-Prepayments, other
-receivables and
-other assets /H1118/H1118/H1118/H1118/H1118569 4,378 13,470 11,811 15,038
-Financial assets at
-amortized costs /H1118/H1118 – – 147,444 – 30,006
-Financial assets at
-fair value through
-profit or loss /H1118/H1118/H1118/H111865,791 15,802 295,220 644,154 731,855
-Time deposits /H1118/H1118/H1118/H1118/H1118– 91,698 26,327 – 13,744
-Restricted cash /H1118/H1118/H1118/H11182,221 – 27,293 25,097 18,744
-Cash and cash
-equivalents /H1118/H1118/H1118/H1118/H11184,691 206,295 288,912 362,647 191,619
-Total current
-assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111873,272 319,511 805,648 1,051,772 1,010,289
-Current liabilities
-Interest-bearing
-bank borrowings /H1118 – – 19,455 19,102 14,130
-Trade and bills
-payables /H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 17,242 51,212 70,219 62,121
-Other payables,
-accruals and other
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H11182,326 14,741 51,512 17,322 21,950
-Contract liabilities /H1118 – 559 1,553 4,657 6,876
-Lease liabilities /H1118/H1118/H1118/H1118349 1,248 1,964 1,694 1,688
-Convertible
-redeemable
-preferred shares /H1118/H1118145,175 629,001 1,581,949 2,321,193 3,091,653
-Total current
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118150,244 662,791 1,707,645 2,434,187 3,198,418
-Net current
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118(76,972) (343,280) (901,997) (1,382,415) (2,188,129)
-FINANCIAL INFORMATION
-– 454 –
-
-Our net current liabilities increased from US$77.0 million as of December 31, 2022 to
-US$343.3 million as of December 31, 2023, primarily due to (i) an increase in convertible
-redeemable preferred shares from US$145.2 million as of December 31, 2022 to US$629.0
-million as of December 31, 2023, reflecting new issuances of preferred shares and additional
-fair value changes, (ii) a decrease in financial assets at fair value through profit or loss from
-US$65.8 million as of December 31, 2022 to US$15.8 million as of December 31, 2023, mainly
-attributable to a partial redemption of previously held liquid financial products and reallocation
-of capital, (iii) an increase in trade and bills payables from US$2.4 million as of December 31,
-2022 to US$17.2 million as of December 31, 2023, primarily due to higher procurement of
-cloud services, and (iv) an increase in other payables, accruals and other liabilities from
-US$2.3 million as of December 31, 2022 to US$14.7 million as of December 31, 2023 as we
-scaled up operations, partially offset by (i) an increase in cash and cash equivalents from
-US$4.7 million as of December 31, 2022 to US$206.3 million as of December 31, 2023, and
-(ii) the recognition of time deposits of US$91.7 million, which did not exist in 2022.
-Our net current liabilities increased from US$343.3 million as of December 31, 2023 to
-US$902.0 million as of December 31, 2024, primarily due to (i) an increase in convertible
-redeemable preferred shares from US$629.0 million as of December 31, 2023 to US$1,581.9
-million as of December 31, 2024 as we completed further rounds of equity financing in 2024
-and recognised fair value changes, (ii) an increase in trade and bills payables from US$17.2
-million as of December 31, 2023 to US$51.2 million as of December 31, 2024, primarily due
-to increased service received, and (iii) an increase in other payables, accruals and other
-liabilities from US$14.7 million as of December 31, 2023 to US$51.5 million as of December
-31, 2024. This was partially offset by (i) an increase in financial assets at fair value through
-profit or loss from US$15.8 million as of December 31, 2023 to US$295.2 million as of
-December 31, 2024, mainly attributable to increased investment in structured wealth
-management products, and (ii) an increase in financial assets at amortized costs from nil as of
-December 31, 2023 to US$147.4 million as of December 31, 2024, as we began investing in
-fixed-income instruments.
-Our net current liabilities increased from US$902.0 million as of December 31, 2024 to
-US$1,382.4 million as of September 30, 2025, primarily due to (i) an increase in convertible
-redeemable preferred shares from US$1,581.9 million as December 31, 2024 to US$2,321.2
-million as of September 30, 2025, mainly due to the increase in the fair value of our preferred
-share, reflecting our enhanced operating performance and business prospect and issuance of
-Series Pre-B++ shares, and (ii) a decrease in financial assets at amortized cost from US$147.4
-million as of December 31, 2024 to nil as of September 30, 2025, primarily attributable to the
-maturity and subsequent redemption of certain short-term investments, and (iii) an increase in
-trade and bills payables from US$51.2 million as of December 31, 2024 to US$70.2 million as
-of September 30, 2025, primarily driven by the increased procurement of goods and services
-as well as increased spending on cloud services for model training to support our business
-expansion. This was partially offset by (i) an increase in financial assets at fair value through
-profit or loss from US$295.2 million as of December 31, 2024 to US$644.2 million as of
-September 30, 2025, primarily due to our increased investment amount in diversified financial
-FINANCIAL INFORMATION
-– 455 –
-
-instruments, and (ii) a decrease in other payables, accruals and other liabilities from US$51.5
-million as of December 31, 2024 to US$17.3 million as of September 30, 2025, mainly
-attributable to the repayment of convertible bonds and the reduction in marketing activities and
-procurement expenses.
-Our net current liabilities increased from US$1,382.4 million as of September 30, 2025
-to US$2,188.1 million as of November 30, 2025, primarily due to (i) an increase in convertible
-redeemable preferred shares from US$2,321.2 million as of September 30, 2025 to US $3,091.7
-million as of November 30, 2025 mainly due to the increase in the fair value of our preferred
-share, reflecting our enhanced operating performance and business prospectus, (ii) a decrease
-in cash and cash equivalents from US$362.6 million as of September 30, 2025 to US$191.6
-million as of November 30, 2025 mainly due to reallocation of capital to financial assets at fair
-value through profit or loss. This was partially offset by (i) an increase in financial assets at
-amortized costs from nil as of September 30, 2025 to US$30.0 million as of November 30,
-2025 as we continued to deploy available funds into stable yield-generating instruments in
-accordance with our cash management strategy, and (ii) an increase in financial assets at fair
-value through profit or loss from US$644.2 million as of September 30, 2025 to US$731.9
-million as of November 30, 2025.
-As of November 30, 2025, we had net current liabilities of US$2,188.1 million, primarily
-because of convertible redeemable preferred shares totaling US$3,091.7 million, which are
-classified as current liabilities. Nevertheless, as these convertible redeemable preferred shares
-will be re-designated from financial liabilities to equity as a result of the automatic conversion
-into ordinary shares upon Listing, our net current liabilities position will turn into a net current
-assets position. Looking forward, we expect our net current liabilities position to improve
-through a combination of the following measures: (i) upon Listing, all of our outstanding
-Preferred Shares currently classified as current liabilities will be converted into ordinary shares
-and reclassified as equity, which is expected to result in a net current assets position; (ii) the
-estimated net proceeds from the Global Offering will further strengthen our cash and bank
-balances and may be applied, where appropriate, to fund our working capital needs, including
-the settlement of current operating liabilities as they fall due; (iii) as we continue to scale the
-commercialization of our foundation models and AI-native products, we expect increasing cash
-inflows from usage-based and contract-based revenue, which, together with disciplined cost
-management, are expected to improve our operating cash flows; and (iv) we will continue to
-actively manage our working capital by, among others, enhancing our billing and collection
-processes, encouraging upfront or periodic prepayments for certain enterprise solutions where
-commercially appropriate, and negotiating appropriate payment terms with major suppliers and
-service providers, so as to maintain a sufficient level of cash and near-cash financial assets
-(such as short-term fixed income products) to meet our current liabilities when due.
-FINANCIAL INFORMATION
-– 456 –
-
-INDEBTEDNESS
-The following table sets forth our indebtedness as of the dates indicated.
-As of December 31,
-As of
-September 30,
-As of
-November 30,
-2022 2023 2024 2025 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Current
-Interest-bearing
-bank borrowings /H1118 – – 19,455 19,102 14,130
-Lease liabilities /H1118/H1118/H1118/H1118349 1,248 1,964 1,694 1,688
-Convertible bonds
-included in other
-payables, accruals
-and other
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 14,722 – –
-Convertible
-redeemable
-preferred shares /H1118/H1118145,175 629,001 1,581,949 2,321,193 3,091,653
-Non-Current
-Lease liabilities /H1118/H1118/H1118/H111891 1,912 1,059 937 738
-Total/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118145,615 632,161 1,619,149 2,342,926 3,108,209
-For details of our interest-bearing bank and other borrowings and lease liabilities during
-the Track Record Period, see “— Discussion of Certain Key Items from Our Consolidated
-Statements of Financial Position”. As of November 30, 2025, our committed unutilized bank
-facilities amounted to US$44.9 million. During the Track Record Period and up to the date of
-this Prospectus, we did not have any contingent liabilities.
-Our Directors confirm that as of the Latest Practicable Date, the agreements under our
-borrowings did not contain any covenants that would have a material and adverse effect on our
-ability to obtain additional borrowings or issue debt or equity securities in the future. Our
-Directors further confirm that we had no defaults in bank and other borrowings, nor did we
-breach any covenants (that were not waived) during the Track Record Period and up to the
-Latest Practicable Date. Additionally, our Directors confirm that, during the Track Record
-Period and up to the Latest Practicable Date, we did not experience any difficulties in obtaining
-credit facilities, nor any withdrawal of facilities or requests for early repayment.
-Except as otherwise disclosed under the sections titled “— Indebtedness” and “—
-Contractual Obligations,” as of November 30, 2025, the latest practicable date for determining
-our indebtedness, we did not have any material bank overdrafts, loans, or other similar
-indebtedness, liabilities under acceptances or acceptance credits, debentures, mortgages,
-charges, other recognised lease liabilities, guarantees, or other material contingent liabilities.
-Our Directors confirm that there have been no material changes in our indebtedness since
-November 30, 2025 and up to the date of this Prospectus.
-FINANCIAL INFORMATION
-– 457 –
-
-RESEARCH AND DEVELOPMENT EXPENDITURE AND TOTAL OPERATING
-EXPENDITURE
-During the Track Record Period, we did not capitalize internal development costs as
-intangible assets. The following table sets forth our annual and total research and development
-expenditure for the periods indicated
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-(unaudited)
-(US$ in thousands)
-Research and
-development
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810,560 70,002 188,979 138,684 180,312
-Adjustments:
-Add: intangible assets
-acquired from third
-parties and
-capitalized
-(1). /H1118/H1118/H1118/H1118/H1118–––––
-Less: amortization
-expense of
-capitalized
-intangible assets
-included in
-research and
-development
-expenditure
-(1). /H1118/H1118/H1118/H1118–––––
-Annual research and
-development
-expenditure /H1118/H1118/H1118/H1118/H1118/H111810,560 70,002 188,979 138,684 180,312
-Total research and
-development
-expenditure for
-the three financial
-years prior to the
-Global Offering /H1118/H1118 269,541
-FINANCIAL INFORMATION
-– 458 –
-
-The following table sets forth our annual and total operating expenditure for the periods
-indicated:
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-(unaudited)
-(US$ in thousands)
-Research and development
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810,560 70,002 188,979 138,684 180,312
-Selling and distribution
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118587 22,827 86,995 53,389 39,325
-Administrative expenses /H1118/H1118/H1118/H11183,213 7,615 14,384 9,610 22,074
-Adjustments:
-Add: intangible assets
-acquired from third parties
-and capitalized /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––
-Less: amortization expense of
-capitalized intangible assets
-included in research and
-development expenditure /H1118/H1118 –––––
-Total operating expenditure
-for the three financial
-years prior to the Global
-Offering /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118405,162
-FINANCIAL INFORMATION
-– 459 –
-
-The following table sets forth our annual research and development expenditure ratio and
-total research and development expenditure ratio for the periods indicated:
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-(unaudited)
-(US$ in thousands)
-Annual research
-and development
-expenditure
-ratio
-(1) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111873.5% 69.7% 65.1% 68.8% 74.6%
-Total research
-and development
-expenditure
-ratio
-(2) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111866.5%
-(1) Calculated by dividing annual research and development expenditure by annual total operating
-expenditure.
-(2) Calculated by dividing total research and development expenditure for the three financial years prior to
-the Global Offering by total operating expenditure for the three financial years prior to the Global
-Offering.
-CAPITAL EXPENDITURES
-Our historical capital expenditures primarily consist of expenditures for plant and
-equipment, specifically leasehold improvements and office equipment. The following table sets
-forth our capital expenditures for the periods indicated.
-For the year ended December 31,
-For the nine months ended
-September 30,
-2022 2023 2024 2024 2025
-(unaudited)
-(US$ in thousands)
-Property, Plant and
-Equipment /H1118/H1118/H1118/H1118/H1118/H1118/H1118256 697 759 496 479
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118256 697 759 496 479
-We will continue to make capital expenditures to support the expected growth of our
-business and our expansion plans. We intend to fund these future capital expenditures with
-financial resources available to us, including our existing cash and bank balances, cash flows
-generated from our financing activities and net proceeds from the Global Offering.
-FINANCIAL INFORMATION
-– 460 –
-
-CONTRACTUAL OBLIGATIONS
-Capital Commitments
-We did not have significant capital commitments as of December 31, 2022, 2023, 2024
-and September 30, 2024 and 2025.
-RELATED PARTY TRANSACTIONS
-We enter into transactions with our related parties from time to time. For details of our
-related party transactions, see Note 29 to the Accountants’ Report included in Appendix I to
-this Prospectus.
-Our Directors are of the view that each of the related party transactions set out in Note
-29 to the Accountants’ Report included in Appendix I to this Prospectus was conducted in the
-ordinary course of business on an arm’s length basis and with normal commercial terms
-between the relevant parties. Our Directors are also of the view that our related party
-transactions during the Track Record Period would not distort our track record results or cause
-our historical results to become non-reflective of our future performance.
-OFF-BALANCE SHEET COMMITMENTS AND ARRANGEMENTS
-As of the Latest Practicable Date, we had not entered into any financial guarantees or
-other commitments to guarantee the payment obligations of any third parties. We have not
-entered into any derivative contracts that are indexed to our shares and classified as
-Shareholder’s equity or that are not reflected in our consolidated financial statements.
-Furthermore, we do not have any retained or contingent interest in assets transferred to an
-unconsolidated entity that serves as credit, liquidity or market risk support to such entity. We
-do not have any variable interest in any unconsolidated entity that provides financing, liquidity,
-market risk or credit support to us or engages in leasing, hedging or product development
-services with us.
-FINANCIAL RISKS DISCLOSURE
-We are exposed to a variety of market and other financial risks, including foreign
-currency risk, credit risk and liquidity risk. We manage and monitor these exposures to ensure
-appropriate measures are implemented in a timely and effective manner.
-Foreign currency risk
-Foreign currency risk is the risk of loss resulting from changes in foreign currency
-exchange rates. Such exposures arise from sales and purchases by operating units in currencies
-other than the units’ functional currencies. We seek to limit our exposure to foreign currency
-risk by minimising its net foreign currency position.
-FINANCIAL INFORMATION
-– 461 –
-
-Credit risk
-We trade only with recognised and creditworthy third parties. It is our policy that all
-customers who wish to trade on credit terms are subject to credit verification procedures. In
-addition, receivable balances are monitored on an ongoing basis and our exposure to bad debts
-is not significant.
-Liquidity risk
-We monitor our exposure to liquidity risk by monitoring the current ratio, which is
-calculated by comparing the current assets with the current liabilities. The liquidity of us is
-primarily dependent on our ability to maintain adequate cash inflows from operations to meet
-our debt obligations as they fall due, and our ability to obtain external financing to meet our
-committed future capital expenditure.
-DIVIDENDS
-No dividend was paid or declared by us or any of our subsidiaries since our incorporation.
-After the Track Record Period and up to the date of this Prospectus, we did not declare any
-dividends to our Shareholders.
-As of the Latest Practicable Date, we did not have a formal dividend policy or a fixed
-dividend distribution ratio. Any declaration and payment as well as the amount of dividends
-will be subject to our Articles and the Cayman Companies Act. We currently do not have any
-dividend policy to guide our dividends declaration or payments. Our board of directors has the
-discretion to pay interim dividends and to recommend to Shareholders to pay final dividends,
-and will depend on a number of factors, including our earnings, capital requirements, overall
-financial condition and contractual restrictions. We may by ordinary resolution resolve to
-declare dividends in any currency and authorize payment of the dividends out of the funds of
-the Company that are lawfully available, provided that (i) no dividends shall exceed the amount
-recommended by our Board and (ii) no dividends shall be paid except out of the realized or
-unrealized profits of the Company, out of the share premium account or as otherwise permitted
-by law. As advised by our Cayman Islands legal advisor, under the Cayman Companies Act, a
-Cayman Islands company may pay a dividend out of either profits and/or a share premium
-account, provided that in no circumstances may a dividend be paid if this would result in the
-company being unable to pay its debts as they fall due in the ordinary course of business. In
-light of our accumulated losses as disclosed in this Prospectus, it is unlikely that we will be
-eligible to pay a dividend out of our profits in the foreseeable future. We may, however, pay
-a dividend out of our share premium account unless the payment of such a dividend would
-result in our Company being unable to pay our debts as they fall due in the ordinary course of
-business. There is no assurance that dividends of any amount will be declared to be distributed
-in any year. As advised by our Cayman Islands legal advisor, we are a holding company
-incorporated under the laws of the Cayman Islands, pursuant to which, the financial position
-of net liabilities does not prohibit us from declaring and paying dividends to our Shareholders,
-as dividends may still be declared and paid out of our share premium account notwithstanding
-FINANCIAL INFORMATION
-– 462 –
-
-our profitability, provided that our memorandum and articles of association do not prohibit
-such payment and our Company is able to pay its debts as they fall due in the ordinary course
-of business immediately after such payment.
-If we pay dividends in the future, in order for us to distribute dividends to our
-Shareholders, we will rely to some extent on any dividends distributed by our PRC
-subsidiaries. Any dividend distributions from our PRC subsidiaries to us will be subject to PRC
-withholding tax. In addition, regulations in the PRC currently permit payment of dividends of
-a PRC company only out of accumulated distributable after-tax profits as determined in
-accordance with its articles of association and the accounting standards and regulations in
-China. See “Risk Factors — Risks Related to Doing Business in the Geographic Markets in
-Which We Operate” in this Prospectus.
-WORKING CAPITAL SUFFICIENCY
-Our Directors are of the opinion that, taking into account (i) the financial resources
-available to our Group, including the cash and cash equivalents of US$362.6 million as well
-as the current portion of financial assets at fair value through profit and loss US$644.2 million,
-as of September 30, 2025, (ii) the estimated net proceeds from the Global Offering and (iii)
-expected net cash used in operating activities and capital expenditures, we have sufficient
-working capital to cover at least 125% of our costs, including research and development costs
-and administrative expenses for the next 12 months from the date of this Prospectus.
-DISTRIBUTABLE RESERVES
-As of September 30, 2025, our Company did not have any distributable reserves.
-LISTING EXPENSES
-Our listing expenses mainly include (i) underwriting-related expenses, such as
-underwriting fees and commissions, and (ii) non-underwriting-related expenses, comprising
-professional fees paid to our legal advisors and reporting accountants for their services
-rendered in relation to the Listing and the Global Offering, and other fees and expenses.
-Assuming full payment of the discretionary incentive fee, the estimated total listing expenses
-(based on the mid-point of the Offer Price range and assuming that the Offer Size Adjustment
-Option and the Over-allotment Option are not exercised) for the Global Offering are
-approximately HK$193.2 million, accounting for approximately 4.8% of our gross proceeds.
-Among such estimated total listing expenses, we expect to pay underwriting-related expenses
-of HK$133.0 million, professional fees for our legal advisors and reporting accountants of
-HK$40.3 million and other fees and expenses of HK$19.9 million. During the Track Record
-Period, the listing expenses charged to our consolidated statements of profit or loss were
-US$3.7 million (HK$28.6 million) and the issuance costs which were recognized as
-prepayments and are expected to be deducted from equity upon the Listing, were US$0.4
-FINANCIAL INFORMATION
-– 463 –
-
-million (HK$3.3 million). After the Track Record Period approximately HK$26.7 million is
-expected to be charged to our consolidated statements of profit or loss, and approximately
-HK$134.7 million is expected to be accounted for as a deduction from equity upon the Listing.
-UNAUDITED PRO FORMA STATEMENT OF ADJUSTED CONSOLIDATED NET
-TANGIBLE ASSETS
-The following unaudited pro forma adjusted consolidated net tangible assets of our
-Group, prepared in accordance with Rule 4.29 of the Listing Rules and with reference to
-Accounting Guideline 7 Preparation of Pro Forma Financial Information for inclusion in
-Investment Circulars issued by the Hong Kong Institute of Certified Public Accountants, is for
-illustration purposes only and is set out here to illustrate the effect of the Global Offering on
-the consolidated net tangible assets of our Group attributable to owners of the parent as of
-September 30, 2025, as if the Global Offering had taken place on September 30, 2025.
-The unaudited pro forma statement of adjusted consolidated net tangible assets of our
-Group has been prepared for illustrative purposes only and, because of its hypothetical nature,
-it may not give a true picture of the consolidated net tangible assets of our Group to owners
-of the parent had the Global Offering been completed as of September 30, 2025 or at any future
-dates. The unaudited pro forma statement of adjusted consolidated net tangible liabilities does
-not form part of the Accountants’ Report.
-Unadjusted
-audited
-consolidated net
-tangible
-liabilities
-attributable to
-the owners of
-our Group as of
-September 30,
-2025
-Estimated net
-proceeds from
-the Global
-Offering
-Estimated
-impact related
-to the
-reclassification
-of convertible
-redeemable
-preferred shares
-upon Listing
-Unaudited pro
-forma adjusted
-consolidated net
-tangible assets
-attributable to
-owners of our
-Group as of
-September 30,
-2025
-Unaudited pro forma
-adjusted consolidated net
-tangible assets attributable
-to owners of our Group
-per Share as of September
-30, 2025
-US$’000 US$’000 US$’000 US$’000 US$ HK$
-Note (1) Note (2) Note (3) Note (3) Note (4)
-Based on an Offer Price of
-HK$151.00
-per Share /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(1,303,499) 472,382 2,321,193 1,490,076 4.88 37.96
-Based on an Offer Price of
-HK$158.00
-per Share /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(1,303,499) 494,423 2,321,193 1,512,117 4.95 38.52
-Based on an Offer Price of
-HK$165.00
-per Share /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(1,303,499) 516,464 2,321,193 1,534,158 5.02 39.08
-FINANCIAL INFORMATION
-– 464 –
-
-Notes:
-(1) The consolidated net tangible liabilities of our Group attributable to owners of the Company as of September
-30, 2025 was based on the consolidated net liabilities attributable to owners of the Company as at September
-30, 2025 of US$1,303,499,000 set out in the Accountants’ Report in Appendix I to this Prospectus.
-(2) The estimated net proceeds from the Global Offering are based on estimated low end, mid-point and high end
-offer prices of HK$151.00, HK$158.00 and HK$165.00 per Share after deduction of underwriting fees and
-commissions and other related expenses payable by the Company and do not take into account any shares
-which may be issued upon exercise of the Offer Size Adjustment Option and the Over-allotment Option.
-(3) For the purpose of the unaudited pro forma financial information, considering the estimated impact related to
-the reclassification of convertible redeemable preferred shares upon Listing, the unaudited pro forma adjusted
-net tangible assets attributable to the owners of the Company will be increased by USD2,321,193,000 being
-the fair value of the convertible redeemable preferred shares as at September 30, 2025. Upon the Listing and
-the completion of the Global Offering, all the convertible redeemable preferred shares will be automatically
-converted into Shares. These convertible redeemable preferred shares will be reclassified from liabilities to
-equity. The amount that is reclassified from liabilities to equity will be the fair value of the Preferred Shares
-on that date of the Global Offering.
-(4) The unaudited pro forma adjusted consolidated net tangible assets attributable to Shareholders of the Company
-per Share is arrived at after the adjustments referred to in the preceding paragraphs (note 2 and 3 above) and
-on the basis that 305,447,288 shares were in issue assuming that the Global Offering and reclassification of
-financial liabilities arising from the convertible redeemable preferred shares and ordinary shares into equity
-had been completed on September 30, 2025, without taking account of the exercise of the Offer Size
-Adjustment Option and the Over-allotment Option.
-(5) For the purpose of this unaudited pro forma adjusted consolidated net tangible assets, The unaudited pro forma
-adjusted consolidated net tangible assets attributable to Shareholders of the Company per Share amounts in
-USD are converted into Hong Kong dollars at USD1.00 = HKD7.7805 prevailing on the latest practical date.
-No representation is made that the Hong Kong dollar amounts have been, could have been or may be converted
-to United States dollars, or vice versa, at that rate or any other rates or at all.
-(6) No other adjustment has been made to the unaudited pro forma adjusted consolidated net tangible asset of the
-Group to reflect any trading result or other transactions entered into subsequent to September 30, 2025.
-Please refer to “Appendix II — Unaudited Pro Forma Financial Information” for further
-details.
-NO MATERIAL ADVERSE CHANGE
-Our Directors have confirmed that, up to the date of the Prospectus, there had been no
-material adverse change in our financial, operational or trading position, indebtedness,
-contingent liabilities or prospects since September 30, 2025, being the end date of the periods
-reported on in the Accountants’ Report set out in Appendix I to this Prospectus, and there had
-been no event since September 30, 2025, that would materially affect the information shown
-in the Accountants’ Report set out in Appendix I to this Prospectus.
-DISCLOSURE UNDER RULES 13.13 TO 13.19 OF THE LISTING RULES
-Our Directors confirm that, except for the amounts due from related parties as disclosed
-in this section, as of the Latest Practicable Date, there were no circumstances that would give
-rise to a disclosure requirement under Rules 13.13 to 13.19 of the Listing Rules.
-FINANCIAL INFORMATION
-– 465 –
-
-FUTURE PLANS
-See the section headed “Business — Our Strategies” for a detailed description of our
-future plans.
-USE OF PROCEEDS
-We estimate that we will receive net proceeds from the Global Offering of approximately
-HK$3,818.3 million, after deducting underwriting commissions, fees and estimated expenses
-payable by us in connection with the Global Offering, assuming no Offer Size Adjustment
-Option or Over-allotment Option is exercised and an Offer Price of HK$158.00 per Offer
-Share, being the midpoint of the indicative Offer Price range stated in this Prospectus.
-Approximately 90%, or HK$3,436.4 million of the net proceeds will be used for our
-research and development over the next five years including the development of our foundation
-models and our AI-native products. In line with our strategies, we intend to use the net
-proceeds for the following purposes, subject to changes in light of our evolving business needs
-and changing market conditions:
- Development of Our Foundation Models. To reinforce our technological
-leadership, we plan to allocate approximately 70.0%, or HK$2,672.8 million, of the
-net proceeds over the next five years to the research and development of our
-foundation models, including investments in AI infrastructure and R&D talent. Our
-core competitive advantage lies in our innovation across the entire foundation model
-stack. Advancing the intelligence, efficiency and scalability of our foundation
-models is critical to strengthening our competitiveness and differentiation in the
-global market. We have observed that our models’ competitiveness, is directly
-related to our models’ market pricing and demand.
-(i) Enhancing AI Infrastructure for Model R&D. We plan to allocate
-approximately 50.0%, or HK$1,909.1 million, of the net proceeds to enhance
-the AI infrastructure* that supports the development of our foundation models.
-This amount will be used entirely for R&D expenses. As our industry relies on
-ever-increasing computing power to train advanced AI models, we believe
-continuous upgrades to our AI infrastructure are essential. Our research and
-development activities, such as training large foundation models,
-experimenting with model designs, conducting large-scale evaluations, and
-developing early prototypes, all depend significantly on our AI infrastructure.
-We will continue to work with our cloud infrastructure and computing services
-vendors to expand and upgrade our AI infrastructure to support increasingly
-* Mainly includes computing services purchased from third-party cloud service providers, namely computing
-power, storage and network capacity that we rent from external cloud platforms instead of building and owning
-all the servers ourselves. In practice, this mainly includes high-performance servers, data storage and
-high-speed network, which we use to train, test and run our large language models and to support user traffic
-on our Open Platform and AI-native products.
-FUTURE PLANS AND USE OF PROCEEDS
-– 466 –
-
-large and complex model architectures, enable faster training cycles, and
-improve model efficiency at scale. In addition, we will focus on integrating
-these models to enhance their overall intelligence across different types of
-information in a scalable manner.
-Since we view the high costs of AI model training and usage as a key barrier
-to the widespread adoption of AI technologies, we plan to dedicate more
-internal resources to our in-house infrastructure team to upgrade our AI
-systems and make them more cost-efficient. We expect these upgrades and
-optimizations to continue lowering our costs for model training and inference,
-thereby improving our overall margin profile. Our ability to further reduce
-infrastructure costs while supporting increasingly complex models will remain
-pivotal for our long-term success. We will further focus on improving cost
-efficiency in model training and inference by refining our infrastructure and
-workflow, which we believe is critical to improving margins as we scale our
-operations.
-Through these investments, we aim to enable the continuous advancement of
-our foundation models and maintain their competitiveness in the global market.
-We believe the strength of our foundation models is the most critical factor for
-our business success and financial performance, and we will continue
-advancing foundation model architectural breakthroughs such as dynamic
-multi-modal model integration. We believe sustained investment based on
-technological insights will allow us to push multi-modality integration,
-real-world applicability, and societal intelligence. The details of our foundation
-model development plans are set out below:
-Modality For the year ending December 31
-2026 2027 2028 2029 2030
-(HK$ in million)
-For multi-modal integration /H1118/H1118/H1118/H1118/H1118/H1118152.7 152.7 152.7 152.7 152.7
-High performance server /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111895.5 95.5 95.5 95.5 95.5
-Data storage and network /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111838.2 38.2 38.2 38.2 38.2
-Others (data procurement, data
-labeling, and compliance) /H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-For text models /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111895.5 95.5 95.5 95.5 95.5
-High performance server /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111857.3 57.3 57.3 57.3 57.3
-Data storage and network /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-Others (data procurement, data
-labeling, and compliance) /H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-FUTURE PLANS AND USE OF PROCEEDS
-– 467 –
-
-Modality For the year ending December 31
-2026 2027 2028 2029 2030
-(HK$ in million)
-For visual models /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111876.4 76.4 76.4 76.4 76.4
-High performance server /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111838.2 38.2 38.2 38.2 38.2
-Data storage and network /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-Others (data procurement, data
-labeling, and compliance) /H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-For audio/music models /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111838.2 38.2 38.2 38.2 38.2
-High performance server /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111811.5 11.5 11.5 11.5 11.5
-Data storage and network /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-Others (data procurement, data
-labeling, and compliance) /H1118/H1118/H1118/H1118/H1118/H1118/H11187.6 7.6 7.6 7.6 7.6
-Miscellaneous /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819.1 19.1 19.1 19.1 19.1
-Total/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118381.8 381.8 381.8 381.8 381.8
-(ii) Cultivating R&D Talent for Model Development. We plan to allocate
-approximately 20.0%, or HK$763.7 million of the net proceeds to expand and
-strengthen our R&D teams focused on advancing the intelligence, efficiency
-and competitiveness of our foundation models over the next five years. This
-amount will be used entirely for staff costs for our foundation model
-development team. To sustain and advance this competitiveness, we will
-continue to recruit top-tier AI researchers, engineers and scientists globally,
-while also investing in the growth and development of our in-house talent.
-These team members will focus on creating algorithms, exploring advanced
-model architectures, improving training and inference efficiency, and
-integrating multi-modal capabilities across different types of information in a
-scalable manner.
-FUTURE PLANS AND USE OF PROCEEDS
-– 468 –
-
-We will uphold rigorous hiring standards as we expand our R&D team. For
-experienced hires, we will seek candidates from top AI companies or academic
-institutions who have published in top peer-reviewed journals or have direct
-experience in developing foundation models. For campus recruits, we will
-focus our talent acquisition on top universities globally. The details of our
-recruitment plan are set forth as below:
-Position For the year ending December 31
-2026 2027 2028 2029 2030
-(HK$ in million)
-Foundational model research /H1118/H1118/H1118/H1118/H1118/H111850.0 50.0 50.0 50.0 50.0
-Pre-training algorithms . /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111820.0 20.0 20.0 20.0 20.0
-Post-training algorithms . /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111820.0 20.0 20.0 20.0 20.0
-Training data . /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810.0 10.0 10.0 10.0 10.0
-AI infrastructure /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11188.5 8.5 8.5 8.5 8.5
-Training framework /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183.4 3.4 3.4 3.4 3.4
-Inference optimization /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183.4 3.4 3.4 3.4 3.4
-Load balancing /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181.7 1.7 1.7 1.7 1.7
-Increased compensation for existing
-personnel /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111894.2 94.2 94.2 94.2 94.2
-Total/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118152.7 152.7 152.7 152.7 152.7
-In addition to our recruitment efforts, we plan to enhance compensation levels
-for our current and new R&D team members to stay ahead in the fierce AI
-talent race in the industry. We will offer competitive packages, including both
-cash compensation and share-based incentives, to attract and retain top-tier
-talent and to ensure their long-term interests align with the success of our
-company. Through these investments, we aim to cultivate a world-class R&D
-organization capable of driving continuous breakthroughs in model
-intelligence and sustaining our leadership position in the global AI industry.
-We plan to increase the compensation of our existing R&D personnel over the
-next five years, allocating approximately 12.3% of the net proceeds or
-HK$471.2 million in this regard.
-FUTURE PLANS AND USE OF PROCEEDS
-– 469 –
-
- Development of Our AI-Native Products. To reinforce our product leadership and
-commercialization capabilities, we plan to allocate approximately 20.0%, or
-HK$763.7 million, of the net proceeds over the next five years to the development,
-refinement and global scaling of our AI-native products, including investments in
-product development and relevant talent. Delivering differentiated, highly
-interactive and scalable AI-native products is critical to driving user adoption,
-engagement and monetization across consumer, developer, and enterprise markets.
-The performance and capabilities of our products directly influences our
-competitiveness in the global market and our ability to generate sustainable revenue
-growth. Furthermore, positive product performance and user experience are key
-drivers of brand recognition, global market expansion and long-term commercial
-success.
-(i) Enhancing Resources for Product Development. We plan to allocate
-approximately 15.0%, or HK$572.7 million, of the net proceeds to refine our
-existing AI-native products and launch new ones powered by our advanced
-foundation models. This amount will be used entirely for R&D expenses. We
-aim to enhance user experience through stronger engagement, broader
-modality support, and improved model memory. We also intend to expand use
-cases and commercial applications across both consumer and business markets.
-We aim to accelerate the enhancement and expansion of our current AI-native
-products. For MiniMax, we will focus on enhancing our MiniMax Agent’s
-ability to perform more complex tasks automatically. Hailuo AI will be
-upgraded to support faster, higher-quality image and longer video generation
-with more creative controls and agentic capabilities. For MiniMax Audio, we
-aim to introduce more interactive and immersive features. We will also scale
-our Talkie/Xingye platform by enriching the emotional intelligence of the
-themes and characters within such platforms and improving multi-modal
-interactions to boost user engagement globally. Meanwhile, our Open Platform
-will expand its industry-specific AI solutions and API capabilities. This will
-enable integration and adoption of our Open Platform by enterprise customers
-and developers worldwide, especially in emerging markets.
-FUTURE PLANS AND USE OF PROCEEDS
-– 470 –
-
-In addition, we will keep developing new AI-native products that leverage
-continuous improvements in our foundation models. This includes designing
-new AI-native applications that offer enhanced user experiences, expanded
-multi-modal capabilities, and smooth integration across different platforms.
-We aim to discover new use cases and launch our products in new markets and
-verticals, thereby driving adoption and creating commercial value for both
-individual users, developers and enterprise customers. The details of our
-AI-native product development plans are set out below:
-Product For the year ending December 31
-2026 2027 2028 2029 2030
-(HK$ in million)
-MiniMax /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111828.6 28.6 28.6 28.6 28.6
-Hailuo AI /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111828.6 28.6 28.6 28.6 28.6
-MiniMax Audio /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111811.5 11.5 11.5 11.5 11.5
-Talkie/Xingye /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111822.9 22.9 22.9 22.9 22.9
-Open Platform /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111811.5 11.5 11.5 11.5 11.5
-New products /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111811.5 11.5 11.5 11.5 11.5
-Total/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118114.5 114.5 114.5 114.5 114.5
-(ii) Cultivating Talent for Product Development. We plan to allocate
-approximately 5.0%, or HK$190.9 million of the net proceeds to expand and
-strengthen our product development and commercialization talent over the next
-five years. This amount will be used entirely for staff costs for our product
-development team. We will continue to recruit top-tier talent globally, while
-also investing in the growth and development of our in-house talent. These
-team members will focus on translating advancements in our foundation
-models into differentiated product capabilities, enhancing usability,
-interactivity and multi-modal functionality, and developing new AI-native
-products and commercial applications. In addition, they will collaborate
-closely with our marketing, sales and customer support teams to optimize user
-experience for global audiences, incorporate market insights into product
-innovation, and drive adoption across both consumer and enterprise segments.
-We will also continue to expand our international sales and marketing team to
-support the global scaling of our AI-native products. We will continue our
-global expansion by building a sales and marketing team tailored for
-international markets. This team will be composed of professionals with global
-perspectives and experience in overseas operations. In parallel, we will further
-strengthen our customer service and support capabilities to enhance overall
-user satisfaction and long-term retention.
-FUTURE PLANS AND USE OF PROCEEDS
-– 471 –
-
-We will uphold high hiring standards as we expand our global talent base for
-product development and commercialization. For experienced hires, we intend
-to recruit candidates with proven expertise in developing and scaling products,
-or in driving international commercialization and user growth. For campus
-hires, we will prioritize candidates from top universities worldwide with
-technical skills, creative problem-solving abilities and a demonstrated passion
-for product innovation. The details of our recruitment plan are set forth as
-below:
-Position For the year ending December 31
-2026 2027 2028 2029 2030
-(HK$ in million)
-Product development and
-commercialization /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817.0 17.0 17.0 17.0 17.0
-Front-end development. /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186.8 6.8 6.8 6.8 6.8
-Back-end development. /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186.8 6.8 6.8 6.8 6.8
-Product manager /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183.4 3.4 3.4 3.4 3.4
-International sales and marketing /H1118/H1118/H11183.6 3.6 4.5 4.5 4.5
-Marketing and branding /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11180.9 0.9 1.8 1.8 1.8
-Key account /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182.7 2.7 2.7 2.7 2.7
-Increased compensation for existing
-personnel /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817.0 17.0 17.0 17.0 17.0
-Total/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111837.6 37.6 38.5 38.5 38.5
-In addition to expanding our talent pipeline, we plan to enhance compensation
-for our current and new team members to remain competitive in attracting and
-retaining top talent. We will offer compensation packages, including both
-competitive salaries and share-based incentives, to align team members’
-long-term interests with the success of our company. We plan to increase the
-compensation of our existing product development and commercialization and
-international sales and marketing personnel over the next five years, allocating
-approximately 2.2% of the net proceeds or HK$85.2 million in this regard.
- Working Capital and General Corporate Purposes. The remaining approximately
-10.0%, or HK$381.8 million, of the net proceeds will be allocated to working capital
-and general corporate purposes.
-FUTURE PLANS AND USE OF PROCEEDS
-– 472 –
-
-If the Offer Price is fixed at the high-end or low-end of the Offer Price range (assuming
-the Offer Size Adjustment Option and the Over-allotment Option are not exercised), the net
-proceeds will increase or decrease by approximately HK$171.5 million (after deducting
-underwriting fees and expenses related to the Global Offering). We intend to apply the
-additional or reduced net proceeds to the above uses on a pro rata basis.
-If the Offer Size Adjustment and the Over-allotment Option are exercised in full, our
-Company will receive additional net proceeds of approximately HK$1,248.3 million for
-8,188,020 Shares to be allotted and issued upon the full exercise of the Offer Size Adjustment
-and the Over-allotment Option based on the Offer Price of HK$158.00 per Offer Share, being
-the mid-point of the Offer Price range, and after deducting the underwriting fees and
-commissions payable by our Company. The additional amount raised will be applied to the
-above areas of use of proceeds on pro rata basis.
-To the extent that the net proceeds from the Global Offering are not immediately required
-for the above purposes and to the extent permitted by the relevant law and regulations, we will
-only place the net proceeds from the Global Offering in short-term interest-bearing accounts
-at licensed commercial banks and/or other authorized financial institutions as defined under the
-Securities and Futures Ordinance or applicable laws in the relevant jurisdictions. We will make
-an appropriate announcement if there is any change to the above proposed use of proceeds.
-FUTURE PLANS AND USE OF PROCEEDS
-– 473 –
-
-HONG KONG UNDERWRITERS
-China International Capital Corporation Hong Kong Securities Limited
-UBS AG Hong Kong Branch
-Goldman Sachs (Asia) L.L.C.
-Morgan Stanley Asia Limited
-Futu Securities International (Hong Kong) Limited
-Tiger Brokers (HK) Global Limited
-UNDERWRITING
-This prospectus is published solely in connection with the Hong Kong Public Offering.
-The Hong Kong Public Offering is fully underwritten by the Hong Kong Underwriters on a
-conditional basis. The Company expects the International Offering to be fully underwritten by
-the International Underwriters. If, for any reason, the Offer Price is not agreed between the
-Overall Coordinators (for themselves and on behalf of the Underwriters) and the Company, the
-Global Offering will not proceed and will lapse.
-The Global Offering comprises the Hong Kong Public Offering of initially 1,269,480
-Hong Kong Offer Shares (subject to reallocation on the basis as set out in “Structure of the
-Global Offering” in this prospectus) and the International Offering of initially 24,119,740
-International Offer Shares (subject to reallocation on the basis as described in “Structure of the
-Global Offering” in this prospectus as well as to the Offer Size Adjustment Option and the
-Over-allotment Option).
-As the Company is likely to be deemed as a “covered foreign person” as described in the
-Final Rule, certain Underwriters have informed the Company that they may consider making
-notifications with the U.S. Department of the Treasury. None of the Underwriters has any
-obligation to inform the Company or any investor if they later decide that they will not file such
-notifications.
-UNDERWRITING ARRANGEMENTS AND EXPENSES
-Hong Kong Public Offering
-Hong Kong Underwriting Agreement
-The Hong Kong Underwriting Agreement was entered into on December 30, 2025.
-Pursuant to the Hong Kong Underwriting Agreement, the Company is offering the Hong Kong
-Offer Shares for subscription on the terms and conditions set out in this prospectus, and the
-Hong Kong Underwriting Agreement at the Offer Price.
-UNDERWRITING
-– 474 –
-
-Subject to (a) the Stock Exchange granting approval for the listing of, and permission to
-deal in, the Class A Ordinary Shares in issue and to be issued pursuant to the Global Offering
-(including the Shares which may be issued pursuant to the exercise of the Offer Size
-Adjustment Option and the Over-allotment Option) on the Main Board of the Stock Exchange
-and such approval not having been withdrawn and (b) certain other conditions set out in the
-Hong Kong Underwriting Agreement, the Hong Kong Underwriters have agreed severally but
-not jointly to procure subscribers for, or themselves to subscribe for, their respective applicable
-proportions of the Hong Kong Offer Shares being offered which are not taken up under the
-Hong Kong Public Offering on the terms and conditions set out in this prospectus, and the
-Hong Kong Underwriting Agreement.
-The Hong Kong Underwriting Agreement is conditional on, among other things, the
-International Underwriting Agreement having been executed and becoming unconditional and
-not having been terminated in accordance with its terms.
-Grounds for Termination
-If at any time prior to 8:00 a.m. on the day that trading in the Class A Ordinary Shares
-commences on the Stock Exchange:
-(a) there develops, occurs, exists or comes into force:
-(i) any new law or regulation or any change or development involving a
-prospective change or any event or series of events or circumstances likely to
-result in a change or a development involving a prospective change in existing
-laws or regulations, or the interpretation or application thereof by any court or
-any competent Authority in or affecting Hong Kong, the Cayman Islands, the
-PRC, the United States, the United Kingdom, Singapore and Philippines, or
-other jurisdictions relevant to the Group or the Global Offering (each a
-“Relevant Jurisdiction ” and collectively, the “ Relevant Jurisdictions ”); or
-(ii) any change or development involving a prospective change, or any event or
-series of events or circumstances likely to result in a change or prospective
-change, in any local, national, regional or international financial, political,
-military, industrial, economic, fiscal, legal, regulatory, currency, credit or
-market conditions or sentiments, Taxation, equity securities or currency
-exchange rate or controls or any monetary or trading settlement system, or
-foreign investment regulations (including, without limitation, a devaluation of
-the Hong Kong dollar, United States dollar or Renminbi against any foreign
-currencies, a change in the system under which the value of the Hong Kong
-dollar is linked to that of the United States dollar or the Renminbi is linked to
-any foreign currency or currencies) or other financial markets (including,
-UNDERWRITING
-– 475 –
-
-without limitation, conditions and sentiments in stock and bond markets,
-money and foreign exchange markets, the inter-bank markets and credit
-markets) in or affecting any Relevant Jurisdictions, or affecting an investment
-in the Offer Shares; or
-(iii) any event or series of events, or circumstances in the nature of force majeure
-(including, without limitation, any acts of government, declaration of a
-regional, national or international emergency or war, calamity, crisis, economic
-sanctions, strikes, labor disputes, other industrial actions, lock-outs, fire,
-explosion, flooding, tsunami, earthquake, volcanic eruption, civil commotion,
-riots, rebellion, public disorder, paralysis in government operations, acts of
-war, epidemic, pandemic, outbreak or escalation, mutation or aggravation of
-diseases, accident or interruption or delay in transportation, local, national,
-regional or international outbreak or escalation of hostilities (whether or not
-war is or has been declared), act of God or act of terrorism (whether or not
-responsibility has been claimed)) in or affecting any of the Relevant
-Jurisdictions; or
-(iv) the imposition or declaration of any moratorium, suspension or limitation
-(including without limitation, any imposition of or requirement for any
-minimum or maximum price limit or price range) on (i) the trading in shares
-or securities generally on the Stock Exchange, the Shanghai Stock Exchange,
-the Shenzhen Stock Exchange, the Tokyo Stock Exchange, the Singapore Stock
-Exchange, the New Y ork Stock Exchange, the NASDAQ Global Market or the
-London Stock Exchange; or (ii) the trading in any securities of the Company
-listed or quoted on a stock exchange or an over-the-counter market; or
-(v) the imposition or declaration of any general moratorium on banking activities
-in or affecting any of the Relevant Jurisdictions or any disruption in
-commercial banking or foreign exchange trading or securities settlement or
-clearing services, procedures or matters in or affecting any of the Relevant
-Jurisdictions; or
-(vi) other than with the prior written consent of the Overall Coordinators, the issue
-or requirement to issue by the Company of a supplement or amendment to this
-Prospectus or other documents in connection with the offer and sale of the
-Offer Shares pursuant to the Companies (Winding up and Miscellaneous
-Provisions) Ordinance or the Listing Rules or upon any requirement or request
-of the Stock Exchange and/or the SFC; or
-(vii) the commencement by any authority or other regulatory or political body or
-organization of any public action or investigation against a member of the
-Group or a director or a senior management member of any member of the
-Group or announcing an intention to take any such action; or
-UNDERWRITING
-– 476 –
-
-(viii) the imposition of sanctions or export controls in whatever form, directly or
-indirectly, on any member of the Group or any of the Controlling Shareholders
-or by or on any Relevant Jurisdiction, or the withdrawal of trading privileges
-which existed on the date of the Hong Kong Underwriting Agreement, in
-whatever form, directly or indirectly, by, or for, any Relevant Jurisdiction; or
-(ix) any valid demand by creditors for payment or repayment of indebtedness of
-any member of the Group or in respect of which any member of the Group is
-liable prior to its stated maturity; or
-(x) any non-compliance of this Prospectus (or any other documents used in
-connection with the contemplated offering, allotment, issue, subscription or
-sale of any of the Offer Shares), the CSRC Filings or any aspect of the Global
-Offering with the Listing Rules or any other applicable Laws; or
-(xi) any litigation, dispute, legal action or claim or regulatory or administrative
-investigation or action being threatened, instigated or announced against any
-member of the Group or any Controlling Shareholder or any Director or senior
-management members as named in this Prospectus; or
-(xii) any contravention by any member of the Group or any Director of the Listing
-Rules or applicable Laws; or
-(xiii) any change or prospective change, or a materialization of, any of the risks set
-out in the section headed “Risk Factors” in this Prospectus,
-which, in any such case individually or in the aggregate, in the sole and absolute
-opinion of the Joint Sponsors and/or the Overall Coordinators (for themselves and
-on behalf of the Hong Kong Underwriters):
-i. has or will or may have a material adverse effect or any development involving
-a prospective material adverse effect, on the profits, losses, results of
-operations, assets, liabilities, general affairs, business, management,
-performance, prospects, shareholders’ equity, position or condition (financial,
-trading or otherwise) of the Group, taken as a whole (the “ Material Adverse
-Effect ”);
-ii. has or will or may have a Material Adverse Effect on the success of the Global
-Offering or the level of applications under the Hong Kong Public Offering or
-the level of indications of interest under the International Offering; or
-iii. makes or will make or may make it impracticable, inadvisable, inexpedient or
-incapable for any material part of the Hong Kong Underwriting Agreement, the
-Hong Kong Public Offering or the Global Offering to be performed or
-implemented as envisaged, or for the Hong Kong Public Offering and/or the
-UNDERWRITING
-– 477 –
-
-Global Offering to proceed, or to market the Global Offering, or the delivery
-or distribution of the Offer Shares on the terms and in the manner contemplated
-by the Offering Documents; or
-iv. has or will or may have the effect of making any part of the Hong Kong
-Underwriting Agreement (including underwriting) incapable of performance in
-accordance with its terms or preventing the processing of applications and/or
-payments pursuant to the Global Offering or pursuant to the underwriting
-thereof; or
-(b) there has come to the notice of the Joint Sponsors and/or the Overall Coordinators
-(for themselves and on behalf of the Hong Kong Underwriters) that:
-(i) any statement contained in any of the Offering Documents (as defined in the
-Hong Kong Underwriting Agreement), the Operative Documents (as defined in
-the Hong Kong Underwriting Agreement), the CSRC filings and/or any
-notices, announcements, advertisements, communications or other documents
-issued or used by or on behalf of the Company in connection with the Global
-Offering (including any supplement or amendment thereto) (the “ Global
-Offering Documents ”) was, when it was issued, or has become untrue,
-incorrect, inaccurate or incomplete in any material respect or misleading; or
-that any estimate, forecast, expression of opinion, intention or expectation
-contained in any such documents, was, when it was issued, or has become
-unfair or misleading in any respect or based on untrue, dishonest or
-unreasonable assumptions or given in bad faith; or
-(ii) any matter has arisen or has been discovered which would, had it arisen or been
-discovered immediately before the date of this Prospectus, constitute a material
-omission or misstatement in any Global Offering Document; or
-(iii) any breach of, or any event or circumstance rendering untrue or incorrect or
-incomplete or misleading in any respect, any of the representations, warranties
-and undertakings given by the Company or the Controlling Shareholders in the
-Hong Kong Underwriting Agreement or the International Underwriting
-Agreement; or
-(iv) any event, act or omission which gives rise or is likely to give rise to any
-liability of any of the Indemnifying Parties (as defined in the Hong Kong
-Underwriting Agreement) pursuant to the indemnities in the Hong Kong
-Underwriting Agreement or the International Underwriting Agreement
-(including any supplement or amendment thereto), as applicable; or
-UNDERWRITING
-– 478 –
-
-(v) any breach of any of the obligations or undertakings imposed upon the
-Company or any member of the Controlling Shareholders or any cornerstone
-investor (as applicable) to the Hong Kong Underwriting Agreement, the
-International Underwriting Agreement or the Cornerstone Investment
-Agreements; or
-(vi) there is any change or development involving a prospective change,
-constituting or having a Material Adverse Effect; or
-(vii) that the Chairman of the Board, any Director or any member of the key
-personnel or senior management of the Company named in this Prospectus
-seeks to retire, or is removed from office or vacating his/her office; or
-(viii) any Director or any member of the key personnel or senior management of the
-Company named in this Prospectus is being charged with an indictable offence
-or prohibited by operation of law or otherwise disqualified from taking part in
-the management or taking directorship of a company; or
-(ix) the Company withdraws this Prospectus (and/or any other documents used in
-connection with the subscription or sale of any of the Offer Shares pursuant to
-the Global Offering) or the Global Offering; or
-(x) that the approval by the Listing Committee of the listing of, and permission to
-deal in, the Class A Ordinary Shares in issue and to be issued pursuant to the
-Global Offering (including pursuant to any exercise of the Over-allotment
-Option and the Offer Size Adjustment Option) is refused or not granted, other
-than subject to customary conditions, on or before the Listing Date, or if
-granted, the approval is subsequently withdrawn, cancelled, qualified (other
-than by customary conditions), revoked or withheld; or
-(xi) any person (other than any of the Joint Sponsors) has withdrawn its consent to
-the issue of this Prospectus or any of the Offering Documents with the
-inclusion of its reports, letters and/or legal opinions (as the case may be) and
-references to its name included in the form and context in which it respectively
-appears; or
-(xii) any prohibition on the Company for whatever reason from offering, allotting,
-issuing or selling any of the Offer Shares pursuant to the terms of the Global
-Offering; or
-(xiii) an order or petition is presented for the winding-up or liquidation of any
-member of the Group, or any member of the Group makes any composition or
-arrangement with its creditors or enters into a scheme of arrangement or any
-resolution is passed for the winding-up of any member of the Group or a
-UNDERWRITING
-– 479 –
-
-provisional liquidator, receiver or manager is appointed over all or part of the
-assets or undertaking of any member of the Group or anything analogous
-thereto occurs in respect of any member of the Group; or
-(xiv) (A) the notice of acceptance of the CSRC filings issued by the CSRC and/or
-the results of the CSRC filings published on the website of the CSRC is
-rejected, withdrawn, revoked or invalidated; or (B) other than with the prior
-written consent of the Overall Coordinators, the issue or requirement to issue
-by the Company of a supplement or amendment to the CSRC filings pursuant
-to the CSRC rules or upon any requirement or request of the CSRC; or (C) any
-non-compliance of the CSRC filings with the CSRC rules or any other
-applicable Laws; or
-(xv) that (i) a material portion of the orders placed or confirmed in the bookbuilding
-process or (ii) any investment commitment made by any cornerstone investors
-under the Cornerstone Investment Agreements signed with such cornerstone
-investors, have been withdrawn, terminated or cancelled, or with respect to
-which the payment of the relevant orders and/or investment commitment has
-not been received or settled in the stipulated time and manner or otherwise,
-then, in each case, the Joint Sponsors and the Overall Coordinators (for themselves
-and on behalf of the Hong Kong Underwriters) may, in their sole and absolute
-discretion and upon giving notice in writing to the Company, terminate the Hong
-Kong Underwriting Agreement with immediate effect.
-Undertakings to the Stock Exchange pursuant to the Listing Rules
-(A) Undertakings by the Company
-Pursuant to Rule 10.08 of the Listing Rules, the Company has undertaken to the Stock
-Exchange that no further Shares or securities convertible into equity securities of the Company
-(whether or not of a class already listed) may be issued by the Company or form the subject
-of any agreement to such an issue within six (6) months from the Listing Date (whether or not
-such issue of Shares or securities will be completed within six (6) months from the Listing
-Date), except for Shares issued or to be issued pursuant to the Global Offering (including any
-Shares which may be issued pursuant to the Offer Size Adjustment Option and the
-Over-allotment Option) or any of the other circumstances provided under Rule 10.08 of the
-Listing Rules.
-(B) Undertakings by the Controlling Shareholders
-Pursuant to Rules 10.07 and 18C.13 of the Listing Rules, each of the Controlling
-Shareholders has undertaken to the Stock Exchange and the Company that, except pursuant to
-the Global Offering (including the Offer Size Adjustment Option and the Over-allotment
-Option), it/he will not and will procure that the relevant registered holder(s) will not without
-UNDERWRITING
-– 480 –
-
-the prior written consent of the Stock Exchange or unless otherwise in compliance with the
-applicable requirement of the Listing Rules, in the period commencing on the date by reference
-to which disclosure of its shareholdings in the Company is made in this prospectus and ending
-on the date which is 24 months from the Listing Date, either directly or indirectly, dispose of,
-nor enter into any agreement to dispose of or otherwise create any options, rights, interests or
-encumbrances in respect of, any of the securities of the Company in respect of which it is
-shown by this prospectus to be the beneficial owner.
-Pursuant to Rule 18C.22, a Pre-Commercial Company that wishes to cease being regarded
-as a Pre-Commercial Company after listing must make an application to the Exchange for that
-purpose. Pursuant to Rule 18C.23, a Pre-Commercial Company must provide the Exchange
-with published audited financial statements in support of an application made under Rule
-18C.22 demonstrating that: (1) for its most recent audited financial year, it has met the revenue
-requirement as set out in Rule 18C.03 (4); or (2) as a result of its operations as a whole, it has
-met at least one of the tests in Rule 8.05. In the event that upon the notification by the Stock
-Exchange that our Company will no longer be regarded as a Pre-Commercial Company after
-the Listing, the lock-up period set out above will expire on the later of: (i) the date on which
-such lock-up periods would have ended if the Company had applied for listing as a Commercial
-Company; and (2) the date falling on the 30th day after the announcement on the removal of
-designation as a Pre-Commercial Company as required under Rule 18C.24 of the Listing Rules.
-Pursuant to Note 3 to Rule 10.07(2) of the Listing Rules, each of the Controlling
-Shareholders has undertaken to the Stock Exchange and the Company that, within the period
-commencing on the date by reference to which disclosure of its shareholding in the Company
-is made in this prospectus and ending on the date which is 24 months from the Listing Date,
-it/he will and will procure that the relevant registered holder(s) will:
-(a) when it pledges or charges any securities of the Company beneficially owned by it
-in favour of an authorized institution (as defined in the Banking Ordinance (Chapter
-155 of the Laws of Hong Kong)) pursuant to Note 2 to Rule 10.07 of the Listing
-Rules, immediately inform the Company of such pledge or charge together with the
-number of securities so pledged or charged; and
-(b) when it receives indications, either verbal or written, from the pledgee or chargee of
-any securities of the Company that any of the pledged or charged securities will be
-disposed of, immediately inform the Company of such indications.
-The Company will inform the Stock Exchange as soon as it has been informed of the
-matters referred to in paragraphs (i) and (ii) above by the Controlling Shareholders and subject
-to the then applicable requirements of the Listing Rules disclose such matters by way of an
-announcement.
-UNDERWRITING
-– 481 –
-
-(C) Undertakings by Key Persons and the Pathfinder SIIs
-Pursuant to Rule 18C.14 of the Listing Rules, each of Dr. Y an and Ms. Y un, key persons
-of the Company and the Pathfinder SIIs (including IDG SIIs and miHoY o SIIs), and their
-respective close associates, as identified under the section headed “History, Reorganization and
-Corporate Structure — Lock-up Periods” (collectively, the “ Undertaking Providers ”), has
-undertaken to the Stock Exchange and to us that, except pursuant to the Global Offering
-(including the Offer Size Adjustment Option and the Over-allotment Option), it will not, unless
-otherwise permitted under Rule 18C.15 of the Listing Rules: at any time in the period
-commencing on the date by reference to which disclosure of its shareholding is made in this
-Prospectus and ending on the date which is 24 months (or 12 months in the case of the
-Pathfinder SIIs) from the Listing Date, dispose of, nor enter into any agreement to dispose of
-or otherwise create any options, rights, interests or encumbrances in respect of, any of the
-shares of the Company in respect of which it is shown by this Prospectus to be the beneficial
-owner.
-Note 2 to Rule 18C.14 of the Listing Rules provides that the above undertakings do not
-prevent such persons from using the shares of the Company beneficially owned by it/him/her
-as security (including a charge or pledge) in favor of an authorized institution (as defined in
-the Banking Ordinance (Chapter 155 of the Laws of Hong Kong)) for a bona fide commercial
-loan.
-Further, pursuant to Note 2 to 18C.14 of the Listing Rules, each of such persons has
-undertaken to the Stock Exchange and to us that, within the period commencing on the date by
-reference to which disclosure of its shareholding is made in this Prospectus and ending on the
-date which is 24 months (or 12 months in the case of the Pathfinder SIIs) from the Listing Date:
-(a) when it pledges or charges any Shares beneficially owned by it in favor of an
-authorized institution (as defined in the Banking Ordinance, Chapter 155 of the
-Laws of Hong Kong) for a bona fide commercial loan, immediately inform us and
-the Stock Exchange of such pledge or charge together with the number of Shares so
-pledged or charged; and
-(b) when it receives indications, either verbal or written, from the pledgee or charge that
-any of the pledged or charged Shares will be disposed of, immediately inform us and
-the Stock Exchange of such indications.
-The Company will inform the Stock Exchange as soon as the Company has been informed
-of the above matters, if any, by such persons and disclose such matters as soon as possible after
-being so informed.
-Pursuant to Note 2 to Rule 18C.23, notwithstanding the foregoing, if the Company ceases
-being regarded as a Pre-Commercial Company after Listing, the lock-up periods during which
-the relevant shareholders as mentioned above are subject to as set out in Rule 18C.14 of the
-Listing Rules will expire on the later of: (1) the date on which such lock-up periods would have
-UNDERWRITING
-– 482 –
-
-ended if the Company had applied for listing as a Commercial Company; and (2) the date
-falling on the 30th day after the announcement on the removal of designation as a
-Pre-Commercial Company as required under Rule 18C.24 of the Listing Rules.
-Undertakings Pursuant to the Hong Kong Underwriting Agreement
-(A) Undertakings by the Company
-Pursuant to the Hong Kong Underwriting Agreement, save for (a) the issue, offer or sale
-of the Offer Shares by the Company pursuant to the Global Offering (including pursuant to the
-Offer Size Adjustment Option and the Over-allotment Option) and (b) the grant of awards
-pursuant to the Post-IPO Share Incentive Plan and the issue and delivery of Class A Ordinary
-Shares for satisfying the awards granted under the Post-IPO Share Incentive Plan, during the
-period commencing on the date of the Hong Kong Underwriting Agreement and ending on, and
-including, the date falling six months after the Listing Date (the “ First Six-Month Period ”),
-the Company has undertaken to each of the Joint Sponsors, the Sponsor-Overall Coordinators,
-the Overall Coordinators, the Joint Global Coordinators, the Joint Bookrunners, the Joint Lead
-Managers, the Capital Market Intermediaries and the Hong Kong Underwriters not to, without
-the prior written consent of the Joint Sponsors and Overall Coordinators (for themselves and
-on behalf of the Hong Kong Underwriters) and unless in compliance with the Listing Rules:
-(i) allot, issue, sell, accept subscription for, offer to allot, issue or sell, contract or agree
-to allot, issue or sell, assign, mortgage, charge, pledge, hypothecate, lend, grant or
-sell any option, warrant, contract or right to subscribe for or purchase, grant or
-purchase any option, warrant, contract or right to allot, issue or sell, or otherwise
-transfer or dispose of or create an encumbrance over, or agree to transfer or dispose
-of or create an encumbrance over, either directly or indirectly, conditionally or
-unconditionally, or repurchase, any legal or beneficial interest in the share capital,
-any Class A Ordinary Shares or any other securities of the Company or any interest
-in any of the foregoing (including, without limitation, any securities convertible into
-or exchangeable or exercisable for or that represent the right to receive, or any
-warrants or other rights to purchase any share capital, Class A Ordinary Shares or
-other securities of the Company, as applicable), or deposit any share capital, Class
-A Ordinary Shares or other securities of the Company, as applicable, with a
-depositary in connection with the issue of depositary receipts; or
-(ii) enter into any swap or other arrangement that transfers to another, in whole or in
-part, any of the economic consequences of ownership (legal or beneficial) of the
-Class A Ordinary Shares or any other securities of the Company, or any interest in
-any of the foregoing (including, without limitation, any securities convertible into
-or exchangeable or exercisable for or that represent the right to receive, or any
-warrants or other rights to purchase, any Shares); or
-(iii) enter into any transaction with the same economic effect as any transaction
-described in paragraphs (i) or (ii) above; or
-UNDERWRITING
-– 483 –
-
-(iv) offer to or agree to do any of the foregoing specified in paragraphs (i), (ii) or (iii)
-above or announce any intention to do so,
-in each case, whether any of the transactions specified in paragraphs (i), (ii) or (iii) above is
-to be settled by delivery of share capital, Class A Ordinary Shares or such other securities, in
-cash or otherwise (whether or not the issue of such share capital or other securities will be
-completed within the First Six Month Period).
-In the event that, during the period of six months commencing on the date on which the
-First Six-Month Period expires (the “ Second Six-Month Period ”), the Company enters into
-any of the transactions specified in paragraphs (i), (ii) or (iii) above or offers to or agrees to
-or announces any intention to effect any such transaction, the Company shall take all
-reasonable steps to ensure that it will not create a disorderly or false market in the Class A
-Ordinary Shares or other equity securities of the Company.
-(B) Undertakings by the Controlling Shareholders
-Pursuant to the Hong Kong Underwriting Agreement, each of the Controlling Shareholder
-has undertaken to each of the Company, the Joint Sponsors, the Sponsor-Overall Coordinators,
-the Overall Coordinators, the Joint Global Coordinators, the CMIs, the Joint Bookrunners, the
-Joint Lead Managers and the Hong Kong Underwriters that, without the prior written consent
-of the Joint Sponsors and the Overall Coordinators (for themselves and on behalf of the Hong
-Kong Underwriters) and unless in compliance with the requirements of the Listing Rules, at
-any time during the period commencing on the date of the Hong Kong Underwriting Agreement
-and ending on, and including, the date that is 24 months after the Listing Date (the “ 24-Month
-Period ”):
-(i) except for any lending of Class A Ordinary Shares by MiniMax Matrix pursuant to
-the Stock Borrowing Agreement and any sale of Class A Ordinary Shares pursuant
-to the Global Offering, it/he will not, and will procure that the relevant registered
-holder(s), any nominee or trustee holding on trust for it/him and the companies
-controlled by it/him/her will not, offer, pledge, charge, sell, offer to sell, contract or
-agree to sell, mortgage, charge, hypothecate, lend, grant or sell any option, warrant,
-contract or right to purchase, grant, or purchase any option, warrant, contract or
-right to sell, grant or agree to grant any option, right or warrant to purchase or
-subscribe for, lend or otherwise transfer or dispose of or create an Encumbrance
-over, or agree to transfer or dispose of or create an Encumbrance over, either directly
-or indirectly, conditionally or unconditionally, any Class A Ordinary Shares, Class
-B Ordinary Shares or other securities of the Company or any interest in any of the
-foregoing (including, but not limited to, any securities that are convertible into or
-exchangeable or exercisable for, or that represent the right to receive, or any
-warrants or other rights to purchase, any Class A Ordinary Shares or Class B
-Ordinary Shares, or deposit any Class A Ordinary Shares or Class B Ordinary Shares
-UNDERWRITING
-– 484 –
-
-or other equity securities of the Company with a depositary in connection with the
-issue of depository receipts) beneficially owned by him or it as of the Listing Date
-(the “ Controlling Shareholders Locked-up Securities ”); or
-(ii) enter into any swap or other arrangement that transfers to another, in whole or in
-part, any of the economic consequences of ownership (legal or beneficial) of any
-Controlling Shareholders Locked-up Securities; or
-(iii) enter into any transaction with the same economic effect as any transaction specified
-in paragraphs (i) or (ii) above, or offer to or agree to or announce any intention to
-effect any transaction specified paragraphs (i) or (ii) above, in each case, whether
-any of the transactions is to be settled by delivery of Class A Ordinary Shares, Class
-B Ordinary Shares or other securities of the Company or in cash or otherwise, and
-whether or not the transactions will be completed within 24-Month Period.
-Until the expiry of the 24-Month Period, in the event that any of the Controlling
-Shareholders enters into any of the transactions specified above or offer to or agrees to or
-contract to or publicly announce any intention to effect any such transaction, it/he will take all
-reasonable steps to ensure that such a disposal will not create a disorderly or false market in
-the securities of the Company.
-The restrictions above shall not prevent the Controlling Shareholders from (i) purchasing
-additional Class A Ordinary Shares or other securities of the Company and disposing of such
-additional Class A Ordinary Shares or securities of the Company in accordance with the Listing
-Rules, provided that any such purchase or disposal does not contravene the lock-up
-arrangements with the Controlling Shareholders referred to above or the compliance by the
-Company with the minimum public float Requirement, (ii) disposing of any interest of the
-Controlling Shareholders Locked-up Securities in the circumstances provided under Rule
-18C.15 of the Listing Rules; and (iii) using the Class A Ordinary Shares or other securities of
-the Company or any interest therein beneficially owned by them as security (including a charge
-or a pledge) in favor of an authorized institution (as defined in the Banking Ordinance (Chapter
-155 of the Laws of Hong Kong)) for a bona fide commercial loan in accordance with Note (2)
-to Rule 10.07(2) of the Listing Rules, provided that, within 24-Month Period, (a) the relevant
-Controlling Shareholder will immediately inform the Company and the Overall Coordinators
-in writing of such pledge or charge together with the number of Class A Ordinary Shares or
-other securities of the Company so pledged or charged if and when it/he or the relevant
-registered holder(s) pledges or charges any Class A Ordinary Shares or other securities of the
-Company beneficially owned by it/him, and (b) when the relevant Controlling Shareholder
-receives indications, either verbal or written, from the pledgee or chargee of any Shares that
-any of the pledged or charged Class A Ordinary Shares or other securities of the Company will
-be disposed of, it/he will immediately inform the Company and the Overall Coordinators of
-such indications.
-UNDERWRITING
-– 485 –
-
-In the event that upon the notification by the Stock Exchange that the Company will no
-longer be regarded as a Pre-Commercial Company after the Listing, the lock-up period set out
-above will expire on the later of: (i) the date on which such lock-up periods would have ended
-if the Company had applied for listing as a Commercial Company; and (2) the date falling on
-the 30th day after the announcement on the removal of designation as a Pre-Commercial
-Company as required under Rule 18C.24 of the Listing Rules.
-Undertaking by the other existing shareholders
-In addition to the respective undertakings by the Controlling Shareholders and the
-Underwriting Providers as disclosed above in this section, each of the Pre-IPO Investors and
-MiniMax Gene has agreed to provide a lock-up undertaking (the “ Lock-up Undertakings ”) in
-favour of the Company, the Joint Sponsors and the Overall Coordinators (for themselves and
-on behalf of the Underwriters).
-Pursuant to the Lock-up Undertakings, (a) existing shareholders holding an aggregate of
-48.92% of the total number of issued shares of the Company as of the Latest Practicable Date
-have agreed to a lock-up in respect of the Shares they held prior to the Listing for a period
-commencing from the date of their respective Lock-up Undertakings and ending on the date
-which is six months from the Listing Date, subject to customary exceptions, and (b) existing
-shareholders holding an aggregate of 20.34% of the total number of issued shares of the
-Company as of the Latest Practicable Date have agree to a lock-up in respect of the Shares they
-held prior to the Listing for a period commencing from the date of their respective Lock-up
-Undertakings or the date of this Prospectus and ending on a date which is the earlier of (i) the
-twentieth (20th) trading day starting from the date on which the Class A Ordinary Shares are
-included as an eligible stocks of Stock Connect and can be traded via Stock Connect of the
-Stock Exchange, or (ii) nine months from the date on which trading in the Class A Ordinary
-Shares commences on the Stock Exchange, subject to customary exceptions.
-Hong Kong Underwriters’ Interests in the Company
-Save for their respective obligations under the Hong Kong Underwriting Agreement and
-otherwise as disclosed in the prospectus, as of the Latest Practicable Date, none of the Hong
-Kong Underwriters was interested, legally or beneficially, directly or indirectly, in any Shares
-or any securities of any member of the Group or had any right or option (whether legally
-enforceable or not) to subscribe for or purchase, or to nominate persons to subscribe for or
-purchase, any Shares or any securities of any member of the Group.
-Following the completion of the Global Offering, the Hong Kong Underwriters and their
-affiliated companies may hold a certain portion of the Shares as a result of fulfilling their
-respective obligations under the Hong Kong Underwriting Agreement.
-UNDERWRITING
-– 486 –
-
-International Offering
-International Underwriting Agreement
-In connection with the International Offering, the Company expects to enter into the
-International Underwriting Agreement with the International Underwriters on or around the
-Price Determination Date. Under the International Underwriting Agreement and subject to the
-Offer Size Adjustment Option and the Over-allotment Option, the International Underwriters
-would, subject to certain conditions set out therein, agree severally but not jointly to procure
-subscribers for, or themselves to subscribe for, their respective applicable proportions of the
-International Offer Shares initially being offered pursuant to the International Offering. It is
-expected that the International Underwriting Agreement may be terminated on similar grounds
-as the Hong Kong Underwriting Agreement. Potential investors should note that in the event
-that the International Underwriting Agreement is not entered into, the Global Offering will not
-proceed. See “Structure of the Global Offering — The International Offering.”
-Over-allotment Option
-The Company is expected to grant to the International Underwriters the Over-allotment
-Option, exercisable by the Overall Coordinators (on behalf of the International Underwriters)
-at any time from the Listing Date until 30 days after the last day for lodging applications under
-the Hong Kong Public Offering, pursuant to which the Company may be required to issue up
-to an aggregate of 3,808,380 Class A Ordinary Shares (representing not more than 15% of the
-number of Offer Shares initially available under the Global Offering assuming the Offer Size
-Adjustment Option is not exercised at all) or up to an aggregate of 4,379,640 Class A Ordinary
-Shares (representing approximately 15% of the Offer Shares initially available under the
-Global Offering assuming the Offer Size Adjustment Option is exercised in full), at the Offer
-Price, to, among other things, cover over-allocations in the International Offering, if any. See
-“Structure of the Global Offering — Over-allotment Option.”
-Offer Size Adjustment Option
-The Company is expected to grant to the Overall Coordinators the Offer Size Adjustment
-Option, exercisable by the Overall Coordinators (for themselves and on behalf of the
-International Underwriters) on or before the second Business Day prior to the Listing Date and
-will lapse immediately thereafter, whichever is earlier, to require our Company to allot and
-issue up to an aggregate of 3,808,380 additional Offer Shares, representing approximately
-15.0% of the Offer Shares initially being offered under the Global Offering at the Offer Price
-to cover any excess demand in the International Offering. The Offer Size Adjustment Option
-provides flexibility for the Overall Coordinators to increase the number of Offer Shares
-available for purchase under the International Offering to cover additional market demand.
-Further details are set out in the section headed “Structure of the Global Offering —
-International Offering — Offer Size Adjustment Option” in this Prospectus.
-UNDERWRITING
-– 487 –
-
-Commissions and Expenses
-The Capital Market Intermediaries will receive an underwriting commission of 2% of the
-aggregate Offer Price of all the Offer Shares (including any Offer Shares to be issued pursuant
-to the exercise of the Offer Size Adjustment Option and the Over-allotment Option), out of
-which they will pay any sub-underwriting commissions and other fees (if any).
-The Capital Market Intermediaries may receive a discretionary incentive fee of up to
-1.5% of the aggregate Offer Price of all the Offer Shares to be issued by the Company under
-the Global Offering (including any Offer Shares to be issued pursuant to the exercise of the
-Offer Size Adjustment Option and the Over-allotment Option).
-Assuming an indicative Offer Price of HK$158.00 per Offer Share (which is the mid-point
-of the Offer Price range), the exercise of the Offer Size Adjustment Option and the
-Over-allotment Option in full and the full payment of the discretionary fees, the fixed fees and
-the discretionary fees payable to the Capital Market Intermediaries represent approximately
-56.84% and 43.16%, respectively, of the aggregate fees payable to the Capital Market
-Intermediaries in total in connection with the Global Offering.
-For any unsubscribed Hong Kong Offer Shares reallocated to the International Offering,
-the underwriting commission will not be paid to the Hong Kong Underwriters but will instead
-be paid, at the rate applicable to the International Offering, to the relevant International
-Underwriters.
-The aggregate underwriting commissions payable to the Capital Market Intermediaries in
-relation to the Global Offering (assuming an indicative Offer Price of HK$158.00 per Offer
-Share (which is the mid-point of the Offer Price range), the full payment of the discretionary
-incentive fee and the exercise of the Offer Size Adjustment Option and the Over-allotment
-Option in full) will be approximately HK$177.9 million representing approximately 3.4% of
-the estimated gross proceeds from the Global Offering.
-The aggregate underwriting commissions and fees together with the Stock Exchange
-listing fees, the SFC transaction levy, the AFRC transaction levy and the Stock Exchange
-trading fee, legal and other professional fees and printing and all other expenses relating to the
-Global Offering are estimated to be approximately HK$238.6 million (assuming an indicative
-Offer Price of HK$158.00 per Offer Share (which is the mid-point of the Offer Price range),
-the full payment of the discretionary incentive fee and the exercise of the Offer Size
-Adjustment Option and the Over-allotment Option in full) and will be paid by the Company.
-UNDERWRITING
-– 488 –
-
-Indemnity
-Each of the Company and the Controlling Shareholders has agreed to indemnify the Hong
-Kong Underwriters for certain losses which they may suffer or incur, including losses arising
-from their performance of their obligations under the Hong Kong Underwriting Agreement and
-any breach by the Company or the Controlling Shareholders of the Hong Kong Underwriting
-Agreement.
-ACTIVITIES BY SYNDICATE MEMBERS
-The underwriters of the Hong Kong Public Offering and the International Offering
-(together, the “ Syndicate Members ”) and their affiliates may each individually undertake a
-variety of activities (as further described below) which do not form part of the underwriting or
-stabilizing process.
-The Syndicate Members and their affiliates are diversified financial institutions with
-relationships in countries around the world. These entities engage in a wide range of
-commercial and investment banking, brokerage, funds management, trading, hedging,
-investing and other activities for their own account and for the account of others. In the
-ordinary course of their various business activities, the Syndicate Members and their respective
-affiliates may purchase, sell or hold a broad array of investments and actively trade securities,
-derivatives, loans, commodities, currencies, credit default swaps and other financial
-instruments for their own account and for the accounts of their customers. Such investment and
-trading activities may involve or relate to assets, securities and/or instruments of the Company
-and/or persons and entities with relationships with the Company and may also include swaps
-and other financial instruments entered into for hedging purposes in connection with the
-Group’s loans and other debt.
-In relation to the Shares, the activities of the Syndicate Members and their affiliates could
-include acting as agent for buyers and sellers of the Shares, entering into transactions with
-those buyers and sellers in a principal capacity, including as a lender to initial purchasers of
-the Shares (which financing may be secured by the Shares) in the Global Offering, proprietary
-trading in the Shares, and entering into over the counter or listed derivative transactions or
-listed or unlisted securities transactions (including issuing securities such as derivative
-warrants listed on a stock exchange) which have as their underlying assets, assets including the
-Shares. Such transactions may be carried out as bilateral agreements or trades with selected
-counterparties. Those activities may require hedging activity by those entities involving,
-directly or indirectly, the buying and selling of the Shares, which may have a negative impact
-on the trading price of the Shares. All such activities could occur in Hong Kong and elsewhere
-in the world and may result in the Syndicate Members and their affiliates holding long and/or
-short positions in the Shares, in baskets of securities or indices including the Shares, in units
-of funds that may purchase the Shares, or in derivatives related to any of the foregoing.
-UNDERWRITING
-– 489 –
-
-In relation to issues by Syndicate Members or their affiliates of any listed securities
-having the Shares as their underlying securities, whether on the Stock Exchange or on any
-other stock exchange, the rules of the stock exchange may require the issuer of those securities
-(or one of its affiliates or agents) to act as a market maker or liquidity provider in the security,
-and this will also result in hedging activity in the Shares in most cases.
-Such activities may affect the market price or value of the Shares, the liquidity or trading
-volume in the Shares and the volatility of the price of the Shares, and the extent to which this
-occurs from day to day cannot be estimated.
-It should be noted that when engaging in any of these activities, the Syndicate Members
-will be subject to certain restrictions, including the following:
- the Syndicate Members (other than the Stabilizing Manager or any person acting for
-it) must not, in connection with the distribution of the Offer Shares, effect any
-transactions (including issuing or entering into any option or other derivative
-transactions relating to the Offer Shares), whether in the open market or otherwise,
-with a view to stabilizing or maintaining the market price of any of the Offer Shares
-at levels other than those which might otherwise prevail in the open market; and
- the Syndicate Members must comply with all applicable laws and regulations,
-including the market misconduct provisions of the SFO, including the provisions
-prohibiting insider dealing, false trading, price rigging and stock market
-manipulation.
-Certain of the Syndicate Members or their respective affiliates have provided from time
-to time, and expect to provide in the future, investment banking and other services to the
-Company and each of its affiliates for which such Syndicate Members or their respective
-affiliates have received or will receive customary fees and commissions.
-In addition, the Syndicate Members or their respective affiliates may provide financing to
-investors to finance their subscriptions of the Offer Shares in the Global Offering.
-UNDERWRITING
-– 490 –
-
-THE GLOBAL OFFERING
-This prospectus is published in connection with the Hong Kong Public Offering as part
-of the Global Offering.
-The listing of the Class A Ordinary Shares on the Main Board of the Stock Exchange are
-sponsored by the Joint Sponsors. The Joint Sponsors have made an application on behalf of the
-Company to the Stock Exchange for the listing of, and permission to deal in, the Class A
-Ordinary Shares to be issued as mentioned in this prospectus.
-25,389,220 Offer Shares will initially be made available under the Global Offering
-comprising:
-(a) the Hong Kong Public Offering of initially 1,269,480 Offer Shares (subject to
-reallocation) in Hong Kong as described in “— The Hong Kong Public Offering”
-below; and
-(b) the International Offering of initially 24,119,740 Offer Shares (subject to
-reallocation, the Offer Size Adjustment Option and the Over-allotment Option) (i) in
-the United States solely to QIBs in reliance on Rule 144A or another exemption
-from, or in a transaction not subject to, the registration requirements of the U.S.
-Securities Act and (ii) outside the United States (including to professional and
-institutional investors within Hong Kong) in offshore transactions in reliance on
-Regulation S, as described in “— The International Offering” below.
-Investors may either (i) apply for Hong Kong Offer Shares under the Hong Kong Public
-Offering; or (ii) apply for or indicate an interest for International Offer Shares under the
-International Offering, but may not do both.
-The Offer Shares will represent approximately 8.3% of the enlarged issued share capital
-of the Company immediately following the completion of the Global Offering, assuming the
-Offer Size Adjustment Option and the Over-allotment Option are not exercised. If the
-Over-allotment Option is exercised in full, the Offer Shares will represent approximately 9.4%
-of the enlarged issued share capital of the Company (assuming the Offer Size Adjustment
-Option is not exercised at all) or approximately 10.7% of the total Shares in issue (assuming
-the Offer Size Adjustment Option is exercised in full) immediately following the completion
-of the Global Offering.
-References in this prospectus to applications, application monies or the procedure for
-applications relate solely to the Hong Kong Public Offering.
-STRUCTURE OF THE GLOBAL OFFERING
-– 491 –
-
-THE HONG KONG PUBLIC OFFERING
-Number of Offer Shares initially offered
-The Company is initially offering 1,269,480 Offer Shares for subscription by the public
-in Hong Kong at the Offer Price, representing approximately 5% of the total number of Offer
-Shares initially available under the Global Offering. The number of Offer Shares initially
-offered under the Hong Kong Public Offering, subject to any reallocation of Offer Shares
-between the International Offering and the Hong Kong Public Offering, will represent
-approximately 0.4% of the enlarged issued share capital of the Company immediately
-following the completion of the Global Offering (assuming the Offer Size Adjustment Option
-and the Over-allotment Option are not exercised).
-The Hong Kong Public Offering is open to members of the public in Hong Kong as well
-as to institutional and professional investors. Professional investors generally include brokers,
-dealers, companies (including fund managers) whose ordinary business involves dealing in
-shares and other securities and corporate entities that regularly invest in shares and other
-securities.
-Completion of the Hong Kong Public Offering is subject to the conditions set out in “—
-Conditions of the Global Offering” below.
-Allocation
-Allocation of Offer Shares to investors under the Hong Kong Public Offering will be
-based solely on the level of valid applications received under the Hong Kong Public Offering.
-The basis of allocation may vary, depending on the number of Hong Kong Offer Shares validly
-applied for by applicants. Such allocation could, where appropriate, consist of balloting, which
-could mean that some applicants may receive a higher allocation than others who have applied
-for the same number of Hong Kong Offer Shares, and those applicants who are not successful
-in the ballot may not receive any Hong Kong Offer Shares.
-For allocation purposes only, the total number of Hong Kong Offer Shares available under
-the Hong Kong Public Offering (after taking into account any reallocation referred to below)
-will be divided equally into two pools: pool A and pool B with any odd lots being allocated to
-pool A. The Hong Kong Offer Shares in pool A will be allocated on an equitable basis to valid
-applicants who have applied for Hong Kong Offer Shares with an aggregate subscription price
-of HK$5 million (excluding the brokerage, the SFC transaction levy, the Stock Exchange
-trading fee and the AFRC transaction levy payable) or less. The Hong Kong Offer Shares in
-pool B will be allocated on an equitable basis to valid applicants who have applied for Hong
-Kong Offer Shares with an aggregate subscription price of more than HK$5 million (excluding
-the brokerage, the SFC transaction levy, the Stock Exchange trading fee and the AFRC
-transaction levy payable) and up to the total value in pool B.
-STRUCTURE OF THE GLOBAL OFFERING
-– 492 –
-
-Investors should be aware that applications in pool A and applications in pool B may
-receive different allocation ratios. If any Hong Kong Offer Shares in one (but not both) of the
-pools are unsubscribed, such unsubscribed Hong Kong Offer Shares will be transferred to the
-other pool to satisfy demand in that other pool and be allocated accordingly. For the purpose
-of the immediately preceding paragraph only, the “price” for Hong Kong Offer Shares means
-the price payable on application therefor (without regard to the Offer Price as finally
-determined). Applicants can only receive an allocation of Hong Kong Offer Shares from either
-pool A or pool B and not from both pools. Multiple or suspected multiple applications under
-the Hong Kong Public Offering and any application for more than 634,740 Hong Kong Offer
-Shares (being 50% of the Hong Kong Offer Shares initially available under the Hong Kong
-Public Offering) is liable to be rejected.
-Reallocation
-The allocation of Offer Shares between the Hong Kong Public Offering and the
-International Offering is subject to reallocation under the Listing Rules. Paragraph 4.2 of
-Practice Note 18 of the Listing Rules (as modified by Rule 18C.09 of the Listing Rules)
-requires a clawback mechanism to be put in place, which would have the effect of increasing
-the number of Hong Kong Offer Shares to certain percentages of the total number of Offer
-Shares to be offered in the Global Offering if certain prescribed total demand levels in the
-Hong Kong Public Offering are reached. 1,269,480 Offer Shares are initially available in the
-Hong Kong Public Offering, representing approximately 5% of the Offer Shares initially
-available for subscription under the Global Offering; and in the event of full subscription or
-oversubscription of the International Offer Shares, the Overall Coordinators shall apply a
-clawback mechanism following the closing of the application lists on the following basis,
-subject to the allocation basis as stated in Chapter 4.14 of the Guide for New Listing
-Applicants:
-(a) If the Hong Kong Public Offering is not fully subscribed for, the Overall
-Coordinators has the authority to reallocate all or any unsubscribed Hong Kong
-Offer Shares to the International Offering, in such proportions as the Overall
-Coordinators deems appropriate, and the Allocation Cap as defined in and stated
-under Chapter 4.14 of the Guide for New Listing Applicants will not be triggered;
-(b) If the number of Offer Shares validly applied for under the Hong Kong Public
-Offering represents 10 times or more but less than 50 times of the number of the
-Offer Shares initially available for subscription under the Hong Kong Public
-Offering, then Offer Shares will be reallocated to the Hong Kong Public Offering
-from the International Offering, so that the total number of Offer Shares available
-under the Hong Kong Public Offering will be 2,538,940 Offer Shares, representing
-approximately 10% of the Offer Shares initially available under the Global Offering
-(before any exercise of the Offer Size Adjustment Option or the Over-allotment
-Option); and
-STRUCTURE OF THE GLOBAL OFFERING
-– 493 –
-
-(c) If the number of Offer Shares validly applied for under the Hong Kong Public
-Offering represents 50 times or more of the number of the Offer Shares initially
-available for subscription under the Hong Kong Public Offering, then Offer Shares
-will be reallocated to the Hong Kong Public Offering from the International
-Offering, so that the total number of Offer Shares available under the Hong Kong
-Public Offering will be 5,077,860 Offer Shares, representing approximately 20% of
-the Offer Shares initially available under the Global Offering (before any exercise
-of the Offer Size Adjustment Option or the Over-allotment Option).
-In each case, the additional Offer Shares reallocated to the Hong Kong Public Offering
-will be allocated between pool A and pool B and the number of Offer Shares allocated to the
-International Offering will be correspondingly reduced in such manner as the Overall
-Coordinators deem appropriate.
-The Offer Shares to be offered in the Hong Kong Public Offering and the International
-Offering may be reallocated as between these offerings at the discretion of the Overall
-Coordinators (for themselves and on behalf of the Underwriters) in accordance with Chapter
-4.14 of the Guide for New Listing Applicants published by the Stock Exchange and paragraph
-4.2 of Practice Note 18 of the Listing Rules. Subject to the foregoing paragraph, the Overall
-Coordinators may in their discretion reallocate Offer Shares from the International Offering to
-the Hong Kong Public Offering to satisfy valid applications under the Hong Kong Public
-Offering.
-In accordance with Chapter 4.14 of the Guide for New Listing Applicants, if (i) the
-International Offering is not fully subscribed and the Hong Kong Public Offering is fully
-subscribed or oversubscribed irrespective of the number of times; or (ii) the International
-Offering is fully subscribed or oversubscribed and the Hong Kong Public Offering is fully
-subscribed or oversubscribed with the number of Offer Shares validly applied for in the Hong
-Kong Public Offering representing less than 10 times of the number of Shares initially
-available for subscription under the Hong Kong Public Offering, the Overall Coordinators have
-the authority to reallocate International Offer Shares originally included in the International
-Offering to the Hong Kong Public Offering in such number as they deem appropriate, provided
-that the total number of Offer Shares available under the Hong Kong Public Offering following
-such reallocation shall be not more than 2,538,960 Offer Shares (representing double of the
-total number of Offer Shares initially available under the Hong Kong Public Offering (before
-any exercise of the Offer Size Adjustment Option or the Over-allotment Option), and the final
-Offer Price shall be fixed at the low-end of the indicative Offer Price range (i.e., HK$151.00
-per Offer Share) stated in this prospectus.
-Details of any reallocation of Offer Shares between the Hong Kong Public Offering and
-the International Offering will be disclosed in the results announcement of the Global Offering,
-which is expected to be published on Thursday, January 8, 2026.
-STRUCTURE OF THE GLOBAL OFFERING
-– 494 –
-
-Where the International Offer Shares are undersubscribed, if the Hong Kong Offer Shares
-are also undersubscribed, the Global Offering will not proceed unless the Underwriters would
-subscribe or procure subscribers for their respective applicable proportions of the Offer Shares
-being offered which are not taken up under the Global Offering on the terms and conditions of
-this prospectus and the Underwriting Agreements.
-Applications
-Each applicant under the Hong Kong Public Offering will be required to give an
-undertaking and confirmation in the application submitted by him/her that he/she and any
-person(s) for whose benefit he/she is making the application has not applied for or taken up,
-or indicated an interest for, and will not apply for or take up, or indicate an interest for, any
-International Offer Shares under the International Offering. Such applicant’s application under
-the International Offering is liable to be rejected if such undertaking and/or confirmation is/are
-breached and/or untrue (as the case may be).
-Applicants under the Hong Kong Public Offering may be required to pay, on application
-(subject to application channels), the maximum Offer Price in addition to the brokerage, the
-SFC transaction levy, the Stock Exchange trading fee and the AFRC transaction levy payable
-on each Offer Share, amounting to a total of HK$3,333.28 for one board lot of 20 Offer Shares.
-If the Offer Price, as finally determined in the manner described in “— Pricing and Allocation”
-below, is less than the maximum Offer Price, appropriate refund payments (including the
-brokerage, the SFC transaction levy, the Stock Exchange trading fee and the AFRC transaction
-levy attributable to the surplus application monies) will be made to successful applicants
-(subject to application channels), without interest. Further details are set out in “How to Apply
-for Hong Kong Offer Shares.”
-THE INTERNATIONAL OFFERING
-Number of Offer Shares initially offered
-The International Offering will consist of an offering of initially 24,119,740 Offer Shares
-offered by the Company (subject to reallocation, the Offer Size Adjustment Option and the
-Over-allotment Option), representing approximately 95% of the total number of Offer Shares
-initially available under the Global Offering. The number of Offer Shares initially offered
-under the International Offering, subject to any reallocation of Offer Shares between the
-International Offering and the Hong Kong Public Offering, will represent approximately 7.9%
-of the enlarged issued share capital of the Company immediately following the completion of
-the Global Offering (assuming the Offer Size Adjustment Option and the Over-allotment
-Option are not exercised).
-STRUCTURE OF THE GLOBAL OFFERING
-– 495 –
-
-Allocation
-The International Offering will include selective marketing of Offer Shares to QIBs in the
-United States as well as institutional and professional investors and other investors anticipated
-to have a sizeable demand for such Offer Shares in Hong Kong and other jurisdictions outside
-the United States in reliance on Regulation S. Professional investors generally include brokers,
-dealers, companies (including fund managers) whose ordinary business involves dealing in
-shares and other securities and corporate entities that regularly invest in shares and other
-securities. Allocation of Offer Shares pursuant to the International Offering will be effected in
-accordance with the “book-building” process described in “Pricing and Allocation” below and
-based on a number of factors, including the level and timing of demand, the total size of the
-relevant investor’s invested assets or equity assets in the relevant sector and whether or not it
-is expected that the relevant investor is likely to buy further Shares and/or hold or sell its
-Shares after the Listing. Such allocation is intended to result in a distribution of the Shares on
-a basis which would lead to the establishment of a solid professional and institutional
-shareholder base to the benefit of the Group and the Shareholders as a whole. In addition,
-pursuant to Rule 18C.08 of the Listing Rules, at least 50% of the total number of shares offered
-in the Global Offering (excluding any shares to be issued pursuant to the exercise of the Offer
-Size Adjustment Option and the Over-allotment Option) will be taken up by independent price
-setting investors, as defined under the Listing Rules, in the International Offering.
-The Overall Coordinators (for themselves and on behalf of the Underwriters) may require
-any investor who has been offered Offer Shares under the International Offering and who has
-made an application under the Hong Kong Public Offering to provide sufficient information to
-the Overall Coordinators so as to allow them to identify the relevant applications under the
-Hong Kong Public Offering and to ensure that they are excluded from any allocation of Offer
-Shares under the International Offering.
-Reallocation
-The total number of Offer Shares to be issued or sold pursuant to the International
-Offering may change as a result of the clawback arrangement described in “— The Hong Kong
-Public Offering — Reallocation” above, the exercise of the Offer Size Adjustment Option and
-the Over-allotment Option in whole or in part and/or any reallocation of unsubscribed Offer
-Shares originally included in the Hong Kong Public Offering.
-STRUCTURE OF THE GLOBAL OFFERING
-– 496 –
-
-OVER-ALLOTMENT OPTION
-In connection with the Global Offering, the Company is expected to grant the
-Over-allotment Option to the International Underwriters, exercisable by the Overall
-Coordinators (on behalf of the International Underwriters).
-Pursuant to the Over-allotment Option, the International Underwriters will have the right,
-exercisable by the Overall Coordinators (on behalf of the International Underwriters) at any
-time from the Listing Date until 30 days after the last day for lodging applications under the
-Hong Kong Public Offering, to require the Company to issue up to an aggregate of 3,808,380
-additional Offer Shares (representing not more than 15% of the total number of Offer Shares
-initially available under the Global Offering assuming the Offer Size Adjustment Option is not
-exercised at all) or up to an aggregate of 4,379,640 additional Shares (representing
-approximately 15% of the Offer Shares initially available under the Global Offering assuming
-the Offer Size Adjustment Option is exercised in full), at the Offer Price under the International
-Offering to, among other things, cover over-allocations in the International Offering, if any.
-If the Offer Size Adjustment Option and the Over-allotment Option are exercised in full,
-the additional Offer Shares to be issued pursuant thereto will represent approximately 2.6% of
-the enlarged issued share capital of the Company immediately following the completion of the
-Global Offering. If the Over-allotment Option is exercised, an announcement will be made.
-OFFER SIZE ADJUSTMENT OPTION
-In order to provide flexibility for the Overall Coordinators to increase the number of
-Offer Shares available for purchase under the International Offering to cover additional market
-demand, the Company is expected to grant to the International Underwriters the Offer Size
-Adjustment Option, exercisable by the Overall Coordinators at their absolute discretion (for
-themselves and on behalf of the International Underwriters) on or before the second business
-day prior to the Listing Date and will lapse immediately thereafter, to require the Company to
-allot and issue up to an aggregate of 3,808,380 additional Offer Shares (representing
-approximately 15.0% of the Offer Shares initially being offered under the Global Offering) at
-the Offer Price to cover any excess demand in the International Offering only and such
-additional Offer Shares will not be subject to the reallocation and clawback as described above.
-If the Offer Size Adjustment Option is exercised in full, the additional Offer Shares to be
-issued pursuant thereto will represent approximately 1.2% of our issued share capital
-immediately following the completion of the Global Offering (assuming the Over-allotment
-Option is not exercised).
-STRUCTURE OF THE GLOBAL OFFERING
-– 497 –
-
-In considering whether to exercise the Offer Size Adjustment Option, the Overall
-Coordinators will take into account a number of factors, including, among other things:
-(i) whether the level of interest expressed by prospective professional and institutional
-investors during the book-building process under the International Offering is
-sufficient to cover:
-(a) the total number of Offer Shares, which represents the aggregate of the Offer
-Shares initially available under the Global Offering and the additional Offer
-Shares upon any exercise of the Offer Size Adjustment Option; and
-(b) the corresponding number of Shares under the Over-allotment Option;
-(ii) the prices at which prospective professional and institutional investors have
-indicated they would be prepared to acquire the Offer Shares in the course of the
-book-building process;
-(iii) the quality of investors, with a view to establishing a solid professional institutional
-and investor shareholder base to the benefit of the Company and its Shareholders as
-a whole; and
-(iv) general market conditions.
-The dilution effect of the Offer Size Adjustment Option (assuming the Over-allotment
-Option is not exercised) is set out below:
-Number of Shares
-issued under the Global
-Offering before the
-exercise of the Offer
-Size Adjustment Option
-(the “Original
-Subscribers”)
-Approximate percentage
-of total issued share
-capital held by the
-Original Subscribers
-before the exercise of
-the Offer Size
-Adjustment Option
-Number of Shares
-issued under the Global
-Offering after the full
-exercise of the Offer
-Size Adjustment Option
-Approximate percentage
-of total issued share
-capital held by the
-Original Subscribers
-after the full exercise of
-the Offer Size
-Adjustment Option
-25,389,220 8.3% 29,197,600 8.2%
-The Offer Size Adjustment Option will not be used for price stabilization purposes and
-will not be subject to the provisions of the Securities and Futures (Price Stabilizing) Rules
-(Chapter 571W of the Laws of Hong Kong). The Offer Size Adjustment Option will be in
-addition to the Over-allotment Option.
-If the Offer Size Adjustment Option is exercised in full, the additional net proceeds
-received from the placing of the additional Shares allotted and issued will be allocated in
-accordance with the allocations as disclosed in the section headed “Future Plans and Use of
-Proceeds” in this Prospectus, on a pro rata basis.
-STRUCTURE OF THE GLOBAL OFFERING
-– 498 –
-
-The Company will disclose in its allotment results announcement if and to what extent the
-Offer Size Adjustment Option has been exercised, or will confirm that if the Offer Size
-Adjustment Option has not been exercised by the Price Determination Date, it will lapse and
-cannot be exercised at any future date.
-STABILIZATION
-Stabilization is a practice used by underwriters in some markets to facilitate the
-distribution of securities. To stabilize, the underwriters may bid for, or purchase, the securities
-in the secondary market during a specified period of time, to retard and, if possible, prevent
-a decline in the initial public market price of the securities below the offer price. Such
-transactions may be effected in all jurisdictions where it is permissible to do so, in each case
-in compliance with all applicable laws and regulatory requirements, including those of Hong
-Kong. In Hong Kong, the price at which stabilization is effected is not permitted to exceed the
-offer price.
-In connection with the Global Offering, the Stabilizing Manager (or any person acting for
-it), on behalf of the Underwriters, may over-allocate or effect transactions with a view to
-stabilizing or supporting the market price of the Shares at a level higher than that which might
-otherwise prevail for a limited period after the Listing Date. However, there is no obligation
-on the Stabilizing Manager (or any person acting for it) to conduct any such stabilizing action.
-Such stabilizing action, if taken, (a) will be conducted at the absolute discretion of the
-Stabilizing Manager (or any person acting for it) and in what the Stabilizing Manager (or any
-person acting for it) reasonably regards as the best interest of the Company, (b) may be
-discontinued at any time, and (c) is required to be brought to an end within 30 days after the
-last day for lodging applications under the Hong Kong Public Offering.
-Stabilization action permitted in Hong Kong pursuant to the Securities and Futures (Price
-Stabilizing) Rules of the SFO includes (a) over-allocating for the purpose of preventing or
-minimizing any reduction in the market price of the Shares, (b) selling or agreeing to sell the
-Shares so as to establish a short position in them for the purpose of preventing or minimizing
-any reduction in the market price of the Shares, (c) purchasing, or agreeing to purchase, the
-Shares pursuant to the Over-allotment Option in order to close out any position established
-under paragraph (a) or (b) above, (d) purchasing, or agreeing to purchase, any of the Shares for
-the sole purpose of preventing or minimizing any reduction in the market price of the Shares,
-(e) selling or agreeing to sell any Shares in order to liquidate any position established as a
-result of those purchases and (f) offering or attempting to do anything as described in
-paragraphs (b), (c), (d) or (e) above.
-Specifically, prospective applicants for and investors in the Offer Shares should note that:
- the Stabilizing Manager (or any person acting for it) may, in connection with the
-stabilizing action, maintain a long position in the Shares;
-STRUCTURE OF THE GLOBAL OFFERING
-– 499 –
-
- there is no certainty as to the extent to which and the time or period for which the
-Stabilizing Manager (or any person acting for it) will maintain such a long position;
- liquidation of any such long position by the Stabilizing Manager (or any person
-acting for it) and selling in the open market may have an adverse impact on the
-market price of the Shares;
- no stabilizing action can be taken to support the price of the Shares for longer than
-the stabilization period, which will begin on the Listing Date, and is expected to
-expire on Thursday, February 5, 2026, being the 30th day after the last day for
-lodging applications under the Hong Kong Public Offering. After this date, when no
-further stabilizing action may be taken, demand for the Shares, and therefore the
-price of the Shares, could fall;
- the price of the Shares cannot be assured to stay at or above the Offer Price by the
-taking of any stabilizing action; and
- stabilizing bids or transactions effected in the course of the stabilizing action may
-be made at any price at or below the Offer Price and can, therefore, be done at a
-price below the price paid by applicants for, or investors in, the Offer Shares.
-The Company will ensure or procure that an announcement in compliance with the
-Securities and Futures (Price Stabilizing) Rules of the SFO will be made within seven days of
-the expiration of the stabilization period.
-Over-allocation
-Following any over-allocation of Shares in connection with the Global Offering, the
-Stabilizing Manager (or any person acting for it) may cover such over-allocations by, among
-others, exercising the Over-allotment Option in full or in part, using Shares purchased by the
-Stabilizing Manager (or any person acting for it) in the secondary market at prices that do not
-exceed the Offer Price or a combination of these means.
-STOCK BORROWING AGREEMENT
-In order to facilitate the settlement of over-allocations, if any, in connection with the
-Global Offering, the Stabilizing Manager (or any person acting for it) may choose to borrow
-up to 4,379,640 Offer Shares (representing approximately 15% of the Offer Shares offered
-under the Global Offering assuming the Offer Size Adjustment Option is exercised in full) or
-up to 3,808,380 Offer Shares (representing approximately 15% of the Offer Shares initially
-being offered under the Global Offering assuming the Offer Size Adjustment Option is not
-exercised) from MiniMax Matrix pursuant to the Stock Borrowing Agreement, which is
-expected to be entered into between the Stabilizing Manager (or any person acting for it) and
-MiniMax Matrix on or about the Price Determination Date.
-STRUCTURE OF THE GLOBAL OFFERING
-– 500 –
-
-Such stock borrowing arrangement under the Stock Borrowing Agreements, if entered
-into, will not be subject to the restrictions of Rule 10.07(1)(a) of the Listing Rules provided
-that the requirements set out in Rule 10.07(3) of the Listing Rules are complied with.
-Such stock borrowing arrangement is fully described in this prospectus and must be for
-the sole purpose of covering any short position prior to the exercise of the Over-allotment
-Option.
-The same number of Shares so borrowed must be returned to MiniMax Matrix or its
-nominees, as the case may be, on or before the third business day following the earlier of (a)
-the last day on which the Over-allotment Option may be exercise and (b) the day on which the
-Over-allotment Option is exercised in full.
-The stock borrowing arrangement described above will be effected in compliance with all
-applicable laws, rules and regulatory requirements. No payment will be made to MiniMax
-Matrix by the Stabilizing Manager (or any person acting for it) in relation to such Shares
-borrowing arrangement.
-PRICING AND ALLOCATION
-Determining the Pricing of the Offer Shares
-Pricing for the Offer Shares for the purpose of the various offerings under the Global
-Offering will be determined on the Price Determination Date, which is expected to be on or
-before Wednesday, January 7, 2026 and, in any event, no later than 12:00 noon on Wednesday,
-January 7, 2026 by agreement between the Overall Coordinators (for themselves and on behalf
-of the Underwriters) and the Company, and the number of Offer Shares to be allocated under
-the various offerings will be determined shortly thereafter.
-The Offer Price will not be more than HK$165.00 per Offer Share and is expected to be
-not less than HK$151.00 per Offer Share, unless otherwise announced, as further explained
-below. Applicants under the Hong Kong Public Offering may be required to pay, on application
-(subject to application channels), the maximum Offer Price plus brokerage of 1.0%, SFC
-transaction levy of 0.0027%, Stock Exchange trading fee of 0.00565% and AFRC transaction
-levy of 0.00015%, amounting to a total of HK$3,333.28 for one board lot of 20 Offer Shares.
-Prospective investors should be aware that the Offer Price to be determined on the Price
-Determination Date may be, but is not expected to be, lower than the indicative Offer
-Price range stated in this prospectus.
-The International Underwriters will be soliciting from prospective investors’ indications
-of interest in acquiring Offer Shares in the International Offering. Prospective professional and
-institutional investors will be required to specify the number of Offer Shares under the
-International Offering they would be prepared to acquire either at different prices or at a
-particular price. This process, known as “book-building,” is expected to continue up to, and to
-cease on or about, the last day for lodging applications under the Hong Kong Public Offering.
-STRUCTURE OF THE GLOBAL OFFERING
-– 501 –
-
-The Overall Coordinators (for themselves and on behalf of the Underwriters) may, where
-it deems appropriate, based on the level of interest expressed by prospective investors during
-the book-building process in respect of the International Offering, and with the consent of the
-Company, reduce the number of Offer Shares offered below and/or the Offer Price range as
-stated in this prospectus at any time on or prior to the morning of the last day for lodging
-applications under the Hong Kong Public Offering. In such a case, the Company will, as soon
-as practicable following the decision to make such reduction, and in any event not later than
-the morning of the last day for lodging applications under the Hong Kong Public Offering,
-cause to be published on the websites of the Company and the Stock Exchange at
-https://www.minimaxi.com and www.hkexnews.hk , respectively, notices of the reduction,
-and the cancellation of the Global Offering and relaunch of the offer at the revised number of
-Offer Shares and/or the revised indicative Offer Price range.
-The Company will also, as soon as practicable following the decision to make such
-change, issue a supplemental or new prospectus updating investors of the change in the number
-of Offer Shares and/or the indicative Offer Price range, and giving investors at least three
-business days to consider the new information. The supplemental or new prospectus should
-include at least the following: (i) updated Offer Price range and market capitalization; (ii)
-updated listing timetable and underwriting obligations; (iii) updated price/earnings multiple,
-unaudited pro forma and adjusted net tangible assets; and (iv) updated use of proceeds and
-confirmation of the working capital adequacy based on the revised estimated proceeds.
-Before submitting applications for the Hong Kong Offer Shares, applicants should have
-regard to the possibility that any announcement of a reduction in the number of Offer Shares
-and/or the indicative Offer Price range may not be made until the last day for lodging
-applications under the Hong Kong Public Offering. In the absence of any such notice so
-announcement and any such supplemental or new prospectus so published, the number of Offer
-Shares and the indicative Offer Price range will not be reduced and/or the Offer Price, if agreed
-upon by the Overall Coordinators (for themselves and on behalf of the other Underwriters) and
-the Company, will under no circumstances be set outside the Offer Price range as stated in this
-prospectus.
-If there is any change to the offer size due to change in the number of Offer Shares offered
-in the Global Offering (other than pursuant to the reallocation mechanism as disclosed in this
-prospectus), or change to the Offer Price falling outside the indicative Offer Price range as
-stated in this prospectus, or if the Company becomes aware that there has been a significant
-change affecting any matter contained in this prospectus or a significant new matter has arisen,
-the inclusion of information in respect of which would have been required to be in this
-prospectus if it had arisen before this prospectus was issued, after the issue of this prospectus
-and before the commencement of dealings in our Shares as prescribed under Rule 11.13 of the
-Listing Rules, we are required to cancel the Global Offering and relaunch the offer with a
-supplemental prospectus or a new prospectus in FINI.
-STRUCTURE OF THE GLOBAL OFFERING
-– 502 –
-
-Announcement of Final Pricing of the Offer Shares
-The final Offer Price, the level of indications of interest in the International Offering, the
-level of applications in the Hong Kong Public Offering, the basis of allocations of the Hong
-Kong Offer Shares and the results of allocations in the Hong Kong Public Offering are
-expected to be made available through a variety of channels in the manner described in “How
-to Apply for Hong Kong Offer Shares — B. Publication of Results.”
-UNDERWRITING
-The Hong Kong Public Offering is fully underwritten by the Hong Kong Underwriters
-under the terms and conditions of the Hong Kong Underwriting Agreement and is subject to,
-among other things, the Overall Coordinators (for themselves and on behalf of the
-Underwriters) and the Company agreeing on the Offer Price.
-The Company expects to enter into the International Underwriting Agreement relating to
-the International Offering on the Price Determination Date.
-These underwriting arrangements, including the Underwriting Agreements, are
-summarized in “Underwriting.”
-CONDITIONS OF THE GLOBAL OFFERING
-Acceptance of all applications for Offer Shares will be conditional on:
- the Stock Exchange granting approval for the listing of, and permission to deal in,
-the Shares to be issued pursuant to the Global Offering on the Main Board of the
-Stock Exchange and such approval not subsequently having been withdrawn or
-revoked prior to the Listing Date;
- the Offer Price having been agreed between the Overall Coordinators (for
-themselves and on behalf of the Underwriters) and the Company;
- the execution and delivery of the International Underwriting Agreement on or
-around the Price Determination Date; and
- the obligations of the Hong Kong Underwriters under the Hong Kong Underwriting
-Agreement and the obligations of the International Underwriters under the
-International Underwriting Agreement becoming and remaining unconditional and
-not having been terminated in accordance with the terms of the respective
-Underwriting Agreements,
-STRUCTURE OF THE GLOBAL OFFERING
-– 503 –
-
-in each case on or before the dates and times specified in the respective Underwriting
-Agreements (unless and to the extent such conditions are validly waived on or before such
-dates and times) and, in any event, not later than the date which is 30 days after the date of
-this prospectus.
-If, for any reason, the Offer Price is not agreed between the Overall Coordinators (for
-themselves and on behalf of the Underwriters) and the Company by 12:00 noon on Wednesday,
-January 7, 2026, the Global Offering will not proceed and will lapse.
-The consummation of each of the Hong Kong Public Offering and the International
-Offering is conditional upon, among other things, the other offering becoming unconditional
-and not having been terminated in accordance with its terms.
-If the above conditions are not fulfilled or waived prior to the dates and times specified,
-the Global Offering will lapse and the Stock Exchange will be notified immediately. Notice of
-the lapse of the Hong Kong Public Offering will be published by the Company on the websites
-of the Company and the Stock Exchange at https://www.minimaxi.com and
-www.hkexnews.hk , respectively, on the next day following such lapse. In such a situation, all
-application monies will be returned, without interest, on the terms set out in “How to Apply
-for Hong Kong Offer Shares — D. Despatch/Collection of Share Certificates and Refund of
-Application Monies”. In the meantime, all application monies will be held in separate bank
-account(s) with the receiving bank or other bank(s) in Hong Kong licensed under the Banking
-Ordinance (Chapter 155 of the Laws of Hong Kong).
-Share certificates for the Offer Shares will only become valid evidence of title at 8:00
-a.m. on Friday, January 9, 2026, provided that the Global Offering has become unconditional
-in all respects at or before that time.
-DEALINGS IN THE SHARES
-Assuming that the Hong Kong Public Offering becomes unconditional at or before 8:00
-a.m. in Hong Kong on Friday, January 9, 2026, it is expected that dealings in the Class A
-Ordinary Shares on the Stock Exchange will commence at 9:00 a.m. on Friday, January 9,
-2026.
-The Class A Ordinary Shares will be traded in board lots of 20 Class A Ordinary Shares
-each and the stock code of the Class A Ordinary Shares will be 0100.
-STRUCTURE OF THE GLOBAL OFFERING
-– 504 –
-
-NOTICE TO CAPITAL MARKET INTERMEDIARIES AND PROSPECTIVE
-INVESTORS PURSUANT TO PARAGRAPH 21 OF THE SFC CODE OF CONDUCT
-Important Notice to CMIs (including private banks)
-This notice to CMIs (including private banks) is a summary of certain obligations the
-Code of Conduct for Persons Licensed by or Registered with the Securities and Futures
-Commission (the “ Code ”) imposes on CMIs, which require the attention and cooperation of
-other CMIs (including private banks). Certain CMIs may also be acting as the Overall
-Coordinators for this offering and is subject to additional requirements under the Code.
-Paragraph 21.3.3(c) of the Code requires that a CMI should take all reasonable steps to
-identify whether investors may have any associations with the Company and provide sufficient
-information to the Overall Coordinators to enable it to assess whether orders placed by these
-investors may negatively impact the price discovery process.
-Prospective investors who are the directors, employees or major shareholders of the
-Company, a CMI or its group companies would be considered under the Code as having an
-association (the “ Association ”) with the Company, the CMI or the relevant group company (as
-the case may be). CMIs should specifically disclose whether their investor clients have any
-Association when submitting orders for the Offer Shares. In addition, private banks should take
-all reasonable steps to identify whether their investor clients may have any Associations with
-the Company or any CMI (including its group companies) and inform the Underwriters
-accordingly.
-Prospective investors to whom the allocation of Offer Shares will be subject to
-restrictions or require prior consent from the Stock Exchange under the Listing Rules and other
-regulatory requirements or guidance issued by the Stock Exchange from time to time (the
-“Stock Exchange Requirements ”) (e.g. a connected person of a listed issuer) would be
-considered as “Restricted Investors”. Offer Shares may only be allocated to Restricted
-Investors in accordance with applicable Stock Exchange Requirements. CMIs should
-specifically disclose whether their investor clients are Restricted Investors when submitting
-orders for the Offer Shares.
-CMIs are informed that the marketing and investor targeting strategy for this offering
-includes institutional investors, long-only investors, sovereign wealth funds, pension funds,
-hedge funds, in each case, subject to the applicable Stock Exchange Requirements (in the case
-of a Stock Exchange listed issuer) and selling restrictions set out elsewhere in this prospectus.
-CMIs should ensure that orders placed are bona fide, are not inflated and do not constitute
-duplicated orders (i.e. two or more corresponding or identical orders placed via two or more
-CMIs). CMIs should inquire with their investor clients regarding any orders which appear
-unusual or irregular. CMIs should disclose the identities of all investors when submitting
-orders for the Offer Shares (except for omnibus orders where underlying investor information
-STRUCTURE OF THE GLOBAL OFFERING
-– 505 –
-
-should be provided to the Overall Coordinators when submitting orders). Failure to provide
-underlying investor information for omnibus orders, where required to do so, may result in that
-order being rejected. CMIs should not place “X-orders” into the order book.
-CMIs should segregate and clearly identify their own proprietary orders (and those of
-their group companies, including private banks as the case may be) in the order book and book
-messages.
-CMIs (including private banks) should not offer any rebates to prospective investors or
-pass on any rebates provided by the Company. In addition, CMIs (including private banks)
-should not enter into arrangements which may result in prospective investors paying different
-prices for the Offer Shares.
-The Code requires that a CMI disclose complete and accurate information in a timely
-manner on the status of the order book and other relevant information it receives to targeted
-investors for them to make an informed decision. In order to do this, those Underwriters in
-control of the order book should consider disclosing order book updates to all CMIs.
-When placing an order for the Offer Shares, private banks should disclose, at the same
-time, if such order is placed other than on a “principal” basis (whereby it is deploying its own
-balance sheet for onward selling to investors). Private banks who do not provide such
-disclosure are hereby deemed to be placing their order on such a “principal” basis. Private
-banks who disclose that they are placing their order other than on a “principal” basis (i.e. they
-are acting as an agent) should note that such order may be considered to be an omnibus order
-pursuant to the Code. Private banks should be aware that if any of their group companies is a
-CMI of this offering, placing an order on a “principal” basis may require the Underwriters to
-apply the “proprietary orders” of the Code to such order and will require the Underwriters to
-apply the “rebates” requirements of the Code to such order.
-In relation to omnibus orders, when submitting such orders, CMIs (including private
-banks) are requested to provide the underlying investor information, preferably in Excel
-Workbook format, in respect of each order constituting the relevant omnibus order (failure to
-provide such information may result in that order being rejected). To the extent information
-being disclosed by CMIs and investors is personal and/or confidential in nature, CMIs
-(including private banks) agree and warrant: (A) to take appropriate steps to safeguard the
-transmission of such information to the Overall Coordinators; (B) that they have obtained the
-necessary consents from the underlying investors to disclose such information to the Overall
-Coordinators. By submitting an order and providing such information to the Overall
-Coordinators, each CMI (including private banks) further warrants that they and the underlying
-investors have understood and consented to the collection, disclosure, use and transfer of such
-information by the Overall Coordinators and/or any other third parties as may be required by
-the Code, including to the Company, relevant regulators and/or any other third parties as may
-be required by the Code, for the purpose of complying with the Code, during the book-building
-process for this offering. CMIs that receive such underlying investor information are reminded
-that such information should be used only for submitting orders in this offering. The
-STRUCTURE OF THE GLOBAL OFFERING
-– 506 –
-
-Underwriters may be asked to demonstrate compliance with their obligations under the Code,
-and may request other CMIs (including private banks) to provide evidence showing compliance
-with the obligations above (in particular, that the necessary consents have been obtained). In
-such event, other CMIs (including private banks) are required to provide the relevant
-Underwriter with such evidence within the timeline requested.
-Important Notice to Prospective Investors
-Prospective investors should be aware that certain intermediaries in the context of this
-offering of the Offer Shares, including certain Underwriters, are CMIs subject to Paragraph 21
-of the Code. This notice to prospective investors is a summary of certain obligations the Code
-imposes on such CMIs, which require the attention and cooperation of prospective investors.
-Certain CMIs may also be acting as the Overall Coordinators for this offering and is subject
-to additional requirements under the Code.
-Prospective investors who are the directors, employees or major shareholders of the
-Company, a CMI or its group companies would be considered under the Code as having an
-Association with the Company, the CMI or the relevant group company (as the case may be).
-Prospective investors associated with the Company or any CMI (including its group
-companies) should specifically disclose this when placing an order for the Offer Shares and
-should disclose, at the same time, if such orders may negatively impact the price discovery
-process in relation to this offering. Prospective investors who do not disclose their Associations
-are hereby deemed not to be so associated. Where prospective investors disclose their
-Associations but do not disclose that such order may negatively impact the price discovery
-process in relation to this offering, such order is hereby deemed not to negatively impact the
-price discovery process in relation to this offering.
-Prospective investors to whom the allocation of Offer Shares will be subject to
-restrictions or require prior consent from the Stock Exchange under the Stock Exchange
-Requirements (e.g. a connected person of a listed issuer) would be considered as “Restricted
-Investors”. Offer Shares may only be allocated to Restricted Investors in accordance with
-applicable Stock Exchange Requirements. Prospective investors who are Restricted Investors
-should specifically disclose whether they are Restricted Investors when placing an order for the
-Offer Shares. Prospective investors who do not disclose they are Restricted Investors are
-hereby deemed not to be Restricted Investors.
-Prospective investors should ensure, and by placing an order prospective investors are
-deemed to confirm, that orders placed are bona fide, are not inflated and do not constitute
-duplicated orders (i.e. two or more corresponding or identical orders placed via two or more
-CMIs). If a prospective investor is an asset management arm affiliated with any Underwriter,
-such prospective investor should indicate when placing an order if it is for a fund or portfolio
-where the Underwriter or its group company has more than 50% interest, in which case it will
-be classified as a “proprietary order” and subject to appropriate handling by CMIs in
-accordance with the Code and should disclose, at the same time, if such “proprietary order”
-may negatively impact the price discovery process in relation to this offering. Prospective
-STRUCTURE OF THE GLOBAL OFFERING
-– 507 –
-
-investors who do not indicate this information when placing an order are hereby deemed to
-confirm that their order is not such a “proprietary order”. If a prospective investor is otherwise
-affiliated with any Underwriter, such that its order may be considered to be a “proprietary
-order” (pursuant to the Code), such prospective investor should indicate to the relevant
-Underwriter when placing such order and such orders will be subject to applicable
-requirements in accordance with the Code. Prospective investors who do not indicate this
-information when placing an order are hereby deemed to confirm that their order is not such
-a “proprietary order”. Where prospective investors disclose such information but do not
-disclose that such “proprietary order” may negatively impact the price discovery process in
-relation to this offering, such “proprietary order” is hereby deemed not to negatively impact the
-price discovery process in relation to this offering.
-Prospective investors should be aware that certain information may be disclosed by CMIs
-(including private banks) which is personal and/or confidential in nature to the prospective
-investor. By placing an order, prospective investors are deemed to have understood and
-consented to the collection, disclosure, use and transfer of such information by the
-Underwriters and/or any other third parties as may be required by the Code, including to the
-Company, the Overall Coordinators, relevant regulators and/or any other third parties as may
-be required by the Code, it being understood and agreed that such information shall only be
-used for the purpose of complying with the Code, during the book-building process for this
-offering. Failure to provide such information may result in that order being rejected.
-STRUCTURE OF THE GLOBAL OFFERING
-– 508 –
-
-IMPORTANT NOTICE TO INVESTORS
-OF HONG KONG OFFER SHARES
-FULLY ELECTRONIC APPLICATION PROCESS
-The Company has adopted a fully electronic application process for the Hong
-Kong Public Offering and below are the procedures for application.
-This prospectus is available at the website of the Stock Exchange at
-www.hkexnews.hk under the “ HKEXnews > New Listings > New Listing Information ”
-section, and the Company’s website at https://www.minimaxi.com .
-The contents of this prospectus are identical to the prospectus as registered with the
-Registrar of Companies in Hong Kong pursuant to Section 342C of the Companies
-(Winding Up and Miscellaneous Provisions) Ordinance.
-A. APPLICATION FOR HONG KONG OFFER SHARES
-1. Who Can Apply
-Y ou can apply for Hong Kong Offer Shares if you or the person(s) for whose benefit you
-are applying for:
- are 18 years of age or older; and
- have a Hong Kong address (for the HK eIPO White Form service only) ; and
- are outside the United States (within the meaning of Regulation S) or are a person
-described in paragraph (h)(3) of Rule 902 of Regulation S.
-Unless permitted by the Listing Rules or a waiver and/or consent has been granted by the
-Stock Exchange to the Company, you cannot apply for any Hong Kong Offer Shares if you or
-the person(s) for whose benefit you are applying for:
- are an existing Shareholder;
- are a Director or chief executive of the Company and/or a director or chief executive
-of any of its subsidiaries;
- are a close associate (as defined in the Listing Rules) of any of the above persons;
- are a connected person (as defined in the Listing Rules) of the Company or will
-become a connected person of the Company immediately upon the completion of the
-Global Offering; or
- have been allocated or have applied for or indicated an interest in any International
-Offer Shares or otherwise participate in the International Offering.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 509 –
-
-2. Application Channels
-The Hong Kong Public Offering period will begin at 9:00 a.m. on Wednesday, December
-31, 2025 and end at 12:00 noon on Tuesday, January 6, 2026 (Hong Kong time).
-To apply for Hong Kong Offer Shares, you may use one of the following application
-channels:
-Application
-Channel Platform Target Investors Application Time
-HK eIPO White
-Form service /H1118
-www.hkeipo.hk Applicants who would like
-to receive a physical
-Share certificate. Hong
-Kong Offer Shares
-successfully applied for
-will be allotted and
-issued in your own name.
-From 9:00 a.m. on
-Wednesday, December
-31, 2025 until 11:30 a.m.
-on Tuesday, January 6,
-2026, Hong Kong time.
-The latest time for
-completing full payment
-of application monies
-in respect of such
-applications will be
-12:00 noon on Tuesday,
-January 6, 2026, Hong
-Kong time.
-HKSCC EIPO
-channel /H1118/H1118/H1118/H1118
-Y our broker or custodian who is a
-HKSCC Participant will submit an
-EIPO application on your behalf
-through HKSCC’s FINI system in
-accordance with your instruction
-Applicants who would not
-like to receive a physical
-Share certificate. Hong
-Kong Offer Shares
-successfully applied for
-will be allotted and
-issued in the name of
-HKSCC Nominees,
-deposited directly into
-CCASS and credited to
-your designated HKSCC
-Participant’s stock
-account.
-Contact your broker or
-custodian for the earliest
-and latest time for giving
-such instructions, as this
-may vary by broker or
-custodian.
-The HK eIPO White Form service and the HKSCC EIPO channel are facilities subject
-to capacity limitations and potential service interruptions and you are advised not to wait until
-the last day of the application period to apply for Hong Kong Offer Shares.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 510 –
-
-For those applying through the HK eIPO White Form service, once you complete
-payment in respect of any application instructions given by you or for your benefit through the
-HK eIPO White Form service to make an application for Hong Kong Offer Shares, an actual
-application shall be deemed to have been made. If you are a person for whose benefit the
-electronic application instructions are given, you shall be deemed to have declared that only
-one set of electronic application instructions has been given for your benefit. If you are an
-agent for another person, you shall be deemed to have declared that you have only given one
-set of electronic application instructions for the benefit of the person for whom you are an
-agent and that you are duly authorized to give those instructions as an agent.
-For the avoidance of doubt, giving an application instruction under the HK eIPO White
-Form service more than once and obtaining different application reference numbers without
-effecting full payment in respect of a particular reference number will not constitute an actual
-application.
-If you apply through the HK eIPO White Form service, you are deemed to have
-authorized the HK eIPO White Form service to apply on the terms and conditions in this
-prospectus, as supplemented and amended by the terms and conditions of the HK eIPO White
-Form service.
-By instructing your broker or custodian to apply for the Hong Kong Offer Shares on your
-behalf through the HKSCC EIPO Channel, you (and, if you are joint applicants, each of you
-jointly and severally) are deemed to have instructed and authorized HKSCC to cause HKSCC
-Nominees (acting as nominee for the relevant HKSCC Participants) to apply for Hong Kong
-Offer Shares on your behalf and to do on your behalf all the things stated in this prospectus
-and any supplement to it.
-For those applying through the HKSCC EIPO channel, an actual application will be
-deemed to have been made for any application instructions given by you or for your benefit to
-HKSCC (in which case an application will be made by HKSCC Nominees on your behalf)
-provided such application instruction has not been withdrawn or otherwise invalidated before
-the closing time of the Hong Kong Public Offering.
-HKSCC Nominees will only be acting as a nominee for you and neither HKSCC nor
-HKSCC Nominees shall be liable to you or any other person in respect of any actions taken by
-HKSCC or HKSCC Nominees on your behalf to apply for Hong Kong Offer Shares or for any
-breach of the terms and conditions of this prospectus.
-Section 40 of the Companies (Winding Up and Miscellaneous Provisions) Ordinance
-For the avoidance of doubt, the Company and all other parties involved in the preparation
-of this prospectus acknowledge that each applicant who gives or causes to give electronic
-application instructions is a person who may be entitled to compensation under section 40 of
-the Companies (Winding Up and Miscellaneous Provisions) Ordinance.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-–5 1 1–
-
-3. Information Required to Apply
-Y ou must provide the following information with your application:
-For Individual/Joint Applicants For Corporate Applicants
- Full name(s) 2 as shown on your
-identity document
- Identity document’s issuing country
-or jurisdiction
- Identity document type, with order
-of priority:
-i. HKID card; or
-ii. National identification
-document; or
-iii. Passport; and
- Identity document number
- Full name(s)
-2 as shown on your
-identity document
- Identity document’s issuing country
-or jurisdiction
- Identity document type, with order
-of priority:
-i. LEI registration document; or
-ii. Certificate of incorporation; or
-iii. Business registration
-certificate; or
-iv. Other equivalent document; and
- Identity document number
-Notes:
-1. If you are applying through the HK eIPO White Form service, you are required to provide a valid
-e-mail address, a contact telephone number and a Hong Kong Address. Y ou are also required to declare
-that the identity information provided by you follows the requirements as described in Note 2 below. In
-particular, where you cannot provide a HKID number, you must confirm that you do not hold a HKID
-card. The number of joint applicants may not exceed four. If you are a firm, the applicant must be in
-the individual members’ names.
-2. The applicant’s full name as shown on their identity document must be used and the surname, given
-name, middle and other names (if any) must be input in the same order as shown on the identity
-document. If an applicant’s identity document contains both an English and Chinese name, both English
-and Chinese names must be used. Otherwise, either English or Chinese names will be accepted. The
-order of priority of the applicant’s identity document type must be strictly followed and where an
-individual applicant has a valid HKID card (including both Hong Kong Residents and Hong Kong
-Permanent Residents), the HKID number must be used when making an application to subscribe for
-Hong Kong Offer Shares in the Hong Kong Public Offering. Similarly for corporate applicants, a LEI
-number must be used if an entity has a LEI certificate.
-3. If the applicant is a trustee, the client identification data (“ CID”) of the trustee, as set out above, will
-be required. If the applicant is an investment fund (i.e. a collective investment scheme, or CIS), the CID
-of the asset management company or the individual fund, as appropriate, which has opened a trading
-account with the broker will be required, as above.
-4. The maximum number of joint applicants on FINI is capped at 4 in accordance with market practice.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 512 –
-
-5. If you are applying as a nominee, you must provide: (i) the full name (as shown on the identity
-document), the identity document’s issuing country or jurisdiction, the identity document type; and (ii)
-the identity document number, for each of the beneficial owners or, in the case(s) of joint beneficial
-owners, for each joint beneficial owner. If you do not include this information, the application will be
-treated as being made for your benefit.
-6. If you are applying as an unlisted company and (i) the principal business of that company is dealing in
-securities; and (ii) you exercise statutory control over that company, then the application will be treated
-as being for your benefit and you should provide the required information in your application as stated
-above.
-“Unlisted company” means a company with no equity securities listed on the Stock Exchange or any other
-stock exchange.
-“Statutory control” means you:
- control the composition of the board of directors of the company;
- control more than half of the voting power of the company; or
- hold more than half of the issued share capital of the company (not counting any part of it which carries
-no right to participate beyond a specified amount in a distribution of either profits or capital).
-For those applying through the HKSCC EIPO channel, and making an application under
-a power of attorney, the Company and the Overall Coordinators, as the Company’s agents, have
-discretion to consider whether to accept it on any conditions the Company thinks fit, including
-evidence of the attorney’s authority.
-Failing to provide any required information may result in your application being rejected.
-4. Permitted Number of Hong Kong Offer Shares for Application
-Board lot size : 20 Shares for one board lot
-Permitted number of Hong
-Kong Offer Shares for
-application and amount
-payable on
-application/successful
-allotment
-: Hong Kong Offer Shares are available for
-application in specified board lot sizes only.
-Please refer to the amount payable associated
-with each specified board lot size in the table
-below.
-The maximum Offer Price is HK$165.00 per
-Share.
-If you are applying through the HKSCC EIPO
-channel, your broker or custodian may require
-you to pre-fund your application, in such
-amount as determined by the broker or
-custodian, based on the applicable laws and
-regulations in Hong Kong. Y ou are responsible
-for complying with any such pre-funding
-requirement imposed by your broker or
-custodian with respect to the Hong Kong Offer
-Shares you applied for.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 513 –
-
-By instructing your broker or custodian to apply
-for the Hong Kong Offer Shares on your behalf
-through the HKSCC EIPO Channel, you (and,
-if you are joint applicants, each of you jointly
-and severally) are deemed to have instructed
-and authorized HKSCC to cause HKSCC
-Nominees (acting as nominee for the relevant
-HKSCC Participants) to arrange payment of the
-final Offer Price, brokerage, SFC transaction
-levy, the Stock Exchange trading fee and the
-AFRC transaction levy by debiting the relevant
-nominee bank account at the designated bank
-for your broker or custodian.
-If you are applying through the HK eIPO
-White Form service, you may refer to the table
-below for the amount payable for the number of
-Hong Kong Offer Shares you have selected. Y ou
-must pay the respective maximum amount
-payable on application in full upon application
-for Hong Kong Offer Shares.
-No. of
-Hong Kong
-Offer Shares
-applied for
-Maximum
-Amount
-payable (2) on
-application/
-successful
-allotment
-No. of
-Hong Kong
-Offer Shares
-applied for
-Maximum
-Amount
-payable (2) on
-application/
-successful
-allotment
-No. of
-Hong Kong
-Offer Shares
-applied for
-Maximum
-Amount
-payable (2) on
-application/
-successful
-allotment
-No. of
-Hong Kong
-Offer Shares
-applied for
-Maximum
-Amount
-payable (2) on
-application/
-successful
-allotment
-HK$ HK$ HK$ HK$
-20 3,333.28 400 66,665.61 6,000 999,984.16 80,000 13,333,122.00
-40 6,666.56 500 83,332.01 7,000 1,166,648.18 90,000 14,999,762.26
-60 9,999.84 600 99,998.41 8,000 1,333,312.20 100,000 16,666,402.50
-80 13,333.13 700 116,664.82 9,000 1,499,976.23 200,000 33,332,805.00
-100 16,666.40 800 133,331.22 10,000 1,666,640.26 300,000 49,999,207.50
-120 19,999.68 900 149,997.62 20,000 3,333,280.50 400,000 66,665,610.00
-140 23,332.96 1,000 166,664.03 30,000 4,999,920.76 500,000 83,332,012.50
-160 26,666.24 2,000 333,328.06 40,000 6,666,561.00 634,740
-(1) 105,788,323.23
-180 29,999.52 3,000 499,992.08 50,000 8,333,201.26
-200 33,332.80 4,000 666,656.10 60,000 9,999,841.50
-300 49,999.21 5,000 833,320.13 70,000 11,666,481.76
-(1) Maximum number of Hong Kong Offer Shares you may apply for and this is 50% of the Hong Kong Offer
-Shares initially offered.
-(2) The amount payable is inclusive of brokerage, SFC transaction levy, the Stock Exchange trading fee and AFRC
-transaction levy. If your application is successful, brokerage will be paid to the Exchange Participants (as
-defined in the Listing Rules) or to the HK eIPO White Form Service Provider (for applications made through
-the application channel of the HK eIPO White Form service) while the SFC transaction levy, the Stock
-Exchange trading fee and the AFRC transaction levy will be paid to the SFC, the Stock Exchange and the
-AFRC, respectively.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 514 –
-
-5. Multiple Applications Prohibited
-Y ou or your joint applicant(s) shall not make more than one application for your own
-benefit, except where you are a nominee and provide the information of the underlying investor
-in your application as required under the paragraph headed “— A. Application for Hong Kong
-Offer Shares — 3. Information Required to Apply” in this section. If you are suspected of
-submitting or cause to submit more than one application, all of your applications will be
-rejected.
-Multiple applications made either through (i) the HK eIPO White Form service, (ii)
-HKSCC EIPO channel, or (iii) both channels concurrently are prohibited and will be rejected.
-If you have made an application through the HK eIPO White Form service or HKSCC EIPO
-channel, you or the person(s) for whose benefit you have made the application shall not apply
-for any International Offer Shares.
-The Hong Kong Share Registrar would record all applications into its system and identify
-suspected multiple applications with identical names and identification document numbers
-according to the Best Practice Note on Treatment of Multiple/Suspected Multiple Applications
-(“Best Practice Note ”) issued by the Federation of Share Registrars Limited.
-Since applications are subject to personal information collection statements,
-identification document numbers displayed are redacted.
-6. Terms and Conditions of An Application
-By applying for Hong Kong Offer Shares through the HK eIPO White Form service or
-HKSCC EIPO channel, you (or as the case may be, HKSCC Nominees will do the following
-things on your behalf):
-(i) undertake to execute all relevant documents and instruct and authorize the Company
-and/or the Overall Coordinators, as the Company’s agents, to execute any documents
-for you and to do on your behalf all things necessary to register any Hong Kong
-Offer Shares allocated to you in your name or in the name of HKSCC Nominees as
-required by the Articles of Association, and (if you are applying through the
-HKSCC EIPO channel) to deposit the allotted Hong Kong Offer Shares directly
-into CCASS for the credit of your designated HKSCC Participant’s stock account on
-your behalf;
-(ii) confirm that you have read and understand the terms and conditions and application
-procedures set out in this prospectus, the designated website of the HK eIPO White
-Form service (or as the case may be, the agreement you entered into with your
-broker or custodian), and agree to be bound by them;
-(iii) (if you are applying through the HKSCC EIPO channel) agree to the arrangements,
-undertakings and warranties under the participant agreement between your broker or
-custodian and HKSCC and observe the General Rules of HKSCC and the HKSCC
-Operational Procedures for giving application instructions to apply for Hong Kong
-Offer Shares;
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 515 –
-
-(iv) confirm that you are aware of the restrictions on offers and sales of Shares set out
-in this prospectus and they do not apply to you, or the person(s) for whose benefit
-you have made the application;
-(v) confirm that you have read this prospectus and any supplement to it and have relied
-only on the information and representations contained therein in making your
-application (or as the case may be, causing your application to be made) and will not
-rely on any other information or representations;
-(vi) agree that the Company, the Joint Sponsors, the Overall Coordinators, the Joint
-Global Coordinators, the Joint Bookrunners, the Joint Lead Managers, the Capital
-Market Intermediaries, the Underwriters, any of their respective directors, officers,
-employees, partners, agents, advisers and any other parties involved in the Global
-Offering (the “ Relevant Persons ”), the Hong Kong Share Registrar and HKSCC
-will not be liable for any information and representations not in this prospectus and
-any supplement to it;
-(vii) agree to disclose the details of your application and your personal data and any other
-personal data which may be required about you and the person(s) for whose benefit
-you have made the application to the Company, the Relevant Persons, the Hong
-Kong Share Registrar, HKSCC, HKSCC Nominees, the Stock Exchange, the SFC
-and any other statutory regulatory or governmental bodies or otherwise as required
-by laws, rules or regulations, for the purposes under the paragraph headed “— G.
-Personal Data — 3. Purposes and 4. Transfer of personal data” in this section;
-(viii) agree (without prejudice to any other rights which you may have once your
-application (or as the case may be, HKSCC Nominees’ application) has been
-accepted) that you will not rescind it because of an innocent misrepresentation;
-(ix) agree that subject to Section 44A(6) of the Companies (Winding Up and
-Miscellaneous Provisions) Ordinance, any application made by you or HKSCC
-Nominees on your behalf cannot be revoked once it is accepted, which will be
-evidenced by the notification of the result of the ballot by the Hong Kong Share
-Registrar by way of publication of the results at the time and in the manner as
-specified in “— B. Publication of Results” in this section;
-(x) confirm that you are aware of the situations specified in the “— C. Circumstances
-in which Y ou Will Not Be Allocated Hong Kong Offer Shares” in this section;
-(xi) agree that your application or HKSCC Nominees’ application, any acceptance of it
-and the resulting contract will be governed by and construed in accordance with the
-laws of Hong Kong;
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 516 –
-
-(xii) agree to comply with the Companies Ordinance, the Companies (Winding Up and
-Miscellaneous Provisions) Ordinance, the Articles of Association and laws of any
-place outside Hong Kong that apply to your application and that neither the
-Company nor the Relevant Persons will breach any law inside and/or outside Hong
-Kong as a result of the acceptance of your offer to purchase, or any action arising
-from your rights and obligations under the terms and conditions contained in this
-prospectus;
-(xiii) confirm that (a) your application or HKSCC Nominees’ application on your behalf
-is not financed directly or indirectly by the Company, any of the directors, chief
-executives, substantial shareholder(s) or existing shareholder(s) of the Company or
-any of its subsidiaries or any of their respective close associates; and (b) you are not
-accustomed or will not be accustomed to taking instructions from the Company, any
-of the directors, chief executives, substantial shareholder(s) or existing
-shareholder(s) of the Company or any of its subsidiaries or any of their respective
-close associates in relation to the acquisition, disposal, voting or other disposition
-of the Shares registered in your name or otherwise held by you;
-(xiv) warrant that the information you have provided is true and accurate;
-(xv) confirm that you understand that the Company and the Overall Coordinators will
-rely on your declarations and representations in deciding whether or not to allocate
-any Hong Kong Offer Shares to you and that you may be prosecuted for making a
-false declaration;
-(xvi) agree to accept Hong Kong Offer Shares applied for or any lesser number allocated
-to you under the application;
-(xvii) declare and represent that this is the only application made and the only application
-intended by you to be made to benefit you or the person for whose benefit you are
-applying;
-(xviii) (if the application is made for your own benefit) warrant that no other application
-has been or will be made for your benefit by giving electronic application
-instructions to HKSCC directly or indirectly or through the application channel of
-the HK eIPO White Form service or by any one as your agent or by any other
-person; and
-(xix) (if you are making the application as an agent for the benefit of another person)
-warrant that (1) no other application has been or will be made by you as agent for
-or for the benefit of that person or by that person or by any other person as agent
-for that person by giving electronic application instructions to HKSCC or the HK
-eIPO White Form Service Provider and (2) you have due authority to give
-electronic application instructions on behalf of that other person as its agent.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 517 –
-
-B. PUBLICATION OF RESULTS
-Results of Allocation
-Y ou can check whether you are successfully allocated any Hong Kong Offer Shares
-through:
-Platform Date/Time
-Applying through HK eIPO White Form service or HKSCC EIPO channel:
-Website /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118From the “Allotment Results”
-page on the designated results
-of allocations website at
-www.tricor.com.hk/ipo/result
-or www.hkeipo.hk/IPOResult
-24 hours, from 11:00 p.m.
-on Thursday, January 8,
-2026 to 12:00 midnight
-on Wednesday,
-January 14, 2026 (Hong
-Kong time)
-The full list of (i) wholly or
-partially successful applicants
-using the HK eIPO White
-Form service and HKSCC
-EIPO channel, and (ii) the
-number of Hong Kong Offer
-Shares conditionally allotted to
-them, among other things, will
-be displayed at
-www.hkeipo.hk/IPOResult or
-www.tricor.com.hk/ipo/result .
-The Stock Exchange’s website at
-www.hkexnews.hk and the
-Company’s website at
-https://www.minimaxi.com
-which will provide links to the
-above mentioned websites of
-the Hong Kong Share
-Registrar.
-No later than 11:00 p.m. on
-Thursday, January 8, 2026
-(Hong Kong time)
-Telephone /H1118/H1118/H1118/H1118/H1118/H1118/H1118+852 3691 8488 — the allocation
-results telephone enquiry line
-provided by the Hong Kong
-Share Registrar
-between 9:00 a.m. and 6:00
-p.m. from Friday,
-January 9, 2026 to
-Wednesday, January 14,
-2026 (Hong Kong time)
-(except Saturday, Sunday
-and public holiday in
-Hong Kong)
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 518 –
-
-For those applying through the HKSCC EIPO channel, you may also check with your
-broker or custodian from 6:00 p.m. on Wednesday, January 7, 2026 (Hong Kong time).
-HKSCC Participants can log into FINI and review the allotment result from 6:00 p.m. on
-Wednesday, January 7, 2026 (Hong Kong time) on a 24-hour basis and should report any
-discrepancies on allotments to HKSCC as soon as practicable.
-Allocation Announcement
-The Company expects to announce the results of the final Offer Price, the level of
-indications of interest in the International Offering, the level of applications in the Hong Kong
-Public Offering and the basis of allocations of Hong Kong Offer Shares on the Stock
-Exchange’s website at www.hkexnews.hk and the Company’s website at
-https://www.minimaxi.com by no later than 11:00 p.m. on Thursday, January 8, 2026 (Hong
-Kong time).
-C. CIRCUMSTANCES IN WHICH YOU WILL NOT BE ALLOCATED HONG KONG
-OFFER SHARES
-Y ou should note the following situations in which Hong Kong Offer Shares will not be
-allocated to you or the person(s) for whose benefit you are applying:
-1. If your application is revoked:
-Y our application or the application made by HKSCC Nominees on your behalf may be
-revoked pursuant to Section 44A(6) of the Companies (Winding Up and Miscellaneous
-Provisions) Ordinance.
-2. If the Company or its agents exercise(s) their discretion to reject your application:
-The Company, the Overall Coordinators, the Hong Kong Share Registrar and their
-respective agents and nominees have full discretion to reject or accept any application, or to
-accept only part of any application, without giving any reasons.
-3. If the allocation of Hong Kong Offer Shares is void:
-The allocation of Hong Kong Offer Shares will be void if the Stock Exchange does not
-grant permission to list the Shares either:
- within three weeks from the closing date of the application lists; or
- within a longer period of up to six weeks if the Stock Exchange notifies the
-Company of that longer period within three weeks of the closing date of the
-application lists.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 519 –
-
-4. If:
- you make multiple applications or suspected multiple applications. Y ou may refer to
-“— A. Application for Hong Kong Offer Shares — 5. Multiple Applications
-Prohibited” in this section on what constitutes multiple applications;
- your application instruction is incomplete;
- your payment (or confirmation of funds, as the case may be) is not made correctly;
- the Underwriting Agreements do not become unconditional or are terminated;
- the Company or the Overall Coordinators believes that by accepting your
-application, it or the Company would violate applicable securities or other laws,
-rules or regulations.
-5. If there is money settlement failure for allotted Offer Shares:
-Based on the arrangements between HKSCC Participants and HKSCC, HKSCC
-Participants will be required to hold sufficient application funds on deposit with their
-designated bank before balloting. After balloting of Hong Kong Offer Shares, the receiving
-bank will collect the portion of these funds required to settle each HKSCC Participant’s actual
-Hong Kong Offer Share allotment from their designated bank.
-There is a risk of money settlement failure . In the extreme event of money settlement
-failure by a HKSCC Participant (or its designated bank), who is acting on your behalf in
-settling payment for your allotted Offer Shares, HKSCC will contact the defaulting HKSCC
-Participant and its designated bank to determine the cause of failure and request such
-defaulting HKSCC Participant to rectify or procure to rectify the failure.
-However, if it is determined that such settlement obligation cannot be met, the affected
-Hong Kong Offer Shares will be reallocated to the International Offering. Hong Kong Offer
-Shares applied for by you through the broker or custodian may be affected to the extent of the
-settlement failure. In the extreme case, you will not be allocated any Hong Kong Offer Shares
-due to the money settlement failure by such HKSCC Participant. None of the Company, the
-Relevant Persons, the Hong Kong Share Registrar and HKSCC is or will be liable if Hong
-Kong Offer Shares are not allocated to you due to the money settlement failure.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 520 –
-
-D. DESPATCH/COLLECTION OF SHARE CERTIFICATES AND REFUND OF
-APPLICATION MONIES
-Y ou will receive one Share certificate for all Hong Kong Offer Shares allotted to you
-under the Hong Kong Public Offering (except pursuant to applications made through the
-HKSCC EIPO channel where the Share certificates will be deposited into CCASS as described
-below).
-No temporary document of title will be issued in respect of the Offer Shares. No receipt
-will be issued for sums paid on application.
-Share certificates will only become valid evidence of title at 8:00 a.m. on Friday,
-January 9, 2026 (Hong Kong time), provided that the Global Offering has become
-unconditional and the right of termination described in the section headed “Underwriting” has
-not been exercised. Investors who trade Shares prior to the receipt of Share certificates or the
-Share certificates becoming valid do so entirely at their own risk.
-The right is reserved to retain any Share certificate(s) and (if applicable) any surplus
-application monies pending clearance of application monies.
-The following sets out the relevant procedures and time:
-HK eIPO White Form service HKSCC EIPO channel
-Despatch/collection of Share certificate (1)
-For application of
-500,000 Hong Kong
-Offer Shares or more /H1118
-Collection in person from the Hong
-Kong Share Registrar, Tricor Investor
-Services Limited, at 17/F, Far East
-Finance Centre, 16 Harcourt Road,
-Hong Kong
-Time: from 9:00 a.m. to 1:00 p.m. on
-Friday, January 9, 2026 (Hong Kong
-time), or any other place or date
-notified by the Company
-Share certificate(s) will be issued
-in the name of HKSCC
-Nominees, deposited into
-CCASS and credited to your
-designated HKSCC Participant’s
-stock account.
-No action by you is required.
-If you are an individual, you must not
-authorize any other person to collect
-for you.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 521 –
-
-HK eIPO White Form service HKSCC EIPO channel
-If you are a corporate applicant, your
-authorized representative must bear a
-letter of authorization from your
-corporation stamped with your
-corporation’s chop.
-Both individuals and authorized
-representatives must produce, at the
-time of collection, evidence of identity
-acceptable to the Hong Kong Share
-Registrar.
-Note: If you do not collect Y our Share
-certificate(s) personally within the time
-above, it/they will be sent to the
-address specified in your application
-instructions by ordinary post at your
-own risk.
-For application of less
-than 500,000 Hong
-Kong Offer Shares /H1118/H1118/H1118
-Y our Share certificate(s) will be sent to
-the address specified in your
-application instructions by ordinary
-post at your own risk.
-Date: Thursday, January 8, 2026
-Refund mechanism for surplus application monies paid by you
-Date /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Friday, January 9, 2026 Subject to the arrangement
-between you and your broker or
-custodian
-Responsible party /H1118/H1118/H1118/H1118/H1118Hong Kong Share Registrar Y our broker or custodian
-Application monies paid
-through single bank
-account /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-HK eIPO White Form e-Auto Refund
-payment instructions to your
-designated bank account
-Y our broker or custodian will
-arrange refund to your
-designated bank account subject
-to the arrangement between you
-and it.Application monies paid
-through multiple bank
-accounts /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Refund check(s) will be despatched to
-the address as specified in your
-application instructions by ordinary
-post at your own risk.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 522 –
-
-Note:
-(1) Except in the event of a tropical cyclone warning signal number 8 or above, a black rainstorm warning
-and/or Extreme Conditions in force in Hong Kong in the morning on Thursday, January 8, 2026,
-rendering it impossible for the relevant Share certificates to be dispatched to HKSCC in a timely
-manner, in which case the Company shall procure the Hong Kong Share Registrar to arrange for delivery
-of the supporting documents and Share certificates in accordance with the contingency arrangements as
-agreed between them. Y ou may refer to “— E. Severe Weather Arrangements” in this section.
-E. SEVERE WEATHER ARRANGEMENTS
-The Opening and Closing of the Application Lists
-The application lists will not open or close on Tuesday, January 6, 2026 if, there is:
- a tropical cyclone warning signal number 8 or above;
- a black rainstorm warning; and/or
- an “extreme conditions” announcement issued after a super typhoon (“ Extreme
-Conditions ”),
-(collectively, “ Severe Weather Signals ”),
-in force in Hong Kong at any time between 9:00 a.m. and 12:00 noon on Tuesday, January 6,
-2026.
-Instead they will open between 11:45 a.m. and 12:00 noon and/or close at 12:00 noon on
-the next business day which does not have Severe Weather Signals in force at any time between
-9:00 a.m. and 12:00 noon.
-Prospective investors should be aware that a postponement of the opening/closing of the
-application lists may result in a delay in the Listing Date. Should there be any changes to the
-dates mentioned in the section headed “Expected Timetable” in this prospectus, an
-announcement will be made and published on the Stock Exchange’s website at
-www.hkexnews.hk and the Company’s website at https://www.minimaxi.com of the revised
-timetable.
-If a Severe Weather Signal is hoisted on Thursday, January 8, 2026, the Hong Kong Share
-Registrar will make appropriate arrangements for the delivery of the Share certificates to the
-CCASS Depository’s service counter so that they would be available for trading on Friday,
-January 9, 2026.
-If a Severe Weather Signal is hoisted on Thursday, January 8, 2026, for application of less
-than 500,000 Hong Kong Offer Shares, the despatch of physical Share certificate(s) will be
-made by ordinary post when the post office re-opens after the Severe Weather Signal is lowered
-or cancelled (e.g. in the afternoon of Thursday, January 8, 2026 or on Friday, January 9, 2026).
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 523 –
-
-If a Severe Weather Signal is hoisted on Friday, January 9, 2026, for application of
-500,000 Hong Kong Offer Shares or more, the physical Share certificates(s) will be available
-for collection in person at the Hong Kong Share Registrar’s office after the Severe Weather
-Signal is lowered or cancelled (e.g. in the afternoon of Friday, January 9, 2026 or on Monday,
-January 12, 2026).
-Prospective investors should be aware that if they choose to receive physical Share
-certificates issued in their own name, there may be a delay in receiving the Share
-certificates.
-F. ADMISSION OF THE CLASS A ORDINARY SHARES INTO CCASS
-If the Stock Exchange grants the listing of, and permission to deal in, the Class A
-Ordinary Shares on the Stock Exchange and the Company complies with the stock admission
-requirements of HKSCC, the Class A Ordinary Shares will be accepted as eligible securities by
-HKSCC for deposit, clearance and settlement in CCASS with effect from the date of
-commencement of dealings in the Class A Ordinary Shares on the Stock Exchange or any other
-date HKSCC chooses. Settlement of transactions between Exchange Participants (as defined in
-the Listing Rules) is required to take place in CCASS on the second settlement day after any
-trading day.
-All activities under CCASS are subject to the General Rules of HKSCC and HKSCC
-Operational Procedures in effect from time to time.
-All necessary arrangements have been made enabling the Class A Ordinary Shares to be
-admitted into CCASS.
-Y ou should seek the advice of your broker or other professional advisor for details of the
-settlement arrangement as such arrangements may affect your rights and interests.
-G. PERSONAL DATA
-The following Personal Information Collection Statement applies to any personal data
-collected and held by the Company, the Hong Kong Share Registrar, the receiving bank and the
-Relevant Persons about you in the same way as it applies to personal data about applicants
-other than HKSCC Nominees. This personal data may include client identifier(s) and your
-identification information. By giving application instructions to HKSCC, you acknowledge
-that you have read, understood and agree to all of the terms of the Personal Information
-Collection Statement below.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 524 –
-
-1. Personal Information Collection Statement
-This Personal Information Collection Statement informs the applicant for, and holder of,
-Hong Kong Offer Shares, of the policies and practices of the Company and the Hong Kong
-Share Registrar in relation to personal data and the Personal Data (Privacy) Ordinance (Chapter
-486 of the Laws of Hong Kong).
-2. Reasons for the collection of your personal data
-It is necessary for applicants and registered holders of Hong Kong Offer Shares to ensure
-that personal data supplied to the Company or its agents and the Hong Kong Share Registrar
-is accurate and up-to-date when applying for Hong Kong Offer Shares or transferring Hong
-Kong Offer Shares into or out of their names or in procuring the services of the Hong Kong
-Share Registrar.
-Failure to supply the requested data or supplying inaccurate data may result in your
-application for Hong Kong Offer Shares being rejected, or in the delay or the inability of the
-Company or the Hong Kong Share Registrar to effect transfers or otherwise render their
-services. It may also prevent or delay registration or transfers of Hong Kong Offer Shares
-which you have successfully applied for and/or the despatch of Share certificate(s) to which
-you are entitled.
-It is important that applicants for and holders of Hong Kong Offer Shares inform the
-Company and the Hong Kong Share Registrar immediately of any inaccuracies in the personal
-data supplied.
-3. Purposes
-Y our personal data may be used, held, processed, and/or stored (by whatever means) for
-the following purposes:
- processing your application and refund check and HK eIPO White Form e-Auto
-Refund payment instruction(s), where applicable, verification of compliance with
-the terms and application procedures set out in this prospectus and announcing
-results of allocation of Hong Kong Offer Shares;
- compliance with applicable laws and regulations in Hong Kong and elsewhere;
- registering new issues or transfers into or out of the names of the holders of the
-Class A Ordinary Shares including, where applicable, HKSCC Nominees;
- maintaining or updating the register of members of the Company;
- verifying identities of applicants for and holders of the Class A Ordinary Shares and
-identifying any duplicate applications for the Class A Ordinary Shares;
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 525 –
-
- facilitating Hong Kong Offer Shares balloting;
- establishing benefit entitlements of holders of the Class A Ordinary Shares, such as
-dividends, rights issues, bonus issues, etc.;
- distributing communications from the Company and its subsidiaries;
- compiling statistical information and profiles of the holder of the Class A Ordinary
-Shares;
- disclosing relevant information to facilitate claims on entitlements; and
- any other incidental or associated purposes relating to the above and/or to enable the
-Company and the Hong Kong Share Registrar to discharge their obligations to
-applicants and holders of the Class A Ordinary Shares and/or regulators and/or any
-other purposes to which applicants and holders of the Class A Ordinary Shares may
-from time to time agree.
-4. Transfer of personal data
-Personal data held by the Company and the Hong Kong Share Registrar relating to the
-applicants for and holders of Hong Kong Offer Shares will be kept confidential but the
-Company and the Hong Kong Share Registrar may, to the extent necessary for achieving any
-of the above purposes, disclose, obtain or transfer (whether within or outside Hong Kong) the
-personal data to, from or with any of the following:
- the Company’s appointed agents such as financial advisers, receiving bank and
-overseas principal share registrar;
- HKSCC or HKSCC Nominees, who will use the personal data and may transfer the
-personal data to the Hong Kong Share Registrar for the purposes of providing its
-services or facilities or performing its functions in accordance with its rules or
-procedures and operating FINI and CCASS (including where applicants for the
-Hong Kong Offer Shares request a deposit into CCASS);
- any agents, contractors or third-party service providers who offer administrative,
-telecommunications, computer, payment or other services to the Company or the
-Hong Kong Share Registrar in connection with their respective business operation;
- the Stock Exchange, the SFC and any other statutory regulatory or governmental
-bodies or otherwise as required by laws, rules or regulations, including for the
-purpose of the Stock Exchange’s administration of the Listing Rules and the SFC’s
-performance of its statutory functions; and
- any persons or institutions with which the holders of Hong Kong Offer Shares have
-or propose to have dealings, such as their bankers, solicitors, accountants or brokers
-etc.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 526 –
-
-5. Retention of personal data
-The Company and the Hong Kong Share Registrar will keep the personal data of the
-applicants and holders of Hong Kong Offer Shares for as long as necessary to fulfil the
-purposes for which the personal data were collected. Personal data which is no longer required
-will be destroyed or dealt with in accordance with the Personal Data (Privacy) Ordinance
-(Chapter 486 of the Laws of Hong Kong).
-6. Access to and correction of personal data
-Applicants for and holders of Hong Kong Offer Shares have the right to ascertain whether
-the Company or the Hong Kong Share Registrar hold their personal data, to obtain a copy of
-that data, and to correct any data that is inaccurate. The Company and the Hong Kong Share
-Registrar have the right to charge a reasonable fee for the processing of such requests. All
-requests for access to data or correction of data should be addressed to the Company and the
-Hong Kong Share Registrar, at their registered address disclosed in the section headed
-“Corporate information” in this prospectus or as notified from time to time, for the attention
-of the company secretary, or the Hong Kong Share Registrar for the attention of the privacy
-compliance officer.
-HOW TO APPLY FOR HONG KONG OFFER SHARES
-– 527 –
-
-⭰㰟㛪姯⸒Ṳ⋀㈧ 
-榀㸖毩歁㵳勘䙮怺 979 噆
-⤑⏋✱ᷧ⺎ 27 㧺 
-Tel 曢婘: +852 2846 9888 
-Fax ₚ䜆: +852 2868 4432 
-ey.com 
-Ernst & Young 
-27/F, One Taikoo Place 
-979 King’s Road  
-Quarry Bay, Hong Kong 
-ACCOUNTANTS’ REPORT ON HISTORICAL FINANCIAL INFORMATION TO THE
-DIRECTORS OF MINIMAX GROUP INC. AND CHINA INTERNATIONAL CAPITAL
-CORPORATION HONG KONG SECURITIES LIMITED AND UBS SECURITIES
-HONG KONG LIMITED
-Introduction
-We report on the historical financial information of MINIMAX GROUP INC. (the
-“Company”) and its subsidiaries (together, the “Group”) set out on pages I-4 to I-67, which
-comprises the consolidated statements of profit or loss, statements of comprehensive income,
-statements of changes in deficits and statements of cash flows of the Group for each of the
-years ended 31 December 2022, 2023 and 2024 and the nine months ended 30 September 2025
-(the “Relevant Periods”), and the consolidated statements of financial position of the Group
-and the statements of financial position of the Company as at 31 December 2022, 2023 and
-2024 and 30 September 2025 and material accounting policy information and other explanatory
-information (together, the “Historical Financial Information”). The Historical Financial
-Information set out on pages I-4 to I-67 forms an integral part of this report, which has been
-prepared for inclusion in the prospectus of the Company dated 31 December 2025 (the
-“Prospectus”) in connection with the initial listing of the shares of the Company on the Main
-Board of The Stock Exchange of Hong Kong Limited (the “Stock Exchange”).
-Directors’ responsibility for the Historical Financial Information
-The directors of the Company are responsible for the preparation of the Historical
-Financial Information that gives a true and fair view in accordance with the basis of
-presentation and the basis of preparation set out in notes 2.1 and 2.2 to the Historical Financial
-Information, respectively, and for such internal control as the directors determine is necessary
-to enable the preparation of the Historical Financial Information that is free from material
-misstatement, whether due to fraud or error.
-Reporting accountants’ responsibility
-Our responsibility is to express an opinion on the Historical Financial Information and to
-report our opinion to you. We conducted our work in accordance with Hong Kong Standard on
-Investment Circular Reporting Engagements 200 Accountants’ Reports on Historical Financial
-Information in Investment Circulars issued by the Hong Kong Institute of Certified Public
-Accountants (“HKICPA”). This standard requires that we comply with ethical standards and
-plan and perform our work to obtain reasonable assurance about whether the Historical
-Financial Information is free from material misstatement.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-1 –
-
-Our work involved performing procedures to obtain evidence about the amounts and
-disclosures in the Historical Financial Information. The procedures selected depend on the
-reporting accountants’ judgement, including the assessment of risks of material misstatement
-of the Historical Financial Information, whether due to fraud or error. In making those risk
-assessments, the reporting accountants consider internal control relevant to the entity’s
-preparation of the Historical Financial Information that gives a true and fair view in accordance
-with the basis of presentation and the basis of preparation set out in notes 2.1 and 2.2 to the
-Historical Financial Information, respectively, in order to design procedures that are
-appropriate in the circumstances, but not for the purpose of expressing an opinion on the
-effectiveness of the entity’s internal control. Our work also included evaluating the
-appropriateness of accounting policies used and the reasonableness of accounting estimates
-made by the directors, as well as evaluating the overall presentation of the Historical Financial
-Information.
-We believe that the evidence we have obtained is sufficient and appropriate to provide a
-basis for our opinion.
-Opinion
-In our opinion, the Historical Financial Information gives, for the purposes of the
-accountants’ report, a true and fair view of the financial position of the Group and the Company
-as at 31 December 2022, 2023 and 2024 and 30 September 2025, and of the financial
-performance and cash flows of the Group for each of the Relevant Periods in accordance with
-the basis of presentation and the basis of preparation set out in notes 2.1 and 2.2 to the
-Historical Financial Information, respectively.
-Review of interim financial information
-We have reviewed the interim financial information of the Group which comprises the
-consolidated statements of profit or loss and other comprehensive income, statements of
-changes in equity and statements of cash flows for the nine months ended 30 September 2024
-and other explanatory information (the “Interim Financial Information”). The directors of the
-Company are responsible for the preparation and presentation of the Interim Financial
-Information in accordance with the basis of presentation and the basis of preparation set out
-in notes 2.1 and 2.2 to the Historical Financial Information, respectively. Our responsibility is
-to express a conclusion on the Interim Financial Information based on our review. We
-conducted our review in accordance with Hong Kong Standard on Review Engagements 2410
-Review of Interim Financial Information Performed by the Independent Auditor of the Entity
-issued by the HKICPA. A review consists of making inquiries, primarily of persons responsible
-for financial and accounting matters, and applying analytical and other review procedures. A
-review is substantially less in scope than an audit conducted in accordance with Hong Kong
-Standards on Auditing and consequently does not enable us to obtain assurance that we would
-become aware of all significant matters that might be identified in an audit. Accordingly, we
-do not express an audit opinion. Based on our review, nothing has come to our attention that
-causes us to believe that the Interim Financial Information, for the purposes of the accountants’
-report, is not prepared, in all material respects, in accordance with the basis of presentation and
-the basis of preparation set out in notes 2.1 and 2.2 to the Historical Financial Information,
-respectively.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-2 –
-
-Report on matters under the Rules Governing the Listing of Securities on the Stock
-Exchange and the Companies (Winding Up and Miscellaneous Provisions) Ordinance
-Adjustments
-In preparing the Historical Financial Information, no adjustments to the Underlying
-Financial Statements as defined on page I-4 have been made.
-Dividends
-We refer to note 11 to the Historical Financial Information which states that no dividends
-have been paid by the Company in respect of the Relevant Periods.
-Ernst & Y oung
-Certified Public Accountants
-Hong Kong
-31 December 2025
-APPENDIX I ACCOUNTANT’S REPORT
-– I-3 –
-
-I HISTORICAL FINANCIAL INFORMATION
-Preparation of Historical Financial Information
-Set out below is the Historical Financial Information which forms an integral part of this
-accountants’ report.
-The financial statements of the Group for the Relevant Periods, on which the Historical
-Financial Information is based, were audited by Ernst & Y oung in accordance with Hong Kong
-Standards on Auditing issued by the HKICPA (the “Underlying Financial Statements”).
-The Historical Financial Information is presented in United States dollars (“USD”) and
-all values are rounded to the nearest thousand (USD’000) except when otherwise indicated.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-4 –
-
-CONSOLIDATED STATEMENTS OF PROFIT OR LOSS
-Y ear ended 31 December
-Nine months ended
-30 September
-Notes 2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-REVENUE /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11185 – 3,460 30,523 19,454 53,437
-Cost of sales /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (4,314) (26,785) (18,944) (40,961)
-Gross (loss)/profit /H1118/H1118/H1118/H1118/H1118– (854) 3,738 510 12,476
-Other income and gains,
-net /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11185 1,155 8,942 36,151 25,278 31,232
-Selling and distribution
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(587) (22,827) (86,995) (53,389) (39,325)
-Administrative expenses /H1118 (3,213) (7,615) (14,384) (9,610) (22,074)
-Research and
-development expenses /H1118 (10,560) (70,002) (188,979) (138,684) (180,312)
-Fair value loss on
-financial liabilities /H1118/H1118/H1118(60,509) (176,826) (214,172) (128,063) (313,477)
-Finance costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186 (14) (61) (509) (316) (511)
-Impairment losses on
-financial assets, net /H1118/H1118/H1118 – (3) (88) (68) (22)
-LOSS BEFORE TAX /H1118/H11187 (73,728) (269,246) (465,238) (304,342) (512,013)
-Income tax expense /H1118/H1118/H1118/H111810 –––––
-LOSS FOR THE
-YEAR/PERIOD /H1118/H1118/H1118/H1118/H1118(73,728) (269,246) (465,238) (304,342) (512,013)
-Attributable to:
-Owners of the parent /H1118 (73,728) (269,246) (465,238) (304,342) (512,013)
-Non-controlling
-interests /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––
-(73,728) (269,246) (465,238) (304,342) (512,013)
-LOSS PER SHARE
-ATTRIBUTABLE TO
-ORDINARY EQUITY
-HOLDERS OF THE
-PARENT
-Basic and diluted —
-For loss for the
-year/period (USD) /H1118/H1118/H1118/H111812 (0.74) (2.56) (4.28) (2.80) (4.71)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-5 –
-
-CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME
-Y ear ended 31 December
-Nine months ended
-30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-LOSS FOR THE YEAR/
-PERIOD /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(73,728) (269,246) (465,238) (304,342) (512,013)
-OTHER COMPREHENSIVE
-INCOME/(LOSS)
-Other comprehensive
-income/(loss) to be
-reclassified to profit or loss
-in subsequent periods:
-Exchange differences on
-translation of foreign
-operations /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111899 360 347 (86) (1,255)
-Net other comprehensive
-income/(loss) to be
-reclassified to profit or loss
-in subsequent periods /H1118/H1118/H1118/H1118/H1118/H111899 360 347 (86) (1,255)
-Other comprehensive income
-not to be reclassified to
-profit or loss in subsequent
-periods:
-Changes in fair value of equity
-investments designated at
-fair value through other
-comprehensive income /H1118/H1118/H1118/H1118/H1118– – 662 (839) 1,604
-Net other comprehensive
-income not to be reclassified
-to profit or loss in
-subsequent periods /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 662 (839) 1,604
-TOTAL COMPREHENSIVE
-LOSS FOR THE YEAR/
-PERIOD /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(73,629) (268,886) (464,229) (305,267) (511,664)
-Attributable to:
-Owners of the parent /H1118/H1118/H1118/H1118/H1118/H1118(73,629) (268,886) (464,229) (305,267) (511,664)
-Non-controlling interests /H1118/H1118/H1118/H1118–––––
-(73,629) (268,886) (464,229) (305,267) (511,664)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-6 –
-
-CONSOLIDATED STATEMENTS OF FINANCIAL POSITION
-As at 31 December
-As at
-30 September
-Notes 2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-NON-CURRENT ASSETS
-Property, plant and equipment /H1118/H111813 231 709 1,093 1,134
-Right-of-use assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814(a) 458 3,313 3,077 2,746
-Prepayments, other receivables
-and other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111816 – 435 561 731
-Financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H111817 – – 95,331 70,228
-Financial assets at fair value
-through other comprehensive
-income /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817 – – 4,836 6,440
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818 –3 93 8 4 1
-Total non-current assets /H1118/H1118/H1118/H1118/H1118/H1118689 4,496 104,936 81,320
-CURRENT ASSETS
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111815 – 1,338 6,982 8,063
-Prepayments, other receivables
-and other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111816 569 4,378 13,470 11,811
-Financial assets at amortised
-cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817 – – 147,444 –
-Financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H111817 65,791 15,802 295,220 644,154
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818 2,221 – 27,293 25,097
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818 – 91,698 26,327 –
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H111818 4,691 206,295 288,912 362,647
-Total current assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111873,272 319,511 805,648 1,051,772
-CURRENT LIABILITIES
-Interest-bearing bank
-borrowings /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819 – – 19,455 19,102
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H111820 2,394 17,242 51,212 70,219
-Other payables, accruals and
-other liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111821 2,326 14,741 51,512 17,322
-Contract liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111822 – 559 1,553 4,657
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814(b) 349 1,248 1,964 1,694
-Convertible redeemable
-preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111824 145,175 629,001 1,581,949 2,321,193
-Total current liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118150,244 662,791 1,707,645 2,434,187
-APPENDIX I ACCOUNTANT’S REPORT
-– I-7 –
-
-As at 31 December
-As at
-30 September
-Notes 2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-NET CURRENT
-LIABILITIES /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(76,972) (343,280) (901,997) (1,382,415)
-TOTAL ASSETS LESS
-CURRENT LIABILITIES /H1118/H1118/H1118(76,283) (338,784) (797,061) (1,301,095)
-NON-CURRENT
-LIABILITIES
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814(b) 91 1,912 1,059 937
-Other non-current liabilities /H1118/H1118/H1118/H111823 – 1,218 1,200 1,467
-Total non-current liabilities /H1118/H1118/H1118/H1118/H111891 3,130 2,259 2,404
-Net liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(76,374) (341,914) (799,320) (1,303,499)
-DEFICITS
-Share capital /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111825 ––– –
-Deficits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111825 (76,374) (341,914) (799,320) (1,303,499)
-Total deficits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(76,374) (341,914) (799,320) (1,303,499)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-8 –
-
-CONSOLIDATED STATEMENTS OF CHANGES IN DEFICITS
-Attributable to owners of the parent
-Share
-capital
-Share
-option
-reserve*
-Exchange
-fluctuation
-reserve*
-Accumulated
-losses* Total
-USD’000 USD’000 USD’000 USD’000 USD’000
-At 31 December 2021
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – (3,814) (3,814)
-Loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – (73,728) (73,728)
-Other comprehensive income
-for the year:
-Exchange differences on
-translation of foreign
-operations /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–– 9 9 – 9 9
-Total comprehensive loss for
-the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 99 (73,728) (73,629)
-Recognition of share-based
-payment expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,069 – – 1,069
-At 31 December 2022 /H1118/H1118/H1118/H1118/H1118/H1118– 1,069 99 (77,542) (76,374)
-Attributable to owners of the parent
-Share
-capital
-Share
-option
-reserve*
-Exchange
-fluctuation
-reserve*
-Accumulated
-losses* Total
-USD’000 USD’000 USD’000 USD’000 USD’000
-At 31 December 2022 /H1118/H1118/H1118/H1118/H1118/H1118– 1,069 99 (77,542) (76,374)
-Loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – (269,246) (269,246)
-Other comprehensive income
-for the year:
-Exchange differences on
-translation of foreign
-operations /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 360 – 360
-Total comprehensive loss for
-the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 360 (269,246) (268,886)
-Recognition of share-based
-payment expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,346 – – 3,346
-At 31 December 2023 /H1118/H1118/H1118/H1118/H1118/H1118– 4,415 459 (346,788) (341,914)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-9 –
-
-Attributable to owners of the parent
-Share
-capital
-Share
-option
-reserve*
-Fair value
-reserve of
-financial
-assets at
-fair value
-through other
-comprehensive
-income*
-Exchange
-fluctuation
-reserve*
-Accumulated
-losses* Total
-USD’000 USD’000 USD’000 USD’000 USD’000 USD’000
-At 31 December 2023 /H1118/H1118 – 4,415 – 459 (346,788) (341,914)
-Loss for the year /H1118/H1118/H1118/H1118/H1118– – – – (465,238) (465,238)
-Other comprehensive
-income for the year:
-Change in fair value of
-equity investments at
-fair value through
-other comprehensive,
-net of tax /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 662 – – 662
-Exchange differences on
-translation of foreign
-operations /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 347 – 347
-Total comprehensive
-loss for the year /H1118/H1118/H1118/H1118– – 662 347 (465,238) (464,229)
-Recognition of
-share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 6,823 – – – 6,823
-At 31 December 2024 /H1118/H1118 – 11,238 662 806 (812,026) (799,320)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-10 –
-
-Attributable to owners of the parent
-Share
-capital
-Share
-option
-reserve
-Fair value
-reserve of
-financial
-assets at
-fair value
-through other
-comprehensive
-income
-Exchange
-fluctuation
-reserve
-Accumulated
-losses Total
-USD’000 USD’000 USD’000 USD’000 USD’000 USD’000
-At 31 December 2023 /H1118 – 4,415 – 459 (346,788) (341,914)
-Loss for the period
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – – (304,342) (304,342)
-Other comprehensive
-income for the period:
-Change in fair value of
-equity investments at
-fair value through
-other comprehensive,
-net of tax (unaudited) /H1118 – – (839) – – (839)
-Exchange differences on
-translation of foreign
-operations
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – (86) – (86)
-Total comprehensive
-loss for the period
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – (839) (86) (304,342) (305,267)
-Recognition of share-
-based payment
-expenses (unaudited) /H1118 – 6,100 – – – 6,100
-At 30 September 2024
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118– 10,515 (839) 373 (651,130) (641,081)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-11 –
-
-Attributable to owners of the parent
-Share
-capital
-Share
-option
-reserve*
-Fair value
-reserve of
-financial
-assets at
-fair value
-through other
-comprehensive
-income*
-Exchange
-fluctuation
-reserve*
-Accumulated
-losses* Total
-USD’000 USD’000 USD’000 USD’000 USD’000 USD’000
-At 31 December 2024 /H1118/H1118 – 11,238 662 806 (812,026) (799,320)
-Loss for the period /H1118/H1118/H1118/H1118– – – – (512,013) (512,013)
-Other comprehensive
-income for the period:
-Change in fair value of
-equity investments at
-fair value through
-other comprehensive,
-net of tax /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 1,604 – – 1,604
-Exchange differences on
-translation of foreign
-operations /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – (1,255) – (1,255)
-Total comprehensive
-loss for the period /H1118/H1118/H1118– – 1,604 (1,255) (512,013) (511,664)
-Recognition of share-
-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 8,581 – – – 8,581
-Deemed distribution /H1118/H1118/H1118– – – – (1,096) (1,096)
-At 30 September 2025 /H1118/H1118 – 19,819 2,266 (449) (1,325,135) (1,303,499)
-* These deficits accounts comprise the consolidated deficits of USD76,374,000, USD341,914,000,
-USD799,320,000 and USD1,303,499,000 in the consolidated statements of financial position as at 31
-December 2022, 2023 and 2024 and 30 September 2025, respectively.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-12 –
-
-CONSOLIDATED STATEMENTS OF CASH FLOWS
-Y ear ended 31 December
-Nine months ended
-30 September
-Notes 2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-CASH FLOWS FROM
-OPERATING ACTIVITIES
-Loss before tax /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(73,728) (269,246) (465,238) (304,342) (512,013)
-Adjustments for:
-Finance costs /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186 14 61 509 316 511
-Interest income /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11185 (39) (7,785) (20,448) (17,199) (7,876)
-Fair value gain on financial
-assets at fair value through
-profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11185 (941) (788) (15,710) (6,682) (20,414)
-Fair value loss on financial
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11187 60,509 176,826 214,172 128,063 313,477
-(Gains)/losses on disposal of
-right-of-use assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118– (70) 1 – (175)
-Depreciation of property, plant
-and equipment /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111813 25 180 451 325 582
-Depreciation of right-of-use
-assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814 182 631 1,450 1,072 1,478
-Share-based payment expense /H1118/H111826 1,069 3,346 6,823 6,100 8,581
-Provision for impairment on
-financial assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111815 – 3 88 68 22
-(12,909) (96,842) (277,902) (192,279) (215,827)
-Increase in trade receivables /H1118/H1118/H1118/H1118 – (1,341) (5,732) (4,230) (1,103)
-(Increase)/decrease in
-prepayments, other receivables
-and other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(513) (4,190) (9,272) (11,925) 1,846
-Increase in trade and bills
-payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 14,848 33,970 37,949 19,007
-Increase/(decrease) in other
-payables, accruals and other
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,191 12,624 21,048 4,557 (22,865)
-Increase in other non-current
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,218 – – 267
-Increase in contract liabilities /H1118/H1118/H1118 – 559 994 481 3,104
-(Increase)/decrease in restricted
-cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(2,221) 2,182 (27,292) (35,347) 2,193
-Cash flows used in operating
-activities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(11,058) (70,942) (264,186) (200,794) (213,378)
-Interest received /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111839 6,487 5,703 5,198 3,982
-Net cash flows used in operating
-activities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(11,019) (64,455) (258,483) (195,596) (209,396)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-13 –
-
-Y ear ended 31 December
-Nine months ended
-30 September
-Notes 2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-CASH FLOWS FROM
-INVESTING ACTIVITIES
-Purchases of items of property,
-plant and equipment /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(256) (697) (759) (496) (479)
-Placement of time deposits /H1118/H1118/H1118/H1118/H1118 – (90,400) (199,100) (195,200) –
-Maturity of time deposits /H1118/H1118/H1118/H1118/H1118/H1118– – 271,201 267,036 26,513
-Proceeds from disposal of
-financial assets at amortised
-cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 982,359 862,084 2,531,476
-Purchase of financial assets at
-amortised cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – (1,121,788) (1,033,743) (2,380,324)
-Purchases of financial assets at
-fair value through other
-comprehensive income /H1118/H1118/H1118/H1118/H1118/H1118– – (4,174) (4,174) –
-Proceeds from disposal of
-financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H111811,050 136,076 1,851,346 1,056,303 1,519,366
-Purchases of financial assets at
-fair value through profit or
-loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(45,950) (85,299) (2,210,385) (1,582,273) (1,822,783)
-Net cash flows used in investing
-activities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(35,156) (40,320) (431,300) (630,463) (126,231)
-CASH FLOWS FROM
-FINANCING ACTIVITIES
-Proceeds from issuance of
-convertible bonds /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 13,910 13,910 –
-Proceeds from issuance of
-convertible redeemable
-preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111850,000 307,000 739,588 686,372 426,262
-New bank and other borrowings /H1118/H1118 – – 19,455 19,455 44,565
-Repayment of bank and
-other borrowings /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– (44,918)
-Repayment of convertible bonds /H1118 –––– (14,668)
-Interest paid for bank borrowings /H1118 – – (355) (199) (404)
-Principal portion of lease
-payments /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814(b) (200) (696) (1,352) (1,097) (1,364)
-Interest paid for leases /H1118/H1118/H1118/H1118/H1118/H1118/H111814(b) (14) (61) (154) (117) (107)
-Payment of Listing expenses /H1118/H1118/H1118/H1118 –––– (357)
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 503 (1,096)
-Net cash flows from financing
-activities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111849,786 306,243 771,092 718,827 407,913
-APPENDIX I ACCOUNTANT’S REPORT
-– I-14 –
-
-Y ear ended 31 December
-Nine months ended
-30 September
-Notes 2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-NET INCREASE/(DECREASE)
-IN CASH AND CASH
-EQUIV ALENTS/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183,611 201,468 81,309 (107,232) 72,286
-Cash and cash equivalents at
-beginning of year/period /H1118/H1118/H1118/H1118/H1118994 4,691 206,295 206,295 288,912
-Effect of foreign exchange rate
-changes, net /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111886 136 1,308 500 1,449
-CASH AND CASH
-EQUIV ALENTS AT END OF
-YEAR/PERIOD /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818 4,691 206,295 288,912 99,563 362,647
-APPENDIX I ACCOUNTANT’S REPORT
-– I-15 –
-
-STATEMENTS OF FINANCIAL POSITION OF THE COMPANY
-As at 31 December
-As at
-30 September
-Notes 2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-NON-CURRENT ASSETS
-Investments in subsidiaries /H1118/H1118/H1118/H1118/H111817 1,069 4,415 11,238 19,819
-Financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H111817 – – 95,331 70,228
-Total non-current assets /H1118/H1118/H1118/H1118/H1118/H11181,069 4,415 106,569 90,047
-CURRENT ASSETS
-Prepayments, other receivables
-and other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111816 14,100 103,895 360,091 663,642
-Financial assets at amortised
-cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817 – – 147,444 –
-Financial assets at fair value
-through profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H111817 65,791 10,152 295,220 639,899
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818 – – 11,802 –
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818 – 91,598 26,327 –
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H111818 1,784 191,634 235,209 250,712
-Total current assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111881,675 397,279 1,076,093 1,554,253
-CURRENT LIABILITIES
-Convertible redeemable
-preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111824 145,175 629,001 1,581,949 2,321,193
-Other payables, accruals and
-other liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 330 71 1,319
-Total current liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118145,175 629,331 1,582,020 2,322,512
-NET CURRENT
-LIABILITIES /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(63,500) (232,052) (505,927) (768,259)
-TOTAL ASSETS LESS
-CURRENT LIABILITIES /H1118/H1118/H1118(62,431) (227,637) (399,358) (678,212)
-NON-CURRENT
-LIABILITIES
-Total non-current liabilities /H1118/H1118/H1118 ––– –
-Net liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(62,431) (227,637) (399,358) (678,212)
-DEFICITS
-Share capital /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––– –
-Deficits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111825 (62,431) (227,637) (399,358) (678,212)
-Total deficits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(62,431) (227,637) (399,358) (678,212)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-16 –
-
-II NOTES TO THE HISTORICAL FINANCIAL INFORMATION
-1. CORPORATE AND GROUP INFORMATION
-MINIMAX GROUP INC. (the “Company”) was incorporated in the Cayman Islands as a limited liability
-company in June 2021. The registered office address of the Company is Maples Corporate Services Limited, PO Box
-309, Ugland House, Grand Cayman, KY1-1104, Cayman Islands.
-During the Relevant Periods, the Company and its subsidiaries (together the “Group”) were principally
-involved in the research and development of Artificial Intelligence (“AI”) foundation model, as well as rendering
-relevant service based on open Application Programming Interface (“API”) platform, other Artificial Intelligence
-(“AI”) based services and AI-native products.
-Information about subsidiaries
-As at the end of the Relevant Periods and the date of the Prospectus, the Company had direct and indirect
-interests in its subsidiaries, all of which are private limited liability companies, particulars of the principal
-subsidiaries are set out below:
-Name
-Place and date of
-incorporation/
-registration and place
-of operations
-Issued ordinary/
-registered share
-capital
-Percentage of
-equity attributable
-to the Company
-Principal activitiesDirect Indirect
-SUBSUP PTE. LTD. (a) /H1118/H1118/H1118/H1118/H1118Singapore,
-14 September 2022
-SGD50,000 – 100 Operation of
-AI-native products
-Beijing Xiyu Jizhi Technology
-Co., Ltd.* (“Beijing Jizhi”)
-(“ʮ̡”)
-(b) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-PRC/Mainland China,
-18 November 2021
-RMB139,995,700 – 100 Research and
-development of AI
-foundation model
-Shanghai Xiyu Jizhi Technology
-Co., Ltd.* (“Shanghai Jizhi”)
-(“ʮ̡”)
-(c) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-PRC/Mainland China,
-3 November 2021
-RMB1,000,000,000 – 100 Research and
-development of AI
-foundation model
-Shanghai Xiyu Technology
-Co., Ltd.* (“Shanghai
-MiniMax”) (“ҦϞ
-ʮ̡”) (d)(e) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-PRC/Mainland China,
-28 January 2023
-RMB2,030,303 – 100 Operation of open
-platform and AI-
-native products
-NanoNoble PTE. LTD. (a) /H1118/H1118/H1118/H1118Singapore,
-19 March 2024
-SGD50,000 – 100 Operation of open
-platform and AI-
-native products
-MiniMax HONGKONG
-Limited (f) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Hong Kong, 23 July
-2021
-HKD1 100 – Investment holding
-* The English names of the PRC companies above represent management’s best efforts in translating the
-Chinese names of these companies as no English names have been registered.
-(a) No audited financial statements have been prepared for these entities for the years ended 31 December
-2022, 2023 and 2024, as the entities were not subject to any statutory audit requirements under the
-relevant rules and regulations in their jurisdictions of incorporation.
-(b) Beijing Jizhi is registered as a limited liability company under PRC law. The statutory financial
-statements for the year ended December 31, 2022 under the PRC Generally Accepted Accounting
-Principles (“PRC GAAP”) were audited by Beijing Dongcai Certified Public Accountants (General
-Partnership), certified public accountants registered in the PRC. The statutory financial statements for
-the year ended December 31, 2023 and 2024 under the PRC GAAP were audited by Shanghai Xuri
-Certified Public Accountants (General Partnership), certified public accountants registered in the PRC.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-17 –
-
-(c) Shanghai Jizhi is registered as a limited liability company under PRC law. The statutory financial
-statements for the year ended December 31, 2022, 2023 and 2024 under the PRC GAAP were audited
-by Shanghai Xuri Certified Public Accountants (General Partnership), certified public accountants
-registered in the PRC.
-(d) Shanghai Minimax is registered as a limited liability company under PRC law. The statutory financial
-statements for the year ended December 31, 2023 and 2024 under the PRC GAAP were audited by
-Shanghai Xuri Certified Public Accountants (General Partnership), certified public accountants
-registered in the PRC.
-(e) The Group accounted for Shanghai MiniMax as a subsidiary through contractual arrangements during
-the Relevant Periods. In 2023, Shanghai Jizhi entered into a series of contractual arrangements with
-Shanghai MiniMax, pursuant to which the Group had effective control over the financial and operational
-matters of Shanghai MiniMax and was entitled to all the economic benefits derived from Shanghai
-MiniMax, and accordingly, Shanghai MiniMax has been consolidated into the Group as a variable
-interest entity. In June 2025, the Company terminated the aforesaid contractual arrangements with
-Shanghai MiniMax. Shanghai MiniMax became a wholly owned subsidiary of the Group through
-acquisition of 100% equity interest.
-(f) MiniMax HONGKONG Limited is registered as a limited liability company under Hong Kong law. The
-statutory financial statements for the year ended 2024 under the HKFRSs for Private Entities were
-audited by Raymond Li&Co., certified public accountants registered in Hong Kong.
-2. ACCOUNTING POLICIES
-2.1 Basis of Presentation
-The Historical Financial Information has been prepared on a consolidated basis. All intra-group transactions
-and balances have been eliminated on consolidation.
-2.2 Basis of Preparation
-The Historical Financial Information has been prepared in accordance with IFRS Accounting Standards, which
-comprise all standards and interpretations approved by the International Accounting Standards Board (the “IASB”).
-All IFRS Accounting Standards effective for the accounting period commencing from 1 January 2025 together
-with the relevant transitional provisions, have been early adopted by the Group in the preparation of the Historical
-Financial Information throughout the Relevant Periods.
-The Historical Financial Information has been prepared under the historical cost convention, except for
-financial assets at fair value through profit or loss, equity investments designated at fair value through other
-comprehensive income, convertible redeemable preferred shares and convertible bonds, which have been measured
-at fair value.
-Basis of consolidation
-The Historical Financial Information has been prepared under the going concern basis notwithstanding
-the fact that, as at 30 September 2025, the Group recorded net current liabilities and net liabilities amounting
-to USD1,382,415,000 and USD1,303,499,000, respectively. The net current liabilities and net liabilities
-primarily arose from the convertible redeemable preferred shares (the “Preferred Shares”) and amounted to
-USD2,321,193,000 as at 30 September 2025. The directors of the Company are of the opinion that no payment
-is expected for the settlement of the liabilities arising from financial instruments issued to investors as the
-related redemption rights would be terminated and such financial instruments would irrevocably be converted
-into equity upon the listing of the Company’s shares on the Stock Exchange. Taken the above into
-consideration, and together with the cash flow forecast which covers a period of not less than twelve months
-from 30 September 2025 prepared by the management of the Group, the directors of the Company are of the
-opinion that the Group has sufficient financial resources to continue as a going concern for the next twelve
-months. Therefore, the directors of the Company consider it is appropriate to prepare the Historical Financial
-Information on a going concern basis.
-The Historical Financial Information includes the financial statements of the Group for the Relevant
-Periods. A subsidiary is an entity (including a structured entity), directly or indirectly, controlled by the
-Company. Control is achieved when the Group is exposed, or has rights, to variable returns from its
-involvement with the investee and has the ability to affect those returns through its power over the investee
-(i.e., existing rights that give the Group the current ability to direct the relevant activities of the investee).
-APPENDIX I ACCOUNTANT’S REPORT
-– I-18 –
-
-Generally, there is a presumption that a majority of voting rights results in control. When the Company
-has less than a majority of the voting or similar rights of an investee, the Group considers all relevant facts
-and circumstances in assessing whether it has power over an investee, including:
-(a) the contractual arrangement with the other vote holders of the investee;
-(b) rights arising from other contractual arrangements; and
-(c) the Group’s voting rights and potential voting rights.
-The financial statements of the subsidiaries are prepared for the same reporting period as the Company,
-using consistent accounting policies. The results of subsidiaries are consolidated from the date on which the
-Group obtains control, and continue to be consolidated until the date that such control ceases.
-Profit or loss and each component of other comprehensive income are attributed to the owners of the
-parent of the Group and to the non-controlling interests, even if this results in the non-controlling interests
-having a deficit balance. All intra-group assets and liabilities, deficits, income, expenses and cash flows
-relating to transactions between members of the Group are eliminated in full on consolidation.
-The Group reassesses whether or not it controls an investee if facts and circumstances indicate that there
-are changes to one or more of the three elements of control described above. A change in the ownership interest
-of a subsidiary, without a loss of control, is accounted for as an equity transaction.
-If the Group loses control over a subsidiary, it derecognises the related assets (including goodwill),
-liabilities, any non-controlling interest and the exchange fluctuation reserve; and recognises the fair value of
-any investment retained and any resulting surplus or deficit in profit or loss. The Group’s share of components
-previously recognised in other comprehensive income is reclassified to profit or loss or retained profits, as
-appropriate, on the same basis as would be required if the Group had directly disposed of the related assets
-or liabilities.
-2.3 Issued but not yet Effective IFRS Accounting Standards
-The Group has not applied the following new and revised IFRS Accounting Standards, that have been issued
-but are not yet effective, in the Historical Financial Information.
-IFRS 18 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Presentation and Disclosure in Financial Statements
-2
-IFRS 19 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Subsidiaries without Public Accountability: Disclosures 2
-Amendments to IFRS 9 and
-IFRS 7 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Amendments to the Classification and Measurement of Financial
-Instruments 1
-Amendments to IFRS 9 and
-IFRS 7 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Contracts Referencing Nature-dependent Electricity 1
-Amendments to IFRS 10 and
-IAS 28 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Sale or Contribution of Assets between an Investor and its Associate
-or Joint V enture 3
-Annual Improvements to IFRS
-Accounting Standards —
-V olume 11 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Amendments to IFRS 1, IFRS 7, IFRS 9, IFRS 10 and IAS 7
-1
-1 Effective for annual periods beginning on or after 1 January 2026
-2 Effective for annual/reporting periods beginning on or after 1 January 2027
-3 No mandatory effective date yet determined but available for adoption
-The Group is in the process of making an assessment of the impact of these new and amended standards upon
-initial application. IFRS 18 introduces new requirements for presentation within the statement of profit or loss,
-including specified totals and subtotals. Entities are required to classify all income and expenses within the statement
-of profit or loss into one of the five categories: operating, investing, financing, income taxes and discontinued
-operations and to present two new defined subtotals. It also requires disclosure of management-defined performance
-measures in a note and introduces new requirements for aggregation and disaggregation of financial information. The
-APPENDIX I ACCOUNTANT’S REPORT
-– I-19 –
-
-new requirements are expected to impact the Group’s presentation of the statement of profit or loss and disclosures
-of the Group’s financial performance. Except for IFRS 18, the directors of the Company anticipate that the
-application of these new and revised IFRS Accounting Standards will have no material impact on the Group’s
-financial performance and financial position in the foreseeable future.
-2.4 Material Accounting Policies
-Fair value measurement
-The Group measures its financial assets at fair value through profit or loss, financial assets at fair value
-through other comprehensive income, convertible redeemable preferred shares and convertible bonds at the
-end of each of the Relevant Periods. Fair value is the price that would be received to sell an asset or paid to
-transfer a liability in an orderly transaction between market participants at the measurement date. The fair
-value measurement is based on the presumption that the transaction to sell the asset or transfer the liability
-takes place either in the principal market for the asset or liability, or in the absence of a principal market, in
-the most advantageous market for the asset or liability. The principal or the most advantageous market must
-be accessible by the Group. The fair value of an asset or a liability is measured using the assumptions that
-market participants would use when pricing the asset or liability, assuming that market participants act in their
-economic best interest.
-A fair value measurement of a non-financial asset takes into account a market participant’s ability to
-generate economic benefits by using the asset in its highest and best use or by selling it to another market
-participant that would use the asset in its highest and best use.
-The Group uses valuation techniques that are appropriate in the circumstances and for which sufficient
-data are available to measure fair value, maximising the use of relevant observable inputs and minimising the
-use of unobservable inputs.
-All assets and liabilities for which fair value is measured or disclosed in the Historical Financial
-Information are categorised within the fair value hierarchy, described as follows, based on the lowest level
-input that is significant to the fair value measurement as a whole:
-Level 1 – based on quoted prices (unadjusted) in active markets for identical assets or liabilities
-Level 2 – based on valuation techniques for which the lowest level input that is significant to the
-fair value measurement is observable, either directly or indirectly
-Level 3 – based on valuation techniques for which the lowest level input that is significant to the
-fair value measurement is unobservable
-For assets and liabilities that are recognised in the Historical Financial Information on a recurring basis,
-the Group determines whether transfers have occurred between levels in the hierarchy by reassessing
-categorisation (based on the lowest level input that is significant to the fair value measurement as a whole) at
-the end of each of the Relevant Periods.
-Impairment of non-financial assets
-Where an indication of impairment exists, or when annual impairment testing for an asset is required,
-the asset’s recoverable amount is estimated. An asset’s recoverable amount is the higher of the asset’s or
-cash-generating unit’s value in use and its fair value less costs of disposal, and is determined for an individual
-asset, unless the asset does not generate cash inflows that are largely independent of those from other assets
-or groups of assets, in which case the recoverable amount is determined for the cash-generating unit to which
-the asset belongs.
-An impairment loss is recognised only if the carrying amount of an asset exceeds its recoverable
-amount. In assessing value in use, the estimated future cash flows are discounted to their present value using
-a pre-tax discount rate that reflects current market assessments of the time value of money and the risks
-specific to the asset. An impairment loss is charged to the statement of profit or loss in the period in which
-it arises in those expense categories consistent with the function of the impaired asset.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-20 –
-
-An assessment is made at the end of each of the Relevant Periods as to whether there is an indication
-that previously recognised impairment losses may no longer exist or may have decreased. If such an indication
-exists, the recoverable amount is estimated. A previously recognised impairment loss of an asset other than
-goodwill is reversed only if there has been a change in the estimates used to determine the recoverable amount
-of that asset, but not to an amount higher than the carrying amount that would have been determined (net of
-any depreciation/amortisation) had no impairment loss been recognised for the asset in prior years. A reversal
-of such an impairment loss is credited to the statement of profit or loss in the period in which it arises, unless
-the asset is carried at a revalued amount, in which case the reversal of the impairment loss is accounted for
-in accordance with the relevant accounting policy for that revalued asset.
-Related parties
-A party is considered to be related to the Group if:
-(a) the party is a person or a close member of that person’s family and that person
-(i) has control or joint control over the Group;
-(ii) has significant influence over the Group; or
-(iii) is a member of the key management personnel of the Group or of a parent of the Group;
-or
-(b) the party is an entity where any of the following conditions applies:
-(i) the entity and the Group are members of the same group;
-(ii) one entity is an associate or joint venture of the other entity (or of a parent, subsidiary or
-fellow subsidiary of the other entity);
-(iii) the entity and the Group are joint ventures of the same third party;
-(iv) one entity is a joint venture of a third entity and the other entity is an associate of the third
-entity;
-(v) the entity is a post-employment benefit plan for the benefit of employees of either the
-Group or an entity related to the Group; and the sponsoring employers of the post-
-employment benefit plan;
-(vi) the entity is controlled or jointly controlled by a person identified in (a);
-(vii) a person identified in (a)(i) has significant influence over the entity or is a member of the
-key management personnel of the entity (or of a parent of the entity); and
-(viii) the entity, or any member of a group of which it is a part, provides key management
-personnel services to the Group or to the parent of the Group.
-Property, plant and equipment and depreciation
-Property, plant and equipment are stated at cost less accumulated depreciation and any impairment
-losses. The cost of an item of property, plant and equipment comprises its purchase price and any directly
-attributable costs of bringing the asset to its working condition and location for its intended use.
-Expenditure incurred after items of property, plant and equipment have been put into operation, such as
-repairs and maintenance, is normally charged to the statement of profit or loss in the period in which it is
-incurred. In situations where the recognition criteria are satisfied, the expenditure for a major inspection is
-capitalised in the carrying amount of the asset as a replacement. Where significant parts of property, plant and
-equipment are required to be replaced at intervals, the Group recognises such parts as individual assets with
-specific useful lives and depreciates them accordingly.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-21 –
-
-Depreciation is calculated on the straight-line basis to write off the cost of each item of property, plant
-and equipment to its residual value over its estimated useful life. The principal annual rates used for this
-purpose are as follows:
-Office equipment /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111833.33%
-Leasehold improvements /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-The shorter of the estimated
-useful life of the assets and
-lease terms
-Where parts of an item of property, plant and equipment have different useful lives, the cost of that item
-is allocated on a reasonable basis among the parts and each part is depreciated separately. Residual values,
-useful lives and the depreciation method are reviewed, and adjusted if appropriate, at least at the end of the
-Relevant Periods.
-An item of property, plant and equipment including any significant part initially recognised is
-derecognised upon disposal or when no future economic benefits are expected from its use or disposal. Any
-gain or loss on disposal or retirement recognised in the statement of profit or loss in the year the asset is
-derecognised is the difference between the net sales proceeds and the carrying amount of the relevant asset.
-Research and development costs
-All research costs are charged to the statement of profit or loss as incurred.
-Expenditure incurred on projects to develop new products is capitalised and deferred only when the
-Group can demonstrate the technical feasibility of completing the intangible asset so that it will be available
-for use or sale, its intention to complete and its ability to use or sell the asset, how the asset will generate future
-economic benefits, the availability of resources to complete the project and the ability to measure reliably the
-expenditure during the development. Product development expenditure which does not meet these criteria is
-expensed when incurred.
-Leases
-The Group assesses at contract inception whether a contract is, or contains, a lease. A contract is, or
-contains, a lease if the contract conveys the right to control the use of an identified asset for a period of time
-in exchange for consideration.
-Group as a lessee
-The Group applies a single recognition and measurement approach for all leases, except for short-term
-leases and leases of low-value assets. The Group recognises lease liabilities to make lease payments and
-right-of-use assets representing the right to use the underlying assets.
-(a) Right-of-use assets
-Right-of-use assets are recognised at the commencement date of the lease (that is the date the underlying
-asset is available for use). Right-of-use assets are measured at cost, less accumulated depreciation and any
-impairment losses, and adjusted for any remeasurement of lease liabilities. The cost of right-of-use assets
-includes the amount of lease liabilities recognised, initial direct costs incurred, and lease payments made at
-or before the commencement date less any lease incentives received.
-Right-of-use assets are depreciated on a straight-line basis over the shorter of the lease terms and the
-estimated useful lives of the assets as follows:
-Buildings /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182 to 3 years
-If ownership of the leased asset transfers to the Group by the end of the lease term or the cost reflects
-the exercise of a purchase option, depreciation is calculated using the estimated useful life of the asset.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-22 –
-
-(b) Lease liabilities
-Lease liabilities are recognised at the commencement date of the lease at the present value of lease
-payments to be made over the lease term. The lease payments include fixed payments (including in-substance
-fixed payments) less any lease incentives receivable, variable lease payments that depend on an index or a rate,
-and amounts expected to be paid under residual value guarantees. The lease payments also include the exercise
-price of a purchase option reasonably certain to be exercised by the Group and payments of penalties for
-termination of a lease, if the lease term reflects the Group exercising the option to terminate the lease. The
-variable lease payments that do not depend on an index or a rate are recognised as an expense in the period
-in which the event or condition that triggers the payment occurs.
-In calculating the present value of lease payments, the Group uses its incremental borrowing rate at the
-lease commencement date because the interest rate implicit in the lease is not readily determinable. After the
-commencement date, the amount of lease liabilities is increased to reflect the accretion of interest and reduced
-for the lease payments made. In addition, the carrying amount of lease liabilities is remeasured if there is a
-modification, a change in the lease term, a change in lease payments (e.g., a change to future lease payments
-resulting from a change in an index or rate) or a change in assessment of an option to purchase the underlying
-asset.
-(c) Short-term leases and leases of low-value assets
-The Group applies the short-term lease recognition exemption to its short-term leases of machinery and
-equipment (that is those leases that have a lease term of 12 months or less from the commencement date and
-do not contain a purchase option). Lease payments on short-term leases are recognised as an expense on a
-straight-line basis over the lease term.
-Investments and other financial assets
-Initial recognition and measurement
-Financial assets are classified, at initial recognition, as subsequently measured at amortised cost, fair
-value through other comprehensive income, and fair value through profit or loss.
-The classification of financial assets at initial recognition depends on the financial asset’s contractual
-cash flow characteristics and the Group’s business model for managing them. With the exception of trade
-receivables that do not contain a significant financing component or for which the Group has applied the
-practical expedient of not adjusting the effect of a significant financing component, the Group initially
-measures a financial asset at its fair value plus in the case of a financial asset not at fair value through profit
-or loss, transaction costs. Trade receivables that do not contain a significant financing component or for which
-the Group has applied the practical expedient are measured at the transaction price determined under IFRS 15
-in accordance with the policies set out for “Revenue recognition” below.
-In order for a financial asset to be classified and measured at amortised cost or fair value through other
-comprehensive income, it needs to give rise to cash flows that are solely payments of principal and interest
-(“SPPI”) on the principal amount outstanding. Financial assets with cash flows that are not SPPI are classified
-and measured at fair value through profit or loss, irrespective of the business model.
-The Group’s business model for managing financial assets refers to how it manages its financial assets
-in order to generate cash flows. The business model determines whether cash flows will result from collecting
-contractual cash flows, selling the financial assets, or both. Financial assets classified and measured at
-amortised cost are held within a business model with the objective to hold financial assets in order to collect
-contractual cash flows, while financial assets classified and measured at fair value through other
-comprehensive income are held within a business model with the objective of both holding to collect
-contractual cash flows and selling. Financial assets which are not held within the aforementioned business
-models are classified and measured at fair value through profit or loss.
-Purchases or sales of financial assets that require delivery of assets within the period generally
-established by regulation or convention in the marketplace are recognised on the trade date, that is, the date
-that the Group commits to purchase or sell the asset.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-23 –
-
-Subsequent measurement
-The subsequent measurement of financial assets depends on their classification as follows:
-Financial assets at amortised cost (debt instruments)
-Financial assets at amortised cost are subsequently measured using the effective interest method and are
-subject to impairment. Gains and losses are recognised in the statement of profit or loss when the asset is
-derecognised, modified or impaired.
-Financial assets designated at fair value through other comprehensive income (equity investments)
-Upon initial recognition, the Group can elect to classify irrevocably its equity investments as equity
-investments designated at fair value through other comprehensive income when they meet the definition of
-equity under IAS 32 Financial Instruments: Presentation and are not held for trading. The classification is
-determined on an instrument-by-instrument basis.
-Gains and losses on these financial assets are never recycled to the statement of profit or loss. Dividends
-are recognised as other income in the statement of profit or loss when the right of payment has been
-established, except when the Group benefits from such proceeds as a recovery of part of the cost of the
-financial asset, in which case, such gains are recorded in other comprehensive income. Equity investments
-designated at fair value through other comprehensive income are not subject to impairment assessment.
-Financial assets at fair value through profit or loss
-Financial assets at fair value through profit or loss are carried in the statement of financial position at
-fair value with net changes in fair value recognised in the statement of profit or loss.
-Derecognition of financial assets
-A financial asset (or, where applicable, a part of a financial asset or part of a group of similar financial
-assets) is primarily derecognised (i.e., removed from the Group’s consolidated statement of financial position)
-when:
- the rights to receive cash flows from the asset have expired; or
- the Group has transferred its rights to receive cash flows from the asset or has assumed an
-obligation to pay the received cash flows in full without material delay to a third party under a
-“pass-through” arrangement; and either (a) the Group has transferred substantially all the risks
-and rewards of the asset, or (b) the Group has neither transferred nor retained substantially all the
-risks and rewards of the asset, but has transferred control of the asset.
-When the Group has transferred its rights to receive cash flows from an asset or has entered into a
-pass-through arrangement, it evaluates if, and to what extent, it has retained the risk and rewards of ownership
-of the asset. When it has neither transferred nor retained substantially all the risks and rewards of the asset nor
-transferred control of the asset, the Group continues to recognise the transferred asset to the extent of the
-Group’s continuing involvement. In that case, the Group also recognises an associated liability. The transferred
-asset and the associated liability are measured on a basis that reflects the rights and obligations that the Group
-has retained.
-Continuing involvement that takes the form of a guarantee over the transferred asset is measured at the
-lower of the original carrying amount of the asset and the maximum amount of consideration that the Group
-could be required to repay.
-Impairment of financial assets
-The Group recognises an allowance for expected credit losses (“ECLs”) for all debt instruments not held
-at fair value through profit or loss. ECLs are based on the difference between the contractual cash flows due
-in accordance with the contract and all the cash flows that the Group expects to receive, discounted at an
-approximation of the original effective interest rate. The expected cash flows will include cash flows from the
-sale of collateral held or other credit enhancements that are integral to the contractual terms.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-24 –
-
-General approach
-ECLs are recognised in two stages. For credit exposures for which there has not been a significant
-increase in credit risk since initial recognition, ECLs are provided for credit losses that result from default
-events that are possible within the next 12 months (a 12-month ECL). For those credit exposures for which
-there has been a significant increase in credit risk since initial recognition, a loss allowance is required for
-credit losses expected over the remaining life of the exposure, irrespective of the timing of the default (a
-lifetime ECL).
-At each reporting date, the Group assesses whether the credit risk on a financial instrument has
-increased significantly since initial recognition. When making the assessment, the Group compares the risk of
-a default occurring on the financial instrument as at the reporting date with the risk of a default occurring on
-the financial instrument as at the date of initial recognition and considers reasonable and supportable
-information that is available without undue cost or effort, including historical and forward-looking
-information. The Group considers that there has been a significant increase in credit risk when contractual
-payments are more than 90 days past due.
-The Group considers a financial asset in default when contractual payments are one year past due.
-However, in certain cases, the Group may also consider a financial asset to be in default when internal or
-external information indicates that the Group is unlikely to receive the outstanding contractual amounts in full
-before taking into account any credit enhancements held by the Group.
-Debt investments at fair value through other comprehensive income and financial assets at amortised
-cost are subject to impairment under the general approach and they are classified within the following stages
-for measurement of ECLs except for trade receivables which apply the simplified approach as detailed below.
-Stage 1 – Financial instruments for which credit risk has not increased significantly since initial
-recognition and for which the loss allowance is measured at an amount equal to
-12-month ECLs
-Stage 2 – Financial instruments for which credit risk has increased significantly since initial
-recognition but that are not credit-impaired financial assets and for which the loss
-allowance is measured at an amount equal to lifetime ECLs
-Stage 3 – Financial assets that are credit-impaired at the reporting date (but that are not purchased
-or originated credit-impaired) and for which the loss allowance is measured at an
-amount equal to lifetime ECLs
-Simplified approach
-For trade receivables that do not contain a significant financing component or when the Group applies
-the practical expedient of not adjusting the effect of a significant financing component, the Group applies the
-simplified approach in calculating ECLs. Under the simplified approach, the Group does not track changes in
-credit risk, but instead recognises a loss allowance based on lifetime ECLs at each reporting date. The Group
-has established a provision matrix that is based on its historical credit loss experience, adjusted for
-forward-looking factors specific to the debtors and the economic environment.
-Financial liabilities
-Initial recognition and measurement
-Financial liabilities are classified, at initial recognition, as financial liabilities at fair value through
-profit or loss, loans and borrowings, or payables, as appropriate.
-All financial liabilities are recognised initially at fair value and, in the case of loans and borrowings and
-payables, net of directly attributable transaction costs.
-The Group’s financial liabilities include trade and bills payables, other payables, accruals and other
-liabilities, convertible redeemable preferred shares, interest-bearing bank borrowings and lease liabilities.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-25 –
-
-Subsequent measurement
-The subsequent measurement of financial liabilities depends on their classification as follows:
-Financial liabilities at amortised cost (trade and bills payables, other payables, accruals and other liabilities
-excluding convertible bonds, interest-bearing bank borrowings and lease liabilities)
-After initial recognition, other payables and accruals, and lease liabilities are subsequently measured at
-amortised cost, using the effective interest rate method unless the effect of discounting would be immaterial,
-in which case they are stated at cost. Gains and losses are recognised in the statement of profit or loss when
-the liabilities are derecognised as well as through the effective interest rate amortisation process.
-Amortised cost is calculated by taking into account any discount or premium on acquisition and fees or
-costs that are an integral part of the effective interest rate. The effective interest rate amortisation is included
-in finance costs in the statement of profit or loss.
-Financial liabilities at fair value through profit or loss (convertible redeemable preferred shares and
-convertible bonds)
-Financial liabilities at fair value through profit or loss include financial liabilities designated upon initial
-recognition as at fair value through profit or loss. The convertible redeemable preferred shares and convertible
-bonds issued by the Company were designated upon initial recognition at fair value through profit or loss. They
-are initially recognised at fair value. Any directly attributable transaction costs are recognised as finance costs
-in profit or loss. Gains or losses on them are recognised in the statement of profit or loss, except for the gains
-or losses arising from the Company’s own credit risk which are presented in other comprehensive income with
-no subsequent reclassification to the statement of profit or loss. The net fair value gain or loss recognised in
-the statement of profit or loss does not include any interest charged on these financial liabilities.
-Derecognition of financial liabilities
-A financial liability is derecognised when the obligation under the liability is discharged or cancelled,
-or expires.
-When an existing financial liability is replaced by another from the same lender on substantially
-different terms, or the terms of an existing liability are substantially modified, such an exchange or
-modification is treated as a derecognition of the original liability and a recognition of a new liability, and the
-difference between the respective carrying amounts is recognised in the statement of profit or loss.
-Cash and cash equivalents
-Cash and cash equivalents in the statement of financial position comprise cash on hand and at banks,
-and short-term highly liquid deposits with a maturity of generally within three months that are readily
-convertible into known amounts of cash, subject to an insignificant risk of changes in value and held for the
-purpose of meeting short-term cash commitments.
-For the purpose of the consolidated statement of cash flows, cash and cash equivalents comprise cash
-on hand and at banks, and short-term deposits as defined above, less bank overdrafts which are repayable on
-demand and form an integral part of the Group’s cash management.
-Provisions
-A provision is recognised when a present obligation (legal or constructive) has arisen as a result of a
-past event and it is probable that a future outflow of resources will be required to settle the obligation, provided
-that a reliable estimate can be made of the amount of the obligation.
-When the effect of discounting is material, the amount recognised for a provision is the present value
-at the end of the reporting period of the future expenditures expected to be required to settle the obligation.
-The increase in the discounted present value amount arising from the passage of time is included in finance
-costs in the statement of profit or loss.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-26 –
-
-Income tax
-Income tax comprises current and deferred tax. Income tax relating to items recognised outside profit
-or loss is recognised outside profit or loss, either in other comprehensive income or directly in equity.
-Current tax assets and liabilities are measured at the amount expected to be recovered from or paid to
-the taxation authorities, based on tax rates (and tax laws) that have been enacted or substantively enacted by
-the end of each of the Relevant Periods, taking into consideration interpretations and practices prevailing in
-the countries in which the Group operates.
-Deferred tax is provided, using the liability method, on all temporary differences at the end of each of
-the Relevant Periods between the tax bases of assets and liabilities and their carrying amounts for financial
-reporting purposes.
-Deferred tax liabilities are recognised for all taxable temporary differences, except:
- when the deferred tax liability arises from the initial recognition of goodwill or an asset or
-liability in a transaction that is not a business combination and, at the time of the transaction,
-affects neither the accounting profit nor taxable profit or loss and does not give rise to equal
-taxable and deductible temporary differences; and
- in respect of taxable temporary differences associated with investments in subsidiaries, when the
-timing of the reversal of the temporary differences can be controlled and it is probable that the
-temporary differences will not reverse in the foreseeable future.
-Deferred tax assets are recognised for all deductible temporary differences, and the carryforward of
-unused tax credits and any unused tax losses. Deferred tax assets are recognised to the extent that it is probable
-that taxable profit will be available against which the deductible temporary differences, and the carryforward
-of unused tax credits and unused tax losses can be utilised, except:
- when the deferred tax asset relating to the deductible temporary differences arises from the initial
-recognition of an asset or liability in a transaction that is not a business combination and, at the
-time of the transaction, affects neither the accounting profit nor taxable profit or loss and does
-not give rise to equal taxable and deductible temporary differences; and
- in respect of deductible temporary differences associated with investments in subsidiaries,
-deferred tax assets are only recognised to the extent that it is probable that the temporary
-differences will reverse in the foreseeable future and taxable profit will be available against
-which the temporary differences can be utilised.
-The carrying amount of deferred tax assets is reviewed at the end of each of the Relevant Periods and
-reduced to the extent that it is no longer probable that sufficient taxable profit will be available to allow all
-or part of the deferred tax asset to be utilised. Unrecognised deferred tax assets are reassessed at the end of
-each of the Relevant Periods and are recognised to the extent that it has become probable that sufficient taxable
-profit will be available to allow all or part of the deferred tax asset to be recovered.
-Deferred tax assets and liabilities are measured at the tax rates that are expected to apply to the period
-when the asset is realised or the liability is settled, based on tax rates (and tax laws) that have been enacted
-or substantively enacted by the end of each of the Relevant Periods.
-Deferred tax assets and deferred tax liabilities are offset if and only if the Group has a legally
-enforceable right to set off current tax assets and current tax liabilities and the deferred tax assets and deferred
-tax liabilities relate to income taxes levied by the same taxation authority on either the same taxable entity or
-different taxable entities which intend either to settle current tax liabilities and assets on a net basis, or to
-realise the assets and settle the liabilities simultaneously, in each future period in which significant amounts
-of deferred tax liabilities or assets are expected to be settled or recovered.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-27 –
-
-Government grants
-Government grants are recognised at their fair value where there is reasonable assurance that the grant
-will be received and all attaching conditions will be complied with. When the grant relates to an expense item,
-it is deducted from the related expense and recognised in the same period as the expenses specifically relevant
-to the grants. The government grants shall be recognised as deferred income and recognised as described above
-when the relevant costs or losses are recognised subsequently.
-Where the grant relates to an asset, the fair value is credited to a deferred income account and is released
-to the statement of profit or loss over the expected useful life of the relevant asset by equal annual instalments
-or deducted from the carrying amount of the asset and released to the statement of profit or loss by way of a
-reduced depreciation charge.
-Revenue recognition
-Revenue from contracts with customers
-Revenue from contracts with customers is recognised when control of goods or services is transferred
-to the customers at an amount that reflects the consideration to which the Group expects to be entitled in
-exchange for those goods or services.
-(a) Revenue from AI-native products
-Membership subscription
-The Group offers membership subscription service to individual users which provides subscribing
-members access rights to premium functionality in the Group’s AI-native products. The membership
-subscription fee should be paid upfront, and it is non-refundable. Revenue is recognised ratably over the
-membership period as service is rendered.
-Virtual items
-The Group also offers individual users with virtual items in its AI-native products to enhance the
-using experience. Users have the option to pre-purchase additional credits to recharge their accounts and
-buy these virtual items. For consumable virtual items, the Group’s performance obligation is to provide
-one-off services to users. This performance obligation is satisfied when the virtual items are consumed.
-Accordingly, the Group recognises the revenue at a point in time. For non-consumable virtual items, the
-Group’s performance obligation is to provide on-going services to users who purchase virtual items.
-This performance obligation is satisfied over the acting period of the paying users. Accordingly, the
-Group recognises the revenue ratably over the estimated average acting period of these paying users.
-Online marketing service
-In addition, the Group provides performance-based online marketing service to enterprise
-customers on certain of its AI-native applications, including through a mediation platform. Revenue
-from online marketing service is primarily recognised at a point in time when users view or click on the
-advertisement.
-(b) Revenue from Open Platform and other AI-based enterprise services
-The Group provides enterprise customers with access to its core AI models through its Open Platform.
-The performance obligation of such services is satisfied at a point in time when the customers call APIs with
-tokens. At the end of each month, the consideration is fixed based on the tokens consumed and no variable
-consideration exists.
-The Group also provides enterprise customers with other AI-based enterprise services. Consideration for
-such services is fixed and revenue from other AI-based enterprise services is typically recognised at a point
-in time when the service is accepted by the customers.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-28 –
-
-Other income
-Interest income is recognised on an accrual basis using the effective interest method by applying the rate
-that exactly discounts the estimated future cash receipts over the expected life of the financial instrument or
-a shorter period, when appropriate, to the net carrying amount of the financial asset.
-Contract liabilities
-A contract liability is recognised when a payment is received or a payment is due (whichever is earlier)
-from a customer before the Group transfers the related goods or services. Contract liabilities are recognised
-as revenue when the Group performs under the contract (i.e., transfers control of the related goods or services
-to the customer).
-Share-based payments
-The Company operates a share option scheme. Employees (including directors) of the Group receive
-remuneration in the form of share-based payments, whereby employees render services in exchange for equity
-instruments (“equity-settled transactions”). The cost of equity-settled transactions with employees is measured
-by reference to the fair value at the date at which they are granted. The fair value is determined by an external
-valuer using a binomial model, further details of which are given in note 26 to the Historical Financial
-Information.
-The cost of equity-settled transactions is recognised in employee benefit expense, together with a
-corresponding increase in equity, over the period in which the performance and/or service conditions are
-fulfilled. The cumulative expense recognised for equity-settled transactions at the end of each of the Relevant
-Periods until the vesting date reflects the extent to which the vesting period has expired and the Group’s best
-estimate of the number of equity instruments that will ultimately vest. The charge or credit to the statement
-of profit or loss for a period represents the movement in the cumulative expense recognised as at the beginning
-and end of that period.
-Service and non-market performance conditions are not taken into account when determining the grant
-date fair value of awards, but the likelihood of the conditions being met is assessed as part of the Group’s best
-estimate of the number of equity instruments that will ultimately vest. Any other conditions attached to an
-award, but without an associated service requirement, are considered to be non-vesting conditions.
-Non-vesting conditions are reflected in the fair value of an award and lead to an immediate expensing of an
-award unless there are also service and/or performance conditions.
-For awards that do not ultimately vest because non-market performance and/or service conditions have
-not been met, no expense is recognised.
-Where the terms of an equity-settled award are modified, as a minimum an expense is recognised as if
-the terms had not been modified, if the original terms of the award are met. In addition, an expense is
-recognised for any modification that increases the total fair value of the share-based payments, or is otherwise
-beneficial to the employee as measured at the date of modification. Where an equity-settled award is cancelled,
-it is treated as if it had vested on the date of cancellation, and any expense not yet recognised for the award
-is recognised immediately.
-Other employee benefits
-Pension scheme
-The employees of the Group’s subsidiaries which operate in Mainland China are required to participate
-in a central pension scheme operated by the local municipal government. The Group is required to contribute
-certain percentages of their payroll costs to the central pension scheme. The contributions are charged to the
-statement of profit or loss as they become payable in accordance with the rules of the central pension scheme.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-29 –
-
-Housing fund and other social insurances
-The Group has participated in defined social security contribution schemes for its employees pursuant
-to the relevant laws and regulations of the PRC. These include a housing fund, basic medical insurance,
-unemployment insurance, injury insurance and maternity insurance. The Group makes monthly contributions
-to the housing fund and other social insurances. The contributions are charged to profit or loss on an accrual
-basis. The Group’s liability in respect of these funds is limited to the contributions payable in each of the
-Relevant Periods.
-Borrowing costs
-Borrowing costs directly attributable to the acquisition, construction or production of qualifying assets,
-i.e., assets that necessarily take a substantial period of time to get ready for their intended use or sale, are
-capitalised as part of the cost of those assets. The capitalisation of such borrowing costs ceases when the assets
-are substantially ready for their intended use or sale. All other borrowing costs are expensed in the period in
-which they are incurred. Borrowing costs consist of interest and other costs that an entity incurs in connection
-with the borrowing of funds.
-Foreign currencies
-The Historical Financial Information is presented in USD, which is the Company’s functional currency.
-Each entity in the Group determines its own functional currency and items included in the Historical Financial
-Information of each entity are measured using that functional currency. Foreign currency transactions recorded
-by the entities in the Group are initially recorded using their respective functional currency rates prevailing
-at the dates of the transactions. Monetary assets and liabilities denominated in foreign currencies are translated
-at the functional currency rates of exchange ruling at the end of each of the Relevant Periods. Differences
-arising on settlement or translation of monetary items are recognised in the statement of profit or loss.
-Non-monetary items that are measured in terms of historical cost in a foreign currency are translated
-using the exchange rates at the dates of the initial transactions. Non-monetary items measured at fair value in
-a foreign currency are translated using the exchange rates at the date when the fair value was measured. The
-gain or loss arising on translation of a non-monetary item measured at fair value is treated in line with the
-recognition of the gain or loss on change in fair value of the item (i.e., translation difference on the item whose
-fair value gain or loss is recognised in other comprehensive income or profit or loss is also recognised in other
-comprehensive income or profit or loss, respectively).
-In determining the exchange rate on initial recognition of the related asset, expense or income on the
-derecognition of a non-monetary asset or non-monetary liability relating to an advance consideration, the date
-of initial transaction is the date on which the Group initially recognises the non-monetary asset or
-non-monetary liability arising from the advance consideration. If there are multiple payments or receipts in
-advance, the Group determines the transaction date for each payment or receipt of the advance consideration.
-The functional currencies of certain subsidiaries are currencies other than the USD. As at the end of each
-of the Relevant Periods, the assets and liabilities of these entities are translated into USD at the exchange rates
-prevailing at the end of each of the Relevant Periods and their statements of profit or loss are translated into
-USD at the exchange rates that approximate to those prevailing at the dates of the transactions.
-The resulting exchange differences are recognised in other comprehensive income and accumulated in
-the exchange fluctuation reserve, except to the extent that the differences are attributable to non-controlling
-interests. On disposal of a foreign operation, the cumulative amount in the reserve relating to that particular
-foreign operation is recognised in the statement of profit or loss.
-For the purpose of the consolidated statement of cash flows, the cash flows of overseas subsidiaries are
-translated into USD at the exchange rates ruling at the dates of the cash flows. Frequently recurring cash flows
-of overseas subsidiaries which arise throughout the year are translated into USD at the weighted average
-exchange rates for the year.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-30 –
-
-3. SIGNIFICANT ACCOUNTING JUDGEMENTS AND ESTIMATES
-The preparation of the Group’s Historical Financial Information requires management to make judgements,
-estimates and assumptions that affect the reported amounts of revenues, expenses, assets and liabilities, and their
-accompanying disclosures, and the disclosure of contingent liabilities. Uncertainty about these assumptions and
-estimates could result in outcomes that could require a material adjustment to the carrying amounts of the assets or
-liabilities affected in the future.
-Estimation uncertainty
-The key assumptions concerning the future and other key sources of estimation uncertainty at the end of
-reporting period, that have a significant risk of causing a material adjustment to the carrying amounts of assets and
-liabilities within the next financial year, are described below:
-Fair values of convertible redeemable preferred shares
-The fair values of the convertible redeemable preferred shares measured at fair value through profit or loss are
-determined using the valuation techniques, including the backsolve method and the equity allocation method. Such
-valuation is based on key parameters about risk-free rate, discounts for lack of marketability (“DLOM”) and
-volatility, which are subject to uncertainty and might materially differ from the actual results. Further details are
-included in note 24 to the Historical Financial Information.
-Share-based payments
-The Group operates share option schemes for the purpose of providing incentives for employees and persons
-contributing to the Group. The fair value of the option is determined using the backsolve method, option pricing and
-binomial model at the grant dates. V aluation techniques are certified by an independent valuer before being
-implemented for valuation and are calibrated to ensure that outputs reflect market conditions. Some inputs, such as
-the discount rate for lack of marketability (“DLOM”), discount rate and volatility, require management estimates.
-Should any of the estimates and assumptions change, it may lead to a change in the fair value to be recognised in
-the statement of profit or loss. Further details are contained in note 26 to the Historical Financial Information.
-4. OPERATING SEGMENT INFORMATION
-For management purposes, the Group is organised into one single business unit that includes primarily the
-rendering of services based on the AI foundation model. Management reviews the overall results and financial
-position of the Group as a whole based on the same accounting policies set out in note 2.4 to the Historical Financial
-Information. Accordingly, the Group has only one single operating segment and no further analysis of the single
-segment is presented.
-Geographical information
-(a) Revenue from external customers
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Mainland China /H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,797 9,217 6,768 14,400
-Singapore /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1 11,455 7,664 12,980
-United States /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 575 4,999 2,871 10,913
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 87 4,852 2,151 15,144
-Total revenue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,460 30,523 19,454 53,437
-The revenue information above is based on the locations of the customers.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-31 –
-
-(b) Non-current assets
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Mainland China /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118689 4,022 4,170 3,880
-Total non-current assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118689 4,022 4,170 3,880
-The non-current asset information above is based on the locations of the assets and include Property, plant and
-equipment and Right-of-use assets.
-Information about major customers
-Revenues from customers, including a group of entities which are known to be under common control, which
-individually accounted for over 10% of the Group’s total revenue during the year ended 31 December 2022,2023 and
-2024 and the nine months ended 30 September 2024 and 2025 are as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Customer A /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A 1,286 N/A N/A N/A
-Customer B /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A 426 N/A N/A N/A
-Customer C /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118N/A N/A 9,438 6,504 7,828
-5. REVENUE, OTHER INCOME AND GAINS
-An analysis of revenue from contracts with customers is as follows:
-(a) Disaggregation of revenue from contracts with customers
-Revenue during the year ended 31 December 2022, 2023 and 2024 and the nine months ended 30 September
-2024 and 2025 is as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-AI-native products /H1118/H1118/H1118/H1118/H1118/H1118– 758 21,805 13,529 38,020
-Open Platform and other
-AI-based enterprise
-services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,702 8,718 5,925 15,417
-Revenue from services
-provided /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,460 30,523 19,454 53,437
-APPENDIX I ACCOUNTANT’S REPORT
-– I-32 –
-
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Timing of revenue
-recognition
-Services transferred at a
-point in time /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,702 25,695 15,825 30,322
-Services transferred over
-time /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 758 4,828 3,629 23,115
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,460 30,523 19,454 53,437
-(b) Performance obligations
-Information about the Group’s performance obligations is described in note 2.4 to the consolidated financial
-statement Under “Revenue recognition”. The Group also obtained advance payment from the Membership
-subscription and the Virtual items.
-The Company elected to use the practical expedient to not disclose the remaining performance obligations, as
-substantially all of the Company’s contracts have duration of one year or less.
-(c) Revenue recognised in relation to contract liabilities
-The amounts of revenue recognised during the years ended 31 December 2022, 2023 and 2024 and the nine
-months ended 30 September 2024 and 2025 that were included in the contract liabilities at the beginning of those
-periods were nil, nil, USD559,000, USD487,000 (unaudited) and USD1,358,000, respectively.
-The amounts of transaction prices allocated to the remaining performance obligations (unsatisfied or partially
-unsatisfied) as at the end of each of the Relevant Periods were nil, USD559,000, USD1,553,000 and USD4,657,000.
-The revenue attributable to these remaining performance obligations is expected to be recognised within one year.
-Other income and gains, net
-An analysis of other income and gains is as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Interest income /H1118/H1118/H1118/H111839 7,785 20,448 17,199 7,876
-Foreign exchange
-gains, net /H1118/H1118/H1118/H1118/H1118/H1118175 311 2 1,415 1,600
-Fair value gain on
-financial assets at
-fair value through
-profit or loss /H1118/H1118/H1118/H1118941 788 15,710 6,682 20,414
-Others /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 58 (9) (18) 1,342
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,155 8,942 36,151 25,278 31,232
-APPENDIX I ACCOUNTANT’S REPORT
-– I-33 –
-
-6. FINANCE COSTS
-An analysis of finance costs is as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Interest on interest-bearing
-bank borrowings /H1118/H1118/H1118/H1118/H1118– – 355 199 404
-Interest on lease liabilities /H1118 14 61 154 117 107
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814 61 509 316 511
-7. LOSS BEFORE TAX
-The Group’s loss before tax is arrived at after charging/(crediting):
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Cost of services provided
-(excluding employment
-benefit) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 4,314 26,785 18,944 40,348
-Depreciation of property,
-plant and equipment /H1118/H1118/H111825 180 451 325 582
-Depreciation of right-of-
-use assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118182 631 1,450 1,072 1,478
-Listing expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 3,675
-Research and development
-costs (excluding
-employee benefit
-expenses, depreciation
-and amortisation costs) /H1118 5,011 49,465 143,807 105,410 145,434
-Employee benefit
-expenses:
-Wages and salaries /H1118/H1118/H1118/H11185,676 19,762 44,036 30,676 38,851
-Pension scheme
-contributions /H1118/H1118/H1118/H1118/H1118/H1118188 1,106 2,402 1,803 2,009
-Share-based payment
-expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118106 2,068 4,548 4,442 7,338
-Fair value loss on financial
-liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111860,509 176,826 214,172 128,063 313,477
-Impairment losses on
-financial assets, net /H1118/H1118/H1118 – 3 88 68 22
-Fair value gains on
-financial assets at fair
-value through profit or
-loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(941) (788) (15,710) (6,682) (20,414)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-34 –
-
-8. DIRECTORS’ AND CHIEF EXECUTIVE’S REMUNERATION
-Directors’ and chief executive’s remuneration for the year/period, disclosed pursuant to the Listing Rules,
-section 383(1)(a), (b), (c) and (f) of the Hong Kong Companies Ordinance and Part 2 of the Companies (Disclosure
-of Information about Benefits of Directors) Regulation, is as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Salaries, allowances and
-benefits in kind /H1118/H1118/H1118/H1118/H1118/H1118358 625 1,144 832 1,011
-Performance related
-bonuses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118131 247 170 – –
-Pension scheme
-contributions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111892 43 93 12 3
-Equity-settled share option
-expense /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118963 1,278 2,275 1,658 1,243
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,461 2,174 3,628 2,521 2,277
-During the year ended 31 December 2022,2023 and 2024 and the nine months ended 30 September 2024 and
-2025, certain directors were granted share options, in respect of their services to the Group, under the share option
-scheme of the Company, further details of which are set out in note 26 to the Historical Financial Information. The
-fair value of such options, which has been recognised in the statement of profit or loss over the vesting period, was
-determined as at the date of grant and the amount included in the financial statements for the current year is included
-in the above directors’ and chief executive’s remuneration disclosures.
-(a) Independent non-executive directors
-During the Relevant Periods, Mr. Huang Guobin, Mr. Wang Pengcheng and Mr. Zhu Huaxing were appointed
-as independent non-executive directors of the Company from listing Date.
-There was no emolument payable to the independent non-executive directors during the year ended 31
-December 2022,2023 and 2024 and the nine months ended 30 September 2024 and 2025.
-(b) Executive directors, a non-executive director and the chief executive
-Salaries,
-allowances and
-benefits in kind
-Performance
-related bonuses
-Pension scheme
-contributions
-Equity-settled
-share option
-expense
-Total
-remuneration
-USD’000 USD’000 USD’000 USD’000 USD’000
-2022
-Executive directors:
-Ms. Y un Y eyi (i) /H1118/H1118/H1118/H1118/H111894 80 4 963 1,141
-Mr. Y ang Bin (ii) /H1118/H1118/H1118/H1118/H1118180 51 2 – 233
-Ms. Wang Meng (iii) /H1118/H1118/H11188 4–3– 8 7
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118358 131 9 963 1,461
-APPENDIX I ACCOUNTANT’S REPORT
-– I-35 –
-
-Salaries,
-allowances and
-benefits in kind
-Performance
-related bonuses
-Pension scheme
-contributions
-Equity-settled
-share option
-expense
-Total
-remuneration
-USD’000 USD’000 USD’000 USD’000 USD’000
-2023
-Executive directors:
-Ms. Y un Y eyi (i) /H1118/H1118/H1118/H1118/H1118179 94 7 1,278 1,558
-Mr. Y ang Bin (ii) /H1118/H1118/H1118/H1118/H1118216 43 7 – 266
-Mr. Zhang Mozhi (iv) /H1118/H1118 159 55 7 – 221
-Mr. Y an Junjie (v) /H1118/H1118/H1118/H111871 55 3 – 129
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118625 247 24 1,278 2,174
-Salaries,
-allowances and
-benefits in kind
-Performance
-related bonuses
-Pension scheme
-contributions
-Equity-settled
-share option
-expense
-Total
-remuneration
-USD’000 USD’000 USD’000 USD’000 USD’000
-2024
-Executive directors:
-Ms. Y un Y eyi (i) /H1118/H1118/H1118/H1118/H1118267 86 7 1,282 1,642
-Mr. Wei Wei (vi) /H1118/H1118/H1118/H1118/H1118212 – 7 736 955
-Mr. Zhang
-Qianchuan (vii) /H1118/H1118/H1118/H1118/H1118123 – 4 257 384
-Mr. Y an Junjie (v) /H1118/H1118/H1118/H1118173 42 7 – 222
-Mr. Zhang Mozhi (iv) /H1118/H1118 168 42 7 – 217
-Mr. Y ang Bin (ii) /H1118/H1118/H1118/H1118/H11182 0 1–7– 2 0 8
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,144 170 39 2,275 3,628
-Salaries,
-allowances and
-benefits in kind
-Performance
-related bonuses
-Pension scheme
-contributions
-Equity-settled
-share option
-expense
-Total
-remuneration
-USD’000 USD’000 USD’000 USD’000 USD’000
-30 September 2024
-(unaudited)
-Executive directors:
-Ms. Y un Y eyi (i) /H1118/H1118/H1118/H1118/H1118126 – 5 960 1,091
-Mr. Wei Wei (vi) /H1118/H1118/H1118/H1118/H1118159 – 5 441 605
-Mr. Zhang
-Qianchuan (vii) /H1118/H1118/H1118/H1118/H1118123 – 4 257 384
-Mr. Y ang Bin (ii) /H1118/H1118/H1118/H1118/H11181 6 6–6– 1 7 2
-Mr. Y an Junjie (v) /H1118/H1118/H1118/H11181 3 0–5– 1 3 5
-Mr. Zhang Mozhi (iv) /H1118/H1118 1 2 8–6– 1 3 4
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118832 – 31 1,658 2,521
-Salaries,
-allowances and
-benefits in kind
-Performance
-related bonuses
-Pension scheme
-contributions
-Equity-settled
-share option
-expense
-Total
-remuneration
-USD’000 USD’000 USD’000 USD’000 USD’000
-30 September 2025 /H1118/H1118/H1118/H1118/H1118
-Executive directors:
-Ms. Y un Y eyi (i) /H1118/H1118/H1118/H1118/H1118518 – 5 956 1,479
-Mr. Y an Junjie (v) /H1118/H1118/H1118/H11181 3 9–7– 1 4 6
-Mr. Zhao Pengyu (viii) /H1118 166 – 5 125 296
-Mr. Zhou Y ucong (viii) /H1118 188 – 6 162 356
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,011 – 23 1,243 2,277
-APPENDIX I ACCOUNTANT’S REPORT
-– I-36 –
-
-(i) Ms. Y un Y eyi served as a director and chief operating officer of the Company since December 2022, and
-was re-designated as an executive Director in June 2025.
-(ii) Mr. Y ang Bin served as a director of the Company since December 2022, and tendered his resignation
-in August 2024 due to the commercial arrangement.
-(iii) Ms. Wang Meng served as a director of the Company since December 2021, and tendered her resignation
-in December 2022 due to the commercial arrangement.
-(iv) Mr. Zhang Mozhi served as a director of the Company since October 2023, and tendered his resignation
-in December 2024 due to the commercial arrangement.
-(v) Mr. Y an Junjie served as a director, the chief executive officer and chief technology officer since
-October 2023, and was re-designated as our executive Director in June 2025.
-(vi) Mr. Wei Wei served as a director of the Company since March 2024, and tendered his resignation in
-December 2024 due to the commercial arrangement.
-(vii) Mr. Zhang Qianchuan served as a director of the Company since March 2024, and tendered his
-resignation in December 2024 due to the commercial arrangement.
-(viii) Mr. Zhao Pengyu and Mr. Zhou Y ucong served as a director of the Company since June 2025.
-There was no arrangement under which a director or the chief executive waived or agreed to waive any
-remuneration during the year ended 31 December 2022,2023 and 2024 and the nine months ended 30 September 2024
-and 2025.
-(c) Directors’ retirement benefits and termination benefits
-Mr. Y ang Bin received termination benefits amounting to USD35,000 in the year ended 31 December 2024.
-No other director’s retirement or termination benefit subsisted at the end of each year disclosed or at any time
-during the year ended 31 December 2022,2023 and 2024 and the nine months ended 30 September 2024 and 2025.
-9. FIVE HIGHEST PAID EMPLOYEES
-The five highest paid employees during the year ended 31 December 2022,2023 and 2024 and the nine months
-ended 30 September 2024 and 2025 included two, three, two, three and two directors, details of whose remuneration
-are set out in above. Details of the remuneration for the remaining three, two, three, two and three highest paid
-employees who are neither a director nor chief executive of the Company during the year ended 31 December
-2022,2023 and 2024 and the nine months ended 30 September 2024 and 2025 are as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Salaries, allowances and
-benefits in kind /H1118/H1118/H1118/H1118/H1118/H1118337 303 610 230 235
-Performance related
-bonuses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118150 156 220 – –
-Pension scheme
-contributions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817 10 21 13 10
-Termination benefits /H1118/H1118/H1118/H1118–––– 2 2 9
-Equity-settled share option
-expense /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111839 734 365 693 4,221
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118543 1,203 1,216 936 4,695
-APPENDIX I ACCOUNTANT’S REPORT
-– I-37 –
-
-The number of non-director and non-chief executive highest paid employees whose remuneration fell within
-the following bands is as follows:
-Number of employees
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-(unaudited)
-Nil to HK$2,000,000 /H1118/H1118/H1118/H11183––––
-HK$2,000,001 to
-HK$4,000,000 /H1118/H1118/H1118/H1118/H1118/H1118/H1118–1312
-HK$4,000,001 to
-HK$6,000,000 /H1118/H1118/H1118/H1118/H1118/H1118/H1118–1–1–
-HK$6,000,001 to
-HK$30,000,000 /H1118/H1118/H1118/H1118/H1118/H1118––––1
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111832323
-During the year ended 31 December 2022, 2023 and 2024 and the nine months ended 30 September 2024 and
-2025, share options were granted to a non-director and non-chief executive highest paid employee in respect of his
-services to the Group, further details of which are included in the disclosures in note 26 to the Historical Financial
-Information. The fair value of such options, which has been recognised in the statement of profit or loss over the
-vesting period, was determined as at the date of grant and the amount included in the financial statements for the
-current year is included in the above non-director and non-chief executive highest paid employees’ remuneration
-disclosures.
-10. INCOME TAX
-The Group is subject to income tax on an entity basis on profits arising in or derived from the jurisdictions
-in which members of the Group are domiciled and operate.
-Cayman Islands
-Under the current laws of the Cayman Islands, the Company and its subsidiaries are not subject to tax on
-income or capital gains.
-Hong Kong
-The subsidiary incorporated in Hong Kong is subject to Hong Kong profits tax at the rate of 16.5% on any
-estimated assessable profits arising in Hong Kong during the year ended 31 December 2022,2023 and 2024 and the
-nine months ended 30 September 2024 and 2025. The first HK$2,000,000 of assessable profits of this subsidiary were
-taxed at 8.25% and the remaining assessable profits were taxed at 16.5% during the year ended 31 December 2022,
-2023 and 2024 and the nine months ended 30 September 2024 and 2025.
-Singapore
-The subsidiaries incorporated in Singapore are subject to Singapore profits tax at the rate of 17% on any
-estimated assessable profits arising in Singapore during the year ended 31 December 2022,2023 and 2024 and the
-nine months ended 30 September 2024 and 2025.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-38 –
-
-Mainland China
-The provision for corporate income tax (“CIT”) in Mainland China is based on the statutory rate of 25% of
-the assessable profits as determined in accordance with the PRC Corporate Income Tax Law which was approved and
-became effective on 1 January, 2008.
-Beijing Jizhi was qualified as a High and New Technology Enterprise in 2023 and is entitled to a preferential
-CIT rate of 15% from 2023 to 2025. This qualification is subject to review by the relevant tax authority in the PRC
-for every three years.
-Shanghai Jizhi was qualified as a High and New Technology Enterprise in 2024 and is entitled to a preferential
-CIT rate of 15% from 2024 to 2026. This qualification is subject to review by the relevant tax authority in the PRC
-for every three years.
-A reconciliation of the tax expense applicable to loss before tax using the statutory rate for the countries or
-jurisdictions in which the Company and its subsidiaries are domiciled and operate to the tax expense at the applicable
-tax rate is as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Loss before tax /H1118/H1118/H1118/H1118/H1118/H1118/H1118(73,728) (269,246) (465,238) (304,342) (512,013)
-Tax calculated at statutory
-tax rates of each
-entities’ jurisdictions /H1118/H1118/H1118(3,474) (23,469) (67,941) (47,372) (54,175)
-Effect of preferential tax
-rates /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,707 22,254 16,169 20,909
-Expenses not deductible
-for tax /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111813 03 22 72 4
-Additional deductible
-allowance for qualified
-research and
-development costs /H1118/H1118/H1118/H1118(1,082) (5,989) (9,573) (7,732) (10,004)
-Temporary difference and
-tax losses not
-recognised /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11184,555 26,721 55,228 38,908 43,246
-Tax charge at the Group’s
-effective rate /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––
-Deferred tax assets have not been recognized during the year ended 31 December 2022, 2023 and 2024 and
-the nine months ended 30 September 2024 and 2025 in respect of these losses as they have arisen in subsidiaries that
-have been loss-making for some time and it is not considered probable that taxable profits will be available against
-which the tax losses can be utilised.
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Tax losses /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111816,702 135,099 404,349 332,354 637,650
-Temporary differences /H1118/H1118/H11181,514 7,206 62,629 41,712 91,718
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111818,216 142,305 466,978 374,066 729,368
-APPENDIX I ACCOUNTANT’S REPORT
-– I-39 –
-
-The tax losses incurred from the Company’s subsidiaries in Mainland China that are not recognised as deferred
-tax assets will expire from 2027 to 2035. Tax losses of the Group’s subsidiaries incorporated in Hong Kong and
-Singapore will be carried forward indefinitely. Deductible losses that are not recognised for deferred income tax
-assets will expire in the following years:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-2027 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111816,702 14,67 7–––
-2028 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 70,023 3,136 3,136 3,136
-2029 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 685 1,161 685
-2030 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 1,725
-2031 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––
-2032 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,025 16,702 16,702 16,702
-2033 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 27,070 93,957 93,957 93,957
-2034 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 222,542 161,686 222,542
-2035 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 209,095
-Indefinitely /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 21,304 67,327 55,712 89,808
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111816,702 135,099 404,349 332,354 637,650
-11. DIVIDENDS
-The Board did not recommend the payment of any dividend during the year ended 31 December 2022, 2023
-and 2024 and the nine months ended 30 September 2024 and 2025.
-12. LOSS PER SHARE ATTRIBUTABLE TO ORDINARY EQUITY HOLDERS OF THE PARENT
-(a) Basic loss per share
-Basic loss per share during the year ended 31 December 2022, 2023 and 2024 and the nine months ended 30
-September 2024 and 2025 are calculated by dividing the loss attributable to owners of the parent by the weighted
-average number of ordinary shares in issue during the respective periods.
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-(unaudited)
-Loss attributable to owners
-of the parent (expressed
-in USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118(73,728) (269,246) (465,238) (304,342) (512,013)
-Weighted average number
-of ordinary shares in
-issue during the
-year/period used in the
-basic loss per share
-calculation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118100,000,000 105,334,213 108,650,075 108,650,075 108,650,075
-Basic loss per share
-(expressed in USD) /H1118/H1118/H1118(0.74) (2.56) (4.28) (2.80) (4.71)
-(b) Diluted loss per share
-As the Group incurred losses during the year ended 31 December 2022, 2023 and 2024 and the nine months
-ended 30 September 2024 and 2025, the potential ordinary shares were not included in the calculation of diluted loss
-per share as their inclusion would be anti-dilutive. Accordingly, diluted loss per share for the year ended 31 December
-2022, 2023 and 2024 and the nine months ended 30 September 2024 and 2025 are the same as basic loss per share
-of the respective periods.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-40 –
-
-13. PROPERTY, PLANT AND EQUIPMENT
-As at 31 December
-Leasehold
-improvements Office equipment Total
-USD’000 USD’000 USD’000
-31 December 2022
-At 1 January 2022 (unaudited):
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––
-At 1 January 2022, net of accumulated
-depreciation (unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 256 256
-Depreciation provided during the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118– (25) (25)
-At 31 December 2022, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 231 231
-At 31 December 2022:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 256 256
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (25) (25)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 231 231
-As at 31 December
-Leasehold
-improvements Office equipment Total
-USD’000 USD’000 USD’000
-31 December 2023
-At 1 January 2023:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 256 256
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (25) (25)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 231 231
-At 1 January 2023, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 231 231
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118256 402 658
-Depreciation provided during the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118(46) (134) (180)
-At 31 December 2023, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118210 499 709
-At 31 December 2023:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118256 658 914
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(46) (159) (205)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118210 499 709
-APPENDIX I ACCOUNTANT’S REPORT
-– I-41 –
-
-As at 31 December
-Leasehold
-improvements Office equipment Total
-USD’000 USD’000 USD’000
-31 December 2024
-At 1 January 2024:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118256 658 914
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(46) (159) (205)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118210 499 709
-At 1 January 2024, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118210 499 709
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118352 483 835
-Depreciation provided during the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118(168) (283) (451)
-At 31 December 2024, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118394 699 1,093
-At 31 December 2024:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118608 1,141 1,749
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(214) (442) (656)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118394 699 1,093
-As at 30 September
-Leasehold
-improvements Office equipment Total
-USD’000 USD’000 USD’000
-30 September 2025
-At 1 January 2025:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118608 1,141 1,749
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(214) (442) (656)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118394 699 1,093
-At 1 January 2025, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118394 699 1,093
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118445 178 623
-Depreciation provided during the period /H1118/H1118/H1118/H1118/H1118/H1118(313) (269) (582)
-At 30 September 2025, net of accumulated
-depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118526 608 1,134
-At 30 September 2025:
-Cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,053 1,319 2,372
-Accumulated depreciation /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(527) (711) (1,238)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118526 608 1,134
-During the Relevant Periods, there was no impairment provided for the Group’s property, plant and equipment.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-42 –
-
-14. LEASES
-The Group as a lessee
-The Group has lease contracts for buildings used in its operations, and the lease terms are generally between
-2 and 3 years. Generally, the Group is restricted from assigning and subleasing the leased assets outside the Group.
-(a) Right-of-use assets
-The carrying amounts of the Group’s right-of-use assets and the movements during the Relevant Periods
-are as follows:
-Buildings
-USD’000
-As at 1 January 2022 (unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118640
-Depreciation charge /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(182)
-As at 31 December 2022 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118458
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183,718
-Depreciation charge /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(631)
-Disposal as a result of early cancellation of lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(232)
-As at 31 December 2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183,313
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,249
-Depreciation charge /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(1,450)
-Disposal as a result of early cancellation of lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(35)
-As at 31 December 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183,077
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,815
-Depreciation charge /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(1,478)
-Disposal as a result of early cancellation of lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(668)
-As at 30 September 2025 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,746
-(b) The carrying amount of lease liabilities and the movements during the Relevant Periods are as follows:
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Carrying amount at the
-beginning of the
-year/period /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 440 3,160 3,023
-New leases /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118640 3,718 1,249 1,815
-Disposal as a result of early
-cancellation of lease /H1118/H1118/H1118/H1118/H1118– (302) (34) (843)
-Accretion of interest
-recognised during the
-year/period /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814 61 154 107
-Payments /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(214) (757) (1,506) (1,471)
-Carrying amount at the end of
-the year/period /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118440 3,160 3,023 2,631
-Analysed into:
-Current portion /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118349 1,248 1,964 1,694
-Non-current portion /H1118/H1118/H1118/H1118/H111891 1,912 1,059 937
-APPENDIX I ACCOUNTANT’S REPORT
-– I-43 –
-
-(c) The amounts recognised in profit or loss in relation to leases are as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Interest on lease
-liabilities /H1118/H1118/H1118/H1118/H1118/H111814 61 154 117 107
-Depreciation charge
-of right-of-use
-assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118182 631 1,450 1,072 1,478
-Expense relating to
-short-term leases /H1118 4 2 7 6––7
-Total amount
-recognised in
-profit or loss /H1118/H1118/H1118/H1118238 768 1,604 1,189 1,592
-15. TRADE RECEIV ABLES
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,341 7,073 8,176
-Impairment /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (3) (91) (113)
-Net carrying amount /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,338 6,982 8,063
-Amounts due from the related parties included in the Group’s trade receivables were nil, USD41,000,
-USD41,000 and USD113,000 as at 31 December 2022, 2023 and 2024 and 30 September 2025, respectively, which
-are recoverable within one year.
-The Group’s trading terms with its customers are mainly on credit. The credit term is generally from 30 to 60
-days. The Group seeks to maintain strict control over its outstanding receivables and has a credit control process to
-minimise credit risk. The Group does not hold any collateral or other credit enhancements over its trade receivable
-balances. Trade receivables are non-interest-bearing.
-An ageing analysis of the trade receivables as at the end of each of the Relevant Periods, based on the invoice
-date and net of loss allowance, is as follows:
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Within one year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,338 6,982 8,063
-The movements in the loss allowance for impairment of trade receivables are as follows:
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-At beginning of the year/period /H1118/H1118/H1118 ––3 9 1
-Additions /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3 88 22
-At end of the year/period /H1118/H1118/H1118/H1118/H1118/H1118/H1118–3 9 1 1 1 3
-APPENDIX I ACCOUNTANT’S REPORT
-– I-44 –
-
-Set out below is the information about the credit risk exposure on the Group’s trade receivables using a
-provision matrix:
-As at 31 December 2023
-Within one year Total
-Expected credit loss rate /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11180.2% 0.2%
-Gross carrying amount (USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,341 1,341
-Expected credit losses (USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111833
-As at 31 December 2024
-Within one year Total
-Expected credit loss rate /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181.3% 1.3%
-Gross carrying amount (USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11187,073 7,073
-Expected credit losses (USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111891 91
-As at 30 September 2025
-Within one year Total
-Expected credit loss rate /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181.4% 1.4%
-Gross carrying amount (USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11188,176 8,176
-Expected credit losses (USD’000) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118113 113
-16. PREPAYMENTS, OTHER RECEIV ABLES AND OTHER ASSETS
-The Group
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Current
-Prepayments /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111856 119 394 451
-V alue-added-tax recoverable /H1118/H1118(i) 387 3,854 7,144 1,500
-Deferred listing expenses /H1118/H1118/H1118 ––– 4 2 2
-Deposits and other
-receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(ii) 126 405 5,932 9,438
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118569 4,378 13,470 11,811
-Non-current
-Deposits and other
-receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(ii) – 435 561 731
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 435 561 731
-(i) The Group’s domestic sales of services are subject to PRC value-added-tax (“V A T”). Input V A T on
-purchases can be deducted from output V A T payable. The V A T recoverable is mainly the net difference
-between output and deductible input V A T.
-(ii) The financial assets included in the above balances relate to deposits and other receivables which were
-categorised in stage 1 at the end of each of the Relevant Periods. In calculating the expected credit loss
-rate, the Group considers the historical loss rate and adjusts for forward-looking factors and
-information. During the year, the deposits and other receivables had no recent history of default and past
-due amounts. At the end of each of the Relevant Periods, the loss allowance was assessed to be minimal.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-45 –
-
-The Company
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Current
-Amounts due from subsidiaries /H1118/H1118/H1118/H111814,100 103,895 358,591 663,220
-Deferred listing expenses /H1118/H1118/H1118/H1118/H1118/H1118/H1118––– 4 2 2
-Other receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 1,500 –
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814,100 103,895 360,091 663,642
-17. INVESTMENTS
-The Group
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Non-current assets
-Financial assets at fair value through
-profit or loss
-Wealth management products, at
-fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 95,331 70,228
-Financial assets at fair value through
-other comprehensive income
-Investment in a listed entity /H1118/H1118/H1118/H1118– – 4,836 6,440
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 100,167 76,668
-Current assets
-Financial assets at fair value through
-profit or loss
-Wealth management products, at
-fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 15,802 295,220 644,154
-Financial assets at amortised costs /H1118/H1118 – – 147,444 –
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 15,802 442,664 644,154
-The Company
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Non-current assets
-Financial assets at fair value through
-profit or loss
-Wealth management products, at
-fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 95,331 70,228
-Investments in subsidiaries /H1118/H1118/H1118/H1118/H1118/H11181,069 4,415 11,238 19,819
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,069 4,415 106,569 90,047
-APPENDIX I ACCOUNTANT’S REPORT
-– I-46 –
-
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Current assets
-Financial assets at fair value through
-profit or loss
-Wealth management products, at
-fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 10,152 295,220 639,899
-Financial assets at amortised costs /H1118/H1118 – – 147,444 –
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 10,152 442,664 639,899
-18. CASH AND CASH EQUIV ALENTS
-The Group
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Cash and bank balances /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186,912 18,188 316,024 293,762
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 279,844 26,546 94,023
-Subtotal /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186,912 298,032 342,570 387,785
-Less: Pledged for bank borrowings /H1118 – – 15,491 6,154
-Pledged for guaranteeing
-bank acceptance bills
-payable /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 11,802 18,943
-Other restricted cash* /H1118/H1118/H1118/H1118/H11182,221 39 38 41
-Non-pledged time deposits
-with original maturity of
-more than three months
-when acquired /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 91,698 26,327 –
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118/H1118/H11184,691 206,295 288,912 362,647
-Denominated in:
-USD /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,884 190,194 130,440 280,728
-RMB /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,807 15,675 157,219 79,235
-SGD /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 426 1,253 2,684
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11184,691 206,295 288,912 362,647
-* Other restricted cash primarily reflects bank balances subject to institutional clearing timelines and is
-automatically released following standard interbank processing protocols.
-The RMB is not freely convertible into other currencies, however, under Mainland China’s Foreign Exchange
-Control Regulations and Administration of Settlement, and Sale and Payment of Foreign Exchange Regulations, the
-Group is permitted to exchange RMB for other currencies through banks authorised to conduct foreign exchange
-business.
-Cash at banks earns interest at floating rates based on daily bank deposit rates. Short term time deposits are
-made for varying periods of between one day and three months, depending on the immediate cash requirements of
-the Group, and earn interest at the respective short term time deposit rates. The bank balances and time deposits are
-deposited with creditworthy banks with no recent history of default.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-47 –
-
-The Company
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Cash and bank balances /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,784 3,488 246,792 164,315
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 279,744 26,546 86,397
-Subtotal /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,784 283,232 273,338 250,712
-Less: Pledged for guaranteeing
-bank acceptance bills
-payable /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 11,802 –
-Non-pledged time deposits
-with original maturity of
-more than three months
-when acquired /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 91,598 26,327 –
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118/H1118/H11181,784 191,634 235,209 250,712
-Denominated in:
-USD /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,784 187,330 126,657 250,676
-RMB /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 4,304 108,552 36
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,784 191,634 235,209 250,712
-19. INTEREST-BEARING BANK BORROWINGS
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Current
-Bank loans — unsecured /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 14,070
-Bank loans — secured /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 19,455 5,032
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 19,455 19,102
-The weighted average interest rates for the years ended 2024 and the nine months ended September 30, 2025
-were 3.14% and 3.00% respectively.
-20. TRADE AND BILLS PAYABLES
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Within 1 year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 17,242 51,159 70,219
-Over 1 year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–– 5 3–
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 17,242 51,212 70,219
-Amounts due to related parties included in the Group’s trade and bills payables were USD10,000,
-USD592,000, USD4,022,000 and USD26,509,000 as at 31 December 2022, 2023 and 2024 and 30 September 2025,
-respectively.
-Trade and bills payables are non-interest-bearing and normally settled on terms of 30 to 90 days.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-48 –
-
-21. OTHER PAYABLES, ACCRUALS AND OTHER LIABILITIES
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Payroll payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,976 5,469 10,596 9,052
-Other tax payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111882 303 644 1,209
-Convertible bonds (i) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 14,722 –
-Other payables and accruals /H1118/H1118/H1118/H1118/H1118/H1118268 8,969 25,550 7,061
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,326 14,741 51,512 17,322
-(i) In May 2024, the Company issued interest-free convertible bonds with a principal amount of
-RMB100,000,000 (USD13,910,000 equivalent). The convertible bonds will mature in five years since
-issuance unless having been redeemed, repurchased or converted prior to such date. As at 31 December
-2024, the convertible bonds were carried at the then fair values of US$14,722,000. The Company
-repurchased the convertible bonds at RMB105,000,000 (USD14,668,000 equivalent) as renegotiated
-with the holders in May 2025.
-22. CONTRACT LIABILITIES
-Details of contract liabilities are as follows:
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Short-term advances received
-from customers:
-Rendering of services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 559 1,553 4,657
-Contract liabilities include advances received from customers for delivery of enterprise services and
-membership subscription. The increase in contract liabilities was mainly due to the increase in advances received
-from customers for services in future.
-23. OTHER NON-CURRENT LIABILITIES
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Government grants /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,218 1,200 1,467
-24. CONVERTIBLE REDEEMABLE PREFERRED SHARES
-The convertible redeemable preferred shareholders have been granted certain special rights in relation to the
-Group, including but not limited to redemption rights, conversion rights at any time after investing, the pre-emptive
-rights, right of co-sale, liquidation preferences, rights of first refusal, information rights and director appointment
-rights. The redemption rights have been suspended immediately prior to the first filing of the listing application and
-all other special rights will be terminated upon Listing.
-Presentation and classification
-The Group does not bifurcate any embedded derivatives from the convertible redeemable preferred shares and
-designates the entire instruments as financial liabilities at fair value through profit or loss. The convertible
-redeemable preferred shares were classified as current liabilities since the conversion options were not classified as
-equity and are exercisable at any time at the shareholders’ options. The change in fair value is charged to profit or
-loss except for the portion attributable to credit risk change that shall be charged to other comprehensive income, if
-any. Management considered that fair value change in the convertible redeemable preferred shares attributable to
-changes of credit risk was not significant.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-49 –
-
-The movements of the convertible redeemable preferred shares are set out below:
-Series Angel Series Pre-A Series A Series A+ Series Pre-B Series Pre-B+ Series Pre-B++ Total
-Number of
-shares USD’000
-Number of
-shares USD’000
-Number of
-shares USD’000
-Number of
-shares USD’000
-Number of
-shares USD’000
-Number of
-shares USD’000
-Number of
-shares USD’000 USD’000
-As at 1 January 2022
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H111818,343,195 34,66 6–––––––––––– 34,666
-Issue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 11,834,320 50,00 0–––––––––– 50,000
-Changes in fair value /H1118/H1118/H1118– 44,568 – 15,94 1–––––––––– 60,509
-As at 31 December 2022 /H111818,343,195 79,234 11,834,320 65,94 1–––––––––– 145,175
-Issue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 37,172,913 257,000 5,677,436 50,00 0–––––– 307,000
-Changes in fair value /H1118/H1118/H1118– 51,912 – 27,390 – 87,306 – 10,21 8–––––– 176,826
-As at 31 December 2023 /H111818,343,195 131,146 11,834,320 93,331 37,172,913 344,306 5,677,436 60,21 8–––––– 629,001
-Issue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––––– 62,537,371 651,872 7,140,526 87,716 – – 739,588
-Changes in fair value /H1118/H1118/H1118– 43,076 – 23,315 – 41,232 – 1,960 – 98,211 – 5,566 – – 213,360
-As at 31 December 2024 /H111818,343,195 174,222 11,834,320 116,646 37,172,913 385,538 5,677,436 62,178 62,537,371 750,083 7,140,526 93,282 – – 1,581,949
-Issue /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––––––– 2,915,191 35,811 25,787,040 390,451 426,262
-Changes in fair value /H1118/H1118/H1118– 39,684 – 26,777 – 87,799 – 13,227 – 122,925 – 17,845 – 4,725 312,982
-As at 30 September 2025 /H111818,343,195 213,906 11,834,320 143,423 37,172,913 473,337 5,677,436 75,405 62,537,371 873,008 10,055,717 146,938 25,787,040 395,176 2,321,193
-APPENDIX I ACCOUNTANT’S REPORT
-– I-50 –
-
-The Group applied the back-solve method to determine the equity value of the Company and adopted the equity
-allocation model to determine the fair values of the convertible redeemable preferred shares as at the end of each of
-the Relevant Periods. Key valuation assumptions used to determine the fair values of the convertible redeemable
-preferred shares are set below:
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Risk-free interest rate (%) /H1118/H1118/H1118/H1118/H1118/H1118/H11184.11% 4.00% 4.24% 3.62%
-Discounts for lack of marketability
-(“DLOM”) (%) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111822% 23% 24% 15%
-V olatility (%) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111854% 64% 71% 62%
-The Group estimated the risk-free interest rate based on the yield of the US Government Bond with maturity
-close to the expected exit timing as at the valuation date. The DLOM was estimated based on the option-pricing
-method. Under the option-pricing method, the cost of put option, which can hedge the price change before the
-privately held share can be sold, was considered as a basis to determine the lack of marketability discount. V olatility
-was estimated based on annualised standard deviation of daily stock price return of comparable companies for a
-period from the valuation date and with a similar span as time to expiration.
-Set out below is a summary of significant unobservable inputs to the valuation of financial liabilities
-categorised within Level 3 of the fair value hierarchy, together with a quantitative sensitivity analysis as at the end
-of each of the Relevant Periods.
-Significant unobservable inputs
-Increase/
-(decrease) in
-the inputs
-Increase/(decrease) in fair value
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Risk-free interest rate (%) /H1118/H1118/H1118/H1118+25 bp (395) (1,009) (673) (753)
-Risk-free interest rate (%) /H1118/H1118/H1118/H1118-25 bp 363 770 567 756
-Discounts for lack of
-marketability (“DLOM”) (%) /H1118 1 (346) (1,656) (3,999) (3,885)
-Discounts for lack of
-marketability (“DLOM”) (%) /H1118 (1) 346 1,656 3,999 3,885
-V olatility (%) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181 76 (34) (148) 89
-V olatility (%) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(1) (80) (24) 138 (99)
-25. DEFICITS
-Shares
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-Authorised
-Ordinary shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118500,000,000 500,000,000 500,000,000 500,000,000
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-Issued
-Ordinary shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118100,000,000 108,650,075 108,650,075 108,650,075
-APPENDIX I ACCOUNTANT’S REPORT
-– I-51 –
-
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-Fully paid
-Ordinary shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––––
-The amounts of the Group’s reserves and the movements therein for the Relevant Periods are presented in the
-consolidated statements of changes in equity.
-Reserves
-The Group
-(i) Share option reserve
-The share option reserve of the Group represents the equity-settled share-based payment as set out in note 26
-to the Historical Financial Information.
-(ii) Exchange fluctuation reserve
-The exchange fluctuation reserve represents exchange differences arising from the translation of the financial
-statements of group companies whose functional currencies are different from the Group’s presentation currency.
-(iii) Fair value reserve of financial assets at fair value through other comprehensive income
-The fair value reserve of financial assets at fair value through other comprehensive income comprises the
-cumulative gains of equity investments designated at fair value through other comprehensive income.
-The Company
-Share option
-reserve
-Accumulated
-losses Total
-USD’000 USD’000 USD’000
-At 31 December 2021 (unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (3,666) (3,666)
-Loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (59,834) (59,834)
-Total comprehensive loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (59,834) (59,834)
-Recognition of share-based payment expenses /H1118/H1118/H1118/H1118/H1118/H1118/H11181,069 – 1,069
-At 31 December 2022 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,069 (63,500) (62,431)
-Share option
-reserve
-Accumulated
-losses Total
-USD’000 USD’000 USD’000
-At 31 December 2022 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,069 (63,500) (62,431)
-Loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (168,552) (168,552)
-Total comprehensive loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (168,552) (168,552)
-Recognition of share-based payment expenses /H1118/H1118/H1118/H1118/H1118/H1118/H11183,346 – 3,346
-At 31 December 2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11184,415 (232,052) (227,637)
-APPENDIX I ACCOUNTANT’S REPORT
-– I-52 –
-
-Share option
-reserve
-Accumulated
-losses Total
-USD’000 USD’000 USD’000
-At 31 December 2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11184,415 (232,052) (227,637)
-Loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (178,544) (178,544)
-Total comprehensive loss for the year /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (178,544) (178,544)
-Recognition of share-based payment expenses /H1118/H1118/H1118/H1118/H1118/H1118/H11186,823 – 6,823
-At 31 December 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111811,238 (410,596) (399,358)
-Share option
-reserve
-Accumulated
-losses Total
-USD’000 USD’000 USD’000
-At 31 December 2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11184,415 (232,052) (227,637)
-Loss for the period (unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (103,525) (103,525)
-Total comprehensive loss for the period (unaudited) /H1118/H1118/H1118 – (103,525) (103,525)
-Recognition of share-based payment expenses
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186,100 – 6,100
-At 30 September 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810,515 (335,577) (325,062)
-Share option
-reserve
-Accumulated
-losses Total
-USD’000 USD’000 USD’000
-At 31 December 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111811,238 (410,596) (399,358)
-Loss for the period /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (287,435) (287,435)
-Total comprehensive loss for the period /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (287,435) (287,435)
-Recognition of share-based payment expenses /H1118/H1118/H1118/H1118/H1118/H1118/H11188,581 – 8,581
-At 30 September 2025 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819,819 (698,031) (678,212)
-26. SHARE-BASED PAYMENTS
-In order to provide incentives for employees and persons contributing to the Group, attract and retain the senior
-management team and core talents, in 2021, the Company established an equity settlement share-based payment plan
-(“the pre-IPO Plan”) and granted options to the employees of the Group. Options granted under the pre-IPO Plan vest
-over the service period as stipulated in the grant letter and expire 10 years from the date of grant. Every 20 options
-can be converted into 1 ordinary share upon exercise.
-As at the end of each of the Relevant Periods, the maximum numbers of shares that may be issued under the
-pre-IPO Plan were 11,240,661, 19,890,736, 20,890,736 and 20,890,736, representing 11%, 18%, 19% and 19% of
-ordinary shares in issue, respectively.
-As at the end of each of the Relevant Periods, the share options granted under the pre-IPO Plan are subject
-to four distinct vesting mechanisms: (i) for the four-year graded vesting schedule, 15% of the aggregate number of
-the share options shall vest at the first (1st) anniversary of the vesting commencement date, 25% of the aggregate
-number of the share options shall vest at the second (2nd) anniversary of the vesting commencement date, 25% of
-the aggregate number of the share options shall vest at the third (3rd) anniversary of the vesting commencement date,
-the remaining granted share options shall vest at the fourth (4th) anniversary of the vesting commencement date; and
-(ii) for the six-year graded vesting schedule, 10% of the aggregate number of the share options shall vest at the grant
-date and the first (1st) anniversary of the vesting commencement date, respectively, 15% of the aggregate number
-of the share options shall vest at the second (2nd) anniversary to the fifth (5th) anniversary of the vesting
-commencement date, respectively, the remaining 20% of the aggregate number of the share options shall vest at the
-sixth (6th) anniversary of the vesting commencement date; and (iii) for the multi-year graded vesting schedule, 10%
-of the aggregate number of the share options shall vest at the first (1st) and second (2nd) anniversary of the
-Company’s Initial Public Offering (“IPO”) date, respectively, 20% of the aggregate number of the share options shall
-vest at the third (3rd) anniversary to the sixth (6th) anniversary of IPO date; and (iv) for the one-time vesting
-schedule, 100% of the share options shall vest at the first (1st) anniversary of the vesting commencement date or grant
-date. Besides, all share options under the pre-IPO Plan are further restricted from exercise until the completion of
-the Company’s IPO, which will be treated as a service condition and influence the vesting period.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-53 –
-
-Set out below are details of the movements of the share options granted under the pre-IPO Plan during the
-Relevant Periods:
-Number of share
-options
-Weighted average
-exercise price
-US$ per option
-Weighted average
-grant date fair
-value US$ per
-option
-Weighted average
-remaining
-contractual term
-Ye a r s
-Outstanding as at 1 January 2022
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––
-Granted /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111894,187,448 0.003 0.09
-Forfeited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––
-Outstanding as at 31 December
-2022 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111894,187,448 0.003 0.09 9.34
-Granted /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111875,091,320 0.017 0.22
-Forfeited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(2,954,870) 0.020 0.18
-Outstanding as at 31 December
-2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118166,323,898 0.009 0.10 8.86
-Granted /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111863,349,900 0.040 0.39
-Forfeited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(24,207,555) 0.033 0.32
-Outstanding as at 31 December
-2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118205,466,243 0.016 0.20 8.25
-Granted /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118215,386,571 0.038 0.54
-Forfeited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(51,306,660) 0.023 0.32
-Outstanding as at 30 September
-2025 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118369,546,154 0.028 0.39 8.79
-No share options were exercised during the Relevant Periods.
-During the Relevant Periods, the Group recognised share-based payment expenses of USD1,069,000,
-USD3,346,000, USD6,823,000 and USD8,581,000, respectively.
-The fair values of the share options granted during the Relevant Periods and nine months ended 30 September
-2024 and 2025 were estimated as at the date of grant using a binomial model, taking into account the terms and
-conditions upon which the options were granted. The following table lists the inputs to the model used:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-(unaudited)
-Risk-free interest rates (%) /H11182.35%-3.83% 3.47%-4.58% 3.79%-4.57% 3.79%-4.39% 4.15%-4.23%
-Expected volatility (%) /H1118/H1118/H111857.2%-58.0% 58.5%-60.5% 60.5%-61.1% 60.5%-60.9% 60.3%-64.1%
-Expected term (years) /H1118/H1118/H1118/H111810 10 10 10 10
-27. NOTES TO THE CONSOLIDATED STATEMENT OF CASH FLOWS
-(a) Major non-cash transactions
-During the year ended 31 December 2022, 2023 and 2024 and the nine months ended 30 September 2024 and
-2025, the Group had non-cash additions to right-of-use assets and lease liabilities of USD640,000, USD3,718,000,
-USD1,249,000, USD1,205,000 (unaudited) and USD1,815,000 in respect of lease arrangements for buildings.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-54 –
-
-(b) Changes in liabilities arising from financing activities
-Interest-bearing
-bank and other
-borrowings Lease liabilities
-Convertible
-bonds
-Convertible
-redeemable
-preferred shares
-USD’000 USD’000 USD’000 USD’000
-At 1 January 2022 (unaudited) /H1118/H1118/H1118/H1118– – – 34,666
-Changes from financing cash flows /H1118 – (214) – 50,000
-Changes in fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 60,509
-New leases /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 6 4 0––
-Disposal as a result of early
-cancellation of lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––––
-Interest expense (note 6) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1 4––
-At 31 December 2022 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 440 – 145,175
-Interest-bearing
-bank and other
-borrowings Lease liabilities
-Convertible
-bonds
-Convertible
-redeemable
-preferred shares
-USD’000 USD’000 USD’000 USD’000
-At 1 January 2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 440 – 145,175
-Changes from financing cash flows /H1118 – (757) – 307,000
-Changes in fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 176,826
-New leases /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,718 – –
-Disposal as a result of early
-cancellation of lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (302) – –
-Interest expense (note 6) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 6 1––
-At 31 December 2023 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,160 – 629,001
-Interest-bearing
-bank and other
-borrowings Lease liabilities
-Convertible
-bonds
-Convertible
-redeemable
-preferred shares
-USD’000 USD’000 USD’000 USD’000
-At 1 January 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,160 – 629,001
-Changes from financing cash flows /H1118 19,100 (1,506) 13,910 739,588
-Changes in fair value /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 812 213,360
-New leases /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,249 – –
-Disposal as a result of early
-cancellation of lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (34) – –
-Interest expense (note 6) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118355 154 – –
-At 31 December 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819,455 3,023 14,722 1,581,949
-Interest-bearing
-bank and other
-borrowings Lease liabilities
-Convertible
-bonds
-Convertible
-redeemable
-preferred shares
-USD’000 USD’000 USD’000 USD’000
-At 1 January 2024 /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,160 – 629,001
-Changes from financing cash flows
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111819,759 (1,214) 13,910 686,372
-Changes in fair value (unaudited) /H1118/H1118 – – 348 127,715
-New leases (unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,205 – –
-Disposal as a result of early
-cancellation of lease (unaudited) /H1118 – (36) – –
-Interest expense (note 6)
-(unaudited) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118199 117 – –
-At 30 September 2024 (unaudited) /H1118/H1118 19,958 3,232 14,258 1,443,088
-APPENDIX I ACCOUNTANT’S REPORT
-– I-55 –
-
-Interest-bearing
-bank and other
-borrowings Lease liabilities
-Convertible
-bonds
-Accrued
-Listing
-Expense
-included in
-other payables
-Convertible
-redeemable
-preferred
-shares
-USD’000 USD’000 USD’000 USD’000 USD’000
-At 1 January 2025 /H1118/H1118/H1118/H1118/H1118/H111819,455 3,023 14,722 – 1,581,949
-Changes from financing
-cash flows /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(757) (1,471) (14,668) (357) 426,262
-Changes in fair value /H1118/H1118/H1118/H1118– – 495 – 312,982
-New leases /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,81 5–––
-Addition /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––– 4 2 2–
-Disposal as a result of
-early cancellation of
-lease /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– (843) – – –
-Gain on disposal /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – (549) – –
-Interest expense (note 6) /H1118/H1118 4 0 4 1 0 7–––
-At 30 September 2025 /H1118/H1118/H111819,102 2,631 – 65 2,321,193
-(c) Total cash outflow for leases
-The total cash outflow for leases included in the statement of cash flows is as follows:
-Y ear ended 31 December Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Within operating activities /H1118 (42) (76) – – (7)
-Within financing activities /H1118 (214) (757) (1,506) (1,214) (1,471)
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118(256) (833) (1,506) (1,214) (1,478)
-28. CONTINGENT LIABILITIES
-As at 30 September 2025, certain subsidiaries of the Group are respondents in several legal dispute cases in
-relation to claims of alleged infringement of intellectual property rights. While these cases are still at an early stage
-and the outcome cannot be estimated with certainty, the directors of the Company, having given due consideration
-to the legal advice and the relevant facts and circumstances, are of the opinion that no provision has been made in
-respect of those cases as at 30 September 2025.
-29. RELATED PARTY TRANSACTIONS
-Parties are considered to be related if one party has the ability, directly or indirectly, control the other party
-or exercise significant influence over the other party in making financial and operation decisions. Parties are also
-considered to be related if they are subject to common control.
-The following significant transactions were carried out between the Group and its related party during the
-periods presented. In the opinion of the directors of the Company, the related party transactions were carried out in
-the normal course of business and on terms negotiated between the Group and the respective related parties.
-(a) Name and relationship
-Name of related party Relationship with the Company
-Shanghai Jizhi Wujie Technology Co., Ltd.
-(“ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Entity controlled by Founder
-Shanghai Jizhi Zongheng Technology Co., Ltd.
-(“ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Entity controlled by Founder
-Alibaba and its affiliates (“Alibaba Group”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118A shareholder of the Company
-APPENDIX I ACCOUNTANT’S REPORT
-– I-56 –
-
-(b) Transactions with related parties
-Y ear ended December 31 Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Purchase of services
-Alibaba Group /H1118/H1118/H1118/H1118/H1118/H1118/H111842 2,936 9,372 6,487 54,937
-Shanghai Jizhi Wujie
-Technology Co., Ltd.
-(“ҦϞ
-ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––––5
-Shanghai Jizhi Zongheng
-Technology Co., Ltd.
-(“ҦϞ
-ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 2 1
-Sales of services
-Alibaba Group /H1118/H1118/H1118/H1118/H1118/H1118/H1118–3 93 13 1 2 2 0
-Other transaction
-Shanghai Jizhi Wujie
-Technology Co., Ltd.
-(“ҦϞ
-ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 2 8 7
-Shanghai Jizhi Zongheng
-Technology Co., Ltd.
-(“ҦϞ
-ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––– 2 8 7
-The transactions with related parties were made according to the published prices and conditions offered to the
-non-related parties of the Company.
-(c) Outstanding balances with related parties
-As at 31 December
-As at
-30 September
-2022 2023 2024 2025
-USD’000 USD’000 USD’000 USD’000
-Alibaba Group
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–4 14 1 1 1 3
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810 592 4,022 26,509
-Shanghai Jizhi Wujie Technology
-Co., Ltd. (“ࠢ
-ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Prepayments, other receivables and
-other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––– 3 0 7
-Shanghai Jizhi Zongheng
-Technology Co., Ltd. (“ ɪऎ฽౽
-ʮ̡”) /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Prepayments, other receivables and
-other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118––– 3 0 9
-As at the end of each of the Relevant Periods, the Group’s outstanding balances with related parties were all
-unsecured, interest-free and of trade nature.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-57 –
-
-(d) Compensation of key management personnel of the Group:
-Y ear ended December 31 Nine months ended 30 September
-2022 2023 2024 2024 2025
-USD’000 USD’000 USD’000 USD’000 USD’000
-(unaudited)
-Short term employee
-benefits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118489 872 1,314 832 1,011
-Post-employment benefits /H1118 92 43 93 12 3
-Equity-settled share option
-expense /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118963 1,278 2,275 1,658 1,243
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,461 2,174 3,628 2,521 2,277
-30. FINANCIAL INSTRUMENTS BY CATEGORY
-The carrying amounts of each of the categories of financial instruments as at the end of each of the Relevant
-Periods are as follows:
-At 31 December 2022
-Financial assets
-Financial assets at
-fair value through
-profit or loss
-Financial assets at
-amortised cost Total
-USD’000 USD’000 USD’000
-Financial assets at fair value through profit or
-loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 – 65,791
-Financial assets included in prepayments, other
-receivables and other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 126 126
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,221 2,221
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 4,691 4,691
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 7,038 72,829
-Financial liabilities
-Financial liabilities
-at fair value
-through profit or
-loss
-Financial liabilities
-at amortised cost Total
-USD’000 USD’000 USD’000
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,394 2,394
-Financial liabilities included in other payables,
-accruals and other liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 268 268
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H1118145,175 – 145,175
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 440 440
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118145,175 3,102 148,277
-APPENDIX I ACCOUNTANT’S REPORT
-– I-58 –
-
-At 31 December 2023
-Financial assets
-Financial assets at
-fair value through
-profit or loss
-Financial assets at
-amortised cost Total
-USD’000 USD’000 USD’000
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 1,338 1,338
-Financial assets included in prepayments, other
-receivables and other assets /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 840 840
-Financial assets at fair value through profit or loss /H1118/H1118/H111815,802 – 15,802
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–3 93 9
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 91,698 91,698
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 206,295 206,295
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111815,802 300,210 316,012
-Financial liabilities
-Financial liabilities
-at fair value
-through profit or
-loss
-Financial liabilities
-at amortised cost Total
-USD’000 USD’000 USD’000
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 17,242 17,242
-Financial liabilities included in other payables
-and accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 8,969 8,969
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118629,001 – 629,001
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,160 3,160
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118629,001 29,371 658,372
-At 31 December 2024
-Financial assets
-Financial assets
-at fair value
-through profit or
-loss
-Financial assets
-at fair value
-through other
-comprehensive
-income
-Financial assets
-at amortised cost Total
-USD’000 USD’000 USD’000 USD’000
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 6,982 6,982
-Financial assets included in prepayments,
-other receivables and other assets /H1118/H1118/H1118/H1118/H1118– – 6,493 6,493
-Financial assets at fair value through other
-comprehensive income /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 4,836 – 4,836
-Financial assets at fair value through profit
-or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118390,551 – – 390,551
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 27,331 27,331
-Financial assets at amortised cost /H1118/H1118/H1118/H1118/H1118/H1118– – 147,444 147,444
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 26,327 26,327
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 288,912 288,912
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118390,551 4,836 503,489 898,876
-APPENDIX I ACCOUNTANT’S REPORT
-– I-59 –
-
-Financial liabilities
-Financial liabilities
-at fair value
-through profit or
-loss
-Financial liabilities
-at amortised cost Total
-USD’000 USD’000 USD’000
-Interest-bearing bank and other borrowings /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 19,455 19,455
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 51,212 51,212
-Financial liabilities included in other payables and
-accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111814,722 25,550 40,272
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,581,949 – 1,581,949
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 3,023 3,023
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,596,671 99,240 1,695,911
-At 30 September 2025
-Financial assets
-Financial
-assets at fair
-value through
-profit or loss
-Financial assets
-at fair value
-through other
-comprehensive
-income
-Financial assets
-at amortised cost Total
-USD’000 USD’000 USD’000 USD’000
-Trade receivables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 8,063 8,063
-Financial assets included in prepayments,
-other receivables and other assets /H1118/H1118/H1118/H1118/H1118– – 10,169 10,169
-Financial assets at fair value through other
-comprehensive income /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 6,440 – 6,440
-Financial assets at fair value through profit
-or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118714,382 – – 714,382
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 25,138 25,138
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 362,647 362,647
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118714,382 6,440 406,017 1,126,839
-Financial liabilities
-Financial liabilities
-at fair value
-through profit or
-loss
-Financial liabilities
-at amortised cost Total
-USD’000 USD’000 USD’000
-Interest-bearing bank and other borrowings /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 19,102 19,102
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 70,219 70,219
-Financial liabilities included in other payables and
-accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 7,061 7,061
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,321,193 – 2,321,193
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 2,631 2,631
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,321,193 99,013 2,420,206
-APPENDIX I ACCOUNTANT’S REPORT
-– I-60 –
-
-31. FAIR V ALUE AND FAIR V ALUE HIERARCHY OF FINANCIAL INSTRUMENTS
-Management has assessed that the fair values of cash and cash equivalents, restricted cash, financial assets at
-amortised costs, financial assets included in prepayments, other receivables and other assets, trade receivables,
-interest-bearing bank borrowings, trade and bills payables, financial liabilities included in other payables, accruals
-and other liabilities and current portion of lease liabilities approximate to their carrying amounts largely due to the
-short-term maturities of these instruments.
-The Group’s finance department headed by the finance director is responsible for determining the policies and
-procedures for the fair value measurement of financial instruments. At the end of each of the Relevant Periods, the
-finance department analyses the movements in the values of financial instruments and determines the major inputs
-applied in the valuation. The directors review the results of the fair value measurement of financial instruments
-periodically for financial reporting.
-The fair values of the financial assets and liabilities are included at the amount at which the instrument could
-be exchanged in a current transaction between willing parties, other than in a forced or liquidation sale. The following
-methods and assumptions were used to estimate the fair values:
-The fair values of the non-current portion of lease liabilities have been calculated by discounting the expected
-future cash flows using rates currently available for instruments with similar terms, credit risk and remaining
-maturities. The changes in fair value as a result of the Group’s own non-performance risk for lease liabilities as at
-the year ended 31 December 2022, 2023 and 2024 and the nine months ended 30 September 2024 and 2025 were
-assessed to be insignificant.
-The fair value of the listed equity investments at fair value through other comprehensive income has been
-determined based on the quoted prices (unadjusted) in active markets.
-The Group invests in wealth management products issued by the counterparty. The fair values of these products
-are derived from quoted prices (unadjusted) in active markets for identical assets or liabilities. The valuation
-techniques based on discounted cash flow method, black model method and Monte Carlo method.
-The fair values of convertible redeemable preferred shares and convertible bonds measured at fair value
-through profit or loss are determined using the valuation techniques, including back-solve method and equity
-allocation model. Further details are set out in note 24 and note 21 to the Historical Financial Information.
-Fair value hierarchy
-The following tables illustrate the fair value measurement hierarchy of the Group’s financial instruments:
-Assets measured at fair value:
-As at 31 December 2022
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Financial assets at fair value through
-profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111865,791 – – 65,791
-As at 31 December 2023
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Financial assets at fair value through
-profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 15,802 – 15,802
-APPENDIX I ACCOUNTANT’S REPORT
-– I-61 –
-
-As at 31 December 2024
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Financial assets at fair value through
-other comprehensive income /H1118/H1118/H1118/H11184,836 – – 4,836
-Financial assets at fair value through
-profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 390,551 – 390,551
-At 30 September 2025
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Financial assets at fair value through
-other comprehensive income /H1118/H1118/H1118/H11186,440 – – 6,440
-Financial assets at fair value through
-profit or loss /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– 714,382 – 714,382
-Liabilities measured at fair value:
-As at 31 December 2022
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Convertible redeemable preferred
-shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 145,175 145,175
-As at 31 December 2023
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Convertible redeemable preferred
-shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 629,001 629,001
-APPENDIX I ACCOUNTANT’S REPORT
-– I-62 –
-
-As at 31 December 2024
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Financial liabilities included in other
-payables and accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 14,722 14,722
-Convertible redeemable preferred
-shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 1,581,949 1,581,949
-As at 30 September 2025
-Fair value measurement using
-Quoted prices in
-active markets
-(Level 1)
-Significant
-observable inputs
-(Level 2)
-Significant
-unobservable
-inputs
-(Level 3) Total
-USD’000 USD’000 USD’000 USD’000
-Convertible redeemable preferred
-shares /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,321,193 2,321,193
-During the Relevant Periods, there were no transfers of fair value measurements between Level 1 and Level
-2 and no transfers into or out of Level 3 for both financial assets and financial liabilities.
-32. FINANCIAL RISK MANAGEMENT OBJECTIVES AND POLICIES
-The Group’s principal financial instruments, comprise bank loans and overdrafts, convertible bonds,
-convertible redeemable preferred shares, financial assets at fair value through profit or loss, and cash and short-term
-deposits. The main purpose of these financial instruments is to raise finance for the Group’s operations. The Group
-has various other financial assets and liabilities such as trade receivables and trade and bills payables, which arise
-directly from its operations.
-The main risks arising from the Group’s financial instruments are foreign currency risk, credit risk and
-liquidity risk. The senior management of the Company meets regularly to analyse and formulate measures to manage
-the Group’s exposure to these risks. In addition, the Board holds meetings regularly to analyse and approve the
-proposals made by the senior management of the Company. Generally, the Group introduces conservative strategies
-on its risk management. As the Group’s exposure to these risks is kept to a minimum, the Group has not used any
-derivatives and other instruments for hedging purposes. The Group does not hold or issue derivative financial
-instruments for trading purposes. The Board reviews and agrees policies for managing each of these risks and they
-are summarised below.
-Foreign currency risk
-Foreign currency risk is the risk of loss resulting from changes in foreign currency exchange rates. Such
-exposures arise from sales and purchases by operating units in currencies other than the units’ functional currencies.
-The Group seeks to limit its exposure to foreign currency risk by minimising its net foreign currency position.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-63 –
-
-The following table demonstrates the sensitivity at the end of each of the Relevant Periods to a reasonably
-possible change in foreign currency exchange rates, with all other variables held constant, of the Group’s loss before
-tax (due to changes in the fair value of monetary assets and liabilities) and the Group’s deficits.
-Increase/(decrease)
-in RMB rate
-Increase/(decrease)
-in loss before tax
-Increase/(decrease)
-in deficits
-% USD’000 USD’000
-2022
-If the RMB weakens against the USD /H1118/H1118/H1118/H1118/H1118/H1118/H1118(5) 73 73
-If the RMB strengthens against the USD /H1118/H1118/H1118/H1118/H1118/H11185 (73) (73)
-Increase/(decrease)
-in RMB rate
-Increase/(decrease)
-in loss before tax
-Increase/(decrease)
-in deficits
-% USD’000 USD’000
-2023
-If the RMB weakens against the USD /H1118/H1118/H1118/H1118/H1118/H1118/H1118(5) (43) (43)
-If the RMB strengthens against the USD /H1118/H1118/H1118/H1118/H1118/H111854 34 3
-Increase/(decrease)
-in RMB rate
-Increase/(decrease)
-in loss before tax
-Increase/(decrease)
-in deficits
-% USD’000 USD’000
-2024
-If the RMB weakens against the USD /H1118/H1118/H1118/H1118/H1118/H1118/H1118(5) (5,295) (5,295)
-If the RMB strengthens against the USD /H1118/H1118/H1118/H1118/H1118/H11185 5,295 5,295
-Increase/(decrease)
-in RMB rate
-Increase/(decrease)
-in loss before tax
-Increase/(decrease)
-in deficits
-% USD’000 USD’000
-30 September 2025
-If the RMB weakens against the USD /H1118/H1118/H1118/H1118/H1118/H1118/H1118(5) (3,241) (3,241)
-If the RMB strengthens against the USD /H1118/H1118/H1118/H1118/H1118/H11185 3,241 3,241
-Credit risk
-The Group trades only with recognised and creditworthy third parties. It is the Group’s policy that all
-customers who wish to trade on credit terms are subject to credit verification procedures. In addition, receivable
-balances are monitored on an ongoing basis and the Group’s exposure to bad debts is not significant.
-Maximum exposure and year-end staging
-The table below shows the credit quality and the maximum exposure to credit risk based on the Group’s credit
-policy, which is mainly based on reasonable and supportable information that is available at the reporting date about
-past events, current conditions and forecasts of future economic conditions, and year-end staging classification as at
-the end of each of the Relevant Periods. The amounts presented are gross amounts for financial assets.
-31 December 2022
-12-months
-ECLs Lifetime ECLs
-Stage 1 Stage 2 Stage 3
-Simplified
-approach Total
-USD’000 USD’000 USD’000 USD’000 USD’000
-Financial assets included in
-prepayments and other
-receivables and other assets
-– Normal** /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181 2 6––– 1 2 6
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,22 1––– 2,221
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H11184,69 1––– 4,691
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11187,03 8––– 7,038
-APPENDIX I ACCOUNTANT’S REPORT
-– I-64 –
-
-31 December 2023
-12-months
-ECLs Lifetime ECLs
-Stage 1 Stage 2 Stage 3
-Simplified
-approach Total
-USD’000 USD’000 USD’000 USD’000 USD’000
-Trade receivables* /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 1,338 1,338
-Financial assets included in
-prepayments and other
-receivables and other assets
-– Normal** /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11188 4 0––– 8 4 0
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11183 9––– 3 9
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111891,69 8––– 91,698
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118206,29 5––– 206,295
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118298,872 – – 1,338 300,210
-31 December 2024
-12-months
-ECLs Lifetime ECLs
-Stage 1 Stage 2 Stage 3
-Simplified
-approach Total
-USD’000 USD’000 USD’000 USD’000 USD’000
-Trade receivables* /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 6,982 6,982
-Financial assets included in
-prepayments, other receivables
-and other assets
-– Normal** /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11186,49 3––– 6,493
-Financial assets at amortised
-cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118147,44 4––– 147,444
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111827,33 1––– 27,331
-Time deposits /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111826,32 7––– 26,327
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118288,91 2––– 288,912
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118496,507 – – 6,982 503,489
-30 September 2025
-12-months
-ECLs Lifetime ECLs
-Stage 1 Stage 2 Stage 3
-Simplified
-approach Total
-USD’000 USD’000 USD’000 USD’000 USD’000
-Trade receivables* /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – – 8,063 8,063
-Financial assets included in
-prepayments, other receivables
-and other assets
-– Normal** /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111810,16 9––– 10,169
-Financial assets at amortised
-cost /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118–––––
-Restricted cash /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111825,13 8––– 25,138
-Cash and cash equivalents /H1118/H1118/H1118/H1118/H1118362,64 7––– 362,647
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118397,954 – – 8,063 406,017
-APPENDIX I ACCOUNTANT’S REPORT
-– I-65 –
-
-* For trade receivables to which the Group applies the simplified approach for impairment, information based
-on the provision is disclosed in note 15 to the Historical Financial Information.
-** The credit quality of the financial assets included in prepayments, other receivables and other assets is
-considered to be “normal” when they are not past due and there is no information indicating that the financial
-assets had a significant increase in credit risk since initial recognition. Otherwise, the credit quality of the
-financial assets is considered to be “doubtful”.
-Further quantitative data in respect of the Group’s exposure to credit risk arising from trade receivables and
-prepayments, other receivables and other assets are respectively disclosed in notes 15 and 16 to the Historical
-Financial Information.
-Liquidity risk
-The Group monitors its exposure to liquidity risk by monitoring the current ratio, which is calculated by
-comparing the current assets with the current liabilities.
-The liquidity of the Group is primarily dependent on its ability to maintain adequate cash inflows from
-operations to meet its debt obligations as they fall due, and its ability to obtain external financing to meet its
-committed future capital expenditure.
-The maturity profile of the Group’s financial liabilities as at the end of each of the Relevant Periods, based
-on the contractual undiscounted payments, is as follows:
-As at 31 December 2022
-Within 1 year 1 to 5 years Total
-USD’000 USD’000 USD’000
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118349 92 441
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11182,394 – 2,394
-Financial liabilities included in other payables
-and accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118268 – 268
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H111885,284 – 85,284
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111888,295 92 88,387
-As at 31 December 2023
-Within 1 year 1 to 5 years Total
-USD’000 USD’000 USD’000
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,248 1,990 3,238
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111817,242 – 17,242
-Financial liabilities included in other payables
-and accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11188,969 – 8,969
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H1118410,775 – 410,775
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118438,234 1,990 440,224
-APPENDIX I ACCOUNTANT’S REPORT
-– I-66 –
-
-As at 31 December 2024
-Within 1 year 1 to 5 years Total
-USD’000 USD’000 USD’000
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,964 1,086 3,050
-Interest-bearing bank and other borrowings /H1118/H1118/H1118/H111819,455 – 19,455
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111851,212 – 51,212
-Financial liabilities included in other payables
-and accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111840,272 – 40,272
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H11181,215,508 – 1,215,508
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,328,411 1,086 1,329,497
-As at 30 September 2025
-Within 1 year 1 to 5 years Total
-USD’000 USD’000 USD’000
-Lease liabilities /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,694 1,039 2,733
-Interest-bearing bank and other borrowings /H1118/H1118/H1118/H111819,102 – 19,102
-Trade and bills payables /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H111870,219 – 70,219
-Financial liabilities included in other payables
-and accruals /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11187,061 – 7,061
-Convertible redeemable preferred shares /H1118/H1118/H1118/H1118/H1118/H11181,698,247 – 1,698,247
-Total /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H11181,796,323 1,039 1,797,362
-Capital management
-The primary objectives of the Group’s capital management are to safeguard the Group’s ability to continue as
-a going concern, so that it can continue to provide returns to shareholders and benefits to other stakeholders, by
-pricing services commensurately with the level of risk.
-The Group manages its capital structure and makes adjustments to it in light of changes in economic conditions
-and the risk characteristics of the underlying assets. To maintain or adjust the capital structure, the Group may adjust
-the dividend payment to return capital to shareholders or issue new shares. The Group is not subject to any externally
-imposed capital requirements. No changes were made in the objectives, policies or processes for managing capital
-during the Relevant Periods.
-33. EVENTS AFTER THE RELEV ANT PERIODS
-There are no material events after the Relevant Periods that may have a material impact on the Group’s
-reported financial position at 30 September 2025.
-34. SUBSEQUENT FINANCIAL STATEMENTS
-No audited financial statements have been prepared by the Group or any of the companies now comprising the
-Group in respect of any period subsequent to 30 September 2025.
-APPENDIX I ACCOUNTANT’S REPORT
-– I-67 –
-
-The following information does not form part of the Accountants’ Report from Ernst &
-Young, Certified Public Accountants, Hong Kong, the Company’ s reporting accountants, as set
-out in Appendix I to this prospectus, and is included herein for information purpose only. The
-unaudited pro forma financial information should be read in conjunction with the section
-headed “Financial Information” in this prospectus, the Accountants’ Report set out in
-Appendix I to this prospectus.
-A. UNAUDITED PRO FORMA STATEMENT OF ADJUSTED CONSOLIDATED NET
-TANGIBLE ASSETS
-The following unaudited pro forma adjusted consolidated net tangible assets of our
-Group, prepared in accordance with Rule 4.29 of the Listing Rules and with reference to
-Accounting Guideline 7 Preparation of Pro Forma Financial Information for inclusion in
-Investment Circulars issued by the Hong Kong Institute of Certified Public Accountants, is for
-illustration purposes only and is set out here to illustrate the effect of the Global Offering on
-the consolidated net tangible assets of our Group attributable to owners of the parent as of
-September 30, 2025, as if the Global Offering had taken place on September 30, 2025.
-The unaudited pro forma statement of adjusted consolidated net tangible assets of our
-Group has been prepared for illustrative purposes only and, because of its hypothetical nature,
-it may not give a true picture of the consolidated net tangible assets of our Group to owners
-of the parent had the Global Offering been completed as of September 30, 2025 or at any future
-dates. The unaudited pro forma statement of adjusted consolidated net tangible liabilities does
-not form part of the Accountants’ Report.
-Unadjusted audited
-consolidated net
-tangible liabilities
-attributable to the
-owners of our
-Group as of
-September 30, 2025
-Estimated net
-proceeds from
-the Global
-Offering
-Estimated impact
-related to the
-reclassification
-of convertible
-redeemable
-preferred shares
-upon Listing
-Unaudited pro
-forma adjusted
-consolidated net
-tangible assets
-attributable to
-owners of our
-G r o u pa so f
-September 30, 2025
-Unaudited pro forma
-adjusted consolidated net
-tangible assets
-attributable to owners
-of our Group per
-Share as of
-September 30, 2025
-USD’000 USD’000 USD’000 USD’000 USD HK$
-(Note 1) (Note 2) (Note 3) (Note 4) (Note 5)
-Based on an Offer
-Price of HK$151.00
-per Share /H1118/H1118/H1118/H1118/H1118(1,303,499) 472,382 2,321,193 1,490,076 4.88 37.96
-Based on an Offer
-Price of HK$158.00
-per Share /H1118/H1118/H1118/H1118/H1118(1,303,499) 494,423 2,321,193 1,512,117 4.95 38.52
-Based on an Offer
-Price of HK$165.00
-per Share /H1118/H1118/H1118/H1118/H1118(1,303,499) 516,464 2,321,193 1,534,158 5.02 39.08
-APPENDIX II UNAUDITED PRO FORMA FINANCIAL INFORMATION
-– II-1 –
-
-Notes:
-1. The consolidated net tangible liabilities of our Group attributable to owners of the Company as of
-September 30, 2025 was based on the consolidated net liabilities attributable to owners of the Company
-as at September 30, 2025 of USD1,303,499,000 set out in the Accountants’ Report in Appendix I to this
-Prospectus.
-2. The estimated net proceeds from the Global Offering are based on estimated low end, mid-point and
-high end offer prices of HK$151.00, HK$158.00 and HK$165.00 per Share after deduction of
-underwriting fees and commissions and other related expenses payable by the Company and do not take
-into account any shares which may be issued upon exercise of the Over-allotment Option.
-3. For the purpose of the unaudited pro forma financial information, considering the estimated impact
-related to the reclassification of convertible redeemable preferred shares upon Listing, the unaudited pro
-forma adjusted net tangible assets attributable to the owners of the Company will be increased by
-USD2,321,193,000 being the fair value of the convertible redeemable preferred shares as at September
-30, 2025. Upon the Listing and the completion of the Global Offering, all the convertible redeemable
-preferred shares will be automatically converted into Shares. These convertible redeemable preferred
-shares will be reclassified from liabilities to equity. The amount that is reclassified from liabilities to
-equity will be the fair value of the Preferred Shares on that date of the Global Offering.
-4. The unaudited pro forma adjusted consolidated net tangible assets attributable to Shareholders of the
-Company per Share is arrived at after the adjustments referred to in the preceding paragraphs (note 2
-and 3 above) and on the basis that 305,447,288 shares were in issue assuming that the Global Offering
-and reclassification of financial liabilities arising from the convertible redeemable preferred shares and
-ordinary shares into equity had been completed on September 30, 2025, without taking account of the
-exercise of the Over-allotment Option.
-5. For the purpose of this unaudited pro forma adjusted consolidated net tangible assets, The unaudited pro
-forma adjusted consolidated net tangible assets attributable to Shareholders of the Company per Share
-amounts in USD are converted into Hong Kong dollars at USD1.00 = HKD7.7805 prevailing on the
-latest practical date. No representation is made that the Hong Kong dollar amounts have been, could
-have been or may be converted to United States dollars, or vice versa, at that rate or any other rates or
-at all.
-6. No other adjustment has been made to the unaudited pro forma adjusted consolidated net tangible asset
-of the Group to reflect any trading result or other transactions entered into subsequent to September 30,
-2025.
-APPENDIX II UNAUDITED PRO FORMA FINANCIAL INFORMATION
-– II-2 –
-
-⭰㰟㛪姯⸒Ṳ⋀㈧ 
-榀㸖毩歁㵳勘䙮怺 979 噆
-⤑⏋✱ᷧ⺎ 27 㧺 
-Tel 曢婘: +852 2846 9888 
-Fax ₚ䜆: +852 2868 4432 
-ey.com 
-Ernst & Young 
-27/F, One Taikoo Place 
-979 King’s Road  
-Quarry Bay, Hong Kong 
-B. INDEPENDENT REPORTING ACCOUNTANTS’ ASSURANCE REPORT ON THE
-COMPILATION OF UNAUDITED PRO FORMA FINANCIAL INFORMATION
-To the Directors of MINIMAX GROUP INC.
-We have completed our assurance engagement to report on the compilation of unaudited
-pro forma financial information of MINIMAX GROUP INC. (the “Company”) and its
-subsidiaries (hereinafter collectively referred to as the “Group”) by the directors of the
-Company (the “Directors”) for illustrative purposes only. The unaudited pro forma financial
-information consists of the unaudited pro forma consolidated net tangible assets as at
-30 September 2025 and related notes as set out on page II-1 of the prospectus dated 31
-December 2025 (the “Prospectus”) issued by the Company (the “Unaudited Pro Forma
-Financial Information”). The applicable criteria on the basis of which the Directors have
-compiled the Unaudited Pro Forma Financial Information are described in note Appendix II(A)
-to the Prospectus.
-The Unaudited Pro Forma Financial Information has been compiled by the Directors to
-illustrate the impact of the global offering of shares of the Company on the Group’s
-consolidated financial position as at 30 September 2025 as if the transaction had taken place
-at 30 September 2025. As part of this process, information about the Group’s consolidated
-financial position has been extracted by the Directors from the Group’s consolidated financial
-statements for the period ended 30 September 2025, on which an accountants’ report has been
-published.
-Directors’ responsibility for the Unaudited Pro Forma Financial Information
-The Directors are responsible for compiling the Unaudited Pro Forma Financial
-Information in accordance with paragraph 4.29 of the Rules Governing the Listing of Securities
-on The Stock Exchange of Hong Kong Limited (the “Listing Rules”) and with reference to
-Accounting Guideline (“AG”) 7 Preparation of Pro Forma Financial Information for Inclusion
-in Investment Circulars issued by the Hong Kong Institute of Certified Public Accountants (the
-“HKICPA”).
-Our independence and quality management
-We have complied with the independence and other ethical requirements of the Code of
-Ethics for Professional Accountants issued by the HKICPA, which is founded on fundamental
-principles of integrity, objectivity, professional competence and due care, confidentiality and
-professional behavior.
-Our firm applies Hong Kong Standard on Quality Management 1 Quality Management for
-Firms that Perform Audits or Reviews of Financial Statements, or Other Assurance or Related
-Services Engagements which requires the firm to design, implement and operate a system of
-quality management including policies or procedures regarding compliance with ethical
-requirements, professional standards and applicable legal and regulatory requirements.
-APPENDIX II UNAUDITED PRO FORMA FINANCIAL INFORMATION
-– II-3 –
-
-Reporting accountants’ responsibilities
-Our responsibility is to express an opinion, as required by paragraph 4.29(7) of the
-Listing Rules, on the Unaudited Pro Forma Financial Information and to report our opinion to
-you. We do not accept any responsibility for any reports previously given by us on any
-financial information used in the compilation of the Unaudited Pro Forma Financial
-Information beyond that owed to those to whom those reports were addressed by us at the dates
-of their issue.
-We conducted our engagement in accordance with Hong Kong Standard on Assurance
-Engagements 3420 Assurance Engagements to Report on the Compilation of Pro Forma
-Financial Information Included in a Prospectus issued by the HKICPA. This standard requires
-that the reporting accountants plan and perform procedures to obtain reasonable assurance
-about whether the Directors have compiled the Unaudited Pro Forma Financial Information in
-accordance with paragraph 4.29 of the Listing Rules and with reference to AG 7 issued by the
-HKICPA.
-For purposes of this engagement, we are not responsible for updating or reissuing any
-reports or opinions on any historical financial information used in compiling the Unaudited Pro
-Forma Financial Information, nor have we, in the course of this engagement, performed an
-audit or review of the financial information used in compiling the Unaudited Pro Forma
-Financial Information.
-The purpose of the Unaudited Pro Forma Financial Information included in the
-Prospectus is solely to illustrate the impact of the global offering of shares of the Company on
-unadjusted financial information of the Group as if the transaction had been undertaken at an
-earlier date selected for purposes of the illustration. Accordingly, we do not provide any
-assurance that the actual outcome of the transaction would have been as presented.
-A reasonable assurance engagement to report on whether the Unaudited Pro Forma
-Financial Information has been properly compiled on the basis of the applicable criteria
-involves performing procedures to assess whether the applicable criteria used by the Directors
-in the compilation of the Unaudited Pro Forma Financial Information provide a reasonable
-basis for presenting the significant effects directly attributable to the transaction, and to obtain
-sufficient appropriate evidence about whether:
- the related pro forma adjustments give appropriate effect to those criteria; and
- the Unaudited Pro Forma Financial Information reflects the proper application of
-those adjustments to the unadjusted financial information.
-APPENDIX II UNAUDITED PRO FORMA FINANCIAL INFORMATION
-– II-4 –
-
-The procedures selected depend on the reporting accountants’ judgment, having regard to
-the reporting accountants’ understanding of the nature of the Group, the transaction in respect
-of which the Unaudited Pro Forma Financial Information has been compiled, and other relevant
-engagement circumstances.
-The engagement also involves evaluating the overall presentation of the Unaudited Pro
-Forma Financial Information.
-We believe that the evidence we have obtained is sufficient and appropriate to provide a
-basis for our opinion.
-Opinion
-In our opinion:
-(a) the Unaudited Pro Forma Financial Information has been properly compiled on the
-basis stated;
-(b) such basis is consistent with the accounting policies of the Group; and
-(c) the adjustments are appropriate for the purpose of the Unaudited Pro Forma
-Financial Information as disclosed pursuant to paragraph 4.29(1) of the Listing
-Rules.
-Ernst & Y oung
-Certified Public Accountants
-Hong Kong
-31 December 2025
-APPENDIX II UNAUDITED PRO FORMA FINANCIAL INFORMATION
-– II-5 –
-
-SUMMARY OF THE CONSTITUTION OF THE COMPANY
-1 Memorandum of Association
-The Memorandum of Association of the Company was conditionally adopted on
-December 29, 2025 and states, inter alia, that the liability of the members of the Company is
-limited, that the objects for which the Company is established are unrestricted and the
-Company shall have full power and authority to carry out any object not prohibited by the
-Companies Act or any other law of the Cayman Islands.
-The Memorandum of Association is on display on the websites of the Stock Exchange and
-the Company as specified in Appendix V in the section headed “Documents Delivered to the
-Registrar of Companies in Hong Kong and Available on Display”.
-2 Articles of Association
-The Articles of Association of the Company were conditionally adopted on December 29,
-2025 and include provisions to the following effect:
-2.1 Classes of Shares
-(a) Share capital
-The share capital of the Company consists of Class A Ordinary Shares and Class B
-Ordinary Shares. The capital of the Company at the date of adoption of the Articles is
-US$50,000 divided into 393,349,925 Class A Ordinary Shares of US$0.0001 each and
-106,650,075 Class B Ordinary Shares of US$0.0001 each.
-(b) Weighted voting rights
-Subject to the provisions of the Articles of Association, the holders of Class A Ordinary
-Shares and Class B Ordinary Shares shall at all times vote together as one class on all
-resolutions submitted to a vote by the members. On a poll, each Class A Share shall entitle its
-holder to one vote and each Class B Share shall entitle its holder to ten votes, provided that
-each Class A Share and each Class B Share shall entitle its holder to one vote on a poll at a
-general meeting in respect of a resolution on the following matters:
-(i) any amendment to the Memorandum of Association or the Articles of Association,
-including the variation of the rights attached to any class of shares;
-(ii) the appointment, election or removal of any independent non-executive Director;
-(iii) the appointment or removal of the auditors; or
-(iv) the voluntary liquidation or winding-up of the Company.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-1 –
-
-Notwithstanding the foregoing, where a holder of Class B Ordinary Shares is permitted
-by the Stock Exchange from time to time to exercise more than one vote per share when voting
-on a resolution to amend the Memorandum of Association or the Articles of Association, any
-holder of Class B Ordinary Shares may elect to exercise such number of votes per share as is
-permitted by the Stock Exchange, up to the maximum number of votes attached to each Class
-B Share as set out in the Articles of Association.
-The Company and holders of Class B Ordinary Shares shall not take any action (including
-the issue or repurchase of shares of any class) that would result in (i) the aggregate number of
-votes entitled to be cast by all holders of Class A Ordinary Shares (for the avoidance of doubt,
-excluding those who are also holders of Class B Ordinary Shares and excluding treasury
-Shares, if any) present at a general meeting to be less than 10% of the votes entitled to be cast
-by all members at a general meeting (excluding treasury Shares, if any); or (ii) an increase in
-the proportion of Class B Ordinary Shares to above the proportion of the total number of shares
-in issue at the time of initial listing of the Company’s shares on the Stock Exchange.
-(c) Restrictions on issue of shares with weighted voting rights
-No further Class B Ordinary Shares shall be allotted, issued or granted by the Company,
-except with the approval of the Stock Exchange and pursuant to (i) an offer to subscribe for
-shares in the Company made to all the members of the Company pro rata (apart from fractional
-entitlements) to their existing holdings; (ii) a pro rata issue of shares to all the members of the
-Company by way of scrip dividends; or (iii) a share subdivision or other similar capital
-reorganisation that is subject to the Stock Exchange’s satisfaction, provided that each member
-of the Company shall be entitled to subscribe for or be issued shares in the same class as the
-shares then held by him, and further provided that the proposed allotment or issuance will not
-result in an increase in the proportion of Class B Ordinary Shares in issue, so that:
-(A) if, under a pro rata offer, any holder of Class B Ordinary Shares does not take up
-any part of the Class B Ordinary Shares or the rights thereto offered to him, such
-untaken shares or rights shall only be transferred to another person on the basis that
-such transferred rights will only entitle the transferee to an equivalent number of
-Class A Ordinary Shares; and
-(B) to the extent that rights to Class A Ordinary Shares in a pro rata offer are not taken
-up in their entirety (including, but not limited to, where the pro rata offering is not
-fully underwritten), the number of Class B Ordinary Shares that shall be allotted,
-issued or granted in such pro rata offer shall be reduced proportionately,
-and where necessary, the holders of Class B Ordinary Shares shall use their best
-endeavours to enable the Company to comply with this requirement.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-2 –
-
-(d) Reduction of shares with weighted voting rights on repurchase of shares
-In the event the Company reduces the number of Class A Ordinary Shares in issue (after
-deducting treasury Shares, if any) (including, but not limited to, through a purchase of its own
-shares), the holders of Class B Ordinary Shares shall reduce their weighted voting rights in the
-Company proportionately (including, but not limited to, through a conversion of a portion of
-their shares with those rights into shares without those rights), if the reduction in the number
-of Class A Ordinary Shares in issue (after deducting treasury Shares, if any) would otherwise
-result in an increase in the proportion of Class B Ordinary Shares.
-(e) Prohibition on variation of terms of shares with weighted voting rights
-The Company shall not change the terms of the Class B Ordinary Shares to increase the
-weighted voting rights attached to that class, unless, in addition to complying with any
-requirement under law, prior approval of the Stock Exchange is obtained and, if such approval
-is granted, the change is announced.
-(f) Conversion of Class B Ordinary Shares
-Each Class B Share is convertible into one Class A Share at any time by the holder
-thereof, such right to be exercisable by the holder of the Class B Share delivering a written
-notice to the Company that such holder elects to convert a specified number of Class B
-Ordinary Shares into Class A Ordinary Shares.
-(g) Qualification of holders of shares with weighted voting rights
-Class B Ordinary Shares shall only be held by the WVR Beneficiaries, or (a) a partnership
-of which the WVR Beneficiary is a partner and the terms of which must expressly specify that
-the voting rights attached to any and all Class B Ordinary Shares held by such partnership are
-solely dictated by the WVR Beneficiary; (b) a trust of which the WVR Beneficiary is a
-beneficiary and that meets the following conditions: (i) the WVR Beneficiary must in
-substance retain an element of control of the trust and any immediate holding companies of,
-and retain a beneficial interest in any and all of the Class B Ordinary Shares held by such trust;
-and (ii) the purpose of the trust must be for estate planning and/or tax planning purposes; or
-(c) a private company or other vehicle wholly-owned and wholly controlled by the WVR
-Beneficiary or by a trust referred to in (b) above (a “ Founder Holding Vehicle ”). Subject to
-the Listing Rules or other applicable laws and regulations, each Class B Share shall be
-automatically converted into one Class A Share upon the occurrence of any of the following
-events:
-(i) the death of the holder of such Class B Share (or, where the holder is a Founder
-Holding V ehicle, the death of the WVR Beneficiary holding and controlling such
-Founder Holding V ehicle);
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-3 –
-
-(ii) the holder of such Class B Share ceasing to be a Director or a Founder Holding
-V ehicle for any reason;
-(iii) the holder of such Class B Share (or, where the holder is a Founder Holding V ehicle,
-the WVR Beneficiary holding and controlling such vehicle) being deemed by the
-Stock Exchange to be incapacitated for the purpose of performing his duties as a
-Director;
-(iv) the holder of such Class B Share (or, where the holder is a Founder Holding V ehicle,
-the WVR Beneficiary holding and controlling such vehicle) being deemed by the
-Stock Exchange to no longer meet the requirements of a director set out in the
-Listing Rules; or
-(v) the transfer to another person of the beneficial ownership of, or economic interest
-in, such Class B Share or the control over the voting rights attached to such Class
-B Share (through voting proxies or otherwise), including where the Founder Holding
-V ehicle holding such Class B Share no longer complies with Rule 8A.18(2) of the
-Listing Rules (in which event the Company and such Founder Holding V ehicle or the
-WVR Beneficiary holding and controlling such vehicle shall notify the Stock
-Exchange of the details of the non-compliance as soon as practicable), other than
-(A) the grant of any lien, pledge, charge or other encumbrance over such Class B
-Share which does not result in the transfer of the legal title or beneficial ownership
-of, or the voting rights attached to, such Class B Share, until the same is transferred
-upon the enforcement of such lien, pledge, charge or other encumbrance, and (B) a
-transfer of the legal title to such Class B Share by the WVR Beneficiary to Founder
-Holding V ehicle wholly-owned and wholly controlled by such WVR Beneficiary, or
-by a Founder Holding V ehicle to the WVR Beneficiary holding and controlling it or
-another Founder Holding V ehicle wholly-owned and wholly controlled by such
-WVR Beneficiary.
-(h) Cessation of weighted voting rights
-All of the Class B Ordinary Shares in the authorised share capital shall be automatically
-re-designated into Class A Ordinary Shares in the event none of the holders of Class B Ordinary
-Shares at the time of initial listing of the Company’s shares on the Stock Exchange have
-beneficial ownership of Class B Ordinary Shares, and no further Class B Ordinary Shares shall
-be issued by the Company.
-(i) Shares to rank pari passu
-Save and except for the rights, preferences, privileges and restrictions set out in this
-paragraph 2.1, the Class A Ordinary Shares and the Class B Ordinary Shares shall rank pari
-passu in all other respects and shall have the same rights, preferences, privileges and
-restrictions.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-4 –
-
-2.2 Directors
-(a) Number of Directors
-The number of Directors shall not be less than two, and the board of Directors shall
-consist of not less than one-third and less than one-half of independent non-executive
-Directors.
-(b) Power to allot and issue shares
-Subject to the provisions of the Memorandum of Association, the Articles of Association,
-compliance with the Listing Rules and the Code on Takeovers and Mergers and Share Buy-back
-issued by the Securities and Futures Commission of Hong Kong and any direction that may be
-given by the Company in general meeting, and without prejudice to any rights attached to any
-existing shares, the Directors may allot, issue, grant options over or otherwise dispose of shares
-with or without preferred, deferred or other rights or restrictions, whether in regard to dividend
-or other distribution, voting, return of capital or otherwise and to such persons, at such times
-and on such other terms as the Directors think proper, provided however that (a) no new class
-of shares with voting rights superior to those of Class A Ordinary Shares shall be created, and
-(b) any variation in the relative rights as between different classes of shares shall not result in
-the creation of a new class of shares with voting rights superior to those of Class A Ordinary
-Shares.
-(c) Power to dispose of the assets of the Company or any subsidiary
-Subject to the provisions of the Companies Act, the Memorandum and Articles of
-Association and to any directions given by special resolution, the business of the Company
-shall be managed by the Directors who may exercise all the powers of the Company. No
-alteration of the Memorandum and Articles of Association and no such direction shall
-invalidate any prior act of the Directors which would have been valid if that alteration had not
-been made or that direction had not been given.
-(d) Compensation or payment for loss of office
-There are no provisions in the Articles of Association relating to compensation or
-payment for loss of office of a Director.
-(e) Loans to Directors
-There are no provisions in the Articles of Association relating to making of loans to
-Directors.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-5 –
-
-(f) Financial assistance to purchase shares
-There are no provisions in the Articles of Association relating to the giving of financial
-assistance by the Company to purchase shares in the Company or its subsidiaries.
-(g) Disclosure of interest in contracts with the Company or any of its subsidiaries
-No person shall be disqualified from the office of Director or alternate Director or
-prevented by such office from contracting with the Company, either as vendor, purchaser or
-otherwise, nor shall any such contract or any contract or transaction entered into by or on
-behalf of the Company in which any Director or alternate Director shall be in any way
-interested be or be liable to be avoided, nor shall any Director or alternate Director so
-contracting or being so interested be liable to account to the Company for any profit realised
-by or arising in connection with any such contract or transaction by reason of such Director or
-alternate Director holding office or of the fiduciary relationship thereby established, provided
-that the nature of the interest of any Director or any alternate Director in any such contract or
-transaction shall be disclosed by them at or prior to its consideration and any vote thereon.
-A Director shall not be entitled to vote on (nor shall the Director be counted in the quorum
-in relation to) any resolution of the Directors in respect of any contract or arrangement or any
-other proposal in which the Director or any of his close associates has any material interest,
-and if he shall do so his vote shall not be counted (nor shall he be counted in the quorum for
-the resolution), but this prohibition shall not apply to any of the following matters, namely:
-(i) the giving to such Director or any of his close associates of any security or
-indemnity in respect of money lent or obligations incurred or undertaken by him or
-any of them at the request of or for the benefit of the Company or any of its
-subsidiaries;
-(ii) the giving of any security or indemnity to a third party in respect of a debt or
-obligation of the Company or any of its subsidiaries for which the Director or any
-of his close associates has himself/themselves assumed responsibility in whole or in
-part and whether alone or jointly under a guarantee or indemnity or by the giving of
-security;
-(iii) any proposal concerning an offer of shares, debentures or other securities of or by
-the Company or any other company which the Company may promote or be
-interested in for subscription or purchase where the Director or any of his close
-associates is/are or is/are to be interested as a participant in the underwriting or
-sub-underwriting of the offer;
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-6 –
-
-(iv) any proposal or arrangement concerning the benefit of employees of the Company
-or any of its subsidiaries including:
-(A) the adoption, modification or operation of any employees’ share scheme or any
-share incentive scheme or share option scheme under which the Director or any
-of his close associates may benefit; or
-(B) the adoption, modification or operation of a pension fund or retirement, death
-or disability benefits scheme which relates to the Director, his close associates
-and employees of the Company or any of its subsidiaries and does not provide
-in respect of any Director or any of his close associates, as such any privilege
-or advantage not generally accorded to the class of persons to which such
-scheme or fund relates; and
-(v) any contract or arrangement in which the Director or any of his close associates
-is/are interested in the same manner as other holders of shares or debentures or other
-securities of the Company by virtue only of their interest in shares or debentures or
-other securities of the Company.
-(h) Remuneration
-The remuneration to be paid to the Directors, if any, shall be such remuneration as the
-Directors shall determine. The Directors shall also be entitled to be paid all travelling, hotel
-and other expenses properly incurred by them in connection with their attendance at meetings
-of Directors or committees of Directors, or general meetings of the Company, or separate
-meetings of the holders of any class of shares or debentures of the Company, or otherwise in
-connection with the business of the Company or the discharge of their duties as a Director, or
-to receive a fixed allowance in respect thereof as may be determined by the Directors, or a
-combination partly of one such method and partly the other.
-The Directors may approve additional remuneration to any Director for any services
-which in the opinion of the Directors go beyond that Director’s ordinary routine work as a
-Director. Any fees paid to a Director who is also counsel, attorney or solicitor to the Company,
-or otherwise serves it in a professional capacity shall be in addition to their remuneration as
-a Director.
-(i) Retirement, appointment and removal
-The Company may by ordinary resolution appoint any person to be a Director, either to
-fill a vacancy or as an additional Director.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-7 –
-
-The Company may, where not otherwise provided by law, by ordinary resolution remove
-any Director (including a managing or other executive Director, but without prejudice to any
-claim for damages under any contract) before the expiration of such Director’s term of office,
-notwithstanding anything in the Articles of Association or in any agreement between the
-Company and such Director, and may by ordinary resolution elect another person in their stead.
-Nothing shall be taken as depriving a Director so removed of compensation or damages
-payable to such Director in respect of the termination of his appointment as Director or of any
-other appointment or office as a result of the termination of his appointment as Director.
-The Directors may appoint any person to be a Director, either to fill a vacancy or as an
-additional Director provided that the appointment does not cause the number of Directors to
-exceed any number fixed by or in accordance with the Articles of Association as the maximum
-number of Directors. Any Director so appointed shall hold office only until the first annual
-general meeting of the Company after such Director’s appointment and shall then be eligible
-for re-election at that meeting.
-There is no shareholding qualification for Directors nor is there any specified age limit
-for Directors.
-The office of a Director shall be vacated if:
-(i) the Director gives notice in writing to the Company that he resigns the office of
-Director;
-(ii) the Director is absent (for the avoidance of doubt, without being represented by
-proxy or an alternate Director appointed by him) for a continuous period of 12
-months without special leave of absence from the Directors, and the Directors pass
-a resolution that he has by reason of such absence vacated office;
-(iii) the Director dies, becomes bankrupt or makes any arrangement or composition with
-his creditors generally; or
-(iv) the Director is found to be or becomes of unsound mind.
-At every annual general meeting of the Company one-third of the Directors for the time
-being, or, if their number is not three or a multiple of three, then the number nearest to, but
-not less than, one-third, shall retire from office by rotation, provided that every Director
-(including those appointed for a specific term) shall be subject to retirement by rotation at least
-once every three years. A retiring Director shall retain office until the close of the meeting at
-which he retires and shall be eligible for re-election at such meeting. The Company at any
-annual general meeting at which any Directors retire may fill the vacated office by electing a
-like number of persons to be Directors.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-8 –
-
-(j) Borrowing powers
-The Directors may exercise all the powers of the Company to borrow money and to
-mortgage or charge its undertaking, property and assets (present and future) and uncalled
-capital or any part thereof and to issue debentures, debenture stock, mortgages, bonds and other
-such securities whether outright or as security for any debt, liability or obligation of the
-Company or of any third party.
-2.3 Alteration to constitutional documents
-No alteration or amendment to the Memorandum or Articles of Association may be made
-except by special resolution.
-2.4 V ariation of rights of existing shares or classes of shares
-If at any time the share capital of the Company is divided into different classes of shares,
-all or any of the rights attached to any class for the time being issued (unless otherwise
-provided by the terms of issue of the shares of that class) may, whether or not the Company
-is being wound up, be varied only with (in addition to a special resolution to amend the
-Memorandum or the Articles) the consent in writing of the holders of not less than
-three-fourths of the voting rights of the issued shares of that class (excluding treasury Shares,
-if any), or with the approval of a resolution passed by a majority of not less than three-fourths
-of the votes cast at a separate meeting of the holders of the shares of that class (excluding votes
-attaching to treasury Shares, if any). For so long as any Class B Share is in issue and unless
-such change is otherwise required by law or the Listing Rules, (a) any change to the
-composition of the board of Directors set out in paragraph 2.2(a) above; (b) any change in the
-proportion of votes required to pass a resolution of the members, whether as an ordinary
-resolution or a special resolution or in respect of particular matters or generally; (c) any
-variation to the number of votes attached to a share of any class, except any such variation
-arising from a conversion of a Class B Share into a Class A Share pursuant to paragraph 2.1(f)
-or paragraph 2.1(g) above; and (d) any change to the matters in respect of which each Class
-A Share and each Class B Share shall entitle its holder to one vote on a poll at a general
-meeting as described in paragraph 2.1(b), to the quorum requirements for meetings of Directors
-or to this provision, shall require the consent in writing of the holders of not less than
-three-fourths in nominal value of the issue Class B Ordinary Shares. To any such separate
-meeting all the provisions of the Articles of Association relating to general meetings shall
-apply mutatis mutandis , except that the necessary quorum shall be one or more persons holding
-or representing by proxy or duly authorised representative at least one-third of the voting rights
-of the issued shares of that class.
-The rights conferred upon the holders of shares of any class shall not, unless otherwise
-expressly provided in the rights attaching to or the terms of issue of the shares of that class,
-be deemed to be varied by the creation or issue of further shares ranking pari passu therewith.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-9 –
-
-2.5 Alteration of capital
-The Company may by ordinary resolution:
-(a) increase its share capital by such sum as the ordinary resolution shall prescribe and
-with such rights, priorities and privileges annexed thereto, as the Company in
-general meeting may determine;
-(b) consolidate and divide all or any of its share capital into shares of larger amount than
-its existing shares. On any consolidation of fully paid shares and division into shares
-of larger amount, the Directors may settle any difficulty which may arise as they
-think expedient and in particular (but without prejudice to the generality of the
-foregoing) may as between the holders of shares to be consolidated determine which
-particular shares are to be consolidated into each consolidated share, and if it shall
-happen that any person shall become entitled to fractions of a consolidated share or
-shares, such fractions may be sold by some person appointed by the Directors for
-that purpose and the person so appointed may transfer the shares so sold to the
-purchasers thereof and the validity of such transfer shall not be questioned, and so
-that the net proceeds of such sale (after deduction of the expenses of such sale) may
-either be distributed among the persons who would otherwise be entitled to a
-fraction or fractions of a consolidated share or shares rateably in accordance with
-their rights and interests or may be paid to the Company for the Company’s benefit;
-(c) by subdivision of its existing shares or any of them divide the whole or any part of
-its share capital into shares of smaller amount than is fixed by the Memorandum of
-Association or into shares without par value; and
-(d) cancel any shares that at the date of the passing of the ordinary resolution have not
-been taken or agreed to be taken by any person and diminish the amount of its share
-capital by the amount of the shares so cancelled.
-The Company may by special resolution reduce its share capital or any capital redemption
-reserve fund, subject to the provisions of the Companies Act.
-2.6 Special resolution — majority required
-A “special resolution” is defined in the Articles of Association to have the same meaning
-as in the Companies Act, for which purpose, the requisite majority shall be not less than
-three-fourths of the votes of such members of the Company as, being entitled to do so, vote in
-person or, in the case of corporations, by their duly authorised representatives or, where proxies
-are allowed, by proxy at a general meeting of which notice specifying the intention to propose
-the resolution as a special resolution has been duly given and includes a special resolution
-approved in writing by all of the members of the Company entitled to vote at a general meeting
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-10 –
-
-of the Company in one or more instruments each signed by one or more of such members, and
-the effective date of the special resolution so adopted shall be the date on which the instrument
-or the last of such instruments (if more than one) is executed.
-In contrast, an “ordinary resolution” is defined in the Articles of Association to mean a
-resolution passed by a simple majority of the votes of such members of the Company as, being
-entitled to do so, vote in person or, in the case of corporations, by their duly authorised
-representatives or, where proxies are allowed, by proxy at a general meeting held in accordance
-with the Articles of Association and includes an ordinary resolution approved in writing by all
-the members of the Company aforesaid.
-2.7 V oting rights
-Subject to paragraph 2.1(b) above and any rights or restrictions attached to any shares, at
-any general meeting every member of the Company present in person (or, in the case of a
-member being a corporation, by its duly authorised representative) or by proxy shall have (a)
-the right to speak; (b) one vote on a show of hands; and (c) one vote for every share of which
-he is the holder on a poll.
-Where any member is, under the Listing Rules, required to abstain from voting on any
-particular resolution or restricted to voting only for or only against any particular resolution,
-any votes cast by or on behalf of such member in contravention of such requirement or
-restriction shall not be counted.
-In the case of joint holders the vote of the senior holder who tenders a vote, whether in
-person or by proxy (or in the case of a corporation or other non-natural person, by its duly
-authorised representative or proxy) shall be accepted to the exclusion of the votes of the other
-joint holders, and seniority shall be determined by the order in which the names of the holders
-stand in the register of members of the Company.
-A member of unsound mind, or in respect of whom an order has been made by any court
-having jurisdiction in lunacy, may vote, whether on a show of hands or on a poll, by their
-committee, receiver, curator bonis, or other person on such member’s behalf appointed by that
-court, and any such committee, receiver, curator bonis or other person may vote by proxy.
-No person shall be counted in a quorum or be entitled to vote at any general meeting
-unless he is registered as a member on the record date for such meeting, nor unless all calls
-or other monies then payable by him in respect of shares have been paid.
-At any general meeting a resolution put to the vote of the meeting shall be decided by way
-of a poll save that the chairperson of the meeting may allow a resolution which relates purely
-to a procedural or administrative matter as prescribed under the Listing Rules to be voted on
-by a show of hands.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-11 –
-
-Any corporation or other non-natural person which is a member of the Company may in
-accordance with its constitutional documents, or in the absence of such provision by resolution
-of its directors or other governing body, authorise such person as it thinks fit to act as its
-representative at any meeting of the Company or of any class of members, and the person so
-authorised shall be entitled to exercise the same powers as the corporation could exercise if it
-were an individual member.
-If a recognised clearing house (or its nominee(s)) is a member of the Company it may
-authorise such person or persons as it thinks fit to act as its proxy(ies) or its representative(s)
-at any general meeting of the Company or at any general meeting of any class of members of
-the Company and at any creditors meetings, provided that, if more than one person is so
-authorised, the authorisation shall specify the number and class of shares in respect of which
-each such person is so authorised. A person authorised pursuant to this provision shall be
-entitled to exercise the same rights and powers on behalf of the recognised clearing house (or
-its nominee(s)) which that person represents as that recognised clearing house (or its
-nominee(s)) could exercise as if such person were an individual member of the Company
-holding the number and class of shares specified in such authorisation, including the right to
-speak and, where a show of hands is allowed, the right to vote individually on a show of hands.
-2.8 Annual general meetings and extraordinary general meetings
-The Company shall hold a general meeting as its annual general meeting for each
-financial year within six months (or such other period as may be permitted by the Listing Rules
-or the Stock Exchange) after the end of such financial year. An annual general meeting shall
-be specified as such in the notices calling it.
-The Directors may call general meetings, and they shall on a members’ requisition
-forthwith proceed to convene an extraordinary general meeting of the Company and such
-members may add resolutions to the meeting agenda. A members’ requisition is a requisition
-of one or more members holding at the date of deposit of the requisition not less than 10% of
-the voting rights, on a one vote per share basis, of the issued shares which as at that date carry
-the right to vote at general meetings of the Company (excluding treasury Shares, if any). The
-members’ requisition must state the objects and the resolutions to be added to the agenda of
-the meeting and must be signed by the requisitionists and deposited at the principal office of
-the Company in Hong Kong or, in the event the Company ceases to have such a principal
-office, the registered office of the Company, and may consist of several documents in like form
-each signed by one or more requisitionists. If there are no Directors as at the date of the deposit
-of the members’ requisition or if the Directors do not within 21 days from the date of the
-deposit of the members’ requisition duly proceed to convene a general meeting to be held
-within a further 21 days, the requisitionists, or any of them representing more than one-half of
-the total voting rights of all the requisitionists, may themselves convene a general meeting, but
-any meeting so convened shall be held no later than the day which falls three months after the
-expiration of the said 21 day period. A general meeting convened by requisitionists shall be
-convened in the same manner as nearly as possible as that in which general meetings are to be
-convened by Directors.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-12 –
-
-2.9 Accounts and audit
-The Directors shall cause proper books of account to be kept with respect to all sums of
-money received and expended by the Company and the matters in respect of which the receipt
-or expenditure takes place, all sales and purchases of goods by the Company and the assets and
-liabilities of the Company. Such books of account must be retained for a minimum period of
-five years from the date on which they are prepared. Proper books shall not be deemed to be
-kept if there are not kept such books of account as are necessary to give a true and fair view
-of the state of the Company’s affairs and to explain its transactions.
-The Directors shall determine whether and to what extent and at what times and places
-and under what conditions or regulations the accounts and books of the Company or any of
-them shall be open to the inspection of members of the Company not being Directors, and no
-member (not being a Director) shall have any right of inspecting any account or book or
-document of the Company except as conferred by the Companies Act or authorised by the
-Directors or by the Company in general meeting.
-The Directors shall cause to be prepared and to be laid before the Company at every
-annual general meeting a profit and loss account for the period since the preceding account,
-together with a balance sheet as at the date to which the profit and loss account is made up,
-a Directors’ report with respect to the profit or loss of the Company for the period covered by
-the profit and loss account and the state of the Company’s affairs as at the end of such period,
-an auditors’ report on such accounts and such other reports and accounts as may be required
-by law.
-2.10 Auditors
-The Company shall at every annual general meeting by ordinary resolution appoint an
-auditor or auditors of the Company who shall hold office until the next annual general meeting.
-The Company may by ordinary resolution remove an auditor before the expiration of his period
-of office. No person may be appointed as an auditor of the Company unless such person is
-independent of the Company. The remuneration of the auditors shall be fixed by the Company
-at the annual general meeting at which they are appointed by ordinary resolution, or in the
-manner specified in such resolution.
-2.11 Notice of meetings and business to be conducted thereat
-An annual general meeting shall be called by not less than 21 days’ notice and any
-extraordinary general meeting shall be called by not less than 14 days’ notice, which shall be
-exclusive of the day on which it is served or deemed to be served and of the day for which it
-is given. The notice convening an annual general meeting shall specify the meeting as such,
-and the notice convening a meeting to pass a special resolution shall specify the intention to
-propose the resolution as a special resolution. Every notice shall specify the place, the day and
-the hour of the meeting, particulars of the resolutions and the general nature of the business to
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-13 –
-
-be conducted at the meeting. Notwithstanding the foregoing, a general meeting of the Company
-shall, whether or not the notice specified has been given and whether or not the provisions of
-the Articles of Association regarding general meetings have been complied with, be deemed to
-have been duly convened if it is so agreed:
-(a) in the case of an annual general meeting, by all members of the Company entitled
-to attend and vote at the meeting; and
-(b) in the case of an extraordinary general meeting, by a majority in number of the
-members having a right to attend and vote at the meeting, together holding not less
-than 95% in par value of the shares giving that right.
-If, after the notice of a general meeting has been sent but before the meeting is held, or
-after the adjournment of a general meeting but before the adjourned meeting is held (whether
-or not notice of the adjourned meeting is required), the Directors, in their absolute discretion,
-consider that it is impractical or unreasonable for any reason to hold a general meeting on the
-date or at the time and place specified in the notice calling such meeting, they may change or
-postpone the meeting to another date, time and place.
-The Directors also have the power to provide in every notice calling a general meeting
-that in the event of a gale warning or a black rainstorm warning is in force at any time on the
-day of the general meeting (unless such warning is cancelled at least a minimum period of time
-prior to the general meeting as the Directors may specify in the relevant notice), the meeting
-shall be postponed without further notice to be reconvened on a later date.
-Where a general meeting is postponed:
-(a) the Company shall endeavour to cause a notice of such postponement, which shall
-set out the reason for the postponement in accordance with the Listing Rules, to be
-placed on the Company’s website and published on the Stock Exchange’s website as
-soon as practicable, provided that failure to place or publish such notice shall not
-affect the automatic postponement of a general meeting due to a gale warning or
-black rainstorm warning being in force on the day of the general meeting;
-(b) the Directors shall fix the date, time and place for the reconvened meeting and at
-least seven clear days’ notice shall be given for the reconvened meeting; and such
-notice shall specify the date, time and place at which the postponed meeting will be
-reconvened and the date and time by which proxies shall be submitted in order to
-be valid at such reconvened meeting (provided that any proxy submitted for the
-original meeting shall continue to be valid for the reconvened meeting unless
-revoked or replaced by a new proxy); and
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-14 –
-
-(c) only the business set out in the notice of the original meeting shall be transacted at
-the reconvened meeting, and notice given for the reconvened meeting does not need
-to specify the business to be transacted at the reconvened meeting, nor shall any
-accompanying documents be required to be recirculated. Where any new business is
-to be transacted at such reconvened meeting, the Company shall give a fresh notice
-for such reconvened meeting in accordance with the Articles of Association.
-2.12 Transfer of shares
-Transfers of shares may be effected by an instrument of transfer, which shall be in writing
-and in any standard form of transfer as prescribed by the Stock Exchange or such other form
-as the Directors may approve. The instrument of transfer shall be executed by or on behalf of
-the transferor and, unless the Directors otherwise determine, the transferee, and the transferor
-shall be deemed to remain the holder of the share until the name of the transferee is entered
-in the register of members of the Company.
-The Directors may decline to register any transfer of any share which is not fully paid up
-or on which the Company has a lien. The Directors may also decline to register any transfer
-of any shares unless:
-(a) the instrument of transfer is lodged with the Company accompanied by the
-certificate for the shares to which it relates (which shall upon the registration of the
-transfer be cancelled) and such other evidence as the Directors may reasonably
-require to show the right of the transferor to make the transfer;
-(b) the instrument of transfer is in respect of only one class of shares;
-(c) the instrument of transfer is properly stamped (in circumstances where stamping is
-required);
-(d) in the case of a transfer to joint holders, the number of joint holders to whom the
-share is to be transferred does not exceed four;
-(e) the shares concerned are free of any lien in favour of the Company; and
-(f) a fee of such amount not exceeding the maximum amount as the Stock Exchange
-may from time to time determine to be payable (or such lesser sum as the Directors
-may from time to time require) is paid to the Company in respect thereof.
-If the Directors refuse to register a transfer of any share they shall notify the transferor
-and the transferee within two months of such refusal.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-15 –
-
-The registration of transfers shall be suspended during such periods as the register of
-members of the Company is closed. The Company may close the Register of Members on terms
-equivalent to section 632 of the Companies Ordinance (Chapter 622 of the Laws of Hong
-Kong).
-2.13 Power of the Company to purchase its own shares
-Subject to the provisions of the Companies Act, the Company may purchase its own
-shares provided that (a) the manner of purchase has first been authorised by the members of
-the Company by ordinary resolution, and (b) any such purchase shall only be made in
-accordance with any relevant code, rules or regulations issued by the Stock Exchange or the
-Securities and Futures Commission of Hong Kong from time to time in force.
-2.14 Power of any subsidiary of the Company to own shares
-There are no provisions in the Articles of Association relating to the ownership of shares
-by a subsidiary.
-2.15 Dividends and other methods of distribution
-Subject to the Companies Act and the Articles of Association, the Company may by
-ordinary resolution resolve to pay dividends and other distributions on shares in issue and
-authorise payment of the dividends or other distributions out of the funds of the Company
-lawfully available therefor, provided no dividends shall exceed the amount recommended by
-the Directors. No dividend or other distribution shall be paid except out of the realised or
-unreleased profits of the Company, out of the share premium account or as otherwise permitted
-by law.
-The Directors may from time to time pay to the members of the Company such interim
-dividends as appear to the Directors to be justified by the profits of the Company. The Directors
-may in addition from time to time declare and pay special dividends on shares of such amounts
-and on such dates as they think fit.
-Except as otherwise provided by the rights attached to any shares, all dividends and other
-distributions shall be paid according to the amounts paid up on the shares that a member holds
-during any portion or portions of the period in respect of which the dividend is paid. For this
-purpose no amount paid up on a share in advance of calls shall be treated as paid up on the
-share.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-16 –
-
-The Directors may deduct from any dividends or other distribution payable to any
-member of the Company all sums of money (if any) then payable by the member to the
-Company on account of calls or otherwise. The Directors may retain any dividends or other
-monies payable on or in respect of a share upon which the Company has a lien, and may apply
-the same in or towards satisfaction of the debts, liabilities or engagements in respect of which
-the lien exists.
-No dividend shall carry interest against the Company. Except as otherwise provided by
-the rights attached to any shares, dividends and other distributions may be paid in any currency.
-Whenever the Directors or the Company in general meeting have resolved that a dividend
-be paid or declared on the share capital of the Company, the Directors may further resolve: (a)
-that such dividend be satisfied wholly or in part in the form of an allotment of shares credited
-as fully paid up on the basis that the shares so allotted are to be of the same class as the class
-already held by the allottee, provided that the members of the Company entitled thereto will
-be entitled to elect to receive such dividend (or part thereof) in cash in lieu of such allotment;
-or (b) that the members of the Company entitled to such dividend will be entitled to elect to
-receive an allotment of shares credited as fully paid up in lieu of the whole or such part of the
-dividend as the Directors may think fit on the basis that the shares so allotted are to be of the
-same class as the class already held by the allottee. The Company may upon the
-recommendation of the Directors by ordinary resolution resolve in respect of any one particular
-dividend of the Company that notwithstanding the foregoing a dividend may be satisfied
-wholly in the form of an allotment of shares credited as fully paid without offering any right
-to members of the Company to elect to receive such dividend in cash in lieu of such allotment.
-Any dividend, interest or other monies payable in cash in respect of shares may be paid
-by wire transfer to the holder or by cheque or warrant sent through the post directed to the
-registered address of the holder or, in the case of joint holders, to the registered address of the
-holder who is first named on the register of members of the Company or to such person and
-to such address as the holder or joint holders may in writing direct. Every such cheque or
-warrant shall be made payable to the order of the person to whom it is sent. Any one of two
-or more joint holders may give effectual receipts for any dividends, other distributions,
-bonuses, or other monies payable in respect of the shares held by them as joint holders.
-Any dividend or other distribution which remains unclaimed after a period of six years
-from the date on which such dividend or distribution becomes payable shall be forfeited and
-shall revert to the Company.
-The Directors, with the sanction of the members of the Company by ordinary resolution,
-may resolve that any dividend or other distribution be paid wholly or partly by the distribution
-of specific assets, and in particular (but without limitation) by the distribution of shares,
-debentures, or securities of any other company or in any one or more of such ways, and where
-any difficulty arises in regard to such distribution, the Directors may settle it as they think
-expedient, and in particular may disregard fractional entitlements, round the same up or down
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-17 –
-
-or provide that the same shall accrue to the benefit of the Company, and may fix the value for
-distribution of such specific assets or any part thereof and may determine that cash payments
-shall be made to any members of the Company upon the basis of the value so fixed in order
-to adjust the rights of all members, and may vest any such specific assets in trustees as may
-seem expedient to the Directors.
-2.16 Proxies
-A member of the Company entitled to attend and vote at a general meeting of the
-Company shall be entitled to appoint another person who must be an individual as his proxy
-to attend and vote instead of him and a proxy so appointed shall have the same right as the
-member to speak at the meeting. V otes may be given either personally or by proxy. A proxy
-need not be a member of the Company. A member may appoint any number of proxies to attend
-in his stead at any one general meeting or at any one class meeting.
-The instrument appointing a proxy shall be in writing and shall be executed under the
-hand of the appointor or of his attorney duly authorised in writing, or, if the appointor is a
-corporation or other non-natural person, under the hand of its duly authorised representative.
-The Directors shall, in the notice convening any meeting or adjourned meeting, or in an
-instrument of proxy sent out by the Company, specify the manner (including by electronic
-means) by which the instrument appointing a proxy shall be deposited and the place and the
-time (being not later than the time appointed for the commencement of the meeting or
-adjourned meeting to which the proxy relates) at which the instrument appointing a proxy shall
-be deposited.
-The instrument appointing a proxy may be in any usual or common form (or such other
-form as the Directors may approve) and may be expressed to be for a particular meeting or any
-adjournment thereof or generally until revoked.
-2.17 Calls on shares and forfeiture of shares
-Subject to the terms of the allotment and issue of any shares, the Directors may make calls
-upon the members of the Company in respect of any monies unpaid on their shares (whether
-in respect of par value or premium), and each member of the Company shall (subject to
-receiving at least 14 clear days’ notice specifying the times or times of payment) pay to the
-Company at the time or times so specified the amount called on his shares. A call may be
-revoked or postponed, in whole or in part, as the Directors may determine. A call may be
-required to be paid by instalments. A person upon whom a call is made shall remain liable for
-calls made upon him, notwithstanding the subsequent transfer of the shares in respect of which
-the call was made.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-18 –
-
-A call shall be deemed to have been made at the time when the resolution of the Directors
-authorising the call was passed. The joint holders of a share shall be jointly and severally liable
-to pay all calls and instalments due in respect of such share.
-If a call remains unpaid after it has become due and payable, the person from whom it is
-due shall pay interest on the amount unpaid from the day it became due and payable until it
-is paid at such rate as the Directors may determine (and in addition all expenses that have been
-incurred by the Company by reason of such non-payment), but the Directors may waive
-payment of the interest or expenses wholly or in part.
-If any call or instalment of a call remains unpaid after it has become due and payable, the
-Directors may give to the person from whom it is due not less than 14 clear days’ notice
-requiring payment of the amount unpaid together with any interest which may have accrued
-and any expenses incurred by the Company by reason of such non-payment. The notice shall
-specify where payment is to be made and shall state if the notice is not complied with the
-shares in respect of which the call was made will be liable to be forfeited.
-If such notice is not complied with, any share in respect of which it was given may, before
-the payment required by the notice has been made, be forfeited by a resolution of the Directors.
-Such forfeiture shall include all dividends, other distributions or other monies payable in
-respect of the forfeited shares and not paid before the forfeiture.
-A forfeited share may be sold, re-allotted or otherwise disposed of on such terms and in
-such manner as the Directors think fit.
-A person any of whose shares have been forfeited shall cease to be a member of the
-Company in respect of the forfeited shares and shall surrender to the Company for cancellation
-the certificate for the shares forfeited and shall remain liable to pay to the Company all monies
-which at the date of forfeiture were payable by him to the Company in respect of the shares,
-together with interest at such rate as the Directors may determine, but that person’s liability
-shall cease if and when the Company shall have received payment in full of all monies due and
-payable by them in respect of those shares.
-2.18 Inspection of register of members
-The Company shall maintain or cause to be maintained the register of members of the
-Company in accordance with the Companies Act. The Company may close the register of
-members on terms equivalent to section 632 of the Companies Ordinance (Chapter 622 of the
-Laws of Hong Kong).
-Except when the register is closed, the register of members shall during business hours
-be kept open for inspection by any member of the Company without charge.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-19 –
-
-2.19 Quorum for meetings and separate class meetings
-No business shall be transacted at any general meeting unless a quorum is present. Two
-members of the Company holding not less than one-third of the total voting power of the
-Company present in person or by proxy, or if a corporation or other non-natural person by its
-duly authorised representative or proxy, shall be a quorum unless the Company has only one
-member entitled to vote at such general meeting in which case the quorum shall be that one
-member present in person or by proxy, or in the case of a corporation or other non-natural
-person by its duly authorised representative or proxy.
-The quorum for a separate general meeting of the holders of a separate class of shares of
-the Company is described in paragraph 2.3 above.
-2.20 Rights of minorities in relation to fraud or oppression
-There are no provisions in the Articles of Association concerning the rights of minority
-shareholders in relation to fraud or oppression.
-2.21 Procedure on liquidation
-Subject to the Companies Act, the Company may by special resolution resolve that the
-Company be wound up voluntarily.
-Subject to the rights attaching to any shares, in a winding up:
-(a) if the assets available for distribution amongst the members of the Company shall
-be insufficient to repay the whole of the Company’s paid-up capital, such assets
-shall be distributed so that, as nearly as may be, the losses shall be borne by the
-members of the Company in proportion to the capital paid up, or which ought to
-have been paid up, on the shares held by them at the commencement of the winding
-up;
-(b) if the assets available for distribution amongst the members of the Company shall
-be more than sufficient to repay the whole of the Company’s paid up capital at the
-commencement of the winding up, the surplus shall be distributed amongst the
-members of the Company in proportion to the capital paid up on the shares held by
-them at the commencement of the winding up.
-If the Company shall be wound up, the liquidator may with the approval of a special
-resolution of the Company and any other approval required by the Companies Act, divide
-amongst the members of the Company in kind the whole or any part of the assets of the
-Company (whether such assets shall consist of property of the same kind or not) and may, for
-that purpose, value any assets and determine how the division shall be carried out as between
-the members or different classes of members of the Company. The liquidator may, with the like
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-20 –
-
-approval, vest the whole or any part of such assets in trustees upon such trusts for the benefit
-of the members of the Company as the liquidator, with the like approval, shall think fit, but so
-that no member of the Company shall be compelled to accept any assets, shares or other
-securities in respect of which there is a liability.
-2.22 Untraceable members
-The Company shall be entitled to sell any shares of a member of the Company or the
-shares to which a person is entitled by virtue of transmission on death or bankruptcy or
-operation of law if: (a) all cheques or warrants, not being less than three in number, for any
-sums payable in cash to the holder of such shares have remained uncashed for a period of 12
-years; (b) the Company has not during that time or before the expiry of the three month period
-referred to in (d) below received any indication of the whereabouts or existence of the member;
-(c) during the 12-year period, at least three dividends in respect of the shares in question have
-become payable and no dividend during that period has been claimed by the member; and (d)
-upon expiry of the 12-year period, the Company has caused an advertisement to be published
-in the newspapers or, subject to the Listing Rules, by electronic communication in the manner
-in which notices may be served by the Company by electronic means as provided in the Articles
-of Association, giving notice of its intention to sell such shares and a period of three months
-has elapsed since such advertisement and the Stock Exchange has been notified of such
-intention. The net proceeds of any such sale shall belong to the Company and upon receipt by
-the Company of such net proceeds it shall become indebted to the former member for an
-amount equal to such net proceeds.
-SUMMARY OF CAYMAN ISLANDS COMPANY LA W AND TAXATION
-1 Introduction
-The Companies Act is derived, to a large extent, from the older Companies Acts of
-England, although there are significant differences between the Companies Act and the current
-Companies Act of England. Set out below is a summary of certain provisions of the Companies
-Act, although this does not purport to contain all applicable qualifications and exceptions or
-to be a complete review of all matters of corporate law and taxation which may differ from
-equivalent provisions in jurisdictions with which interested parties may be more familiar.
-2 Incorporation
-The Company was incorporated in the Cayman Islands as an exempted company with
-limited liability on 30 June 2021 under the Companies Act. As such, its operations must be
-conducted mainly outside the Cayman Islands. The Company is required to file an annual
-return each year with the Registrar of Companies of the Cayman Islands and pay a fee which
-is based on the size of its authorised share capital.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-21 –
-
-3 Share Capital
-The Companies Act permits a company to issue ordinary shares, preference shares,
-redeemable shares or any combination thereof.
-The Companies Act provides that where a company issues shares at a premium, whether
-for cash or otherwise, a sum equal to the aggregate amount of the value of the premia on those
-shares shall be transferred to an account called the “share premium account”. At the option of
-a company, these provisions may not apply to premia on shares of that company allotted
-pursuant to any arrangement in consideration of the acquisition or cancellation of shares in any
-other company and issued at a premium. The Companies Act provides that the share premium
-account may be applied by a company, subject to the provisions, if any, of its memorandum and
-articles of association, in such manner as the company may from time to time determine
-including, but without limitation:
-(a) paying distributions or dividends to members;
-(b) paying up unissued shares of the company to be issued to members as fully paid
-bonus shares;
-(c) in the redemption and repurchase of shares (subject to the provisions of section 37
-of the Companies Act);
-(d) writing-off the preliminary expenses of the company;
-(e) writing-off the expenses of, or the commission paid or discount allowed on, any
-issue of shares or debentures of the company; and
-(f) providing for the premium payable on redemption or purchase of any shares or
-debentures of the company.
-No distribution or dividend may be paid to members out of the share premium account
-unless immediately following the date on which the distribution or dividend is proposed to be
-paid the company will be able to pay its debts as they fall due in the ordinary course of
-business.
-The Companies Act provides that, subject to confirmation by the Grand Court of the
-Cayman Islands, a company limited by shares or a company limited by guarantee and having
-a share capital may, if so authorised by its articles of association, by special resolution reduce
-its share capital in any way.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-22 –
-
-Subject to the detailed provisions of the Companies Act, a company limited by shares or
-a company limited by guarantee and having a share capital may, if so authorised by its articles
-of association, issue shares which are to be redeemed or are liable to be redeemed at the option
-of the company or a shareholder. In addition, such a company may, if authorised to do so by
-its articles of association, purchase its own shares, including any redeemable shares. The
-manner of such a purchase must be authorised either by the articles of association or by an
-ordinary resolution of the company. The articles of association may provide that the manner of
-purchase may be determined by the directors of the company. At no time may a company
-redeem or purchase its shares unless they are fully paid. A company may not redeem or
-purchase any of its shares if, as a result of the redemption or purchase, there would no longer
-be any member of the company holding shares. A payment out of capital by a company for the
-redemption or purchase of its own shares is not lawful unless immediately following the date
-on which the payment is proposed to be made, the company shall be able to pay its debts as
-they fall due in the ordinary course of business.
-There is no statutory restriction in the Cayman Islands on the provision of financial
-assistance by a company for the purchase of, or subscription for, its own or its holding
-company’s shares. Accordingly, a company may provide financial assistance if the directors of
-the company consider, in discharging their duties of care and to act in good faith, for a proper
-purpose and in the interests of the company, that such assistance can properly be given. Such
-assistance should be on an arm’s-length basis.
-4 Dividends and Distributions
-With the exception of section 34 of the Companies Act, there are no statutory provisions
-relating to the payment of dividends. Based upon English case law which is likely to be
-persuasive in the Cayman Islands in this area, dividends may be paid only out of profits. In
-addition, section 34 of the Companies Act permits, subject to a solvency test and the
-provisions, if any, of the company’s memorandum and articles of association, the payment of
-dividends and distributions out of the share premium account (see paragraph 3 above for
-details).
-5 Shareholders’ Suits
-The Cayman Islands courts can be expected to follow English case law precedents. The
-rule in Foss v. Harbottle (and the exceptions thereto which permit a minority shareholder to
-commence a class action against or derivative actions in the name of the company to challenge
-(a) an act which is ultra vires the company or illegal, (b) an act which constitutes a fraud
-against the minority where the wrongdoers are themselves in control of the company, and (c)
-an action which requires a resolution with a qualified (or special) majority which has not been
-obtained) has been applied and followed by the courts in the Cayman Islands.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-23 –
-
-6 Protection of Minorities
-In the case of a company (not being a bank) having a share capital divided into shares,
-the Grand Court of the Cayman Islands may, on the application of members holding not less
-than one-fifth of the shares of the company in issue, appoint an inspector to examine into the
-affairs of the company and to report thereon in such manner as the Grand Court shall direct.
-Any shareholder of a company may petition the Grand Court of the Cayman Islands which
-may make a winding up order if the court is of the opinion that it is just and equitable that the
-company should be wound up.
-Claims against a company by its shareholders must, as a general rule, be based on the
-general laws of contract or tort applicable in the Cayman Islands or their individual rights as
-shareholders as established by the company’s memorandum and articles of association.
-The English common law rule that the majority will not be permitted to commit a fraud
-on the minority has been applied and followed by the courts of the Cayman Islands.
-7 Disposal of Assets
-The Companies Act contains no specific restrictions on the powers of directors to dispose
-of assets of a company. As a matter of general law, in the exercise of those powers, the directors
-must discharge their duties of care and to act in good faith, for a proper purpose and in the
-interests of the company.
-8 Accounting and Auditing Requirements
-The Companies Act requires that a company shall cause to be kept proper books of
-account with respect to:
-(a) all sums of money received and expended by the company and the matters in respect
-of which the receipt and expenditure takes place;
-(b) all sales and purchases of goods by the company; and
-(c) the assets and liabilities of the company.
-Proper books of account shall not be deemed to be kept if there are not kept such books
-as are necessary to give a true and fair view of the state of the company’s affairs and to explain
-its transactions.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-24 –
-
-9 Register of Members
-An exempted company may, subject to the provisions of its articles of association,
-maintain its principal register of members and any branch registers at such locations, whether
-within or without the Cayman Islands, as its directors may from time to time think fit. There
-is no requirement under the Companies Act for an exempted company to make any returns of
-members to the Registrar of Companies of the Cayman Islands. The names and addresses of the
-members are, accordingly, not a matter of public record and are not available for public
-inspection.
-10 Inspection of Books and Records
-Members of a company will have no general right under the Companies Act to inspect or
-obtain copies of the register of members or corporate records of the company. They will,
-however, have such rights as may be set out in the company’s articles of association.
-11 Special Resolutions
-The Companies Act provides that a resolution is a special resolution when it has been
-passed by a majority of at least two-thirds of such members as, being entitled to do so, vote
-in person or, where proxies are allowed, by proxy at a general meeting of which notice
-specifying the intention to propose the resolution as a special resolution has been duly given,
-except that a company may in its articles of association specify that the required majority shall
-be a number greater than two-thirds, and may additionally so provide that such majority (being
-not less than two-thirds) may differ as between matters required to be approved by a special
-resolution. Written resolutions signed by all the members entitled to vote for the time being of
-the company may take effect as special resolutions if this is authorised by the articles of
-association of the company.
-12 Subsidiary Owning Shares in Parent
-The Companies Act does not prohibit a Cayman Islands company acquiring and holding
-shares in its parent company provided its objects so permit. The directors of any subsidiary
-making such acquisition must discharge their duties of care and to act in good faith, for a
-proper purpose and in the interests of the subsidiary.
-13 Mergers and Consolidations
-The Companies Act permits mergers and consolidations between Cayman Islands
-companies and between Cayman Islands companies and non-Cayman Islands companies. For
-these purposes, (a) “merger” means the merging of two or more constituent companies and the
-vesting of their undertaking, property and liabilities in one of such companies as the surviving
-company, and (b) “consolidation” means the combination of two or more constituent
-companies into a consolidated company and the vesting of the undertaking, property and
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-25 –
-
-liabilities of such companies to the consolidated company. In order to effect such a merger or
-consolidation, the directors of each constituent company must approve a written plan of merger
-or consolidation, which must then be authorised by (a) a special resolution of each constituent
-company and (b) such other authorisation, if any, as may be specified in such constituent
-company’s articles of association. The written plan of merger or consolidation must be filed
-with the Registrar of Companies of the Cayman Islands together with a declaration as to the
-solvency of the consolidated or surviving company, a list of the assets and liabilities of each
-constituent company and an undertaking that a copy of the certificate of merger or
-consolidation will be given to the members and creditors of each constituent company and that
-notification of the merger or consolidation will be published in the Cayman Islands Gazette.
-Dissenting shareholders have the right to be paid the fair value of their shares (which, if not
-agreed between the parties, will be determined by the Cayman Islands court) if they follow the
-required procedures, subject to certain exceptions. Court approval is not required for a merger
-or consolidation which is effected in compliance with these statutory procedures.
-14 Reconstructions
-There are statutory provisions which facilitate reconstructions and amalgamations
-approved by (a) 75% in value of shareholders, or (b) a majority in number representing 75%
-in value of creditors, depending on the circumstances, as are present at a meeting called for
-such purpose and thereafter sanctioned by the Grand Court of the Cayman Islands. Whilst a
-dissenting shareholder would have the right to express to the Grand Court his view that the
-transaction for which approval is sought would not provide the shareholders with a fair value
-for their shares, the Grand Court is unlikely to disapprove the transaction on that ground alone
-in the absence of evidence of fraud or bad faith on behalf of management and if the transaction
-were approved and consummated the dissenting shareholder would have no rights comparable
-to the appraisal rights (i.e. the right to receive payment in cash for the judicially determined
-value of his shares) ordinarily available, for example, to dissenting shareholders of United
-States corporations.
-15 Take-overs
-Where an offer is made by a company for the shares of another company and, within four
-months of the offer, the holders of not less than 90% of the shares which are the subject of the
-offer accept, the offeror may at any time within two months after the expiration of the said four
-months, by notice require the dissenting shareholders to transfer their shares on the terms of
-the offer. A dissenting shareholder may apply to the Grand Court of the Cayman Islands within
-one month of the notice objecting to the transfer. The burden is on the dissenting shareholder
-to show that the Grand Court should exercise its discretion, which it will be unlikely to do
-unless there is evidence of fraud or bad faith or collusion as between the offeror and the holders
-of the shares who have accepted the offer as a means of unfairly forcing out minority
-shareholders.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-26 –
-
-16 Indemnification
-Cayman Islands law does not limit the extent to which a company’s articles of association
-may provide for indemnification of officers and directors, except to the extent any such
-provision may be held by the Cayman Islands courts to be contrary to public policy (e.g. for
-purporting to provide indemnification against the consequences of committing a crime).
-17 Restructuring
-A company may present a petition to the Grand Court of the Cayman Islands for the
-appointment of a restructuring officer on the grounds that the company:
-(a) is or is likely to become unable to pay its debts; and
-(b) intends to present a compromise or arrangement to its creditors (or classes thereof)
-either pursuant to the Companies Act, the law of a foreign country or by way of a
-consensual restructuring.
-The Grand Court may, among other things, make an order appointing a restructuring
-officer upon hearing of such petition, with such powers and to carry out such functions as the
-court may order. At any time (i) after the presentation of a petition for the appointment of a
-restructuring officer but before an order for the appointment of a restructuring officer has been
-made, and (ii) when an order for the appointment of a restructuring officer is made, until such
-order has been discharged, no suit, action or other proceedings (other than criminal
-proceedings) shall be proceeded with or commenced against the company, no resolution to
-wind up the company shall be passed, and no winding up petition may be presented against the
-company, except with the leave of the court. However, notwithstanding the presentation of a
-petition for the appointment of a restructuring officer or the appointment of a restructuring
-officer, a creditor who has security over the whole or part of the assets of the company is
-entitled to enforce the security without the leave of the court and without reference to the
-restructuring officer appointed.
-18 Liquidation
-A company may be placed in liquidation compulsorily by an order of the court, or
-voluntarily (a) by a special resolution of its members if the company is solvent, or (b) by an
-ordinary resolution of its members if the company is insolvent. The liquidator’s duties are to
-collect the assets of the company (including the amount (if any) due from the contributories
-(shareholders)), settle the list of creditors and discharge the company’s liability to them,
-rateably if insufficient assets exist to discharge the liabilities in full, and to settle the list of
-contributories and divide the surplus assets (if any) amongst them in accordance with the rights
-attaching to the shares.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-27 –
-
-19 Stamp Duty on Transfers
-No stamp duty is payable in the Cayman Islands on transfers of shares of Cayman Islands
-companies except those which hold interests in land in the Cayman Islands.
-20 Taxation
-Pursuant to section 6 of the Tax Concessions Act (As Revised) of the Cayman Islands, the
-Company may obtain an undertaking from the Financial Secretary of the Cayman Islands:
-(a) that no law which is enacted in the Cayman Islands imposing any tax to be levied
-on profits, income, gains or appreciations shall apply to the Company or its
-operations; and
-(b) in addition, that no tax to be levied on profits, income, gains or appreciations or
-which is in the nature of estate duty or inheritance tax shall be payable:
-(i) on or in respect of the shares, debentures or other obligations of the Company;
-or
-(ii) by way of the withholding in whole or in part of any relevant payment as
-defined in section 6(3) of the Tax Concessions Act (As Revised).
-The Cayman Islands currently levy no taxes on individuals or corporations based upon
-profits, income, gains or appreciations and there is no taxation in the nature of inheritance tax
-or estate duty. There are no other taxes likely to be material to the Company levied by the
-Government of the Cayman Islands save certain stamp duties which may be applicable, from
-time to time, on certain instruments executed in or brought within the jurisdiction of the
-Cayman Islands. The Cayman Islands are not party to any double tax treaties that are applicable
-to any payments made by or to the Company.
-21 Exchange Control
-There are no exchange control regulations or currency restrictions in the Cayman Islands.
-22 General
-Maples and Calder (Hong Kong) LLP , the Company’s legal advisor on Cayman Islands
-law, have sent to the Company a letter of advice summarising aspects of Cayman Islands
-company law. This letter, together with a copy of the Companies Act, is on display on the
-websites as referred to in the section headed “Documents Available on Display” in Appendix
-V . Any person wishing to have a detailed summary of Cayman Islands company law or advice
-on the differences between it and the laws of any jurisdiction with which he/she is more
-familiar is recommended to seek independent legal advice.
-APPENDIX III SUMMARY OF THE CONSTITUTION OF OUR
-COMPANY AND CAYMAN ISLANDS COMPANY LA W
-– III-28 –
-
-A. FURTHER INFORMATION ABOUT OUR GROUP
-1. Incorporation of Our Company
-Our Company was incorporated in the Cayman Islands under the Companies Act as an
-exempted company with limited liability on June 30, 2021. Our registered office is at Maples
-Corporate Services Limited, PO Box 309, Ugland House, Grand Cayman, KY1-1104, Cayman
-Islands. Accordingly, our Company’s corporate structure and Articles of Association are
-subject to the relevant laws of the Cayman Islands. A summary of our Articles of Association
-is set out in the section headed “Summary of the Constitution of our Company and Cayman
-Islands Company Law” in Appendix III to this Prospectus.
-Our headquarters and principal places of business in the PRC are at 11th Floor, Building
-B, Xinyan Mansion, No. 65 Guiqing Road, Xuhui District, Shanghai, PRC. Our Company has
-established its principal place of business in Hong Kong at Room 1917, 19/F, Lee Garden One,
-33 Hysan Avenue, Causeway Bay, Hong Kong and has been registered as a non-Hong Kong
-company on June 20, 2025 under Part 16 of the Companies Ordinance with the Registrar of
-Companies in Hong Kong. Ms. Chan Sau Ling has been appointed as the authorized
-representative of our Company for the acceptance of service of process in Hong Kong.
-2. Changes in the Share Capital of Our Company
-The following sets out the change in the share capital of our Company during the two
-years immediately preceding the date of this Prospectus:
-On July 17, 2024, the share capital of our Company was increased from 240,616,816
-Shares to 240,951,486 Shares.
-On September 2, 2024, the share capital of our Company was increased from 240,951,486
-Shares to 252,530,121 Shares.
-On December 5, 2024, the share capital of our Company was increased from 252,530,121
-Shares to 252,941,218 Shares.
-On June 13, 2025, the share capital of our Company was increased from 252,941,218
-Shares to 256,846,760 Shares.
-On July 29, 2025, the share capital of our Company was increased from 256,846,760
-Shares to 258,894,137 Shares.
-On August 8, 2025, the share capital of our Company was increased from 258,894,137
-Shares to 265,564,623 Shares.
-On August 18, 2025, the share capital of our Company was increased from 265,564,623
-Shares to 280,058,068 Shares.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-1 –
-
-Save as disclosed above and the section headed “History, Reorganization and Corporate
-Structure”, there has been no other alternations in our share capital of our Company within the
-two years immediately preceding the date of this Prospectus.
-3. Changes in the Share Capital of Our Subsidiaries
-A summary of the corporate information and the particulars of our subsidiaries are set out
-in the Accountants’ Report in Appendix I to this Prospectus.
-The following sets out the changes in the share capital of the Company’s subsidiaries
-during the two years immediately preceding the date of this Prospectus:
- On May 12, 2025, the registered share capital of Shanghai MiniMax was increased
-from RMB2.01 million to approximately RMB2.03 million.
- On June 23, 2025, the registered share capital of Shanghai Jizhi was increased from
-USD20 million to RMB1 billion.
-Save as disclosed above and the section headed “History, Reorganization and Corporate
-Structure”, there had been no other alterations of share capital of our subsidiaries within the
-two years preceding the date of this Prospectus.
-4. Resolutions of our Shareholders
-Pursuant to the written resolutions of all Shareholders passed on December 29, 2025,
-among other things:
-(a) the Memorandum and Articles of Association were approved and adopted
-conditional upon Listing;
-(b) the Global Offering and the Over-allotment Option were approved;
-(c) all of the Class B Ordinary Shares held by MiniMax Matrix be re-designated and
-re-classified as Class A Ordinary Shares, all of the Class A Ordinary Shares held by
-Alpha EXP be re-designated and re-classified as Class B Ordinary Shares, all of the
-Preferred Shares be re-designated and re-classified as Class A Ordinary Shares, and
-the authorized share capital of the Company shall be US$50,000 divided into
-393,349,925 Class A Ordinary Shares of US$0.0001 par value each and 106,650,075
-Class B Ordinary Shares of US$0.0001 par value each and the issued share capital
-of the Company shall be US$28,252.3364 divided into 198,955,534 Class A
-Ordinary Shares of US$0.0001 par value each and 81,102,534 Class B Ordinary
-Shares of US$0.0001 par value each, in each case to be effective on the Listing Date;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-2 –
-
-(d) a general unconditional mandate was given to our Directors to exercise all the
-powers of our Company to (i) allot, issue and deal with Class A Ordinary Shares or
-securities convertible into Class A Ordinary Shares and to make or grant offers or
-agreements or options (including any warrants, bonds, notes and debentures
-conferring any rights to subscribe for or otherwise receive Shares) and (ii) sell
-and/or transfer Class A Ordinary Shares out of treasury that are held as treasury
-shares which might require Class A Ordinary Shares to be allotted, issued, or dealt
-with, or to be sold and/or transferred out of treasury that are held as treasury shares,
-other than pursuant to the Global Offering or pursuant to a rights issue or pursuant
-to the exercise of any subscription rights attaching to any warrants or any option
-scheme or similar arrangement which may be allotted and issued by our Company
-from time to time on a specific authority granted by the Shareholders in general
-meeting or, pursuant to the allotment and issue of Class A Ordinary Shares in lieu
-of the whole or part of a dividend on Class A Ordinary Shares in accordance with
-the Articles, Shares not exceed 20% of the number of the Shares in issue (excluding
-any treasury shares) immediately following completion of the Global Offering;
-(e) a general unconditional mandate (the “ Repurchase Mandate ”) was given to our
-Directors to exercise all the powers of our Company to repurchase Class A Ordinary
-Shares on the Stock Exchange or on any other stock exchange on which the
-securities of our Company may be listed and which is recognised by the SFC and the
-Stock Exchange for this purpose, such number of Shares shall not exceed 10% of the
-total number of Shares in issue immediately following the completion of the Global
-Offering, excluding any treasury shares or Class A Ordinary Shares to be sold, or
-issued and allotted pursuant to the exercise of the Over-allotment Option; and
-(f) the Repurchase Mandate was extended by the addition to the number of the Shares
-which may be allotted, or agreed conditionally or unconditionally to be allotted and
-issued by our Directors pursuant to such general mandate of an amount representing
-the number of Shares repurchased by the Company pursuant to the mandate to
-purchase shares referred to in paragraph (e) above, provided that such amount shall
-not exceed 10% of the total number of the Shares in issue (excluding any treasury
-shares) immediately following the completion of the Global Offering, excluding any
-Class A Ordinary Shares to be sold, or issued and allotted pursuant to the exercise
-of the Over-allotment Option.
-Each of the general mandates referred to in paragraphs (d), (e) and (f) above will remain
-in effect until whichever is the earliest of:
- the conclusion of the next annual general meeting of our Company unless otherwise
-renewed by an ordinary resolution of our Shareholders in a general meeting, either
-unconditionally or subject to conditions; or
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-3 –
-
- the expiration of the period within which our Company’s next annual general
-meeting is required by the Articles of Association or any other applicable laws to be
-held; or
- the date on which it is varied or revoked by an ordinary resolution of our
-Shareholders in a general meeting.
-(g) the Post-IPO Share Incentive Plan was approved.
-5. Repurchases of Our Own Securities
-(a) Provisions of the Listing Rules
-The Listing Rules permit companies with a primary listing on the Stock Exchange to
-repurchase their securities on the Stock Exchange subject to certain restrictions, the more
-important of which are summarized below:
-(i) Shareholders’ approval
-All proposed repurchases of shares (which must be fully paid up) by a company with
-a primary listing on the Stock Exchange must be approved in advance by an ordinary
-resolution of the Shareholders in general meeting, either by way of general mandate or by
-specific approval of a particular transaction.
-Pursuant to a written resolutions of all Shareholders dated December 29, 2025, the
-Repurchase Mandate was given to the Directors authorizing any repurchase by our
-Company of Class A Ordinary Shares on the Stock Exchange or on any other stock
-exchange on which the securities may be listed and which is recognized by the SFC and
-the Stock Exchange for this purpose, of not more than 10% of the number of Shares in
-issue (excluding any treasury shares) immediately following the completion of the Global
-Offering but excluding any Class A Ordinary Shares which may be issued pursuant to the
-exercise of the Over-allotment Option until the conclusion of our next annual general
-meeting, or the date by which our next annual general meeting is required by the Articles
-of Association or any applicable law to be held, or the passing of an ordinary resolution
-by the Shareholders revoking or varying the authority given to the Directors, whichever
-occurs first.
-(ii) Source of funds
-Repurchases must be funded out of funds legally available for the purpose in
-accordance with our Articles and the applicable laws of Hong Kong and the Cayman
-Islands. A listed company may not repurchase its own securities on the Stock Exchange
-for a consideration other than cash or for settlement otherwise than in accordance with the
-trading rules of the Stock Exchange from time to time. As a matter of Cayman Islands law,
-any repurchases by the Company may be made out of profits or out of the proceeds of a
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-4 –
-
-new issue of shares made for the purpose of the repurchase or from sums standing to the
-credit of our share premium account or out of capital, if so authorised by the Articles of
-Association and subject to the Cayman Companies Act. Any premium payable on the
-repurchase over the par value of the shares to be repurchased must have been provided
-for out of profits or from sums standing to the credit of our share premium account or out
-of capital, if so authorised by the Articles of Association and subject to the Cayman
-Companies Act.
-(iii) Trading restrictions
-The total number of Class A Ordinary Shares which our Company may repurchase
-is up to 10% of the total number of our Shares in issue (excluding any treasury shares)
-immediately after the completion of the Global Offering (but not taking into account any
-Class A Ordinary Shares which may be issued pursuant to the exercise of the
-Over-allotment Option). Our Company may not issue new Class A Ordinary Shares, or a
-sale or transfer of any treasury shares, or announce a proposed issue of new Shares, or a
-sale or transfer of any treasury shares for a period of 30 days immediately following a
-share repurchase without the prior approval of the Stock Exchange. For the avoidance of
-doubt, this restriction will not apply to (i) a new issue of Shares, or a sale or transfer of
-treasury shares under a capitalization issue, (ii) a grant of share awards or options under
-a share scheme that complies with Chapter 17 of the Listing Rules or a new issue of
-Shares or a transfer of treasury shares upon vesting or exercise of share awards or options
-under the share scheme that complies with Chapter 17 of the Listing Rules, and (iii) a new
-issue of Shares or a transfer of treasury shares pursuant to the exercise of warrants, share
-options or similar instruments requiring the issuer to issue securities which were
-outstanding prior to the repurchase. Our Company is also prohibited from repurchasing
-Class A Ordinary Shares on the Stock Exchange if the repurchase would result in the
-number of listed Class A Ordinary Shares which are in the hands of the public falling
-below the relevant prescribed minimum percentage as required by the Stock Exchange.
-Our Company is required to procure that the broker appointed by our Company to effect
-a repurchase of Class A Ordinary Shares discloses to the Stock Exchange such
-information with respect to the repurchase as the Stock Exchange may require. As
-required by the prevailing requirements of the Listing Rules, an issuer shall not purchase
-its shares on the Stock Exchange if the purchase price is higher by 5% or more than the
-average closing market price for the five preceding trading days on which its shares were
-traded on the Stock Exchange.
-(iv) Status of repurchased Class A Ordinary Shares
-Following a repurchase of Class A Ordinary Shares, the Company may cancel any
-repurchased Class A Ordinary Shares and/or hold them as treasury shares subject to,
-among others, market conditions and its capital management needs at the relevant time of
-the repurchases, which may change due to evolving circumstances.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-5 –
-
-(v) Suspension of repurchase
-Pursuant to the Listing Rules, our Company may not make any repurchases of Class
-A Ordinary Shares after inside information has come to its knowledge until the
-information is made publicly available. In particular, under the requirements of the
-Listing Rules in force as of the date hereof, during the period of 30 days immediately
-preceding the earlier of:
-(i) the date of the Board meeting (as such date is first notified to the Stock
-Exchange in accordance with the Listing Rules) for the approval of our
-Company’s results for any year, half year, quarterly or any other interim period
-(whether or not required under the Listing Rules); and
-(ii) the deadline for our Company to publish an announcement of our Company’s
-results for any year or half-year under the Listing Rules, or quarterly or any
-other interim period (whether or not required under the Listing Rules), and in
-each case ending on the date of the results announcement, our Company may
-not repurchase Class A Ordinary Shares on the Stock Exchange unless the
-circumstances are exceptional.
-In addition, the Stock Exchange may prohibit a repurchase of securities on the Stock
-Exchange if a listed company has breached the Listing Rules.
-The Company may not purchase any of its Class A Ordinary Shares on the Stock
-Exchange for a period of 30 days after any sale or transfer of any treasury shares on the
-Stock Exchange, without the prior approval of the Stock Exchange.
-(vi) Procedural and reporting requirements
-As required by the Listing Rules, repurchases of Shares on the Stock Exchange or
-otherwise must be reported to the Stock Exchange not later than 30 minutes before the
-earlier of the commencement of the morning trading session or any pre-opening session
-on the Stock Exchange business day following any day on which our Company may make
-a purchase of Shares. The report must state the total number of Shares purchased the
-previous day, the purchase price per Share or the highest and lowest prices paid for such
-purchases, and whether the purchased Shares are cancelled following settlement of any
-such purchase or held as treasury shares, and where applicable, the reasons for any
-deviation from the intention statement previously disclosed by the Company. In addition,
-our Company’s annual report is required to disclose details regarding repurchases of
-Shares made during the year, including a monthly breakdown of the number of shares
-repurchased, the purchase price per Share or the highest and lowest price paid for all such
-purchases, where relevant, and the aggregate prices paid.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-6 –
-
-(vii) Connected parties
-A company is prohibited from knowingly repurchasing securities on the Stock
-Exchange from a core connected person (as defined in the Listing Rules) and a core
-connected person shall not knowingly sell its securities to the company on the Stock
-Exchange.
-(b) Reasons and impact for repurchases
-The Directors believe that it is in the best interests of our Company and Shareholders for
-the Directors to have general authority from the Shareholders to enable the Directors to
-repurchase Class A Ordinary Shares in the market. Such repurchases may, depending on market
-conditions and funding arrangements at the time, lead to an enhancement of the net asset value
-per Share and/or earnings per Share and will only be made where the Directors believe that
-such repurchases will benefit our Company and our Shareholders.
-(c) Funding of repurchases
-In repurchasing securities, our Company may only apply funds legally available for such
-purpose in accordance with the Articles, the Listing Rules and the applicable laws and
-regulations of Hong Kong.
-On the basis of the current financial position as disclosed in this Prospectus and taking
-into account the current working capital position, the Directors consider that, if the Repurchase
-Mandate were to be exercised in full, it might have a material adverse effect on the working
-capital and/or the gearing position of our Company as compared with the position disclosed in
-this Prospectus. The Directors, however, do not propose to exercise the Repurchase Mandate
-to such an extent as would, in the circumstances, have a material adverse effect on the working
-capital requirements or the gearing levels of our Company which in the opinion of the Directors
-are from time to time appropriate for our Company.
-(d) Interim measures
-For any treasury shares of the Company deposited with CCASS pending resale on the
-Stock Exchange, the Company shall, upon approval by the Board, implement the below interim
-measures which include (without limitation):
-(i) procuring its broker not to give any instructions to HKSCC to vote at general
-meetings for the treasury shares deposited with CCASS;
-(ii) in the case of dividends or distributions (if any and where applicable), withdrawing
-the treasury shares from CCASS, and either re-register them in its own name as
-treasury shares or cancel them, in each case before the relevant record date for the
-dividend or distributions; or
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-7 –
-
-(iii) taking any other measures to ensure that it will not exercise any Shareholders’ rights
-or receive any entitlements which would otherwise be suspended under the
-applicable laws if those Shares were registered in its own name as treasury shares.
-(e) General
-The Company did not hold any treasury shares as of the Latest Practicable Date and will
-not hold any treasury shares upon Listing. To the best knowledge of the Directors, neither the
-explanatory statement contained herein nor the proposed share repurchase has unusual features.
-None of the Directors or, to the best of their knowledge having made all reasonable
-enquiries, any of their close associates currently intends to sell any Shares to our Company.
-The Directors have undertaken that, so far as the same may be applicable, they will
-exercise the Repurchase Mandate in accordance with the Listing Rules and the applicable laws
-and regulations in the Cayman Islands.
-Any repurchase of Shares that results in the number of Shares held by the public being
-reduced to less than such minimum percentage prescribed by the Stock Exchange could only
-be implemented if the Stock Exchange agreed to waive the Listing Rules requirements
-regarding the public shareholding referred to above. It is believed that a waiver of this
-provision would not normally be granted other than in exceptional circumstances.
-If, as a result of any repurchase of Shares, a Shareholder’s proportionate interest in the
-voting rights of our Company increases, such increase will be treated as an acquisition for the
-purposes of the Takeovers Code. Accordingly, a Shareholder or a group of Shareholders acting
-in concert could obtain or consolidate control of our Company and become obliged to make a
-mandatory offer in accordance with Rule 26 of the Takeovers Code.
-Save as aforesaid, our Directors are not aware of any consequences which would arise
-under the Takeovers Code as a consequence of any repurchases pursuant to the general mandate
-to repurchase Shares.
-No core connected person has notified our Company that he or she has a present intention
-to sell Shares to our Company, or has undertaken not to do so, if the Repurchase Mandate is
-exercised.
-B. FURTHER INFORMATION ABOUT OUR BUSINESS
-1. Summary of Material Contracts
-We have entered into the following contracts (not being contracts entered into in the
-ordinary course of business) within the two years preceding the date of this Prospectus that are
-or may be material:
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-8 –
-
-(a) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Abu Dhabi Investment Authority, China International Capital
-Corporation Hong Kong Securities Limited, UBS Securities Hong Kong Limited,
-UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley
-Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in an
-aggregate amount of the Hong Kong dollar equivalent of US$65 million;
-(b) the cornerstone investment agreement dated December 29, 2025 entered into among
-our Company, Alisoft China Holding Limited, China International Capital
-Corporation Hong Kong Securities Limited, UBS Securities Hong Kong Limited,
-UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley
-Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in an
-aggregate amount of the Hong Kong dollar equivalent of US$30 million;
-(c) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Aspex Master Fund, China International Capital Corporation Hong
-Kong Securities Limited, UBS Securities Hong Kong Limited, UBS AG Hong Kong
-Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley Asia Limited to
-subscribe for Class A Ordinary Shares at the Offer Price in an aggregate amount of
-the Hong Kong dollar equivalent of US$35 million;
-(d) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Abstract Enigma Limited, China International Capital Corporation
-Hong Kong Securities Limited, UBS Securities Hong Kong Limited, UBS AG Hong
-Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley Asia Limited to
-subscribe for Class A Ordinary Shares at the Offer Price in an aggregate amount of
-the Hong Kong dollar equivalent of US$35 million;
-(e) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, China Universal Asset Management (Hong Kong) Company Limited,
-China International Capital Corporation Hong Kong Securities Limited, UBS
-Securities Hong Kong Limited, UBS AG Hong Kong Branch, Goldman Sachs (Asia)
-L.L.C. and Morgan Stanley Asia Limited to subscribe for Class A Ordinary Shares
-at the Offer Price in an aggregate amount of the Hong Kong dollar equivalent of
-US$15 million;
-(f) the cornerstone investment agreement dated December 29, 2025 entered into among
-our Company, IDG Breyer Capital Fund L.P ., China International Capital
-Corporation Hong Kong Securities Limited, UBS Securities Hong Kong Limited,
-UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley
-Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in an
-aggregate amount of the Hong Kong dollar equivalent of US$15 million;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-9 –
-
-(g) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Eastspring Investments (Singapore) Limited, China International
-Capital Corporation Hong Kong Securities Limited, UBS Securities Hong Kong
-Limited, UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan
-Stanley Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in
-an aggregate amount of the Hong Kong dollar equivalent of US$15 million;
-(h) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, E Fund Management Co., Ltd., China International Capital
-Corporation Hong Kong Securities Limited, UBS Securities Hong Kong Limited,
-UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley
-Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in an
-aggregate amount of the Hong Kong dollar equivalent of US$10 million;
-(i) the cornerstone investment agreement dated December 29, 2025 entered into among
-our Company, Janchor Partners Pan-Asian Master Fund and Janchor Partners
-Opportunities Master Fund III, China International Capital Corporation Hong Kong
-Securities Limited, UBS Securities Hong Kong Limited, UBS AG Hong Kong
-Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley Asia Limited to
-subscribe for Class A Ordinary Shares at the Offer Price in an aggregate amount of
-the Hong Kong dollar equivalent of US$35 million;
-(j) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Martis Fund, L.P ., China International Capital Corporation Hong
-Kong Securities Limited, UBS Securities Hong Kong Limited, UBS AG Hong Kong
-Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley Asia Limited to
-subscribe for Class A Ordinary Shares at the Offer Price in an aggregate amount of
-the Hong Kong dollar equivalent of US$15 million;
-(k) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Mirae Asset Securities Co., Ltd., China International Capital
-Corporation Hong Kong Securities Limited, UBS Securities Hong Kong Limited,
-UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley
-Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in an
-aggregate amount of the Hong Kong dollar equivalent of US$20 million;
-(l) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, MPC VII Pte. Ltd., China International Capital Corporation Hong
-Kong Securities Limited, UBS Securities Hong Kong Limited, UBS AG Hong Kong
-Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley Asia Limited to
-subscribe for Class A Ordinary Shares at the Offer Price in an aggregate amount of
-the Hong Kong dollar equivalent of US$15 million;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-10 –
-
-(m) the cornerstone investment agreement dated December 29, 2025 entered into among
-our Company, Perseverance Asset Management International (Singapore) Pte. Ltd.,
-China International Capital Corporation Hong Kong Securities Limited, UBS
-Securities Hong Kong Limited, UBS AG Hong Kong Branch, Goldman Sachs (Asia)
-L.L.C. and Morgan Stanley Asia Limited to subscribe for Class A Ordinary Shares
-at the Offer Price in an aggregate amount of the Hong Kong dollar equivalent of
-US$25 million;
-(n) the cornerstone investment agreement dated December 28, 2025 entered into among
-our Company, Taikang Life Insurance Co., Ltd, China International Capital
-Corporation Hong Kong Securities Limited, UBS Securities Hong Kong Limited,
-UBS AG Hong Kong Branch, Goldman Sachs (Asia) L.L.C. and Morgan Stanley
-Asia Limited to subscribe for Class A Ordinary Shares at the Offer Price in an
-aggregate amount of the Hong Kong dollar equivalent of US$20 million; and
-(o) the Hong Kong Underwriting Agreement.
-2. Intellectual Property Rights of our Group
-(a) Trademarks
-As of the Latest Practicable Date, our Group had registered the following trademarks
-which we consider to be material to our Group’s business:
-No.
-Registered
-owner
-Trademark
-registered Class
-Registration
-number
-Place of
-registration
-Validity
-period
-1. /H1118/H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-72922073 PRC 10/06/2034
-2. /H1118/H1118Shanghai Jizhi
-Class 42 Design and
-research
-72917167 PRC 10/06/2034
-3. /H1118/H1118Shanghai Jizhi
- Class 9 Scientific
-apparatus
-72910717 PRC 10/06/2034
-4. /H1118/H1118Shanghai Jizhi
- Class 35 Advertising
-sales
-72913727 PRC 09/27/2034
-5. /H1118/H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-72922086 PRC 02/06/2034
-6. /H1118/H1118Shanghai Jizhi
-Class 42 Design and
-research
-72895862 PRC 02/06/2034
-7. /H1118/H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-73169698 PRC 10/13/2034
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-11 –
-
-No.
-Registered
-owner
-Trademark
-registered Class
-Registration
-number
-Place of
-registration
-Validity
-period
-8. /H1118/H1118Shanghai Jizhi
- Class 42 Design and
-research
-73184798 PRC 10/13/2034
-9. /H1118/H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-73184765 PRC 01/20/2034
-10. /H1118Shanghai Jizhi
-Class 9 Scientific
-apparatus
-73168903 PRC 11/27/2034
-11. /H1118Shanghai Jizhi
- Class 45 Social and
-legal services
-75385867 PRC 05/06/2034
-12. /H1118Shanghai Jizhi
- Class 45 Social and
-legal services
-75400071 PRC 05/06/2034
-13. /H1118Shanghai Jizhi
- Class 35 Advertising
-sales
-75389532 PRC 05/06/2034
-14. /H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-75394057 PRC 05/06/2034
-15. /H1118Shanghai Jizhi
-Class 42 Design and
-research
-75399498 PRC 05/06/2034
-16. /H1118Shanghai Jizhi
- Class 45 Social and
-legal services
-75392132 PRC 05/06/2034
-17. /H1118Shanghai Jizhi
- Class 9 Scientific
-apparatus
-75400436 PRC 05/06/2034
-18. /H1118Shanghai
-MiniMax
-Class 35 Advertising
-sales
-75613941 PRC 06/06/2034
-19. /H1118Shanghai
-MiniMax
-Class 38
-Telecommunication
-services
-75619315 PRC 06/06/2034
-20. /H1118Shanghai
-MiniMax
-Class 42 Design and
-research
-75620273 PRC 06/06/2034
-21. /H1118Shanghai
-MiniMax
-Class 45 Social and
-legal services
-75637859 PRC 08/20/2034
-22. /H1118Shanghai
-MiniMax
-Class 9 Scientific
-apparatus
-75624611 PRC 08/20/2034
-23. /H1118Shanghai Jizhi
- Class 35 Advertising
-sales
-75787462 PRC 08/27/2034
-24. /H1118Shanghai Jizhi
- Class 42 Design and
-research
-75821210 PRC 06/27/2034
-25. /H1118Shanghai Jizhi
- Class 45 Social and
-legal services
-75790352 PRC 06/27/2034
-26. /H1118Shanghai Jizhi
- Class 35 Advertising
-sales
-75793990 PRC 09/06/2034
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-12 –
-
-No.
-Registered
-owner
-Trademark
-registered Class
-Registration
-number
-Place of
-registration
-Validity
-period
-27. /H1118Shanghai Jizhi
- Class 42 Design and
-research
-75788960 PRC 06/27/2034
-28. /H1118Shanghai Jizhi
- Class 45 Social and
-legal services
-75801347 PRC 06/27/2034
-29. /H1118Shanghai Jizhi
- Class 9 Scientific
-apparatus
-75800200 PRC 09/06/2034
-30. /H1118Shanghai
-MiniMax
-Class 45 Social and
-legal services
-75900702 PRC 08/27/2034
-31. /H1118Shanghai
-MiniMax
-Class 45 Social and
-legal services
-78623509 PRC 11/06/2034
-32. /H1118Shanghai Jizhi
- Class 42 Design and
-research
-78795933 PRC 12/06/2034
-33. /H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-79760783 PRC 01/13/2035
-34. /H1118Shanghai Jizhi
-Class 45 Social and
-legal services
-79764849 PRC 01/13/2035
-35. /H1118Shanghai
-MiniMax
-Class 9 Scientific
-apparatus
-80030435 PRC 01/13/2035
-36. /H1118Shanghai
-MiniMax
-Class 35 Advertising
-sales
-80010742 PRC 01/13/2035
-37. /H1118Shanghai
-MiniMax
-Class 38
-Telecommunication
-services
-80017430 PRC 01/13/2035
-38. /H1118Shanghai
-MiniMax
-Class 41 Education
-and entertainment
-80042659 PRC 01/13/2035
-39. /H1118Shanghai
-MiniMax
-Class 42 Design and
-research
-80017460 PRC 01/13/2035
-40. /H1118Shanghai
-MiniMax
-Class 45 Social and
-legal services
-80024551 PRC 01/13/2035
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-13 –
-
-No.
-Registered
-owner
-Trademark
-registered Class
-Registration
-number
-Place of
-registration
-Validity
-period
-41. /H1118Shanghai
-MiniMax
-Class 45 Social and
-legal services
-80311996A PRC 03/06/2035
-42. /H1118Shanghai Jizhi
- Class 38
-Telecommunication
-services
-81726199 PRC 05/06/2035
-43. /H1118Shanghai Jizhi
-Class 45 Social and
-legal services
-81723154 PRC 05/06/2035
-44 /H1118/H1118Shanghai
-MiniMax
-Class 41 Education
-and entertainment
-80318472 PRC 04/20/2035
-45 /H1118/H1118Shanghai Jizhi
- Class 9 Scientific
-apparatus
-75802973 PRC 08/27/2034
-46 /H1118/H1118NANONOBLE
-PTE. LTD.
-MINIMAX Class 45 Social and
-legal services
-40202417422S Singapore 08/01/2034
-47 /H1118/H1118NANONOBLE
-PTE. LTD.
-MINIMAX Class 9 Scientific
-apparatus
-1270412 New Zealand 08/02/2034
-48 /H1118/H1118NANONOBLE
-PTE. LTD.
-MINIMAX Class 42 Design and
-research
-1270413 New Zealand 08/02/2034
-49 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 9 Scientific
-apparatus
-40202417414R Singapore 08/01/2034
-50 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 35 Advertising
-sales
-40202417415P Singapore 08/01/2034
-51 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 38
-Telecommunication
-services
-40202417417U Singapore 08/01/2034
-52 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 41 Education
-entertainment
-40202417412W Singapore 08/01/2034
-53 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 42 Design and
-research
-40202417416Y Singapore 08/01/2034
-54 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 45 Social and
-legal services
-40202417413T Singapore 08/01/2034
-55 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 9 Scientific
-apparatus
-1270462 New Zealand 08/05/2034
-56 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 38
-Telecommunication
-services
-1270463 New Zealand 08/05/2034
-57 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 38
-Telecommunication
-services
-JID2024074848 Indonesia 08/07/2034
-58 /H1118/H1118SUBSUP PTE.
-LTD.
-Talkie Class 38
-Telecommunication
-services
-3201806 Mexico 12/13/2034
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-14 –
-
-No.
-Registered
-owner
-Trademark
-registered Class
-Registration
-number
-Place of
-registration
-Validity
-period
-59 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 9 Scientific
-apparatus
-UK00004116722 UK 10/25/2034
-60 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 35 Advertising
-sales
-UK00004116722 UK 10/25/2034
-61 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 38
-Telecommunication
-services
-UK00004116722 UK 10/25/2034
-62 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 41 Education
-entertainment
-UK00004116722 UK 10/25/2034
-63 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 42 Design and
-research
-UK00004116722 UK 10/25/2034
-64 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 45 Social and
-legal services
-UK00004116722 UK 10/25/2034
-65 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 9 Scientific
-apparatus
-019097061 EU 10/28/2034
-66 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 35 Advertising
-sales
-019097061 EU 10/28/2034
-67 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 38
-Telecommunication
-services
-019097061 EU 10/28/2034
-68 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 41 Education
-entertainment
-019097061 EU 10/28/2034
-69 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 42 Design and
-research
-019097061 EU 10/28/2034
-70 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 45 Social and
-legal services
-019097061 EU 10/28/2034
-71 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 9 Scientific
-apparatus
-2024-115848 Japan 05/22/2035
-72 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 35 Advertising
-sales
-2024-115848 Japan 05/22/2035
-73 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 38
-Telecommunication
-services
-2024-115848 Japan 05/22/2035
-74 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 41 Education
-entertainment
-2024-115848 Japan 05/22/2035
-75 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 42 Design and
-research
-2024-115848 Japan 05/22/2035
-76 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 45 Social and
-legal services
-2024-115848 Japan 05/22/2035
-77 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 9 Scientific
-apparatus
-40202425121Y Singapore 10/29/2034
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-15 –
-
-No.
-Registered
-owner
-Trademark
-registered Class
-Registration
-number
-Place of
-registration
-Validity
-period
-78 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 35 Advertising
-sales
-40202425122T Singapore 10/29/2034
-79 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 38
-Telecommunication
-services
-40202425118S Singapore 10/29/2034
-80 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 41 Education
-entertainment
-40202425119T Singapore 10/29/2034
-81 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 42 Design and
-research
-40202425120X Singapore 10/29/2034
-82 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 45 Social and
-legal services
-40202425123U Singapore 10/29/2034
-83 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 9 Scientific
-apparatus
-2494437 Australia 10/29/2034
-84 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 35 Advertising
-sales
-2494438 Australia 10/29/2034
-85 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 38
-Telecommunication
-services
-2494439 Australia 10/29/2034
-86 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 41 Education
-entertainment
-2494440 Australia 10/29/2034
-87 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 42 Design and
-research
-2494441 Australia 10/29/2034
-88 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 45 Social and
-legal services
-2494442 Australia 10/29/2034
-89 /H1118/H1118NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-00164446 Peru 03/20/2035
-90 /H1118/H1118NANONOBLE
-PTE. LTD.
-Hailuo Class 41 Education
-entertainment
-00164382 Peru 03/18/2035
-91 /H1118/H1118NANONOBLE
-PTE. LTD.
-MINIMAX Class 42 Design and
-research
-00164383 Peru 03/18/2035
-92 /H1118/H1118NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-apparatus
-019136134 EU 01/27/2035
-93 /H1118/H1118NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-019136134 EU 01/27/2035
-94 /H1118/H1118NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-019136134 EU 01/27/2035
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-16 –
-
-As of the Latest Practicable Date, our Group had applied for the registration of the
-following trademarks which we consider to be material to our Group’s business:
-No. Trademark Owner Class
-Date of
-application Place of application
-1 /H1118/H1118
- Nanonoble
-PTE. LTD
-Class 9 Scientific
-apparatus, Class 35
-Advertising sales, Class
-38 Telecommunication
-services, Class 41
-Education
-Entertainment, Class 42
-Design and research,
-Class 45 Social and
-legal services
-11/10/2025 Hong Kong
-2 /H1118/H1118
-Nanonoble
-PTE. LTD
-Class 9 Scientific
-apparatus, Class 35
-Advertising sales, Class
-38 Telecommunication
-services, Class 41
-Education Entertainment,
-Class 42 Design and
-research, Class 45
-Social and legal services
-06/04/2025 Hong Kong
-3 /H1118/H1118MINIMAX Shanghai Jizhi Class 38
-Telecommunication
-services
-08/05/2024 America
-4 /H1118/H1118MINIMAX Shanghai Jizhi Class 9 Scientific
-Apparatus
-08/05/2024 America
-5 /H1118/H1118MINIMAX Shanghai Jizhi Class 42 Design and
-research
-08/05/2024 America
-6 /H1118/H1118Hailuo NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-10/29/2024 America
-7 /H1118/H1118Hailuo NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 10/29/2024 America
-8 /H1118/H1118Hailuo NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-10/29/2024 America
-9 /H1118/H1118Hailuo NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-10/29/2024 America
-10 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-10/29/2024 America
-11/H1118/H1118Hailuo NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-10/29/2024 America
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-17 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-12 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/29/2024 Saudi
-13 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 10/29/2024 New Zealand
-14 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-10/29/2024 New Zealand
-15 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-10/29/2024 New Zealand
-16 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 America
-17 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 America
-18 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 45 Social and
-legal services
-08/02/2024 America
-19 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/30/2025 America
-20 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-01/30/2025 America
-21 /H1118
-NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-02/3/2025 America
-22 /H1118
-NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-02/3/2025 America
-23 /H1118
- NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-02/3/2025 America
-24 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 United Kingdom
-25 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-08/02/2024 United Kingdom
-26 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 United Kingdom
-27 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 United Kingdom
-28 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 45 Social and
-legal services
-08/02/2024 United Kingdom
-29 /H1118 TALKIE SUBSUP
-PTE. LTD.
-Class 42 Design and
-research
-04/24/2025 United Kingdom
-30 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/01/2024 European Union
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-18 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-31 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-08/01/2024 European Union
-32 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-08/01/2024 European Union
-33 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 European Union
-34 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 European Union
-35 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 45 Social and
-legal services
-08/02/2024 European Union
-36 /H1118 TALKIE SUBSUP
-PTE. LTD.
-Class 42 Design and
-research
-04/24/2025 European Union
-37 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 01/27/2025 Singapore
-38 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-01/27/2025 Singapore
-39 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 Singapore
-40 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 Australia
-41 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 Australia
-42 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 42 Design
-and research
-08/02/2024 Australia
-43 /H1118 MINIMAX Shanghai Jizhi Class 9 Scientific
-Apparatus
-08/05/2024 Canadian
-44 /H1118 MINIMAX Shanghai Jizhi Class 42 Design
-and research
-08/05/2024 Canadian
-45 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/03/2024 Australia
-46 /H1118
-Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/03/2024 Australia
-47 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 Japan
-48 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 Japan
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-19 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-49 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 Canadian
-50 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 Canadian
-51 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-08/02/2024 Korea
-52 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-08/02/2024 Korea
-53 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 45 Social and
-legal services
-08/02/2024 Korea
-54 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-10/29/2024 New Zealand
-55 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-10/29/2024 New Zealand
-56 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-10/29/2024 New Zealand
-57 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-10/29/2024 Canadian
-58 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 10/29/2024 Canadian
-59 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-10/29/2024 Canadian
-60 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-10/29/2024 Canadian
-61 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-10/29/2024 Canadian
-62 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-10/29/2024 Canadian
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-20 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-63 /H1118
- NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-01/27/2025 America; Australia;
-United Kingdom;
-Japan; Canada;
-European Union;
-Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-64 /H1118
-NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 01/27/2025 America; United
-Kingdom; Canada;
-European Union;
-Indonesia; Brazil;
-India; Russia;
-Pakistan; Turkey;
-Egypt; Columbia;
-Israel;
-65 /H1118
-NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-01/27/2025 America; Australia;
-United Kingdom;
-Japan; Canada;
-European Union;
-Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-66 /H1118
-NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 America; Australia;
-United Kingdom;
-Japan; Canada;
-European Union;
-Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-21 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-67 /H1118
- NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-01/27/2025 America; Australia;
-United Kingdom;
-Japan; Canada;
-European Union;
-Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-68 /H1118
-NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-01/27/2025 America; United
-Kingdom; Canada;
-European Union;
-Indonesia; Brazil;
-India; Russia;
-Pakistan; Turkey;
-Egypt; Columbia;
-Israel;
-69 /H1118
-NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 Argentina
-70 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 Argentina
-71 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-01/22/2025 Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-72 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 01/22/2025 Indonesia, Brazil,
-Vietnam, India,
-Russia, Pakistan,
-Korea, Mexico,
-Turkey, Egypt,
-Columbia, Israel
-73 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-01/22/2025 Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-22 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-74 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/22/2025 Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-75 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-01/22/2025 Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel;
-76 /H1118 Hailuo NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-01/22/2025 Indonesia, Brazil,
-Vietnam, India,
-Russia, Pakistan,
-Korea, Mexico,
-Turkey, Egypt,
-Columbia, Israel
-77 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 Argentina
-78 /H1118
-NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-01/27/2025 Argentina
-79 /H1118
- NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-01/27/2025 Peru
-80 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-01/27/2025 United Kingdom;
-Japan; Canada;
-Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel
-81 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 English, Pakistan
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-23 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-82 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-01/27/2025 Indonesia; Brazil;
-Vietnam; India;
-Russia; Pakistan;
-Korea; Mexico;
-Turkey; Thailand;
-Egypt; Malaysia;
-Columbia; Israel
-83 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-01/27/2025 Australia; Japan;
-Canada; Indonesia;
-Brazil; Vietnam;
-India; Russia;
-Pakistan; Korea;
-Mexico; Turkey;
-Thailand; Egypt;
-Malaysia;
-Columbia; Israel
-84 /H1118
-NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-01/27/2025 Australia; United
-Kingdom; Japan;
-Canada; European
-Union; Indonesia;
-Brazil; Vietnam;
-India; Russia;
-Pakistan; Korea;
-Mexico; Turkey;
-Thailand; Egypt;
-Malaysia;
-Columbia; Israel
-85 /H1118
-NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-01/27/2025 United Kingdom;
-Vietnam; Russia;
-Egypt
-86 /H1118
-NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-01/27/2025 Australia; United
-Kingdom; Japan;
-Canada; European
-Union; Indonesia;
-Brazil; Vietnam;
-India; Russia;
-Pakistan; Korea;
-Mexico; Turkey;
-Thailand; Egypt;
-Malaysia;
-Columbia; Israel
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-24 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-87 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-03/06/2025 Brazil; Philippines;
-Ukarine; Malaysia;
-Chile; Russia;
-Norway; UAE;
-Turkey;
-88 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 35 Advertising sales 03/06/2025 Brazil; America;
-Philippines;
-Mexico; Ukarine;
-Malaysia; Chile;
-Australia; Russia;
-Norway; Turkey;
-Indonesia; Japan;
-89 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 38
-Telecommunication
-services
-03/06/2025 Brazil; Philippines;
-Ukarine; Malaysia;
-Chile; Russia;
-Norway; UAE;
-Turkey;
-90 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 41 Education
-entertainment
-03/06/2025 Brazil; America;
-Philippines;
-Mexico; Ukarine;
-United Kingdom;
-Malaysia;
-European Union;
-Chile; Canada;
-Russia; Norway;
-UAE; Turkey;
-Indonesia; Japan;
-91 /H1118 Talkie SUBSUP
-PTE. LTD.
-Class 42 Design and
-research
-03/06/2025 Brazil; America;
-Philippines;
-Mexico; Ukarine;
-Malaysia; Chile;
-Russia; Norway;
-Turkey; Indonesia;
-Japan;
-92 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 45 Social and
-legal services
-03/06/2025 Brazil; Philippines;
-Mexico; Ukarine;
-Malaysia; Chile;
-Canada; Australia;
-Russia; Norway;
-UAE; Turkey;
-Indonesia; Japan;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-25 –
-
-No. Trademark Owner Class
-Date of
-application Place of application
-93 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 38
-Telecommunication
-services
-03/14/2025 South Africa
-94 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 45 Social and
-legal services
-03/14/2025 South Africa
-95 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 38
-Telecommunication
-services
-03/18/2025 Peru
-96 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 45 Social and
-legal services
-03/18/2025 Peru
-97 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 45 Social and
-legal services
-03/20/2025 Argentina
-98 /H1118 Talkie SUBSUP PTE.
-LTD.
-Class 45 Social and
-legal services
-04/08/2025 Saudi
-99 /H1118
-NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-04/11/2025 Hong Kong
-100 /H1118
- NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 04/11/2025 Hong Kong
-101 /H1118
- NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-04/11/2025 Hong Kong
-102 /H1118
-NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-04/11/2025 Hong Kong
-103 /H1118
- NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-04/11/2025 Hong Kong
-104 /H1118
- NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-04/11/2025 Hong Kong
-105 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 9 Scientific
-Apparatus
-01/27/2025 Hong Kong
-106 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 35 Advertising sales 04/11/2025 Hong Kong
-107 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 38
-Telecommunication
-services
-04/11/2025 Hong Kong
-108 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 41 Education
-entertainment
-04/11/2025 Hong Kong
-109 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 42 Design and
-research
-04/11/2025 Hong Kong
-110 /H1118 MINIMAX NANONOBLE
-PTE. LTD.
-Class 45 Social and
-legal services
-04/11/2025 Hong Kong
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-26 –
-
-(b) Patents
-As of the Latest Practicable Date, we are the owner of the following material patents,
-details of which are as follows:
-No. Patent Owner Patent Number Application date
-1 /H1118/H1118A Rapid Speech
-Recognition
-Method Based
-on Hierarchical
-Identification
-(ʱॴ
-ࠪ
-ج)
-Beijing Jizhi,
-Shanghai Jizhi
-202210571189.4 05/24/2022
-2 /H1118/H1118A Method and
-Device for
-Acquiring
-Training Text
-for Speech
-Synthesis ( ɓ၇
-Υ
-ٙ
-ʿༀໄ)
-Beijing Jizhi,
-Shanghai Jizhi
-202210678581.9 06/15/2022
-3 /H1118/H1118A Training
-Method and
-Device for
-Error
-Correction
-Model Based on
-Text Data (׵
-፹
-ج
-ʿༀໄ)
-Beijing Jizhi,
-Shanghai Jizhi
-202210805129.4 07/08/2022
-4 /H1118/H1118A Text
-Acquisition
-Method,
-Device, Storage
-Medium and
-Computer
-Device ( ɓ၇˖
-eༀ
-ໄeπᎷʧሯձ
-ၑዚண௪)
-Beijing Jizhi,
-Shanghai Jizhi
-202210952021.8 08/09/2022
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-27 –
-
-No. Patent Owner Patent Number Application date
-5 /H1118/H1118Video Generation
-Method,
-Device,
-Equipment and
-Computer-
-Readable
-Storage
-Medium ( ൖ᎖
-eༀ
-ၑ
-ዚ̙ᛘπᎷʧ
-ሯ)
-Shanghai Jizhi 202211231054.X 10/09/2022
-6 /H1118/H1118Video Generation
-Method,
-Device,
-Equipment and
-Computer-
-Readable
-Storage
-Medium ( ൖ᎖
-eༀ
-ၑ
-ዚ̙ᛘπᎷʧ
-ሯ)
-Shanghai Jizhi 202211226180.6 10/09/2022
-7 /H1118/H1118Text Cleaning
-Method,
-Device,
-Equipment and
-Computer-
-Readable
-Storage
-Medium ( ˖͉
-eༀ
-ၑ
-ዚ̙ᛘπᎷʧ
-ሯ)
-Shanghai Jizhi 202211231064.3 10/09/2022
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-28 –
-
-No. Patent Owner Patent Number Application date
-8 /H1118/H1118Method for
-Determining
-Human V oice
-Fundamental
-Frequency
-Range,
-Electronic
-Device and
-Storage
-Medium ( ɛᑊ
-˙
-eཥɿண௪ʿ
-πᎷʧሯ)
-Beijing Jizhi 202310471776.0 04/27/2023
-9 /H1118/H1118Timbre Mixing
-Method and
-Device, Audio
-Processing
-Method and
-Device,
-Electronic
-Device, and
-Storage
-Medium (Ѝ
-ձༀ
-᎖ஈଣ˙
-ձༀໄeཥɿ
-ண௪eπᎷʧ
-ሯ)
-Beijing Jizhi,
-Shanghai Jizhi
-202311864508.1 12/29/2023
-10 /H1118Speech Synthesis
-Model Training
-Method, Speech
-Synthesis
-Method,
-Electronic
-Device and
-Storage
-Medium (ࠪ
-৅ᇖ˙
-Υϓ˙
-eཥɿண௪ʿ
-πᎷʧሯ)
-Shanghai Jizhi 202311870114.7 12/29/2023
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-29 –
-
-No. Patent Owner Patent Number Application date
-11 /H1118Human-Computer
-Interaction
-Method,
-System, Device
-and Storage
-Medium Based
-on Large
-Language
-Models (ɽ
-ɛዚ
-eӻ
-୕eண௪ձπᎷ
-ʧሯ)
-Shanghai Jizhi 202311857312.X 12/29/2023
-12 /H1118A Method,
-System, Storage
-Medium and
-Program
-Product for
-Protecting User
-Privacy (ڭ
-˙
-eӻ୕eπᎷ
-ʧሯʿ೻ҏପ
-ۜ)
-Beijing Jizhi,
-Shanghai Jizhi
-202311859590.9 12/30/2023
-13 /H1118A Language
-Model Training
-Method, Device
-and Computer
-Program
-Product ( ɓ၇Ⴇ
-৅ᇖ˙
-ၑ
-ۜ)
-Beijing Jizhi,
-Shanghai Jizhi
-202311859562.7 12/30/2023
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-30 –
-
-No. Patent Owner Patent Number Application date
-14 /H1118Anomaly
-Detection
-Method and
-Device,
-Electronic
-Device,
-Distributed
-Computing
-System and
-Storage
-Medium ( ମ੬
-ձༀ
-ໄeཥɿண௪e
-ၑӻ୕
-ʿπᎷʧሯ)
-Beijing Jizhi,
-Shanghai Jizhi
-202311869853.4 12/31/2023
-15 /H1118An Image
-Generation
-Method,
-Device,
-Equipment,
-Storage
-Medium and
-Program
-Product ( ɓ၇ྡ
-eༀ
-ໄeண௪eπᎷ
-ʧሯ˸ʿ೻ҏପ
-ۜ)
-Beijing Jizhi 202311860347.9 12/31/2023
-16 /H1118A Method and
-Device for
-Acquiring
-Audio-Text
-Pairs,
-Electronic
-Device and
-Storage
-Medium (᎖
-ᐏ՟˙
-ձༀໄeཥɿ
-ண௪eπᎷʧ
-ሯ)
-Shanghai Jizhi 202311871259.9 12/31/2023
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-31 –
-
-No. Patent Owner Patent Number Application date
-17 /H1118Speech Synthesis,
-Speech
-Recognition
-Method,
-Training
-Method,
-Device,
-Electronic
-Device, and
-Storage
-Medium (ࠪ
-ᗆй
-e৅ᇖ˙
-eༀໄeཥɿ
-ண௪eπᎷʧ
-ሯ)
-Shanghai Jizhi 202311873032.8 12/31/2023
-18 /H1118An Image
-Generation
-Method,
-Device,
-Equipment,
-Storage
-Medium and
-Program
-Product ( ɓ၇ྡ
-eༀ
-ໄeண௪eπᎷ
-ʧሯ˸ʿ೻ҏପ
-ۜ)
-Shanghai Jizhi 202311860217.5 12/31/2023
-19 /H1118An Image
-Generation
-Method,
-Device,
-Equipment,
-Storage
-Medium and
-Program
-Product ( ɓ၇ྡ
-eༀ
-ໄeண௪eπᎷ
-ʧሯ˸ʿ೻ҏପ
-ۜ)
-Shanghai Jizhi 202311860241.9 12/31/2023
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-32 –
-
-No. Patent Owner Patent Number Application date
-20 /H1118A Method, System
-and Computer
-Program
-Product for
-Acquiring
-Language
-Model Training
-Samples ( ɓ၇
-৅ᇖᅵ
-eӻ
-ၑዚ೻ҏ
-ۜ)
-Shanghai
-MiniMax
-202410650470.6 05/23/2024
-21 /H1118A Role-Playing
-Dialogue Data
-Generation
-Method, System
-and Computer
-Program
-Product ( ɓ၇ԉ
-ЍҲစ࿁༑ᅰኽ
-eӻ୕
-ၑዚ೻ҏପ
-ۜ)
-Shanghai
-MiniMax
-202410651922.2 05/23/2024
-22 /H1118Speaker Pitch
-Prediction
-Method,
-Device,
-Electronic
-Device and
-Storage
-Medium ( Ⴍ༑
-৷ཫ಻˙
-eༀໄeཥɿ
-ண௪eπᎷʧ
-ሯ)
-Shanghai Jizhi 202410683587.4 05/29/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-33 –
-
-No. Patent Owner Patent Number Application date
-23 /H1118Speech and
-Singing V oice
-Synthesis
-Method,
-Training
-Method and
-Device, and
-Model (ձ
-e
-ձༀ
-ۨ)
-Shanghai Jizhi 202410672187.3 05/28/2024
-24 /H1118An Inference
-Optimization
-Method for
-Language
-Models ( ɓ၇Ⴇ
-પଣᎴ
-ج)
-Shanghai
-MiniMax
-202411076211.3 08/07/2024
-25 /H1118A Resource
-Allocation
-Method, Device
-and Electronic
-Device (Quota)
-(ʱ
-eༀໄʿ
-ཥɿண௪)
-(Quota)
-Beijing Jizhi,
-Shanghai Jizhi
-202411216490.9 09/02/2024
-26 /H1118A Design Method,
-Device and
-Equipment for
-V olumetric
-Video
-Acquisition
-Systems ( ɓ၇
-᜗ጐൖ᎖મණӻ
-e
-ༀໄʿண௪)
-Shanghai Jizhi 202411017896.4 07/29/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-34 –
-
-No. Patent Owner Patent Number Application date
-27 /H1118Graphical User
-Interface for
-Launching
-Applications on
-Electronic
-Devices ( ཥɿ
-ක઼Ꮠ͜
-ࠦޢ)
-Beijing Jizhi 202430384909.6 06/21/2024
-28 /H1118Graphical User
-Interface for
-Mobile
-Assistant on
-Electronic
-Devices ( ཥɿ
-Դ͜˓ዚ
-ޢ
-ࠦ)
-Beijing Jizhi 202430384911.3 06/21/2024
-29 /H1118An Automatic API
-Recommendation
-Method and
-Device for
-Object-Oriented
-Instantiation
-Tasks (Σ
-࿁൥ྼԷʷ΂ਕ
-ٙAPIІਗપᑥ
-ʿༀໄ)
-Shanghai Jizhi 201810778473.2 07/16/2018
-30 /H1118A Data Center
-Resource
-Management
-Method and
-Device ( ɓ၇ᅰ
-ኽʕː༟๕၍ଣ
-ʿༀໄ)
-Shanghai Jizhi 202411369222.0 09/29/2024
-31 /H1118Task Processing
-Load Analysis
-Method and
-Device ( ΂ਕஈ
-ج
-ձༀໄ)
-Shanghai Jizhi 202411374448.X 09/29/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-35 –
-
-No. Patent Owner Patent Number Application date
-32 /H1118A Multi-Role
-Interaction
-Method and
-Device ( ɓ၇ε
-ʿ
-ༀໄ)
-Beijing Jizhi 2024116098728 11/12/2024
-33 /H1118A Training and
-Inference
-Method and
-Device for
-Large Language
-Models ( ɓ၇ɽ
-৅ᇖe
-ʿༀ
-ໄ)
-Shanghai Jizhi 2024114704155 10/21/2024
-34 /H1118A Large Language
-Model
-Encoding
-Training
-Method and
-Device ( ɓ၇ɽ
-ᇜᇁ৅
-ʿༀໄ)
-Shanghai Jizhi 2024114704136 10/21/2024
-35 /H1118A Computing
-Power Resource
-Scheduling
-Method and
-Device ( ɓ၇ၑ
-ج
-ʿༀໄ)
-Shanghai Jizhi 2025102521001 03/05/2025
-36 /H1118Speech Synthesis
-Method and
-Device (Υ
-ʿༀໄ)
-Shanghai Jizhi 202411880325.3 29/12/2023
-37 /H1118Speech Synthesis
-Method and
-Device (Υ
-ʿༀໄ)
-Shanghai Jizhi 202411879546.9 29/12/2023
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-36 –
-
-No. Patent Owner Patent Number Application date
-38 /H1118A Speech
-Generation
-Method and
-Device ( ɓ၇Ⴇ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2025105031042 04/22/2025
-39 /H1118Task Processing
-Load Analysis
-Method and
-Device ( ΂ਕஈ
-ج
-ձༀໄ)
-Shanghai Jizhi 202510210133X 29/09/2024
-40 /H1118A Load Balancing
-Method, Device
-and Electronic
-Device for
-Mixture-of-
-Experts Models
-(࢕
-༱ѩፅ
-eༀໄʿཥ
-ɿண௪)
-Shanghai
-MiniMax
-2025105121284 04/23/2025
-41 /H1118A Data Parallel
-Processing
-Method and
-Device ( ɓ၇ᅰ
-ج
-ձༀໄ)
-Shanghai
-MiniMax
-2025106296572 05/16/2025
-42 /H1118A Language
-Model Inference
-Optimization
-Method and
-Device ( ɓ၇Ⴇ
-પଣᎴ
-ʿༀໄ)
-Shanghai
-MiniMax
-2025104989957 08/07/2024
-43 /H1118A Language
-Model Inference
-Optimization
-Method and
-Device ( ɓ၇Ⴇ
-પଣᎴ
-ʿༀໄ)
-Shanghai
-MiniMax
-2025105406753 08/07/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-37 –
-
-No. Patent Owner Patent Number Application date
-44 /H1118Encoding
-Generation
-Method and
-Device for
-Models (ٙۨ
-ձ
-ༀໄ)
-Shanghai Jizhi 202510780088.1 06/12/2025
-45 /H1118A Speech Emotion
-Recognition
-Model
-Construction
-Method and
-Device ( ɓ၇Ⴇ
-ۨ
-ʿༀ
-ໄ)
-Shanghai Jizhi 202510606182.5 05/12/2025
-As of the Latest Practicable Date, our Group had applied for the registration of the
-following patents which we consider to be material to our Group’s business:
-No. Patent Owner Patent Number Application date
-1 /H1118/H1118A Data Processing
-Method,
-Computer-
-Readable
-Storage
-Medium and
-Electronic
-Device ( ɓ၇ᅰ
-ࠇ
-ၑዚ̙ᛘπᎷʧ
-ሯʿཥɿண௪)
-Beijing Jizhi 202210897049.6 07/28/2022
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-38 –
-
-No. Patent Owner Patent Number Application date
-2 /H1118/H1118An Evaluation
-Method and
-Device for
-Machine
-Learning
-Models and
-Computer
-Storage
-Medium (׵
-ٙۨ
-eༀໄ
-ၑዚπᎷʧ
-ሯ)
-Beijing Jizhi 202210989659.9 08/17/2022
-3 /H1118/H1118System Resource
-Permission
-Management
-Method,
-Electronic
-Device and
-Storage
-Medium ( ӻ୕
-၍ଣ˙
-eཥɿண௪ʿ
-πᎷʧሯ)
-Beijing Jizhi 202211308172.6 10/25/2022
-4 /H1118/H1118Video Generation
-Method,
-Device,
-Equipment and
-Computer-
-Readable
-Storage
-Medium ( ൖ᎖
-eༀ
-ၑ
-ዚ̙ᛘπᎷʧ
-ሯ)
-Shanghai Jizhi PCT/CN2022/
-143214
-12/29/2022
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-39 –
-
-No. Patent Owner Patent Number Application date
-5 /H1118/H1118Video Generation
-Method,
-Device,
-Equipment and
-Computer-
-Readable
-Storage
-Medium ( ൖ᎖
-eༀ
-ၑ
-ዚ̙ᛘπᎷʧ
-ሯ)
-Shanghai Jizhi PCT/CN2022/
-143239
-12/29/2022
-6 /H1118/H1118Data Transmission
-Method and
-Device,
-Distributed
-Training
-Method and
-Device ( ᅰኽෂ
-ձༀໄe
-ج
-ձༀໄ)
-Shanghai Jizhi 202410672174.6 05/28/2024
-7 /H1118/H1118A Load Balancing
-Method and
-Device Based
-on Message
-Queues ( ɓ၇ਿ
-ࠋٙ
-ʿༀ
-ໄ)
-Shanghai Jizhi 202411077613.5 08/07/2024
-8 /H1118/H1118A Foreground/
-Background
-Separation
-Method and
-Device (ۃ/
-ʿ
-ༀໄ)
-Shanghai Jizhi 202411006973.6 07/25/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-40 –
-
-No. Patent Owner Patent Number Application date
-9 /H1118/H1118A Network Packet
-Transmission
-Method, System
-and Device ( ɓ
-၇ၣഖ̍ෂ፩˙
-eӻ୕ʿༀ
-ໄ)
-Shanghai Jizhi 202411369682.3 09/29/2024
-10 /H1118A Data Interaction
-Method and
-Device ( ɓ၇ᅰ
-ʿༀ
-ໄ)
-Shanghai
-MiniMax
-202411589464.0 11/08/2024
-11 /H1118A Music
-Generation
-Method,
-Device,
-Electronic
-Device and
-Storage
-Medium ( ɓ၇
-e
-ༀໄeཥɿண௪
-ʿπᎷʧሯ)
-Shanghai Jizhi 2024112102029 08/30/2024
-12 /H1118A Music
-Generation
-Method and
-Device (ࠪ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2024114704140 10/21/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-41 –
-
-No. Patent Owner Patent Number Application date
-13 /H1118Timbre Mixing
-Method and
-Device, Audio
-Processing
-Method and
-Device,
-Electronic
-Device, and
-Storage
-Medium (Ѝ
-ձༀ
-᎖ஈଣ˙
-ձༀໄeཥɿ
-ண௪eπᎷʧ
-ሯ)
-Beijing Jizhi PCT/CN2024/
-130857
-11/08/2024
-14 /H1118Speech Synthesis,
-Speech
-Recognition
-Method,
-Training
-Method,
-Device,
-Electronic
-Device, and
-Storage
-Medium (ࠪ
-ᗆй
-e৅ᇖ˙
-eༀໄeཥɿ
-ண௪eπᎷʧ
-ሯ)
-Shanghai Jizhi PCT/CN2024/
-131601
-11/12/2024
-15 /H1118A Role-Playing
-Dialogue Data
-Generation
-Method, System
-and Computer
-Program
-Product ( ɓ၇ԉ
-ЍҲစ࿁༑ᅰኽ
-eӻ୕
-ၑዚ೻ҏପ
-ۜ)
-Shanghai
-MiniMax
-PCT/CN2024/
-131603
-11/12/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-42 –
-
-No. Patent Owner Patent Number Application date
-16 /H1118Speech
-Recognition
-Method, Model
-Training
-Method, Model,
-and Device ( Ⴇ
-eᅼ
-eᅼ
-eༀໄ)
-Shanghai Jizhi 2024115938901 12/31/2023
-17 /H1118A Large Language
-Model Training
-Method and
-Device ( ɓ၇ɽ
-৅ᇖ˙
-ʿༀໄ)
-Shanghai Jizhi 202411810781.0 12/10/2024
-18 /H1118METHOD AND
-DEVICE FOR
-SPEECH
-SYNTHESIS
-SUBSUP PTE.
-LTD.
-10202500081W 01/10/2025
-19 /H1118A Method,
-System, Storage
-Medium and
-Program
-Product for
-Protecting User
-Privacy (ڭ
-˙
-eӻ୕eπᎷ
-ʧሯʿ೻ҏପ
-ۜ)
-Shanghai Jizhi PCT/CN2024/
-138198
-12/10/2024
-20 /H1118A Language
-Model Training
-Method, Device
-and Computer
-Program
-Product ( ɓ၇Ⴇ
-৅ᇖ˙
-ၑ
-ۜ)
-Shanghai Jizhi PCT/CN2024/
-137880
-12/09/2024
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-43 –
-
-No. Patent Owner Patent Number Application date
-21 /H1118Anomaly
-Detection
-Method and
-Device,
-Electronic
-Device,
-Distributed
-Computing
-System and
-Storage
-Medium ( ମ੬
-ձༀ
-ໄeཥɿண௪e
-ၑӻ୕
-ʿπᎷʧሯ)
-Shanghai Jizhi PCT/CN2024/
-137643
-12/06/2024
-22 /H1118TRAINING
-METHOD AND
-TRAINING
-DEVICE FOR
-LARGE
-LANGUAGE
-MODEL
-NANONOBLE
-PTE. LTD.
-10202500865W 04/02/2025
-23 /H1118A Pre-Training
-Data Processing
-Method and
-Device ( ɓ၇ཫ
-৅ᇖᅰኽஈଣ˙
-ձༀໄ)
-Shanghai Jizhi 202510110920.7 01/23/2025
-24 /H1118PRE-TRAINING
-DA TA
-CONSTRUCTION
-METHOD AND
-DEVICE
-NANONOBLE
-PTE. LTD.
-10202500895V 04/04/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-44 –
-
-No. Patent Owner Patent Number Application date
-25 /H1118Speech Synthesis
-Model Training
-Method, Speech
-Synthesis
-Method,
-Electronic
-Device and
-Storage
-Medium (ࠪ
-৅ᇖ˙
-Υϓ˙
-eཥɿண௪ʿ
-πᎷʧሯ)
-Shanghai Jizhi PCT/CN2024/
-141147
-12/20/2024
-26 /H1118A Model Training
-Method and
-Device ( ɓ၇ᅼ
-ʿༀ
-ໄ)
-Shanghai Jizhi 202411946235X 12/27/2024
-27 /H1118A Code Execution
-Method and
-Device ( ɓ၇˾
-ձༀ
-ໄ)
-Shanghai
-MiniMax
-2025102722138 03/10/2025
-28 /H1118A Conversational
-Interaction
-Method,
-Device,
-Electronic
-Device and
-Storage
-Medium ( ɓ၇
-e
-ༀໄeཥɿண௪
-˸ʿπᎷʧሯ)
-Beijing Jizhi 2025103272701 03/19/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-45 –
-
-No. Patent Owner Patent Number Application date
-29 /H1118A Music
-Generation
-Method,
-Device, Storage
-Medium and
-Electronic
-Device (ࠪ
-eༀ
-ໄeπᎷʧሯʿ
-ཥɿண௪)
-Shanghai
-MiniMax
-2025103396691 03/21/2025
-30 /H1118Artificial
-Intelligence
-Model Control
-Method and
-Device ( ɛʈ౽
-ج
-ձༀໄ)
-Shanghai
-MiniMax
-2025103272716 03/19/2025
-31 /H1118A Data Center
-Resource
-Management
-Method and
-Device ( ɓ၇ᅰ
-ኽʕː༟๕၍ଣ
-ʿༀໄ)
-Shanghai Jizhi 2025102112404 09/29/2024
-32 /H1118Task Processing
-Load Analysis
-Method and
-Device ( ΂ਕஈ
-ج
-ձༀໄ)
-Shanghai Jizhi 2025102112438 09/29/2024
-33 /H1118A Music
-Generation
-Method and
-Device (ࠪ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2025103272805 03/19/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-46 –
-
-No. Patent Owner Patent Number Application date
-34 /H1118A Design Method,
-Device and
-Equipment for
-V olumetric
-Video
-Acquisition
-Systems ( ɓ၇
-᜗ጐൖ᎖મණӻ
-e
-ༀໄʿண௪)
-Shanghai Jizhi 2025104637248 07/29/2024
-35 /H1118VIDEO
-GENERA TION
-METHOD AND
-APPARA TUS,
-DEVICE, AND
-COMPUTER
-READABLE
-STORAGE
-MEDIUM
-Shanghai Jizhi 19/118,791 12/29/2022
-36 /H1118VIDEO
-GENERA TION
-METHOD AND
-APPARA TUS,
-DEVICE, AND
-COMPUTER
-READABLE
-STORAGE
-MEDIUM
-Shanghai Jizhi 19/117,662 12/29/2022
-37 /H1118An Inference
-Optimization
-Method,
-Device,
-Electronic
-Device and
-Storage
-Medium for
-Language
-Models ( ɓ၇Ⴇ
-પଣᎴ
-eༀໄe
-ཥɿண௪ʿπᎷ
-ʧሯ)
-Shanghai
-MiniMax
-PCT/CN2025/
-093511
-05/08/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-47 –
-
-No. Patent Owner Patent Number Application date
-38 /H1118A Large Language
-Model
-Encoding
-Training
-Method and
-Device ( ɓ၇ɽ
-ᇜᇁ৅
-ʿༀໄ)
-Shanghai Jizhi 2025105478696 10/21/2024
-39 /H1118An Encoding
-Generation
-Method and
-Device ( ɓ၇ᇜ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2025105470641 10/21/2024
-40 /H1118A Model Training
-Method and
-Device ( ɓ၇ᅼ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2025105470622 10/21/2024
-41 /H1118A Streaming
-Speech
-Synthesis
-Method and
-Device (ݴ
-ج
-ʿༀໄ)
-Shanghai Jizhi 2025106658111 05/22/2025
-42 /H1118A Model Training
-Method and
-Device ( ɓ၇ᅼ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2025106901211 05/27/2025
-43 /H1118A Data
-Scheduling
-Method and
-Device for
-Distributed
-Systems ( ɓ၇
-ᅰ
-ʿༀ
-ໄ)
-Shanghai
-MiniMax
-202510825440.9 06/19/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-48 –
-
-No. Patent Owner Patent Number Application date
-44 /H1118A Model
-Inference
-Method and
-Device ( ɓ၇ᅼ
-ձༀ
-ໄ)
-Shanghai Jizhi 202510606178.9 05/12/2025
-45 /H1118Training
-Architecture for
-Music Token
-Generation
-Model (ᆀ
-tokenۨ
-࿴)
-Shanghai Jizhi 2025108271724 06/19/2025
-46 /H1118Speech and
-Singing V oice
-Synthesis
-Method,
-Training
-Method and
-Device, and
-Model (ձ
-e
-ձༀ
-ۨ)
-Shanghai Jizhi PCT/CN2025/
-097527
-05/27/2025
-47 /H1118An Audio
-Generation
-Method and
-Device (ࠪ
-ʿༀ
-ໄ)
-Shanghai Jizhi 2025107924761 06/13/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-49 –
-
-(c) Copyrights
-As of the Latest Practicable Date, we owned the following copyrights which we consider
-to be material to our business:
-No. Copyright Registered Owner Registration number Registration date
-1. /H1118/H1118/H1118Hailuo AI
-(ऎᑮAI)
-Shanghai
-MiniMax
-਷Ъ೮ο-2025-F-
-00002391
-01/03/2025
-2. /H1118/H1118/H1118MINIMAX Shanghai Jizhi ਷Ъ೮ο-2025-F-
-00002393
-01/03/2025
-3. /H1118/H1118/H1118Xingye (௉) Shanghai
-MiniMax
-਷Ъ೮ο-2025-F-
-00002394
-01/03/2025
-4. /H1118/H1118/H1118Hailuo Wenwen APP
-[Abbreviation:
-Hailuo Wenwen]
-V1.0 ( ऎᑮਪਪ
-APP[ ᔊ၈:ऎᑮਪ
-ਪ]V1.0)
-Shanghai
-MiniMax
-2024SR0297695 02/22/2024
-5. /H1118/H1118/H1118MiniMax APP
-[Abbreviation:
-MiniMax] V1.0
-(MiniMax APP[ ᔊ
-၈: MiniMax]
-V1.0)
-Shanghai
-MiniMax
-2025SR0550771 03/31/2025
-6. /H1118/H1118/H1118Hailuo AI APP
-[Abbreviation:
-Hailuo AI] V1.0
-(ऎᑮAI APP[ ᔊ၈
-:ऎᑮAI]V1.0)
-Shanghai
-MiniMax,
-Shanghai Jizhi
-Wujie ɪऎ฽
-ޢ
-2025SR1270668 07/16/2025
-7. /H1118/H1118/H1118Xingye Software
-[Abbreviation:
-Xingye] V1.0.0
-(௉ழ΁[ᔊ၈:݋
-௉]V1.0.0)
-Shanghai
-MiniMax,
-Shanghai Jizhi
-Zongheng ɪ
-ऎ฽౽ᐽዑ
-2025SR1270833 07/16/2025
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-50 –
-
-(d) Domain Name
-As of the Latest Practicable Date, we had registered the following domain names which
-we consider to be material to our business:
-No. Domain Name Registered Owner Registration Date Expiry Date
-1. /H1118/H1118hailuo.ai NANONOBLE
-PTE. LTD.
-11/07/2023 12/13/2027
-2. /H1118/H1118hailuoai.video NANONOBLE
-PTE. LTD.
-09/05/2024 09/05/2027
-3. /H1118/H1118hailuovideo.ai NANONOBLE
-PTE. LTD.
-09/05/2024 09/05/2026
-4. /H1118/H1118talkie-ai.com SUBSUP PTE.
-LTD.
-05/16/2023 05/16/2031
-5. /H1118/H1118talkieai.io SUBSUP PTE.
-LTD.
-05/14/2024 05/14/2026
-6. /H1118/H1118talkieai.jp SUBSUP PTE.
-LTD.
-11/14/2024 11/30/2026
-7. /H1118/H1118talkiejp.ai SUBSUP PTE.
-LTD.
-11/14/2024 11/14/2026
-8. /H1118/H1118heytalkie.com SUBSUP PTE.
-LTD.
-05/16/2023 05/16/2026
-9. /H1118/H1118subsup.com SUBSUP PTE.
-LTD.
-12/19/2009 12/19/2028
-10. /H1118subsup.ai SUBSUP PTE.
-LTD.
-07/05/2022 07/05/2026
-11. /H1118nanonoble.com NANONOBLE
-PTE. LTD.
-09/13/2024 09/13/2027
-12. /H1118minmax.ai NANONOBLE
-PTE. LTD.
-06/04/2025 12/04/2026
-13. /H1118minimaxai.com NANONOBLE
-PTE. LTD.
-03/12/2025 03/10/2026*
-14. /H1118minimax.io SUBSUP PTE.
-LTD.
-03/27/2021 03/27/2030
-15. /H1118minimaxi.ai SUBSUP PTE.
-LTD.
-01/19/2022 01/19/2028
-16. /H1118minimax-ai.org SUBSUP PTE.
-LTD.
-04/28/2025 09/04/2026*
-17. /H1118xaminim.ai SUBSUP PTE.
-LTD.
-01/09/2022 01/19/2028
-18. /H1118minimaxi.com Shanghai
-MiniMax
-12/29/1998 12/29/2026
-19. /H1118minimax.chat Shanghai
-MiniMax
-01/29/2023 01/29/2026*
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-51 –
-
-No. Domain Name Registered Owner Registration Date Expiry Date
-20. /H1118minimax.wiki Shanghai
-MiniMax
-01/29/2023 01/29/2026*
-21. /H1118aiminimax.com Shanghai
-MiniMax
-07/04/2023 07/04/2026*
-22. /H1118mm-platform.com Shanghai
-MiniMax
-10/08/2023 10/08/2026
-23. /H1118minimaxi.cn Shanghai Jizhi 01/19/2022 01/19/2027
-24. /H1118xaminim.com Shanghai Jizhi 01/19/2022 01/19/2027
-* will be renewed upon expiration after the Listing.
-Save as disclosed above, as of the Latest Practicable Date, there were no other intellectual
-property rights which are or may be material in relation to our business.
-C. FURTHER INFORMATION ABOUT OUR DIRECTORS AND SUBSTANTIAL
-SHAREHOLDERS
-1. Disclosure of Interests
-(a) Interests and short positions of our Directors in the share capital of our Company and
-its associated corporations following completion of the Global Offering
-Save as disclosed in the section headed “Substantial Shareholders”, immediately
-following the completion of the Global Offering (assuming that the Offer Size Adjustment
-Option and the Over-allotment Option are not exercised), so far as our Directors are aware,
-none of our Directors and chief executive has any interests and short positions in our Shares,
-underlying Shares or debentures of our Company or any of our associated corporations (within
-the meaning of Part XV of the SFO) (i) which will have to be notified to us and the Stock
-Exchange pursuant to Divisions 7 and 8 of Part XV of the SFO (including interests and short
-positions in which they are taken or deemed to have under such provisions of the SFO), or (ii)
-which will be required, pursuant to section 352 of the SFO, to be entered in the register referred
-to therein, or (iii) which will be required to be notified to us and the Stock Exchange pursuant
-to the Model Code for Securities Transactions by Directors of Listed Issuers (“ Model Code ”)
-contained in the Listing Rules.
-(b) Interests of the substantial shareholders in the Shares
-Save as disclosed in “Substantial Shareholders”, immediately following the completion of
-the Global Offering and without taking into account any Shares which may be issued pursuant
-to the exercise of the Offer Size Adjustment Option and the Over-allotment Option, our
-Directors are not aware of any other person (not being a Director or chief executive of our
-Company) who will have an interest or short position in our Shares or the underlying Shares
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-52 –
-
-which would fall to be disclosed to us and the Stock Exchange under the provisions of
-Divisions 2 and 3 of Part XV of the SFO, or who is, directly or indirectly, interested in 10%
-or more of the issued voting shares of our Company.
-(c) Interests of the substantial shareholders in other members of our Group
-Save as disclosed in “Substantial Shareholders”, as of the Latest Practicable Date, our
-Directors are not aware of any other persons who would, immediately following the completion
-of the Global Offering, be directly or indirectly interested in 10% or more of the issued voting
-shares of any member of our Group (other than our Company).
-2. Particulars of Service Contracts
-(a) Executive Directors
-Each of the executive Directors has entered into a service contract with our Company
-under which they agreed to act as executive Directors for an initial term of three years
-commencing from the Listing Date, which may be terminated by not less than three months’
-notice in writing served by either the executive Director or our Company.
-The appointments of the executive Directors are subject to the provisions of retirement
-and rotation of Directors under the Articles.
-(b) Non-executive Directors and Independent Non-executive Directors
-Each of the non-executive Directors and independent non-executive Directors has signed
-an appointment letter with our Company for a term of three years with effect from the Listing
-Date. The appointments are subject to the provisions of retirement and rotation of Directors
-under the Articles.
-3. Director’s Remuneration
-Save as disclosed in “Directors and Senior Management” and Note 8 to the Accountants’
-Report set out in Appendix I to this Prospectus for the three financial years ended December
-31, 2022, 2023 and 2024, none of our Directors received other remunerations of benefits in
-kind from us.
-4. Disclaimers
-Save as disclosed in this Prospectus:
-(a) none of the Directors or chief executive of our Company has any interest or short
-positions in the Shares, underlying Shares or debentures of our Company or any
-associated corporation (within the meaning of Part XV of the SFO) which will have
-to be notified to us and the Stock Exchange pursuant to Divisions 7 and 8 of Part
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-53 –
-
-XV of the SFO (including interests and short positions which he is taken or deemed
-to have under such provisions of the SFO) or which will be required, pursuant to
-section 352 of the SFO, to be entered into the register referred to in that section, or
-which will be required to be notified to us and the Stock Exchange pursuant to the
-Model Code, in each case once our Shares are listed on the Stock Exchange;
-(b) none of our Directors is aware of any person (not being a Director or chief executive
-of our Company) who will, immediately following the completion of the Global
-Offering (without taking into account any Shares which may be allotted and issued
-pursuant to the exercise of the Offer Size Adjustment Option and the Over-allotment
-Option), have an interest or short position in our Shares or underlying Shares which
-would fall to be disclosed to us under the provisions of Divisions 2 and 3 of Part XV
-of the SFO or who is interested, directly or indirectly, in 10% or more of the issued
-voting shares of any member of our Group;
-(c) none of our Directors, their respective close associates (as defined under the Listing
-Rules) or Shareholders who own more than 5% of the number of issued shares of our
-Company have any interests in the five largest customers or the five largest suppliers
-in each years or periods during the Track Record Period of our Group; and
-(d) none of our Directors or any of the parties listed in “Qualification of Experts” of this
-Appendix is:
-(i) interested in our promotion, or in any assets which have been, within two years
-immediately preceding the date of this Prospectus, acquired or disposed of by
-or leased to us, or are proposed to be acquired or disposed of by or leased to
-any member of our Group; or
-(ii) materially interested in any contract or arrangement subsisting at the date of
-this Prospectus which is significant in relation to our business.
-D. SHARE INCENTIVE PLANS
-1. Pre-IPO Share Incentive Plan
-The following is a summary of the principal terms of the Pre-IPO Share Incentive Plan,
-which is not subject to Chapter 17 of the Listing Rules as it does not involve any further grant
-of options or share awards by the Company after the Listing.
-(a) Purpose
-The purposes of Pre-IPO Share Incentive Plan are to attract and retain the best available
-personnel for positions of substantial responsibility, to provide additional incentive to
-employees and consultants, and to promote the success of the Company’s business.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-54 –
-
-(b) Eligibility
-Options and RSUs may be granted to director, officer, employee, advisor and consultant
-of the Group (the “ Participants ”).
-Neither the Pre-IPO Share Incentive Plan nor any Option or RSU shall confer upon any
-employee or consultant any right with respect to continuation of an employment or consulting
-relationship with any Group Company, nor shall it interfere in any way with such employee’s
-or consultant’s right or the Group Company’s right to terminate his or her employment or
-consulting relationship at any time, with or without cause.
-(c) Types of Awards
-The Pre-IPO Share Incentive Plan provides for the grant of options (“ Options ”) and RSUs
-(each an “ Award” collectively referred to as “ Awards ”).
-(d) Duration
-The Pre-IPO Share Incentive Plan shall become effective upon its adoption by the
-Management Team of the Company. It shall continue in effect for a term of ten (10) years
-unless sooner terminated under the provisions of the Pre-IPO Share Incentive Plan.
-(e) Administration
-The Pre-IPO Share Incentive Plan shall be administered by the management team as
-determined by the Company.
-(f) Maximum Number of Shares
-Subject to certain adjustments upon changes in capitalization, merger or certain other
-transactions, the maximum aggregate number of Shares under Pre-IPO Share Incentive Plan
-that are issued to the shareholder MiniMax Gene is 20,890,736 Class A Ordinary Shares.
-(g) Exercise price or consideration
-The per Share exercise price for the Shares to be issued or transferred pursuant to the
-exercise of an Option shall be such price as is determined by the management team of the
-Company and set forth in the option agreement.
-(h) Restrictions on Transfer
-Options, RSUs and their related rights may not be sold, pledged, assigned, hypothecated,
-transferred, donated or disposed of in any manner, except as otherwise provided in the Pre-IPO
-Share Incentive Plan.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-55 –
-
-Outstanding Options and Awards
-(a) Options
-As of the Latest Practicable Date, our Company had granted outstanding options under the
-Pre-IPO Share Incentive Plan to 392 grantees to subscribe for an aggregate of 20,890,736 Class
-A Ordinary Shares, representing approximately 6.84% of the total issued share capital
-immediately after completion of the Global Offering (assuming the Offer Size Adjustment
-Option and the Over-allotment Option are not exercised), among which all options were held
-by our employees, former employees and consultants. These options were granted with
-consideration from nil to US$17.6 between March 2022 and November 2025 with exercise
-prices ranging from nominal value to US$0.8. The exercise period for all the options is a period
-from the ending of the vesting period to 10 years after the grant date. The vesting periods of
-the options range from the date of grant to 6 years from the grant date. As of the Latest
-Practicable Date, 3,888,105 Class A Ordinary Shares underlying the options have been vested.
-We set forth below the details of the outstanding options granted pursuant to the Pre-IPO
-Share Incentive Plan to our connected persons, other grantees with options representing
-200,000 Class A Ordinary Shares or more and consultants as of the Latest Practicable Date:
-Name of
-Grantee
-Position
-held at our
-Company Address Exercise Price
-Number of Class A
-Ordinary Shares
-subject to the options
-granted Dates of Grant
-Vesting
-Period Consideration
-Approximate
-percentage of
-shareholding
-immediately
-following completion
-of the Global
-Offering (1)
-(US$ per
-Share)
-(US$ per
-Share)
-Connected Persons
-Ms. Y un /H1118/H1118Executive Director
-and chief operating
-officer
-No. 51, Lane 1030,
-Zhongshan West
-Road, Changning
-District, Shanghai,
-PRC
-0.002 3,814,065 March 31, 2022 Six years 1.6 1.25%
-Mr. Zhou
-Y ucong /H1118
-Executive Director
-and visual models
-research and
-engineering leader
-Room 902, No. 17,
-Zhongyou Jiayuan,
-Minhang District,
-Shanghai, PRC
-0.2 to 0.8 1,010,724 September 30, 2022
-to November 30,
-2025
-Four to six
-years
-2.8-17.2 0.33%
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-56 –
-
-Name of
-Grantee
-Position
-held at our
-Company Address Exercise Price
-Number of Class A
-Ordinary Shares
-subject to the options
-granted Dates of Grant
-Vesting
-Period Consideration
-Approximate
-percentage of
-shareholding
-immediately
-following completion
-of the Global
-Offering (1)
-(US$ per
-Share)
-(US$ per
-Share)
-Mr. Zhao
-Pengyu /H1118
-Executive Director
-and large language
-model research and
-engineering leader
-No. 501, 119th Floor,
-Block 4, Nanhu East
-Park 1, Wangjing,
-Chaoyang District,
-Beijing, PRC
-0.8 567,182 December 31, 2024
-to November 30,
-2025
-Four to six
-years
-7.0-17.2 0.19%
-Ms. Sheng
-Jingyuan /H1118
-Director of subsidiary 491 Leahy st,
-Redwood City,
-CA 94061
-0.8 276,541 December 31, 2024
-to November 30,
-2025
-Date of grant
-to six years
-8.6-17.2 0.09%
-Ms. Gou Y ue Director of subsidiary Room 301, No. 27,
-Lane 121, Donglan
-Road, Xuhui
-District, Shanghai
-0.2 to 0.8 302,376 December 31, 2023
-to November 30,
-2025
-Date of grant
-to six years
-6.2-17.6 0.10%
-Others grantees with options representing 200,000 Class A Ordinary Shares or more
-Miao
-Y uhang /H1118/H1118
-Product Research and
-Development
-Director
-No. 89, Lane 633,
-Wuzhong Road,
-Minhang District,
-Shanghai, PRC
-0.6 to 0.8 573,752 September 30, 2023
-to November 30,
-2025
-Date of grant
-to six years
-5.2-17.2 0.188%
-Pan Lin /H1118/H1118Human Resources
-Director
-Room 105, No. 8,
-Lane 10, Jinping
-Road, Changning
-District, Shanghai,
-PRC
-0.2 to 0.8 516,686 September 30, 2022
-to November 30,
-2025
-Date of grant
-to six years
-2.8-17.6 0.169%
-Shi Xizhi /H1118/H1118Head of Strategic &
-Business Analysis
-Room 2002, No. 9,
-Lane 477, Xinchang
-Road, Huangpu
-District, Shanghai,
-PRC
-0.2 to 0.8 421,838 June 30, 2023 to
-September 30,
-2025
-Date of grant
-to six years
-4.2-10.6 0.138%
-Sun Haohai /H1118Algorithm Engineer No. 97, Pingnanyicun,
-Minhang District,
-Shanghai, PRC
-0.8 248,919 March 31,
-2024 to November
-30, 2025
-Date of grant
-to six years
-7.0-17.2 0.081%
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-57 –
-
-Name of
-Grantee
-Position
-held at our
-Company Address Exercise Price
-Number of Class A
-Ordinary Shares
-subject to the options
-granted Dates of Grant
-Vesting
-Period Consideration
-Approximate
-percentage of
-shareholding
-immediately
-following completion
-of the Global
-Offering (1)
-(US$ per
-Share)
-(US$ per
-Share)
-Wang Hanyu /H1118Product Manager No. 259, South
-Building, No. 3
-Xicui Road, Haidian
-District, Beijing,
-PRC
-0.4 to 0.8 323,660 September 30, 2022
-to September 30,
-2025
-Four to six
-years
-2.8-10.6 0.106%
-Xue Zizhao /H1118Vice president of
-capital markets and
-investments
-Room 1, No. 8, Lane
-182, Fuxin Road,
-Y angpu District,
-Shanghai, PRC
-0.8 392,580 March 31,
-2024 to November
-30, 2025
-Date of grant
-to six years
-7.0-17.2 0.129%
-Y ang Mingqi /H1118Head of Audio Model
-Research and
-Engineering
-No. 19, Shangdixinxi
-Road, Haidian
-District, Beijing,
-PRC
-0.2 to 0.8 231,779 September 30, 2022
-to September 30,
-2025
-Date of grant
-to six years
-2.8-10.6 0.076%
-Zhang
-Mozhi /H1118/H1118
-Algorithm Engineer Room 3001, No. 19,
-Lane 758, Siping
-Road, Shanghai,
-PRC
-0.2 354,600 June 30, 2025 Date of grant 10.8 0.116%
-Zhang
-Qianchuan /H1118
-Product Manager No. 208, Entrance 2,
-Building No. 44,
-Haidian Avenue,
-Haidian District,
-Beijing, PRC
-0.2 390,533 March 31, 2023 Four years 3.8 0.128%
-Zheng Nan /H1118General Counsel No. 17, Lane 19,
-Hongcao Road,
-Xuhui District,
-Shanghai, PRC
-0.2 to 0.8 224,382 September 30, 2024
-to November 30,
-2025
-Date of grant
-to six years
-8.0-17.6 0.073%
-Zhuang Jiaqi /H1118Head of Computing
-Platform
-No. 122, Tianshan
-Sicun, Changning
-District, Shanghai,
-PRC
-0.2 to 0.8 580,257 September 30, 2022
-to November 30,
-2025
-Four to six
-years
-2.8-17.2 0.190%
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-58 –
-
-Name of
-Grantee
-Position
-held at our
-Company Address Exercise Price
-Number of Class A
-Ordinary Shares
-subject to the options
-granted Dates of Grant
-Vesting
-Period Consideration
-Approximate
-percentage of
-shareholding
-immediately
-following completion
-of the Global
-Offering (1)
-(US$ per
-Share)
-(US$ per
-Share)
-Consultants
-Zhang Y unan /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Flat E, 16/F, Block 2,
-25 Tai Hang Drive,
-Ronsdale Garden,
-Jardine’s Lookout,
-Hong Kong
-0.8 8,471 June 30, 2024 to
-June 30, 2025
-One to four
-years
-7.4-10.2 0.003%
-Zeng Qunhong /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118No. 73, Zhujiao,
-Lianqun Village,
-Luoyang Town,
-Huian County,
-Fujian Province,
-PRC
-0.8 33,022 November 30, 2025 Six years 17.2 0.011%
-Chen Xiancai /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Room 1811, No. 37,
-Xueyuan Road,
-Haidian District,
-Beijing, PRC
-0.8 33,022 September 30, 2025 Six years 10.6 0.011%
-Cheng Y u /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Room 102, No. 72,
-Runan Street,
-Huangpu District,
-Shanghai, PRC
-0.8 25,448 June 30, 2023 to
-June 30, 2024
-One to four
-years
-3.8-7.4 0.008%
-He Junxian /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118No. 14, Chaoyang East
-Road, Tongchuan
-District, Dazhou,
-Sichuan Province,
-PRC
-0.8 17,218 March 31, 2024 to
-March 31, 2025
-One to four
-years
-7.0-9.6 0.006%
-Lai Xunhao /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Y ongbu Group 1,
-Hengkeng Village,
-Luokou Town,
-Ningdu County,
-Ganzhou, Jiangxi
-Province, PRC
-0.8 33,022 September 30, 2025 Six years 10.6 0.011%
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-59 –
-
-Name of
-Grantee
-Position
-held at our
-Company Address Exercise Price
-Number of Class A
-Ordinary Shares
-subject to the options
-granted Dates of Grant
-Vesting
-Period Consideration
-Approximate
-percentage of
-shareholding
-immediately
-following completion
-of the Global
-Offering (1)
-(US$ per
-Share)
-(US$ per
-Share)
-Li Dongxiao /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Room 301, Unit 4,
-Building 1, No. 157
-Shuiximen Avenue,
-Jianye District,
-Nanjing, PRC
-0.8 6,604 September 30, 2025 Six years 10.6 0.002%
-Song Y uchen /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118No. 1, 16/F, Unit 1,
-Building 8, No. 42
-Dongping Middle
-Road, Chuanshan
-District, Suining,
-Sichuan Province,
-PRC
-0.8 6,604 November 30, 2025 Six years 17.2 0.002%
-Wang Xinggang /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118No. 1037, Luoyu
-Road, Hongshan
-District, Wuhan,
-PRC
-0.8 10,649 March 31, 2024 to
-September 30,
-2025
-One year 7-10.6 0.003%
-Wenren Y uze /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118No. 5, Qianwenjia,
-Y ongfeng Village,
-Fengshan
-Subdistrict, Y uyao,
-Zhejiang Province,
-PRC
-0.8 6,604 November 30, 2025 Six years 17.2 0.002%
-Y an Y uxin /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118No. 82, Donghe
-Dongbao Village
-Area 1, Y aozhai
-Town, Congtai
-District, Handan,
-Hebei Province,
-PRC
-0.8 6,604 November 30, 2025 Six years 17.2 0.002%
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-60 –
-
-Name of
-Grantee
-Position
-held at our
-Company Address Exercise Price
-Number of Class A
-Ordinary Shares
-subject to the options
-granted Dates of Grant
-Vesting
-Period Consideration
-Approximate
-percentage of
-shareholding
-immediately
-following completion
-of the Global
-Offering (1)
-(US$ per
-Share)
-(US$ per
-Share)
-Y ao Jinfeng /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Room 4108, No. 1
-Zhouchengchang
-Road, Xiangcheng
-District, Xiangyang,
-Hubei Province,
-PRC
-0.8 34,173 December 31, 2024
-to September 30,
-2025
-Four to six
-years
-8.6-10.6 0.011%
-Y u Bin /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Room 402, No. 27,
-Lane 1880,
-Longyang Road,
-Pudong New Area,
-Shanghai, PRC
-0.8 24,026 June 30, 2023 to
-June 30, 2024
-One year 3.8-7.4 0.008%
-Note:
-(1) Assuming no exercise of the Offer Size Adjustment Option and the Over-allotment Option.
-As of the Latest Practicable Date and save as disclosed in the table above, our Company
-had granted outstanding options under the Pre-IPO Share Incentive Plan to 363 grantees to
-subscribe for an aggregate of 10,415,395 Class A Ordinary Shares, representing approximately
-3.41% of the total issued share capital immediately after completion of the Global Offering
-(assuming the Offer Size Adjustment Option and the Over-allotment Option are not exercised),
-among which all options were held by our employees or former employees. These options were
-granted with nil consideration from September 2022 and November 2025 with exercise prices
-ranging from US$0.002 to US$0.8. The exercise period for all the options is a period from the
-ending of the vesting period to 10 years after the grant date. The vesting periods of the options
-range from the date of grant to 6 years from the grant date.
-(b) RSUs
-As of the Latest Practicable Date, our Company had not grant any share awards under the
-Pre-IPO Share Incentive Plan.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-61 –
-
-Dilution Effect and Impact on Earnings per Share
-As of the Latest Practicable Date, all Class A Ordinary Shares granted under the Pre-IPO
-Share Incentive Plan have been held by employee shareholding platforms set up by our
-Company with independent professional trustee companies. Accordingly, there will not be any
-dilution effect on the shareholdings of our Shareholders nor any impact on the earnings per
-share arising from the full vesting or exercise of the outstanding options after Listing.
-2. Post-IPO Share Incentive Plan
-A summary of the principal terms of the Post-IPO Share Incentive Plan conditionally
-approved and adopted in compliance with Chapter 17 of the Listing Rules by a Shareholders’
-resolution dated December 29, 2025 is as follows.
-(a) Purpose
-The purpose of the Post-IPO Share Incentive Plan is to incentivize and reward the Eligible
-Participants (as defined below) for their contribution to the Group and to align their interests
-with that of our Company so as to encourage them to work towards enhancing the value of our
-Company.
-(b) Eligible Participants
-The Board (which expression shall, for the purpose of this paragraph, include the Board
-or such person(s) delegated by the Board) may, at its absolute discretion, offer to grant an
-option or a share award to subscribe for such number of Class A Ordinary Shares as the Board
-may determine to (a) an employee (whether full time or part-time) or a director of our Company
-or any of its subsidiaries (the “ Eligible Employee(s) ”) and (b) a consultant who provides
-services to the Group on a continuing and recurring basis in its ordinary and usual course of
-business which are material to the long term growth of the Group (“ Service Provider(s) ”), and
-(c) directors and employees of the holding companies, fellow subsidiaries or associated
-companies of the Company (“ Related Entity Participants ”, together with the Eligible
-Employees and Service Providers hereinafter referred as the “ Eligible Participant(s) ”).
-For the avoidance of doubt, Service Providers shall exclude placing agents or financial
-advisers providing advisory services for fundraising, mergers or acquisitions, and any
-professional service providers such as auditors or valuers.
-The eligibility of any Eligible Employees shall be determined by the Board from time to
-time on the basis of the Board’s opinion as to, among others, the participant’s individual
-performance, time commitment, responsibilities or employment conditions according to the
-prevailing market practice and industry standard, the length of engagement with the Group and
-the actual or potential contribution to the development and growth of the Group.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-62 –
-
-The eligibility of any Service Providers shall be determined by the Board from time to
-time on the basis of the Board’s opinion as to, among others, their contribution to the
-development and growth of the Group, the prevailing market practice and industry standard,
-the actual degree of involvement in and/or cooperation with the Group and length of
-collaborative relationship the Service Providers has established with the Group, and the amount
-of support, assistance, guidance, advice, efforts and contributions the Service Providers has
-exerted and given towards the success of the Group, and/or whether the person is regarded as
-a valuable consultant of the Group, taking into account the knowledge, experience,
-qualification, expertise and reputation of the Service Providers or other relevant factors
-(including without limitation technical know-how, market competitiveness, synergy between
-him/her and the Group and his/her strategic value).
-The eligibility of any Related Entity Participant shall be determined by the Board from
-time to time on the basis of the Board’s opinions as to, among others, the positive impacts
-(including support, assistance, guidance, advice, efforts and/or contributions) brought by, or
-expected from, the Related Entity Participant on the Group’s business development, the actual
-degree of involvement in and/or cooperation with the Group and length of collaborative
-relationship the Related Entity Participant has established with the Group, the number, scale
-and nature of the projects which promote the business, development and growth of the Group
-in which the Related Entity Participant is involved, whether the Related Entity Participant has
-referred or introduced opportunities to the Group which have materialised into further business
-relationships, the materiality and nature of the business relation between the entity where the
-Related Entity Participant holds office with the Group and his/her contribution to such entity,
-or such other factors as the Board may at its discretion considers appropriate.
-(c) Maximum number of Shares
-(i) Subject to paragraphs (iv) and (v) below, the total number of Class A Ordinary
-Shares which may be issued and transferred out of treasury upon exercise of all
-options and share awards to be granted under the Post-IPO Share Incentive Plan
-shall not in aggregate exceed 6% of the total number of Shares in issue (but
-excluding any treasury shares) on the day on which trading of the Class A Ordinary
-Shares commences on the Stock Exchange (the “ Plan Mandate Limit ”). Options
-and share awards lapsed in accordance with the terms of the Post-IPO Share
-Incentive Plan will not be counted for the purpose of calculating the Plan Mandate
-Limit. The Company may issue new Class A Ordinary Shares or utilize treasury
-shares (if any) to satisfy grants of the options and share awards under the Post-IPO
-Share Incentive Plan.
-(ii) Subject to paragraph (i) above, within the Plan Mandate Limit, the total number of
-Class A Ordinary Shares which may be issued upon exercise of all options and share
-awards to be granted to Service Providers shall not exceed 2% of the total number
-of Shares in issue (but excluding any treasury shares) on the day on which trading
-of the Class A Ordinary Shares commences on the Stock Exchange (the “ Service
-Providers Sublimit ”).
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-63 –
-
-(iii) The Company may seek approval by Shareholders in general meeting for refreshing
-the Plan Mandate Limit and the Service Providers Sublimit, subject to compliance
-with the requirements of the Listing Rules.
-(iv) Without prejudice to paragraph (iv) above, our Company may seek separate
-Shareholders’ approval in a general meeting to grant options and/or share awards
-beyond the Plan Mandate Limit to participants specifically identified by our
-Company before such approval is sought. In such event, our Company must send a
-circular to its Shareholders containing a general description of the specified
-participants, the number and terms of options and/or share awards to be granted, the
-purpose of granting options and/or share awards to the specified participants with an
-explanation as to how the terms of the options and/or share awards will serve such
-purpose and all other information required under the Listing Rules.
-(d) Maximum entitlement of a grantee
-Where any grant of options or share awards to a participant would result in the Class A
-Ordinary Shares issued and to be issued upon exercise of all options and/or share awards
-granted and to be granted to such participant (excluding any options and share awards lapsed
-in accordance with the terms of the Post-IPO Share Incentive Plan) in the 12-month period up
-to and including the date of such grant representing in aggregate over 1% of the Shares in issue
-(but excluding any treasury shares), such grant must be separately approved by the
-Shareholders in general meeting with such participant and his/her close associates (or his/her
-associates if the participant is a connected person) abstaining from voting. The number and
-terms (including the exercise price) of options and/or share awards to be granted to such
-participant must be fixed before Shareholders’ approval.
-(e) Grant and exercise of options and share awards
-The Board or such duly authorized person(s) by the Board may in its absolute discretion
-specify such event, time limit or conditions (if any) as it thinks fit when making such offer to
-the Eligible Participants, including, without limitation, conditions as to performance criteria
-(such as growth rate of revenue, earnings per share and/or total shareholders’ return) to be
-satisfied or achieved by the Eligible Participants and/or our Company and/or the Group which
-must be satisfied before an option or a share award can be exercised.
-An offer of the grant of an option or a share award shall be made to any Eligible
-Participants by letter in such form as the Board or such duly authorized person(s) by the Board
-may from time to time determine specifying the number of Class A Ordinary Shares, the
-vesting period, the subscription price, the option period, the date by which the grant must be
-accepted and further requiring the Eligible Participants to hold the option or share award on the
-terms on which it is to be granted and to be bound by the provisions of the Post-IPO Share
-Incentive Plan. An option or a share award shall be deemed to have been granted and accepted
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-64 –
-
-and to have taken effect when the duplicate letter comprising acceptance of the offer of the
-grant of the option or share award duly signed by the grantee within the time period specified
-in the offer of the grant of the option or share award.
-An option or a share award granted hereunder but not yet vested shall be personal to
-relevant grantee to whom it is made and shall not be assignable or transferable and no grantee
-shall in any way sell, transfer, assign, charge, mortgage, encumber or create any interest (legal
-or beneficial) in favor of any other person over or in relation to any option or share award, or
-enter into any agreement to do so, except for when a waiver is obtained from the Stock
-Exchange and express written consent is obtained from the Board. Where the Eligible
-Participant is a corporate entity, any change of its controlling shareholder or any substantial
-change in its management (which is to be determined by the Board) will be deemed to be a sale
-or transfer of interest. Any breach of the foregoing by the grantee shall entitle our Company
-to cancel any outstanding entitlement of such grantee.
-An option may be exercised in accordance with the terms of the Post-IPO Share Incentive
-Plan at any time during a period to be determined and notified by the Board to each grantee,
-which period may commence on a day falling at least 12 months after the date upon which the
-offer for the grant of options is made but shall end in any event not later than 10 years from
-the date on which an option is offered to a participant, subject to the provisions for early
-termination under the Post-IPO Share Incentive Plan. The minimum period for which an option
-or a share award must be held before it can be vested or exercised (if applicable) shall be 12
-months from the date of grant of such option or share award, except that any options or share
-awards granted to an Eligible Employee may be subject to a short vesting period, including
-where:
-(i) grants of “make-whole” options or a share awards to new Eligible Employee(s) to
-replace options or share awards such Eligible Participant(s) forfeited when leaving
-their previous employers;
-(ii) grants to an Eligible Participant whose employment is terminated due to death or
-disability or event of force majeure;
-(iii) grants of options or share awards which are subject to fulfilment of performance
-targets as determined in the conditions of his/her grant;
-(iv) grants of options or share awards the timing of which is determined by
-administrative or compliance requirements, in which case the vesting date may be
-adjusted to take account of the time from which the options or share awards would
-have been granted if not for such administrative or compliance requirements;
-(v) grants of options or share awards with a mixed vesting schedule such as the options
-or share awards vest evenly over a period of 12 months; and
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-65 –
-
-(vi) grants of options or share awards with a total vesting of more than 12 months, such
-as where the options or share awards may vest by several batches with the first batch
-to vest within 12 months of the grant date and the last batch to vest 12 months after
-the date of grant of such options or share awards.
-(f) Subscription price
-The amount payable for each Class A Ordinary Share to be subscribed for under an option
-(the “ Subscription Price ”) in the event of the option being exercised shall be determined by
-the Board or such duly authorized person(s) by the Board at its absolute discretion, which shall
-be not less than the highest of:
-(i) the nominal value of a Class A Ordinary Share;
-(ii) the closing price of the Class A Ordinary Shares as stated in the Stock Exchange’s
-daily quotations sheet on the date of grant, which must be a business day; and
-(iii) the average closing price of the Class A Ordinary Shares as stated in the Stock
-Exchange’s daily quotations sheets for the five business days immediately preceding
-the date of grant.
-The amount payable for each Class A Ordinary Share to be subscribed for under a share
-award (the “ Purchase Price ”) shall be determined by the Board or such duly authorized
-person(s) by the Board at its absolute discretion, based on considerations such as the prevailing
-closing price of the Class A Ordinary Shares, the purpose of the share award and the
-contribution of the Eligible Participant.
-(g) Options and share awards granted to connected persons
-(i) Any grant of options or share awards to a director, chief executive or substantial
-shareholder of the Company, or any of their associates must be approved by the
-independent non-executive Director (excluding any independent non-executive
-Director who is the grantee of the options or share awards). Any grant of options or
-share awards to a director who is a WVR Beneficiary shall subject to prior
-recommendation of the Corporate Governance Committee under Rule 8A.30(4) of
-the Listing Rules.
-(ii) Where any grant of share awards (excluding grant of options) to a director (other
-than an independent non-executive Director) or chief executive of the Company, or
-any of their associates would result in the shares issued and to be issued in respect
-of all share awards granted (excluding any share awards lapsed in accordance with
-the terms of the Post-IPO Share Incentive Plan) to such person in the 12-month
-period up to and including the date of such grant, representing in aggregate over
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-66 –
-
-0.1% of the total number of Shares in issue (but excluding any treasury shares), such
-further grant of share awards must be approved by the Shareholders at a general
-meeting of our Company, with voting to be taken by way of poll.
-(iii) Where any grant of options or share awards to an independent non-executive
-Director or a substantial shareholder of our Company or any of their respective
-associates would result in the Shares issued and to be issued in respect of all options
-and awards granted (excluding any options lapsed in accordance with the terms of
-the Post-IPO Share Incentive Plan) under the Post-IPO Share Incentive Plan and any
-other plans of our Company to such person in the 12-month period up to and
-including the date of such grant representing in aggregate over 0.1% of the total
-number of Shares in issue (but excluding any treasury shares), such further grant of
-options or share awards must be approved by the Shareholders at a general meeting
-of our Company, with voting to be taken by way of poll.
-Our Company shall send a circular to the Shareholders containing all information as
-required under the Listing Rules in this regard. The grantee, his/her associates and all core
-connected persons (as defined in the Listing Rules) of our Company shall abstain from voting
-(except where any core connected person intends to vote against the proposed grant and his/her
-intention to do so has been stated in the aforesaid circular). Any change in the terms of an
-option or a share award granted to a Director, a chief executive, a substantial shareholder of
-our Company or an independent non-executive Director or any of their respective associates is
-also required to be approved by Shareholders in the aforesaid manner if the initial grant of the
-options or share awards requires such approval.
-(h) Restriction of grant of options and share awards
-No option or share awards shall be offered or granted:
-(i) to Directors or any other Eligible Participant after a price sensitive event has
-occurred or a price sensitive matter has been the subject of a decision, until (and
-including) the trading day after the relevant price sensitive or inside information has
-been announced in accordance with the applicable provisions of law or the Listing
-Rules;
-(ii) to any Eligible Participant during the period commencing one month immediately
-before the following (whichever is earlier):
-(a) the date of the board meeting (as such date is first notified to the Stock
-Exchange in accordance with the Listing Rules) for the approval of our
-Company’s annual, quarterly (if any) or half-yearly results; and
-(b) the deadline for our Company to publish an announcement of its annual,
-quarterly (if any) or half-yearly results;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-67 –
-
-and ending on the date of the results announcement. No option or share award shall
-be granted during any period of delay in the publication of a results announcement;
-(iii) to any Director (except where the Subscription Price is to be determined by the
-Board or such duly authorized person(s) by the Board at the time of exercise of the
-option):
-(a) during the period of 60 days immediately preceding the publication of the
-annual results of our Company or, if shorter, the period from the end of the
-relevant financial year up to the publication date of the results; or
-(b) during the period of 30 days immediately preceding the publication of the
-quarterly (if any) or half-yearly results or, if shorter, the period from the end
-of the relevant quarterly or half-year period up to the publication date of the
-results.
-(i) Lapse of options and share awards
-Any option or share award shall elapse automatically and not be exercisable on the
-earliest of:
-(i) the expiry of the option period or other applicable exercisable periods under the
-Post-IPO Share Incentive Plan;
-(ii) the expiry of the periods or the occurrence of the relevant event referred to in
-paragraphs (l)(i) and (l)(iii) below;
-(iii) subject as provide in the Post-IPO Share Incentive Plan, the date of the
-commencement of the winding-up of our Company;
-(iv) the date on which the grantee commits a breach of relevant clauses that rights are
-personal to the grantee; or
-(v) the occurrence or non-occurrence of any event, expiry of any period, or non-
-satisfaction of any condition, as specified in the letter containing the offer or grant
-of the relevant option or share award.
-(j) Voting and dividend rights
-No grantee shall enjoy any of the rights of a Shareholder (including but not limited to
-voting, dividend, transfer rights or any other rights attached to a Class A Ordinary Share) by
-virtue of the grant of an option or a share award pursuant to the Post-IPO Share Incentive Plan,
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-68 –
-
-unless and until the registration of the grantee (or such other person as may succeed to the
-grantee’s title by operation of applicable laws and in compliance with the terms of the Post-IPO
-Share Incentive Plan) as the holder thereof, unless the Board determines otherwise at its
-discretion.
-For the avoidance of doubt, the trustee holding unvested Class A Ordinary Shares under
-the Post-IPO Share Incentive Plan, whether directly or indirectly, shall abstain from voting on
-matters that require Shareholders’ approval under the Listing Rules, unless otherwise required
-by law to vote in accordance with the beneficial owner’s direction and such a direction is given.
-(k) Effects of alterations in the capital structure of our Company
-In the event of a capitalization issue, rights issue, subdivision or consolidation of Class
-B Ordinary Shares or reduction of capital of our Company whilst an option or a share award
-remains outstanding, such corresponding adjustment (if any) certified by the auditors for the
-time being of or an independent financial adviser to our Company as fair and reasonable will
-be made to (a) the number of Class A Ordinary Shares to which the option or the share award
-relates, so far as outstanding, and/or (b) the Subscription Price of any outstanding option and
-the Purchase Price of any share awards, provided that (i) any such alteration shall give a
-grantee the same proportion of the issued share capital (rounded to the nearest whole Class A
-Ordinary Share) to which the grantee was entitled prior to such alteration; (ii) any such
-adjustments shall be made on the basis that the aggregate Subscription Price and Purchase Price
-payable by a grantee on the full exercise of any option or share award shall remain as nearly
-as possible the same as it was before such event; and (iii) no adjustment shall be made the
-effect of which would be to enable a Class A Ordinary Share to be issued at less than its
-nominal value. In addition, in respect of any such adjustments, other than any adjustment made
-on a capitalization issue, such auditors or independent financial adviser must confirm to the
-Board in writing that the adjustments comply with the relevant provisions of the Listing Rules
-(or any guideline or supplementary guideline as may be issued by the Stock Exchange from
-time to time).
-(l) Rights on ceasing employment, death, or dismissal
-Unless otherwise determined by the Board,
-(i) if the grantee of an option or a share award is an employee and ceases to be an
-employee for any reason other than death, or for serious misconduct or other
-grounds referred to in sub-paragraph (iii) below before exercising his/her option or
-share award in full, the option or share award (to the extent not already exercised)
-will lapse automatically on the date of cessation of his/her employment or
-engagement with the Group.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-69 –
-
-(ii) if the grantee of an option or a share award is an employee and ceases to be an
-employee by reason of his/her death, before exercising the option or share award in
-full, his/her legal personal representative(s), or, as appropriate, the grantee may
-exercise the option or share award (to the extent not already exercised) in whole or
-in part within a period of 12 months following the date of death of the grantee.
-(iii) if the grantee of an option or a share award is an employee and ceases to be an
-employee by reason that he has been guilty of serious misconduct or has committed
-any act of bankruptcy or has become insolvent or has made any arrangement or
-composition with his/her creditors generally, or has been convicted of any criminal
-offense involving his/her integrity or honesty or (if so determined by the Board) on
-any other ground on which an employer would be entitled to terminate his/her
-employment summarily, his/her option or share award will lapse automatically on
-the date of cessation of his/her employment with the Group.
-(m) Rights on takeover and plans of compromise or arrangement
-If a general or partial offer (whether by way of take-over offer, share repurchase offer or
-otherwise in like manner other than by way of a plan of arrangement) is made to all the holders
-of Class A Ordinary Shares (or all such holders other than the offeror and/or any person
-controlled by the offeror and/or any person acting in association or in concert with the offeror)
-our Company shall use its best endeavors to procure that such offer is extended to all the
-grantees (on the same terms mutatis mutandis, and assuming that they will become, by the
-exercise in full of the options and/or share awards granted to them, Shareholders of our
-Company), and the Board shall at their sole discretion determine whether the vesting date of
-any options or share awards will be accelerated. If such offer becomes or is declared
-unconditional, the grantee (or his/her legal personal representative(s)) shall be entitled to
-exercise the grantee’s outstanding entitlement in full at any time within 14 days after the date
-on which such general offer becomes or is declared unconditional.
-(n) Rights on a voluntary winding-up
-In the event of an effective resolution being passed for the voluntary winding-up of our
-Company or an order of the court being made for the winding-up of our Company, notice
-thereof shall be given by our Company to grantees with options and/or share awards
-outstanding in full or in part at such date. If a grantee immediately prior to such event had any
-outstanding entitlement, the grantee (or his legal personal representative(s)) may by notice in
-writing to our Company within 21 days after the date of such resolution elect to be treated as
-if the entitlement had been exercised immediately before the passing of such resolution either
-to its full extent or to the extent specified in the notice, such notice to be accompanied by a
-remittance for the full amount of the aggregate Subscription Price or Purchase Price for the
-Class A Ordinary Shares in respect of which the notice is given, whereupon the grantee shall
-be duly transferred with the relevant Class A Ordinary Shares (or treated as such by our
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-70 –
-
-Company) and entitled to receive out of the assets available in the liquidation pari passu with
-the holders of Class A Ordinary Shares such sum as would have been received in respect of the
-Shares that are the subject of such election.
-(o) Ranking of Shares
-The Class A Ordinary Shares underlying the options and the share awards to be allotted
-and issued, or transferred (in the case of any treasury shares), will be subject to all the
-provisions of the Articles of Association of our Company for the time being in force and will
-rank pari passu with the fully paid Class A Ordinary Shares in issue on the date on which such
-Class A Ordinary Shares are registered in the name of the Eligible Participants on the
-Company’s register of members and accordingly will entitle the holders to participate in all
-dividends and other distributions paid or made on or after the date on which such Class A
-Ordinary Shares are registered in the name of the Eligible Participants on the Company’s
-register of members other than any dividend or other distribution previously declared or
-recommended or resolved to be paid or made if the record date therefor falls before the date
-of such transfer.
-(p) Duration
-The Post-IPO Share Incentive Plan shall be valid and effective for a period of 10 years
-commencing on the date when the Post-IPO Share Incentive Plan becomes unconditional, after
-which period no further options or share awards will be granted by the provisions of the
-Post-IPO Share Incentive Plan, but the provisions of the Post-IPO Share Incentive Plan shall
-remain in full force and effect to the extent necessary to give effect to the exercise of any
-options or share awards granted prior thereto or otherwise as may be required in accordance
-with the provisions of the Post-IPO Share Incentive Plan.
-(q) Alteration of the Plan
-The Board may subject to the rules of the Post-IPO Share Incentive Plan amend any of
-the provisions of the Post-IPO Share Incentive Plan at any time (but not so as to affect
-adversely any rights which have accrued to any grantee at that date).
-Any alterations to the terms and conditions of the Post-IPO Share Incentive Plan which
-are of a material nature, and any change to the terms of any options or share awards granted
-to the advantage of Eligible Participants, shall be subject to the approval of the Shareholders
-in general meeting and, where required under the Listing Rules, the Stock Exchange.
-Any change to the terms of options or share awards granted to an Eligible Participant
-must be approved by the Board, the remuneration committee, the independent non-executive
-Directors and/or the Shareholders (as the case may be) if the initial grant of the options or share
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-71 –
-
-awards was approved by the Board, the remuneration committee, the independent non-
-executive Directors and/or the Shareholders (as the case may be). Such requirement does not
-apply where the alterations take effect automatically under the existing terms of the Post-IPO
-Share Incentive Plan.
-(r) Cancelation of options and share awards
-Any cancelation of options or share awards granted may be effected on such terms as may
-be agreed with the relevant grantee, as the Board may in its absolute discretion sees fit and in
-a manner that complies with all applicable legal requirements for such cancelation. Where our
-Company cancels options and/or share awards granted to a participant and makes a new grant
-to the same participant, such new grant may only be made under the Post-IPO Share Share
-Incentive Plan with available Plan Mandate Limit approved by the Shareholders. The options
-or share awards canceled will be regarded as utilized for the purpose of calculating the Plan
-Mandate Limit.
-(s) Clawback
-The Board may, at its absolute discretion, determine such malus and/or clawback
-provisions to be applied to an option and a share award or an offer of grant so as to provide,
-upon the occurrence of the applicable malus and/or clawback event(s) such as serious
-misconduct, a material misstatement in our Company’s financial statements and fraud and the
-Company shall the right to recourse to the relevant grantee (i) to claw back all proceeds
-generated from the options and share awards, or (ii) by seizing or forfeiting all vested Class
-A Ordinary Shares issued as a result of exercising options granted. If the Board exercises its
-discretion under this paragraph, it will give the relevant grantee written notice of such
-determination and the Board’s interpretation of and determination pursuant to this paragraph
-shall be final, conclusive and binding.
-(t) Termination
-Our Company by resolution in general meeting or the Board may at any time terminate
-the operation of the Post-IPO Share Incentive Plan and in such event no further options or share
-awards will be offered but the provisions of the Post-IPO Share Incentive Plan shall remain in
-full force in all other respects. All options and share awards granted prior to such termination
-shall continue to be valid and exercisable in accordance with the terms of the Post-IPO Share
-Incentive Plan.
-(u) Value of option and share awards
-Our Directors consider it inappropriate to disclose the value of options and/or share
-awards which may be granted under the Post-IPO Share Incentive Plan as if they had been
-granted as of the Latest Practicable Date. Any such valuation will have to be made on the basis
-of a certain option and/or share awards pricing model or other method that depends on various
-assumptions including the exercise price, the exercise period, interest rate, expected volatility
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-72 –
-
-and other variables. As no options or share awards have been granted, certain variables are not
-available for calculating the value of options or share awards. Our Directors believe that any
-calculation of the value of options and share awards granted as of the Latest Practicable Date
-would be based on a number of speculative assumptions that are not meaningful and would be
-misleading to investors.
-(v) General
-As of the Latest Practicable Date, no options or share awards had been granted or agreed
-to be granted under the Post-IPO Share Incentive Plan.
-E. OTHER INFORMATION
-1. Litigation
-As of the Latest Practicable Date, we are not aware of any other litigation or arbitration
-proceedings of material importance pending or threatened against us or any of our Directors
-that could have a material adverse effect on our financial condition or results of operations.
-2. No Material Adverse Change
-The Directors confirm that there has been no material change in the financial or trading
-position or prospects of our Group since September 30, 2025 (being the date to which the latest
-audited consolidated financial statements of our Group were prepared) and up to the date of
-this Prospectus.
-3. The Joint Sponsors
-Each of the Joint Sponsors is independent from our Company pursuant to Rule 3A.07 of
-the Listing Rules. The fee payable by our Company to each of the Joint Sponsors to act as
-sponsor to our Company in connection with the Global Offering is US$1 million in total.
-4. Preliminary expenses
-We have not incurred any material preliminary expenses.
-5. Promoter
-Our Company has no promoter for the purpose of the Listing Rules.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-73 –
-
-6. Qualification of Experts
-The following are the qualifications of the experts who have given opinion or advice
-which are contained in this Prospectus:
-Name Qualification
-China International Capital Corporation
-Hong Kong Securities Limited /H1118/H1118/H1118/H1118/H1118/H1118/H1118
-A licensed corporation under the SFO to
-conduct type 1 (dealing in securities), type
-2 (dealing in futures contracts), type 4
-(advising on securities), type 5 (advising
-on futures contracts) and type 6 (advising
-on corporate finance) of the regulated
-activities as defined under the SFO
-UBS Securities Hong Kong Limited /H1118/H1118/H1118/H1118A licensed corporation under the SFO to
-conduct type 1 (dealing in securities), type
-2 (dealing in futures contracts), type 6
-(advising on corporate finance) and type 7
-(providing automated trading services) of
-the regulated activities as defined under the
-SFO
-Jingtian & Gongcheng /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Legal advisor to our Company as to PRC
-laws (including as to matters concerning
-data compliance in the PRC)
-ZwillGen PLLC /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Legal advisor to our Company as to U.S.
-data compliance matters
-Shook Lin & Bok LLP /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Legal advisor to our Company as to
-Singapore laws (including as to matters
-concerning data compliance in Singapore)
-Maples and Calder (Hong Kong) LLP /H1118/H1118/H1118Legal advisor to our Company as to
-Cayman Islands laws
-Hogan Lovells International LLP /H1118/H1118/H1118/H1118/H1118/H1118/H1118Legal advisor to our Company as to
-international sanctions laws
-Ernst & Y oung /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118Certified Public Accountants under
-Professional Accountants Ordinance
-(Chapter 50 of the Laws of Hong Kong)
-and Registered Public Interest Entity
-Auditor under Accounting and Financial
-Reporting Council Ordinance (Chapter 588
-of the Laws of Hong Kong)
-China Insights Industry Consultancy
-Limited /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118
-Industry consultant
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-74 –
-
-7. Consent of Experts
-Each of the experts named above has given and has not withdrawn its respective written
-consent to the issue of this Prospectus with the inclusion of its report and/or letter and/or
-opinion and/or the references to its name included in this Prospectus in the form and context
-in which it is respectively included.
-8. Binding Effect
-This Prospectus shall have the effect, if an application is made in pursuance of this
-Prospectus, of rendering all persons concerned bound by all of the provisions (other than the
-penal provisions) of sections 44A and 44B of the Companies (Winding Up and Miscellaneous
-Provisions) Ordinance insofar as applicable.
-9. Bilingual prospectus
-The English and Chinese language versions of this Prospectus are being published
-separately in reliance upon the exemption provided by section 4 of the Companies (Exemption
-Companies and Prospectuses from Compliance with Provisions) Notice (Chapter 32L of the
-Laws of Hong Kong).
-F. MISCELLANEOUS
-Save as otherwise disclosed in this Prospectus:
-(a) within the two years preceding the date of this Prospectus: (i) we have not issued nor
-agreed to issue any share or loan capital fully or partly paid either for cash or for
-a consideration other than cash; and (ii) no commissions, discounts, brokerage fee
-or other special terms have been granted in connection with the issue or sale of any
-shares of our Company;
-(b) no share or loan capital of our Company is under option or is agreed conditionally
-or unconditionally to be put under option;
-(c) we have not issued nor agreed to issue any founder shares, management shares or
-deferred shares;
-(d) there are no arrangements under which future dividends are waived or agreed to be
-waived;
-(e) there are no contracts for hire or hire purchase of plant to or by us for a period of
-over one year which are substantial in relation to our business;
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-75 –
-
-(f) there have been no interruptions in our business which may have or have had a
-significant effect on our financial position in the last 12 months;
-(g) there are no restrictions affecting the remittance of profits or repatriation of capital
-by us into Hong Kong from outside Hong Kong; and
-(h) no part of the equity or debt securities of our Company, if any, is currently listed on
-or dealt in on any stock exchange or trading system, and no such listing or
-permission to list on any stock exchange other than the Hong Kong Stock Exchange
-is currently being or agreed to be sought.
-APPENDIX IV STATUTORY AND GENERAL INFORMATION
-– IV-76 –
-
-DOCUMENTS DELIVERED TO THE REGISTRAR OF COMPANIES
-The documents attached to the copy of this Prospectus delivered to the Registrar of
-Companies in Hong Kong for registration were, among other documents:
-(a) the written consents referred to in the section headed “Statutory and General
-Information — E. Other Information — 7. Consent of Experts” in Appendix IV to
-this Prospectus; and
-(b) a copy of each of the material contracts referred to in the section headed “Statutory
-and General Information — B. Further Information about Our Business — 1.
-Summary of Material Contracts” in Appendix IV to this Prospectus.
-DOCUMENTS A V AILABLE ON DISPLAY
-Copies of the following documents will be available on display on the Company’s website
-(https://www.minimaxi.com ) and the Stock Exchange’s website ( https://www.hkexnews.hk )
-up to and including the date which is 14 days from the date of this Prospectus:
-(a) the Memorandum and Articles of Association of our Company;
-(b) the Accountant’s Report from Ernst & Y oung, the text of which is set out in
-Appendix I to this Prospectus;
-(c) the report on the unaudited pro forma financial information from Ernst & Y oung, the
-text of which is set out in Appendix II to this Prospectus;
-(d) the audited consolidated financial statements of our Company for the three financial
-years ended December 31, 2022, 2023 and 2024 and the nine months ended
-September 30, 2025;
-(e) the legal opinion issued by Jingtian & Gongcheng, our PRC Legal Advisor in respect
-of general matters and property interests of our Group in the PRC;
-(f) the legal opinion issued by Jingtian & Gongcheng, our PRC Legal Advisor in respect
-of data compliance matters in the PRC;
-(g) the legal opinion issued by ZwillGen PLLC, our legal advisor as to U.S. data
-compliance matters, summarizing the legal advice in respect of data compliance
-matters in the U.S.;
-(h) the legal opinion issued by Shook Lin & Bok LLP , our legal advisor as to the laws
-of Singapore, summarizing the legal advice in respect of Singapore laws, including
-matters concerning data compliance in Singapore;
-APPENDIX V DOCUMENTS DELIVERED TO THE REGISTRAR OF
-COMPANIES IN HONG KONG AND A V AILABLE ON DISPLAY
-– V-1 –
-
-(i) the letter of advice from Maples and Calder (Hong Kong) LLP , our legal advisor as
-to the laws of the Cayman Islands, summarizing certain aspects of the Cayman
-Companies Act referred to in Appendix III to this Prospectus;
-(j) the memorandum of advice prepared by Hogan Lovells International LLP , our legal
-advisor as to international sanctions laws, summarizing the legal advice in respect
-of international sanctions laws;
-(k) the report issued by China Insights Industry Consultancy Limited, a summary of
-which is set forth in the section headed “Industry Overview”;
-(l) the material contracts referred to in the section entitled “Statutory and General
-Information — B. Further Information about Our Business — 1. Summary of
-Material Contracts” in Appendix IV to this Prospectus;
-(m) the written consents referred to in the section entitled “Statutory and general
-information — E. Other Information — 7. Consent of Experts” in Appendix IV to
-this Prospectus;
-(n) the service contracts and the letters of appointment with our Directors referred to in
-the section headed “Statutory and General Information — C. Further Information
-about Our Directors and Substantial Shareholders — 2. Particulars of Service
-Contracts” in Appendix IV to this Prospectus;
-(o) the terms of the Pre-IPO Share Incentive Plan and Post-IPO Share Incentive Plan;
-and
-(p) the Cayman Companies Act.
-DOCUMENT A V AILABLE FOR INSPECTION
-A copy of a list of grantees under the Pre-IPO Share Incentive Plan, containing all details
-as required under the Listing Rules and the Companies (Winding Up and Miscellaneous
-Provisions) Ordinance, will be available for inspection at the office of Davis Polk & Wardwell
-at 10/F, The Hong Kong Club Building, 3A Chater Road, Central, Hong Kong during normal
-business hours up to and including the date which is 14 days from the date of this Prospectus.
-APPENDIX V DOCUMENTS DELIVERED TO THE REGISTRAR OF
-COMPANIES IN HONG KONG AND A V AILABLE ON DISPLAY
-– V-2 –
-
-minimaxi.com

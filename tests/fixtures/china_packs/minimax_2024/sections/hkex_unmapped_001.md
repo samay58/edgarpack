@@ -8,7 +8,6 @@ Joint Sponsors, Overall Coordinators, Joint Global Coordinators, Joint Bookrunne
 Overall Coordinators, Joint Global Coordinators, Joint Bookrunners and Joint Lead Managers
 (in alphabetical order)
 (in alphabetical order)
-
 IMPORTANT: If you are in any doubt about any of the contents of this Prospectus, you should seek independent professional advice.
 MiniMax Group Inc.
 (A company controlled through weighted voting rights and incorporated in the Cayman Islands with limited liability)
@@ -72,7 +71,6 @@ This prospectus is available at the website of the Stock Exchange at www.hkexnew
 and print from the website addresses above.
 IMPORTANT
 December 31, 2025
-
 IMPORTANT NOTICE TO INVESTORS OF HONG KONG OFFER SHARES
 FULLY ELECTRONIC APPLICATION PROCESS
 The Company has adopted a fully electronic application process for the Hong Kong
@@ -105,7 +103,6 @@ Y ou must pay the respective maximum amount payable on application in full upon 
 for Hong Kong Offer Shares.
 IMPORTANT
 –i i–
-
 If you are applying through the HKSCC EIPO channel, you are required to pre-fund your
 application based on the amount specified by your broker or custodian, as determined based on
 the applicable laws and regulations in Hong Kong.
@@ -172,7 +169,6 @@ Exchange trading fee and the AFRC transaction levy will be paid to the SFC, the 
 AFRC, respectively.
 IMPORTANT
 – iii –
-
 If there is any change in the following expected timetable, we will issue an
 announcement to be published on the websites of the Company at
 https://www.minimaxi.com and the Stock Exchange at www.hkexnews.hk .
@@ -214,7 +210,6 @@ https://www.minimaxi.com (6) on or before (10) .................... 1 1:00 p.m. 
 Thursday, January 8, 2026
 EXPECTED TIMETABLE (1)
 –i v–
-
 (2) Results of allocations in the Hong Kong
 Public Offering (with successful applicants’
 identification document or business registration
@@ -255,7 +250,6 @@ Dealings in the Class A Ordinary Shares on the Hong Kong Stock
 Exchange expected to commence at 9:00 a.m. on ............ .Friday, January 9, 2026
 EXPECTED TIMETABLE (1)
 –v–
-
 Notes:
 (1) All times refer to Hong Kong local time, except as otherwise stated.
 (2) Y ou will not be permitted to submit your application through the designated website at www.hkeipo.hk after
@@ -306,7 +300,6 @@ Further information is set out in the section headed “How to Apply for Hong Ko
 Despatch/Collection of Share Certificates and Refund of Application Monies”.
 EXPECTED TIMETABLE (1)
 –v i–
-
 The above expected timetable is a summary only. Y ou should see “Structure of the
 Global Offering” and “How to Apply for Hong Kong Offer Shares” for details of the
 structure of the Global Offering, including the conditions of the Global Offering, and the
@@ -316,7 +309,6 @@ with its terms, the Global Offering will not proceed. In such a case, the Compan
 make an announcement as soon as practicable thereafter.
 EXPECTED TIMETABLE (1)
 – vii –
-
 IMPORTANT NOTICE TO INVESTORS
 This Prospectus is issued by us solely in connection with the Hong Kong Public
 Offering and does not constitute an offer to sell or a solicitation of an offer to buy any
@@ -351,7 +343,6 @@ INFORMATION ABOUT THIS PROSPECTUS AND THE GLOBAL
 OFFERING ...................................................... 1 2 6
 CONTENTS
 – viii –
-
 DIRECTORS AND PARTIES INVOLVED IN THE GLOBAL OFFERING ..... 1 3 1
 CORPORATE INFORMATION ....................................... 1 4 1
 INDUSTRY OVERVIEW ............................................. 1 4 4
@@ -381,7 +372,6 @@ COMPANIES IN HONG KONG AND A V AILABLE
 ON DISPLAY .................................. V - 1
 CONTENTS
 –i x–
-
 This summary aims to give you an overview of the information contained in this
 Prospectus. As it is a summary, it does not contain all the information that may be
 important to you. You should read the whole Prospectus before you decide to invest in the
@@ -421,7 +411,6 @@ architecture and hybrid attention mechanism at an early stage, which significant
 computation resources while maintaining globally recognized performance.
 SUMMARY
 –1–
-
 Large 
 Language 
 Model
@@ -461,7 +450,6 @@ enable an elevated level of intelligence for everyone—powering productivity an
 life. See “Business — Scalability.”
 SUMMARY
 –2–
-
 OUR MODELS AND PRODUCT OFFERINGS
 Our Foundation Model Suite
 We have leveraged our R&D capabilities to build a comprehensive suite of foundation
@@ -497,7 +485,6 @@ services that unleash the power of AI to benefit both individual users, develope
 customers around the world. The evolution of our AI-native products is rooted in advancements
 SUMMARY
 –3–
-
 in its underlying foundation models. Through continuous iterations and upgrades of foundation
 models and the development of new ones, we are able to design and create AI-native products
 with enhanced productivity and user experience.
@@ -532,7 +519,6 @@ making it one of the world’s largest open platforms for enterprises and develo
 average daily token volume, signifying widespread adoption.
 SUMMARY
 –4–
-
 OUR BUSINESS AND REVENUE MODEL
 Our revenue is derived from two primary sources — (i) AI-native products and (ii) Open
 Platform and other AI-based enterprise services. Each revenue stream reflects a distinct
@@ -575,7 +561,6 @@ Revenue from other AI-based enterprise services, mainly consists of arrangements
 to enterprise requirements and licensed deliverables, is typically recognised at a point in time,
 SUMMARY
 –5–
-
 when control is transferred or acceptance is confirmed. In relation to our AI-based enterprise
 services, for customised arrangements, we work with enterprise customers to set up dedicated
 inference resource pools tailored to their needs, helping ensure stable and predictable model
@@ -603,7 +588,6 @@ services /H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 2,702 78.
 Total revenue /H1118/H1118/H1118/H1118/H1118/H1118/H1118– – 3,460 100.0 30,523 100.0 19,454 100.0 53,437 100.0
 SUMMARY
 –6–
-
 For the year ended December 31,
 For the nine months ended
 September 30,
@@ -647,7 +631,6 @@ our core AI models via our Open Platform, which supports growing business needs 
 industry sectors. Our Open Platform demonstrates solid monetization capabilities for the
 SUMMARY
 –7–
-
 foundation models offered. We have consistently observed a rapid increase in paying customers
 on the Open Platform. Our number of paying users on the Open Platform, defined as users who
 have individually consumed no less than US$50 worth of API calls in a given period, expanded
@@ -681,7 +664,6 @@ As a result, we are currently not able to reliably distinguish whether an Open P
 developer or an enterprise customer.
 SUMMARY
 –8–
-
 The following chart sets forth the number of paying users within each period of the Track
 Record Period 1:
 For the year ended December 31,
@@ -724,7 +706,6 @@ made API calls during a given month on our Open Platform including both paying a
 customers. Customers who have registered but not made API calls are not included.
 SUMMARY
 –9–
-
 The following chart sets forth the number of new users within each period of the Track
 Record Period 1,2:
 For the year ended December 31,
@@ -764,7 +745,6 @@ For Open Platform, average spending per paying customer is calculated by dividin
 generated by the number of paying users of our Open Platform in a given period.
 SUMMARY
 –1 0–
-
 OUR STRENGTHS
 Our core strength resides in the scalability embedded across our key operational pillars.
 This includes our algorithms, model training and inference infrastructure, commercialization
@@ -794,7 +774,6 @@ services expenses related to training.
 See “Business — Research and Development.”
 SUMMARY
 –1 1–
-
 CUSTOMERS AND SUPPLIERS
 Our customers comprise a broad and diverse base across various sectors and geographies.
 In 2023, 2024 and nine months ended September 30, 2025, revenue from our five largest
@@ -837,7 +816,6 @@ in response to user prompts and therefore lacks the volitional conduct required 
 liability. In respect of the secondary infringement claims, Hailuo AI is a general-purpose
 SUMMARY
 –1 2–
-
 creative tool created for lawful uses, and the Company does not have any direct financial
 benefit tied to alleged infringements, such that the elements required for contributory or
 vicarious liability are not satisfied.
@@ -883,7 +861,6 @@ urgency, none of which have been substantiated, and courts in comparable technol
 generally favor narrow output-specific remedies rather than broad platform-wide restrictions,
 SUMMARY
 –1 3–
-
 making any such operational impact unlikely even in a final judgment; and (iii) the Plaintiffs’
 intellectual property is not material to the commercial viability of Hailuo AI, which is a
 general-purpose creative platform created for lawful uses, and the Directors do not consider
