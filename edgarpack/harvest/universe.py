@@ -17,6 +17,11 @@ class CompanySpec(BaseModel):
     forms_10q: int | None = None
     forms_8k: int | None = None
     forms_20f: int | None = None
+    # China query parity (edgarpack-2yg): identity + listing metadata.
+    listing: str | None = None
+    aliases: list[str] = []
+    alt_tickers: list[str] = []
+    hk_stock_code: str | None = None
 
 
 class UniverseConfig(BaseModel):

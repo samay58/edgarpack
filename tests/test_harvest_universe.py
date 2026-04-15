@@ -91,3 +91,60 @@ def test_form_counts_zero_excludes():
     counts = config.form_counts(config.companies[0])
     assert "8-K" not in counts
     assert counts == {"10-K": 2, "10-Q": 4}
+
+
+def test_company_spec_accepts_hk_listing_fields(tmp_path):
+    cfg = tmp_path / "u.toml"
+    cfg.write_text(
+        """
+[[companies]]
+ticker = "0700.HK"
+listing = "HKEX"
+aliases = ["tencent", "tencent holdings"]
+hk_stock_code = "00700"
+"""
+    )
+    from edgarpack.harvest.universe import load_universe
+
+    universe = load_universe(cfg)
+    spec = universe.companies[0]
+    assert spec.ticker == "0700.HK"
+    assert spec.listing == "HKEX"
+    assert spec.aliases == ["tencent", "tencent holdings"]
+    assert spec.hk_stock_code == "00700"
+
+
+def test_company_spec_accepts_alt_tickers_for_dual_listed(tmp_path):
+    cfg = tmp_path / "u.toml"
+    cfg.write_text(
+        """
+[[companies]]
+ticker = "BABA"
+listing = "NYSE"
+aliases = ["alibaba"]
+alt_tickers = ["9988.HK"]
+"""
+    )
+    from edgarpack.harvest.universe import load_universe
+
+    universe = load_universe(cfg)
+    spec = universe.companies[0]
+    assert spec.alt_tickers == ["9988.HK"]
+
+
+def test_company_spec_listing_defaults_to_none_for_legacy_entries(tmp_path):
+    cfg = tmp_path / "u.toml"
+    cfg.write_text(
+        """
+[[companies]]
+ticker = "NVDA"
+"""
+    )
+    from edgarpack.harvest.universe import load_universe
+
+    universe = load_universe(cfg)
+    spec = universe.companies[0]
+    assert spec.listing is None
+    assert spec.aliases == []
+    assert spec.alt_tickers == []
+    assert spec.hk_stock_code is None
