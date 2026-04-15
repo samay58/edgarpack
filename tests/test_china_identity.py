@@ -1,7 +1,5 @@
 """Identity resolution for China query parity (edgarpack-2yg)."""
 
-from pathlib import Path
-
 import pytest
 
 from edgarpack.identity import (

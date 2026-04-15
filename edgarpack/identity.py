@@ -19,11 +19,11 @@ from .harvest.universe import CompanySpec, load_universe
 Source = Literal["SEC", "HKEX"]
 
 
-class UnknownCompany(ValueError):
+class UnknownCompany(ValueError):  # noqa: N818
     """Raised when a ticker or alias does not resolve to any company."""
 
 
-class AmbiguousCompany(ValueError):
+class AmbiguousCompany(ValueError):  # noqa: N818
     """Raised at config load when two companies claim the same alias."""
 
 
