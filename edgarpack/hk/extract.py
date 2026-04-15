@@ -176,7 +176,7 @@ def _merge_wrapped_labels(lines: list[str]) -> list[str]:
         if not has_digits and _is_label_prefix(stripped) and i + 1 < len(lines):
             next_line = lines[i + 1]
             next_stripped = _strip_filler(next_line).strip()
-            if next_stripped and (next_stripped[0].islower() or next_stripped.startswith("/H")):
+            if next_stripped and next_stripped[0].islower():
                 merged.append(f"{line.rstrip()} {next_line.lstrip()}")
                 skip_next = True
                 continue
