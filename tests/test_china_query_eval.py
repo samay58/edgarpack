@@ -13,10 +13,8 @@ from __future__ import annotations
 import asyncio
 import math
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -82,9 +80,11 @@ def _case_id(c: GoldenCase) -> str:
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_case_id)
-def test_china_golden(case: GoldenCase) -> None:
+def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
     if case.xfail:
-        pytest.xfail(f"known bug: {case.xfail}")
+        request.applymarker(
+            pytest.mark.xfail(strict=True, reason=f"known bug: {case.xfail}")
+        )
 
     result = asyncio.run(
         financials(company=case.ticker, metrics=case.metric, period=case.period)
