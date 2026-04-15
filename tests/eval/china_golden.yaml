@@ -13,6 +13,12 @@ companies:
           fx_rate: 1.0
           fx_convention: average
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: 30523000
+          usd: 30523000
+          fx_rate: 1.0
+          fx_convention: average
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
       gross_profit:
         lfy:
           native: 3738000
@@ -20,6 +26,12 @@ companies:
           fx_rate: 1.0
           fx_convention: average
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: 3738000
+          usd: 3738000
+          fx_rate: 1.0
+          fx_convention: average
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
       net_income:
         lfy:
           native: -465238000
@@ -27,6 +39,12 @@ companies:
           fx_rate: 1.0
           fx_convention: average
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss"
+        ltm:
+          native: -465238000
+          usd: -465238000
+          fx_rate: 1.0
+          fx_convention: average
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
       cash_and_equivalents:
         lfy:
           native: 288912000
@@ -34,6 +52,12 @@ companies:
           fx_rate: 1.0
           fx_convention: spot
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Balance Sheet"
+        ltm:
+          native: 288912000
+          usd: 288912000
+          fx_rate: 1.0
+          fx_convention: spot
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Balance Sheet (LTM proxy: annual-only filer, mirrors LFY)"
       total_equity:
         lfy:
           native: -799320000
@@ -41,15 +65,31 @@ companies:
           fx_rate: 1.0
           fx_convention: spot
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Balance Sheet"
+        ltm:
+          native: -799320000
+          usd: -799320000
+          fx_rate: 1.0
+          fx_convention: spot
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Balance Sheet (LTM proxy: annual-only filer, mirrors LFY)"
       operating_cash_flow:
         lfy:
           native: null
           usd: null
           xfail: edgarpack-483
           source: "MiniMax 00100.HK FY2024 pack, Cash Flow Statement (multi-line label extraction bug)"
+        ltm:
+          native: null
+          usd: null
+          xfail: edgarpack-483
+          source: "MiniMax 00100.HK FY2024 pack, Cash Flow Statement (multi-line label extraction bug, LTM proxy: annual-only filer, mirrors LFY)"
       r_and_d_expense:
         lfy:
           native: null
           usd: null
           xfail: edgarpack-483
           source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug)"
+        ltm:
+          native: null
+          usd: null
+          xfail: edgarpack-483
+          source: "MiniMax 00100.HK FY2024 pack, Consolidated Statement of Profit or Loss (multi-line label extraction bug, LTM proxy: annual-only filer, mirrors LFY)"
