@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/edgarpack-cover.png" alt="EdgarPack: a 10-K rendered as geological strata being excavated" width="800">
+</p>
+
 # EdgarPack
 
 SEC filings turned into clean markdown packs and cited financial queries, one command at a time.
