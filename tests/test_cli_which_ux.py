@@ -7,8 +7,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
-
 from edgarpack import cli
 from edgarpack.harvest.registry import PackRecord, PackRegistry
 from edgarpack.query.kpi_discover import CompanyKpiAggregate, PeriodPoint
@@ -108,7 +106,10 @@ def test_cmd_build_registers_pack_and_groups_warnings(tmp_path, capsys):
 
     with (
         patch("edgarpack.pack.build.build_pack", new=AsyncMock(return_value=stub_result)),
-        patch("edgarpack.cli._resolve_cli_company", new=AsyncMock(return_value=_resolved_company())),
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(return_value=_resolved_company()),
+        ),
         patch("edgarpack.cli._register_pack_result") as mock_register,
     ):
         rc = cli._cmd_build(_build_args(company="FIG", tmp_path=tmp_path))
@@ -128,7 +129,10 @@ def test_cmd_which_no_packs_uses_ticker_first_copy(capsys):
     mock_registry.close.return_value = None
 
     with (
-        patch("edgarpack.cli._resolve_cli_company", new=AsyncMock(return_value=_resolved_company())),
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(return_value=_resolved_company()),
+        ),
         patch("edgarpack.harvest.registry.PackRegistry", return_value=mock_registry),
     ):
         rc = cli._cmd_which(_which_args(company="FIG"))
@@ -195,7 +199,10 @@ def test_cmd_which_shows_progress_and_summary(capsys):
     mock_registry.close.return_value = None
 
     with (
-        patch("edgarpack.cli._resolve_cli_company", new=AsyncMock(return_value=_resolved_company())),
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(return_value=_resolved_company()),
+        ),
         patch("edgarpack.harvest.registry.PackRegistry", return_value=mock_registry),
         patch("edgarpack.query.kpi_discover.discover_kpis", side_effect=_fake_discover),
     ):
@@ -237,7 +244,10 @@ def test_cmd_which_empty_state_is_actionable(capsys):
     mock_registry.close.return_value = None
 
     with (
-        patch("edgarpack.cli._resolve_cli_company", new=AsyncMock(return_value=_resolved_company())),
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(return_value=_resolved_company()),
+        ),
         patch("edgarpack.harvest.registry.PackRegistry", return_value=mock_registry),
         patch("edgarpack.query.kpi_discover.discover_kpis", side_effect=_fake_discover),
     ):

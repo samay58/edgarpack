@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from collections import Counter
 import shutil
 import sys
 import textwrap
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -186,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
     p_build.add_argument(
         "company",
         nargs="?",
-        help='Ticker or company name first (e.g. FIG, Figma, NVDA). CIK also accepted.',
+        help="Ticker or company name first (e.g. FIG, Figma, NVDA). CIK also accepted.",
     )
     p_build.add_argument(
         "--cik",
@@ -466,7 +466,11 @@ def main(argv: list[str] | None = None) -> int:
         "comps",
         help="Compare financial metrics across companies",
     )
-    p_comps.add_argument("companies", nargs="+", help="Ticker symbols or CIK numbers")
+    p_comps.add_argument(
+        "companies",
+        nargs="+",
+        help="Tickers, CIKs, or company names",
+    )
     p_comps.add_argument(
         "--metrics",
         "-m",
@@ -582,7 +586,11 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     p_compare = sub.add_parser("compare", help="Side-by-side comparison of two or more companies")
-    p_compare.add_argument("companies", nargs="+", help="Two or more company tickers or aliases")
+    p_compare.add_argument(
+        "companies",
+        nargs="+",
+        help="Two or more tickers, CIKs, or company names",
+    )
     p_compare.add_argument("--metrics", help="Comma-separated metric names")
     p_compare.add_argument("--period", default="lfy", help="Fiscal period (default: lfy)")
     p_compare.add_argument(
@@ -763,7 +771,9 @@ def _cmd_build(args: Any) -> int:
 
         if result.warnings:
             grouped = _group_build_warnings(result.warnings)
-            print(f"\nNon-fatal warnings ({len(grouped)} groups from {len(result.warnings)} events):")
+            print(
+                f"\nNon-fatal warnings ({len(grouped)} groups from {len(result.warnings)} events):"
+            )
             for w in grouped[:10]:
                 print(f"  - {w}")
             if len(grouped) > 10:
@@ -832,8 +842,6 @@ def _cmd_cache(args: Any) -> int:
         return 0
 
     if args.clear:
-        import shutil
-
         try:
             shutil.rmtree(cache_dir)
         except Exception as e:
@@ -1173,7 +1181,8 @@ def _render_query_table(result: Any, args: Any) -> str:
         lines.append("")
         lines.append("Diagnostics:")
         for diag in diagnostics:
-            # diag is a Diagnostic pydantic model (Task 12), not a dict
+            # Diagnostic is a pydantic model; getattr guards against stub dicts
+            # slipping in via monkey-patched tests.
             metric_name = getattr(diag, "metric", "?")
             message = getattr(diag, "message", "")
             lines.extend(
@@ -1343,15 +1352,11 @@ def _cmd_query(args: Any) -> int:
             metric_list_for_render = list(result.metrics.keys())
 
         if args.output_format == "json":
-            print(
-                multi_period_to_lean_json(results_by_period, metric_list_for_render, periods)
-            )
+            print(multi_period_to_lean_json(results_by_period, metric_list_for_render, periods))
             return 0
 
         if args.output_format == "json-full":
-            print(
-                multi_period_to_full_json(results_by_period, metric_list_for_render, periods)
-            )
+            print(multi_period_to_full_json(results_by_period, metric_list_for_render, periods))
             return 0
 
         citations_mode = args.citations if args.citations is not None else "footer"
@@ -1505,8 +1510,6 @@ def _print_paragraph_delta(pd: Any) -> None:
 
 
 def _cmd_diff(args: Any) -> int:
-    from pathlib import Path
-
     async def _run() -> int:
         from .diff.section_diff import diff_filings
 
@@ -1867,7 +1870,9 @@ def _render_which_diagnostics(diagnostics: Any) -> str | None:
     if diagnostics.discovered_packs:
         fragments.append(f"{diagnostics.discovered_packs} analyzed")
     if diagnostics.unreadable_manifest_packs:
-        fragments.append(f"{diagnostics.unreadable_manifest_packs} skipped (missing/corrupt manifest)")
+        fragments.append(
+            f"{diagnostics.unreadable_manifest_packs} skipped (missing/corrupt manifest)"
+        )
     if diagnostics.llm_failed_packs:
         fragments.append(f"{diagnostics.llm_failed_packs} discovery failure(s)")
     if diagnostics.empty_packs:

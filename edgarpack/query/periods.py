@@ -668,9 +668,7 @@ def _select_ltm_like(
 
     annual = _annual_history(values)
     if not annual:
-        _record_incomputable(
-            f"no annual history for concept (MRP={mrp_fp} FY{mrp_fy})"
-        )
+        _record_incomputable(f"no annual history for concept (MRP={mrp_fp} FY{mrp_fy})")
         return _finalize(None)
 
     lfy_target_fy = mrp_fy - 1
@@ -679,7 +677,8 @@ def _select_ltm_like(
         lfy = next((v for v in annual if int(v.get("fy") or 0) < mrp_fy), None)
     if lfy is None:
         _record_incomputable(
-            f"no prior FY annual (looking for FY{lfy_target_fy} or earlier; MRP={mrp_fp} FY{mrp_fy})"
+            f"no prior FY annual (looking for FY{lfy_target_fy} or earlier; "
+            f"MRP={mrp_fp} FY{mrp_fy})"
         )
         return _finalize(None)
 
@@ -694,8 +693,7 @@ def _select_ltm_like(
     mrp_prior = _pick_cumulative_quarter(prior_year)
     if mrp_prior is None:
         _record_incomputable(
-            f"no matching {mrp_fp} cumulative entry for FY{lfy_fy} "
-            f"(MRP={mrp_fp} FY{mrp_fy})"
+            f"no matching {mrp_fp} cumulative entry for FY{lfy_fy} (MRP={mrp_fp} FY{mrp_fy})"
         )
         return _finalize(None)
 
@@ -1162,13 +1160,24 @@ def select_period(
         meta: Metric metadata.
         company: Company name.
         cik: CIK number.
-        period: Period selector string. Valid values: ``"lfy"`` (latest fiscal
-            year), ``"mrq"`` (most recent quarter), ``"ltm"`` / ``"ltm-1"``
-            (trailing twelve months, current and prior window), ``"annual:N"``
-            (series of N annual periods), ``"quarterly:N"`` (series of N
-            quarters), and ``"lfy-N"`` (fiscal year N positions back from the
-            latest; N must be a non-negative integer). ``lfy-0`` is equivalent
-            to ``lfy``.
+        period: Period selector string. Scalars:
+
+            - ``"lfy"`` / ``"lfy-N"`` -- latest fiscal year, or N years back
+              (``lfy-0`` is equivalent to ``lfy``).
+            - ``"mrq"`` / ``"mrq-N"`` -- most recent standalone quarter, or
+              the same fiscal quarter N years back.
+            - ``"ltm"`` / ``"ltm-N"`` -- trailing twelve months, or the
+              window ending N fiscal years back.
+            - ``"mrp"`` -- most recent reported period (no offset form).
+
+            Series:
+
+            - ``"annual:N"`` -- last N fiscal years.
+            - ``"quarterly:N"`` -- last N standalone quarters.
+
+            Unknown selectors raise ``ValueError``. For multi-period grids,
+            pre-parse the user string with ``parse_period_spec`` and dispatch
+            once per selector.
         taxonomy: XBRL taxonomy ("us-gaap" or "ifrs-full").
         doc_map: Optional mapping of accession -> primaryDocument filename.
 

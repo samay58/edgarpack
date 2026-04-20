@@ -1,7 +1,8 @@
 """Identity resolution across SEC and HKEX listings.
 
-Single entrypoint for the CLI. `--ticker` and `--company` both flow
-through `resolve()`. Ambiguity (two aliases colliding) is caught at
+The CLI calls `resolve()` with whatever the user typed as the positional
+`company` argument, passed once as `ticker=` and once as `company=` to
+handle either shape. Ambiguity (two aliases colliding) is caught at
 config load time, not query time.
 """
 
@@ -111,7 +112,12 @@ def resolve(
     ticker: str | None,
     company: str | None,
 ) -> ResolvedCompany:
-    """Resolve a CLI --ticker or --company into a canonical ResolvedCompany."""
+    """Resolve a ticker symbol or a company alias into a ResolvedCompany.
+
+    Pass exactly one of ``ticker`` or ``company``. The CLI typically calls
+    this twice for the same user input (first as ticker, then as company
+    alias) to paper over the ambiguity between short tickers and names.
+    """
     if ticker is None and company is None:
         raise ValueError("resolve() requires ticker or company")
 

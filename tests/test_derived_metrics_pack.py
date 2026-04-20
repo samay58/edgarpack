@@ -30,8 +30,7 @@ def _facts_with(concept_entries: dict[str, list[dict]]) -> dict:
     """Build a us-gaap facts blob with `{concept: [entries...]}`."""
     return {
         "us-gaap": {
-            concept: {"units": {"USD": entries}}
-            for concept, entries in concept_entries.items()
+            concept: {"units": {"USD": entries}} for concept, entries in concept_entries.items()
         }
     }
 
@@ -79,9 +78,7 @@ class TestGrowthFamily(unittest.TestCase):
             }
         )
         meta = METRIC_MAP["eps_growth_yoy"]
-        result = _compute_derived(
-            facts, "eps_growth_yoy", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_derived(facts, "eps_growth_yoy", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         self.assertAlmostEqual(result.value, 0.5, places=6)
 
@@ -135,15 +132,11 @@ class TestIntensityFamily(unittest.TestCase):
         facts = _facts_with(
             {
                 "Revenues": [_entry(2024, 1_000_000_000)],
-                "SellingGeneralAndAdministrativeExpense": [
-                    _entry(2024, 100_000_000)
-                ],
+                "SellingGeneralAndAdministrativeExpense": [_entry(2024, 100_000_000)],
             }
         )
         meta = METRIC_MAP["sga_intensity"]
-        result = _compute_derived(
-            facts, "sga_intensity", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_derived(facts, "sga_intensity", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         self.assertAlmostEqual(result.value, 0.1, places=6)
 
@@ -151,15 +144,11 @@ class TestIntensityFamily(unittest.TestCase):
         facts = _facts_with(
             {
                 "Revenues": [_entry(2024, 1_000_000_000)],
-                "PaymentsToAcquirePropertyPlantAndEquipment": [
-                    _entry(2024, 50_000_000)
-                ],
+                "PaymentsToAcquirePropertyPlantAndEquipment": [_entry(2024, 50_000_000)],
             }
         )
         meta = METRIC_MAP["capex_intensity"]
-        result = _compute_derived(
-            facts, "capex_intensity", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_derived(facts, "capex_intensity", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         self.assertAlmostEqual(result.value, 0.05, places=6)
 
@@ -199,9 +188,7 @@ class TestQualityComposite(unittest.TestCase):
             }
         )
         meta = METRIC_MAP["rule_of_40"]
-        result = _compute_derived(
-            facts, "rule_of_40", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_derived(facts, "rule_of_40", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         # revenue_growth_yoy = 150/100 - 1 = 0.5
         # FCF FY24 = 30 - 15 = 15; fcf_margin = 15 / 150 = 0.1

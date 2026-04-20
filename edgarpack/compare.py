@@ -168,8 +168,7 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
             entry["fx_rate"] = 1.0
         metrics_dict[m] = entry
     diagnostics_out: list[dict[str, str]] = [
-        {"metric": d.metric, "kind": d.kind, "message": d.message}
-        for d in result.diagnostics
+        {"metric": d.metric, "kind": d.kind, "message": d.message} for d in result.diagnostics
     ]
 
     return CompanyColumn(
@@ -238,7 +237,7 @@ def _period_header(period_request: str, columns: list[CompanyColumn]) -> str:
     if len(unique) == 1:
         return f"Period: {period_request} ({unique[0]})"
     pairs = ", ".join(f"{c.ticker}={c.period}" for c in columns)
-    return f"Period: {period_request} — fiscal years differ: {pairs}"
+    return f"Period: {period_request}; fiscal years differ: {pairs}"
 
 
 def _diagnostics_lines(columns: list[CompanyColumn]) -> list[str]:
@@ -323,17 +322,18 @@ def _format_json(columns: list[CompanyColumn], period_request: str) -> str:
 
 
 def cmd_compare(args: Any) -> int:
-    from pathlib import Path
-
     from .identity import AmbiguousCompany, UnknownCompany, load_identity, resolve
 
     universe_path = Path("universe.toml")
     if universe_path.exists():
         try:
             idx = load_identity(universe_path)
+        except AmbiguousCompany as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
         except Exception as e:
             print(f"Error: failed to load universe: {e}", file=sys.stderr)
-            return 1
+            return 2
 
         for name in args.companies:
             try:
@@ -360,10 +360,16 @@ def cmd_compare(args: Any) -> int:
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
+    except AmbiguousCompany as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
     except ValueError as e:
         msg = str(e)
         print(f"Error: {msg}", file=sys.stderr)
-        return 2 if msg.lower().startswith("unknown ticker") else 1
+        lower = msg.lower()
+        if lower.startswith(("unknown ticker", "unknown company", "ambiguous company")):
+            return 2
+        return 1
 
     metric_keys = [m.strip() for m in metrics.split(",")]
 

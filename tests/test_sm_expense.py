@@ -23,9 +23,7 @@ def _entry(fy: int, val: float) -> dict:
 
 
 def _facts(concepts: dict[str, list[dict]]) -> dict:
-    return {
-        "us-gaap": {c: {"units": {"USD": entries}} for c, entries in concepts.items()}
-    }
+    return {"us-gaap": {c: {"units": {"USD": entries}} for c, entries in concepts.items()}}
 
 
 class TestSmExpense(unittest.TestCase):
@@ -70,9 +68,7 @@ class TestSmExpense(unittest.TestCase):
             }
         )
         meta = METRIC_MAP["sm_intensity"]
-        result = _compute_derived(
-            facts, "sm_intensity", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_derived(facts, "sm_intensity", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNone(result)
 
     def test_sm_intensity_computes_when_sm_tagged(self) -> None:
@@ -83,9 +79,7 @@ class TestSmExpense(unittest.TestCase):
             }
         )
         meta = METRIC_MAP["sm_intensity"]
-        result = _compute_derived(
-            facts, "sm_intensity", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_derived(facts, "sm_intensity", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         self.assertAlmostEqual(result.value, 0.2, places=6)
 

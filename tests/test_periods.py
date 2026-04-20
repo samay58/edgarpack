@@ -1826,16 +1826,12 @@ class TestSelectPeriodRouter(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        routed = select_period(
-            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "ltm-2"
-        )
+        routed = select_period(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "ltm-2")
         self.assertIsNotNone(routed)
 
     def test_mrq_2_via_select_period(self) -> None:
         facts = _make_facts("Revenues", REVENUE_VALUES)
-        routed = select_period(
-            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "mrq-2"
-        )
+        routed = select_period(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "mrq-2")
         direct = select_mrq_n(
             facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=2
         )

@@ -18,14 +18,11 @@ Covers the eight scenarios in the design spec:
 
 from __future__ import annotations
 
-import io
 import json
 import tempfile
 import unittest
-from contextlib import redirect_stdout
 from datetime import UTC, date, datetime
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from edgarpack.harvest.registry import PackRecord, PackRegistry
@@ -199,9 +196,7 @@ class TestCleanDiscoveredItem(unittest.TestCase):
             "source_substring": "100 ghosts observed in the filing",
             "confidence": 1.0,
         }
-        self.assertIsNone(
-            _clean_discovered_item(item, self.section_ids, self.text, set())
-        )
+        self.assertIsNone(_clean_discovered_item(item, self.section_ids, self.text, set()))
 
     def test_unknown_section_id_dropped_but_item_kept(self) -> None:
         item = {
@@ -230,9 +225,7 @@ class TestCleanDiscoveredItem(unittest.TestCase):
             "source_substring": "1.2 million paid seats",
             "confidence": 0.9,
         }
-        result = _clean_discovered_item(
-            item, self.section_ids, self.text, {"paid_seats"}
-        )
+        result = _clean_discovered_item(item, self.section_ids, self.text, {"paid_seats"})
         self.assertIsNotNone(result)
         assert result is not None
         self.assertTrue(result.reused_slug)

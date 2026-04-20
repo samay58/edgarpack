@@ -3,12 +3,13 @@
 import hashlib
 import json
 import os
+
 try:
     from datetime import UTC, datetime
 except ImportError:  # Python 3.9 fallback
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    UTC = timezone.utc
+    UTC = UTC
 from pathlib import Path
 from threading import Lock, get_ident
 from typing import Any

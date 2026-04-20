@@ -722,11 +722,10 @@ def _verify_against_prior_filing(
     if cached is not None and cached.value_sample is not None:
         prior_value = float(cached.value_sample)
     else:
-        # Forward reference: try_extract_kpi is defined in Task 11. Until
-        # Task 11 lands in the same file, this branch can't execute — but
-        # if the LearnedRegistry cache is missing or has value_sample=None,
-        # we'd otherwise NameError at call time. Guard with a module-level
-        # lookup so the fallback is clean.
+        # If the LearnedRegistry entry lacks a value_sample, we fall back to
+        # re-running the full extractor on the prior filing. Look up via
+        # globals() so this stays resilient to future module reorganizations
+        # that might temporarily break the direct reference.
         try_extract = globals().get("try_extract_kpi")
         if try_extract is None:
             return False, "prior_extract_unavailable"
@@ -825,8 +824,8 @@ def try_extract_kpi(
                     return None
                 primary_doc = manifest.get("filing", {}).get("primary_document", "")
                 _, filed_cached = _parse_filing_date_safe(pack_record.filing_date)
-                period_end_cached, fiscal_year_cached, fiscal_period_cached = (
-                    _resolve_period_end(manifest, pack_record)
+                period_end_cached, fiscal_year_cached, fiscal_period_cached = _resolve_period_end(
+                    manifest, pack_record
                 )
                 # Note: excerpt_text is not persisted in learned_concepts (v2
                 # schema), so cached CitedValues fall back to the concept-label
@@ -872,7 +871,7 @@ def try_extract_kpi(
             manifest = _load_pack_manifest(pack_dir)
         except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
             logger.warning(
-                "Layer B cache hit but pack manifest unreadable at %s: %s",
+                "Layer B extraction skipped: pack manifest unreadable at %s: %s",
                 pack_dir,
                 e,
             )
@@ -1127,7 +1126,7 @@ def _build_discovery_prompt(
         "- confidence: 0.0-1.0.\n\n"
         f"{existing_hint}"
         "Respond with strict JSON of the shape:\n"
-        "  { \"kpis\": [ { ... }, { ... } ] }\n"
+        '  { "kpis": [ { ... }, { ... } ] }\n'
         "No prose, no markdown fences. Empty list if the company does not "
         "disclose any qualifying KPIs.\n\n"
         f"TEXT (with `--- [section_id] ---` markers):\n{text}\n"
@@ -1301,7 +1300,9 @@ def _clean_discovered_item(
             section_id = cand
 
     unit_raw = item.get("unit")
-    unit: str | None = unit_raw if isinstance(unit_raw, str) and unit_raw in _DISCOVERY_UNIT_ALLOWED else None
+    unit: str | None = (
+        unit_raw if isinstance(unit_raw, str) and unit_raw in _DISCOVERY_UNIT_ALLOWED else None
+    )
 
     magnitude_raw = item.get("magnitude")
     magnitude: str | None = (
@@ -1321,7 +1322,9 @@ def _clean_discovered_item(
 
     definition_raw = item.get("definition")
     definition = (
-        str(definition_raw).strip() if isinstance(definition_raw, str) and definition_raw.strip() else None
+        str(definition_raw).strip()
+        if isinstance(definition_raw, str) and definition_raw.strip()
+        else None
     )
 
     confidence = _coerce_confidence(item.get("confidence"))

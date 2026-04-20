@@ -73,8 +73,9 @@ edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm --audit
 ### Multi-period grid (single company)
 
 `query` accepts a comma-separated list of scalar period selectors to render a
-metrics x periods grid. Rows are metrics in the caller's order. Columns are
-the periods, newest on the LEFT (matches the order typed on the CLI).
+metrics x periods grid. Rows are metrics in the caller's order. Columns follow
+the `--period` order exactly, so put newest first if you want newest on the
+LEFT.
 
 ```bash
 # Three-year annual performance view

@@ -126,6 +126,13 @@ _CONCEPT_NAME: dict[str, str] = {
 }
 
 
+# Sentinel used by the regex/LLM extractors for any fact that is not
+# naturally in its own unit (e.g. "headcount"). `extract_facts_from_pack`
+# overwrites this with the filing's `reporting_currency` during assembly,
+# so no caller should see `_UNIT_PENDING` in final facts.json output.
+_UNIT_PENDING = "__pending__"
+
+
 @dataclass(frozen=True)
 class HKFact:
     metric: str
@@ -330,7 +337,7 @@ def _extract_metric_from_section(
                                 metric=metric,
                                 concept=_CONCEPT_NAME.get(metric, metric),
                                 value=val,
-                                unit="USD",
+                                unit=_UNIT_PENDING,
                                 section_id=section_id,
                                 extraction_method="regex",
                                 matched_label=label,
@@ -344,7 +351,7 @@ def _extract_metric_from_section(
                     metric=metric,
                     concept=_CONCEPT_NAME.get(metric, metric),
                     value=val2,
-                    unit="USD",
+                    unit=_UNIT_PENDING,
                     section_id=section_id,
                     extraction_method="regex",
                     matched_label=label,
@@ -398,7 +405,7 @@ def _extract_inline_single_year(
                     metric=metric,
                     concept=_CONCEPT_NAME.get(metric, metric),
                     value=scaled_val,
-                    unit="USD",
+                    unit=_UNIT_PENDING,
                     section_id=section_id,
                     extraction_method="regex",
                     matched_label=label,

@@ -20,13 +20,16 @@ async def comps(
     """Query financial metrics for multiple companies in parallel.
 
     Args:
-        companies: List of ticker symbols or CIK numbers.
+        companies: List of tickers, CIKs, or company names. Each entry is
+            passed through ``financials()``, which resolves all three shapes
+            via the SEC ticker list.
         metrics: List of metric names.
-        period: Period selector.
-        force: Bypass cache.
+        period: Period selector (see ``financials`` for the accepted forms).
+        force: Bypass the on-disk cache for SEC lookups.
 
     Returns:
-        Dict keyed by company identifier, values are QueryResult.
+        Dict keyed by the caller's input string. Failed lookups yield a
+        ``QueryResult`` with empty metrics rather than raising.
     """
     tasks = [financials(company=c, metrics=metrics, period=period, force=force) for c in companies]
 
@@ -365,7 +368,7 @@ def _metric_label(metric: str) -> str:
 
 
 def format_financial_perf_table(
-    results_by_period: dict[str, "QueryResult"],
+    results_by_period: dict[str, QueryResult],
     metrics: list[str],
     periods: list[str],
     *,
@@ -416,11 +419,7 @@ def format_financial_perf_table(
         for period in periods:
             qr = results_by_period.get(period)
             raw_value = None if qr is None else qr.metrics.get(metric)
-            cited = (
-                raw_value[0]
-                if isinstance(raw_value, list) and raw_value
-                else raw_value
-            )
+            cited = raw_value[0] if isinstance(raw_value, list) and raw_value else raw_value
             if cited is None or cited.value is None:
                 row.append("N/A")
                 continue
@@ -434,15 +433,13 @@ def format_financial_perf_table(
             if cited.warnings:
                 warn_marker = " !"
                 company_label = qr.company or "" if qr is not None else ""
-                warnings.extend(
-                    f"{company_label} {metric} ({period}): {w}"
-                    for w in cited.warnings
-                )
+                warnings.extend(f"{company_label} {metric} ({period}): {w}" for w in cited.warnings)
 
-            if citations_mode == "footer" or citations_mode == "off":
-                # Footer mode: markers go below the table, not inline.
+            if citations_mode == "off":
                 row.append(f"{formatted}{warn_marker}")
             else:
+                # Keep compact markers inline even in footer mode so each cell
+                # still traces back to a specific source/calculation entry.
                 row.append(f"{formatted} {marker}{warn_marker}".rstrip())
         data_rows.append(row)
 
@@ -453,9 +450,7 @@ def format_financial_perf_table(
     # threshold used by ``format_comps_table`` is too conservative for this
     # view, which usually has far fewer columns.
     all_rows = [header_parts] + data_rows
-    col_widths = [
-        max(len(row[i]) for row in all_rows) for i in range(len(header_parts))
-    ]
+    col_widths = [max(len(row[i]) for row in all_rows) for i in range(len(header_parts))]
     required_width = sum(col_widths) + 2 * (len(header_parts) - 1)
     stacked_mode = len(periods) > 1 and required_width > width
 
@@ -530,9 +525,7 @@ def format_financial_perf_table(
                     link = record.get("primary_link")
                     link_type = record.get("primary_link_type")
                     if isinstance(link, str) and link:
-                        lines.extend(
-                            _wrap(f"     link({link_type}): {link}", indent="       ")
-                        )
+                        lines.extend(_wrap(f"     link({link_type}): {link}", indent="       "))
                 elif show_links == "all":
                     links = record.get("links", {})
                     if isinstance(links, dict):
@@ -579,7 +572,7 @@ def format_financial_perf_table(
 
 
 def multi_period_to_lean_json(
-    results_by_period: dict[str, "QueryResult"],
+    results_by_period: dict[str, QueryResult],
     metrics: list[str],
     periods: list[str],
 ) -> str:
@@ -594,7 +587,7 @@ def multi_period_to_lean_json(
 
 
 def multi_period_to_full_json(
-    results_by_period: dict[str, "QueryResult"],
+    results_by_period: dict[str, QueryResult],
     metrics: list[str],
     periods: list[str],
 ) -> str:
@@ -604,7 +597,7 @@ def multi_period_to_full_json(
 
 
 def _build_multi_period_dict(
-    results_by_period: dict[str, "QueryResult"],
+    results_by_period: dict[str, QueryResult],
     metrics: list[str],
     periods: list[str],
     *,
@@ -673,19 +666,25 @@ def _build_multi_period_dict(
             per_period[period] = _serialize(raw_value, metric)
         metrics_out[metric] = per_period
 
+    diagnostics_by_period: dict[str, list[dict[str, object]]] = {}
+    for period, qr in results_by_period.items():
+        if qr.diagnostics:
+            diagnostics_by_period[period] = [diag.model_dump() for diag in qr.diagnostics]
+
     result: dict[str, object] = {
         "company": company,
         "cik": cik,
         "periods": periods,
         "permalink": (
-            f"edgarpack query {cik or company} {','.join(metrics)} "
-            f"--period {','.join(periods)}"
+            f"edgarpack query {cik or company} {','.join(metrics)} --period {','.join(periods)}"
         ),
         "filings": filings,
         "metrics": metrics_out,
         "citations": citation_records,
         "calculations": calc_records,
     }
+    if diagnostics_by_period:
+        result["diagnostics_by_period"] = diagnostics_by_period
     return result
 
 

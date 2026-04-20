@@ -19,16 +19,15 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
-from typing import Callable
 
 from ..harvest.registry import PackRecord, PackRegistry
 from .kpi_extract import (
     KPI_CATALOG,
     DiscoveredKpi,
-    DiscoveryExtractResult,
     _load_pack_manifest,
     _resolve_period_end,
     extract_discoveries_detailed,
@@ -309,9 +308,7 @@ def _catalog_points_for_cik(
             manifest = {}
         period_end_date, fiscal_year, fiscal_period = _resolve_period_end(manifest, pack)
         period_end_iso = (
-            period_end_date.isoformat()
-            if period_end_date and period_end_date != _date.min
-            else ""
+            period_end_date.isoformat() if period_end_date and period_end_date != _date.min else ""
         )
         label = _period_label(pack.form_type, fiscal_year, fiscal_period, period_end_iso)
         unit_hint = KPI_CATALOG[row.metric].unit_hint
@@ -379,9 +376,7 @@ def discover_kpis(
 
         packs_by_accn: dict[str, PackRecord] = {p.accession: p for p in packs}
         eligible_packs = [
-            p
-            for p in packs
-            if (p.form_type or "").upper().startswith(("10-K", "10-Q", "20-F"))
+            p for p in packs if (p.form_type or "").upper().startswith(("10-K", "10-Q", "20-F"))
         ]
         if diagnostics is not None:
             diagnostics.eligible_packs = len(eligible_packs)

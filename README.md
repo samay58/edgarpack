@@ -106,7 +106,8 @@ edgarpack query NVDA --preset perf --period ltm,ltm-1,ltm-2
 
 `--preset perf` expands to a curated analyst panel
 (`revenue`, `revenue_growth_yoy`, `revenue_cagr_3y`, margins, `r_and_d_intensity`, `sga_intensity`, `fcf_margin`).
-Newest period column is on the LEFT, matching the order typed on the CLI.
+Columns follow the `--period` order exactly, so put newest first if you want
+the newest period on the LEFT.
 
 Full query model, JSON formats, derived metric catalog (including CAGR),
 and citation semantics in [`docs/QUERY.md`](docs/QUERY.md).

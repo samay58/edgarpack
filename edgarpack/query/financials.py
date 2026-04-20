@@ -257,12 +257,18 @@ async def financials(
 
     Args:
         company: Ticker symbol ("NVDA"), CIK number ("1045810"), or
-                 company name ("NVIDIA").
+                 company name ("NVIDIA"). Resolution falls back to a
+                 fuzzy name match across the SEC ticker list.
         metrics: Metric name(s). String for single, list for multiple,
                  None for all available metrics.
-        period: Period selector: "lfy", "mrq", "ltm", "ltm-1", "mrp",
-                "annual:N", "quarterly:N".
-        force: Bypass cache.
+        period: Period selector. Scalars: "lfy", "mrq", "ltm", "mrp",
+                and offset forms "lfy-N", "mrq-N", "ltm-N" (N >= 1).
+                "mrp" does not take an offset. Series: "annual:N",
+                "quarterly:N". The CLI additionally accepts a
+                comma-separated list of scalars to render a multi-period
+                grid; callers of this function should pre-parse that with
+                ``parse_period_spec`` and dispatch per selector.
+        force: Bypass the on-disk cache for SEC lookups.
 
     Returns:
         QueryResult with cited values for each requested metric.
@@ -277,6 +283,11 @@ async def financials(
     if _universe_path.exists():
         try:
             _idx = _load_identity(_universe_path)
+        except Exception as _e:
+            # A malformed universe should not silently disable HKEX routing;
+            # log and continue so the SEC path still works.
+            logger.warning("universe.toml unreadable, skipping HKEX pre-pass: %s", _e)
+        else:
             _resolved_id = None
             try:
                 _resolved_id = _resolve_identity(_idx, ticker=company, company=None)
@@ -287,8 +298,6 @@ async def financials(
                     pass
             if _resolved_id is not None and _resolved_id.source == "HKEX":
                 return await _query_hkex_pack(_resolved_id, metrics, period)
-        except Exception:
-            pass
 
     cik, company_name = await resolve_ticker(company, force=force)
 
@@ -316,9 +325,7 @@ async def financials(
             and resolved not in KPI_CATALOG
             and resolved not in discovered_slugs
         ):
-            combined_known = (
-                set(METRIC_MAP.keys()) | set(KPI_CATALOG.keys()) | discovered_slugs
-            )
+            combined_known = set(METRIC_MAP.keys()) | set(KPI_CATALOG.keys()) | discovered_slugs
             suggestions = suggest_metrics(resolved, combined_known, n=3)
             raise MetricNotFound(m, suggestions=suggestions)
         resolved_list.append(resolved)
@@ -376,7 +383,7 @@ async def financials(
                         message=(
                             f"Discovered KPI '{metric}' has no cached row for "
                             f"period '{period}'. Run `edgarpack which "
-                            f"{company}` to refresh discovery, or check the "
+                            f"{cik}` to refresh discovery, or check the "
                             f"period against what's available."
                         ),
                     )
@@ -616,7 +623,7 @@ def _fetch_prior_year_for_self_heal(
     Walks the annual history for the resolved concept and returns the second
     most recent full-year entry (prior fiscal year). Returns None if fewer
     than two annual entries exist. Used only as a sanity-check input for
-    the self-heal verifier — never for user-visible output.
+    the self-heal verifier, never for user-visible output.
     """
     from .periods import _annual_history, _extract_values, _unit_for_concept, _value_to_cited
 

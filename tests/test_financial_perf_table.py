@@ -12,7 +12,7 @@ from edgarpack.query.comps import (
     multi_period_to_full_json,
     multi_period_to_lean_json,
 )
-from edgarpack.query.models import CitedValue, QueryResult
+from edgarpack.query.models import CitedValue, Diagnostic, QueryResult
 
 
 def _cv(
@@ -117,6 +117,8 @@ class TestFormatFinancialPerfTable(unittest.TestCase):
         out = format_financial_perf_table(
             self.results, self.metrics, self.periods, terminal_width=200
         )
+        # Footer mode still keeps per-cell markers for traceability.
+        self.assertIn("[C1]", out)
         self.assertIn("Sources:", out)
         # Should have 3 unique accessions -> 3 citation IDs.
         self.assertIn("C1:", out)
@@ -168,9 +170,7 @@ class TestFormatFinancialPerfTable(unittest.TestCase):
     def test_na_cell_when_metric_missing(self) -> None:
         results = dict(self.results)
         results["lfy-2"].metrics["revenue"] = None
-        out = format_financial_perf_table(
-            results, self.metrics, self.periods, terminal_width=200
-        )
+        out = format_financial_perf_table(results, self.metrics, self.periods, terminal_width=200)
         self.assertIn("N/A", out)
 
 
@@ -209,6 +209,28 @@ class TestMultiPeriodLeanJson(unittest.TestCase):
         self.assertEqual(payload["periods"], ["lfy"])
         self.assertIn("revenue", payload["metrics"])
         self.assertIn("lfy", payload["metrics"]["revenue"])
+
+    def test_diagnostics_preserved_by_period(self) -> None:
+        periods = ["lfy", "lfy-1"]
+        metrics = ["revenue"]
+        results = {
+            "lfy": _result_for("lfy", revenue=100e9, net_income=30e9),
+            "lfy-1": _result_for("lfy-1", revenue=80e9, net_income=20e9),
+        }
+        results["lfy-1"].diagnostics = [
+            Diagnostic(
+                metric="revenue",
+                kind="layer_b_unresolved",
+                message="example diagnostic",
+            )
+        ]
+        payload = json.loads(multi_period_to_lean_json(results, metrics, periods))
+        self.assertIn("diagnostics_by_period", payload)
+        self.assertIn("lfy-1", payload["diagnostics_by_period"])
+        self.assertEqual(
+            payload["diagnostics_by_period"]["lfy-1"][0]["message"],
+            "example diagnostic",
+        )
 
 
 if __name__ == "__main__":

@@ -54,13 +54,9 @@ class TestFyEquivalent(unittest.TestCase):
 
 class TestComputeCagrHelper(unittest.TestCase):
     def test_cagr_3y_matches_hand_calc(self) -> None:
-        facts = _make_fy_revenue_facts(
-            {2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0}
-        )
+        facts = _make_fy_revenue_facts({2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0})
         meta = METRIC_MAP["revenue_cagr_3y"]
-        result = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         # (100 / 50) ^ (1/3) - 1 ~ 0.25992
         self.assertAlmostEqual(result.value, (100.0 / 50.0) ** (1 / 3) - 1, places=6)
@@ -76,53 +72,35 @@ class TestComputeCagrHelper(unittest.TestCase):
             {2019: 20.0, 2020: 30.0, 2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0}
         )
         meta = METRIC_MAP["revenue_cagr_5y"]
-        result = _compute_cagr(
-            facts, "revenue_cagr_5y", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_cagr(facts, "revenue_cagr_5y", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNotNone(result)
         self.assertAlmostEqual(result.value, (100.0 / 20.0) ** (1 / 5) - 1, places=6)
 
     def test_missing_start_returns_none(self) -> None:
         facts = _make_fy_revenue_facts({2023: 90.0, 2024: 100.0})
         meta = METRIC_MAP["revenue_cagr_3y"]
-        result = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNone(result)
 
     def test_zero_start_returns_none(self) -> None:
-        facts = _make_fy_revenue_facts(
-            {2021: 0.0, 2022: 10.0, 2023: 20.0, 2024: 30.0}
-        )
+        facts = _make_fy_revenue_facts({2021: 0.0, 2022: 10.0, 2023: 20.0, 2024: 30.0})
         meta = METRIC_MAP["revenue_cagr_3y"]
-        result = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNone(result)
 
     def test_sign_flip_returns_none(self) -> None:
         # Start negative (net loss), end positive -> CAGR undefined.
-        facts = _make_fy_revenue_facts(
-            {2021: -50.0, 2022: -20.0, 2023: 10.0, 2024: 30.0}
-        )
+        facts = _make_fy_revenue_facts({2021: -50.0, 2022: -20.0, 2023: 10.0, 2024: 30.0})
         meta = METRIC_MAP["revenue_cagr_3y"]
-        result = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None
-        )
+        result = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None)
         self.assertIsNone(result)
 
     def test_ltm_parent_substitutes_to_lfy(self) -> None:
         """ltm parent period uses FY-anchored components for CAGR."""
-        facts = _make_fy_revenue_facts(
-            {2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0}
-        )
+        facts = _make_fy_revenue_facts({2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0})
         meta = METRIC_MAP["revenue_cagr_3y"]
-        via_lfy = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None
-        )
-        via_ltm = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "ltm", None
-        )
+        via_lfy = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy", None)
+        via_ltm = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "ltm", None)
         self.assertIsNotNone(via_lfy)
         self.assertIsNotNone(via_ltm)
         # Same underlying FY endpoints -> same CAGR value.
@@ -136,9 +114,7 @@ class TestComputeCagrHelper(unittest.TestCase):
             {2020: 40.0, 2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0}
         )
         meta = METRIC_MAP["revenue_cagr_3y"]
-        result = _compute_cagr(
-            facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy-1", None
-        )
+        result = _compute_cagr(facts, "revenue_cagr_3y", meta, "Test", "0000000001", "lfy-1", None)
         self.assertIsNotNone(result)
         # End = FY2023 (90), Start = FY2020 (40)
         self.assertEqual(result.components["end"].fiscal_year, 2023)
@@ -150,9 +126,7 @@ class TestCagrViaComputeDerived(unittest.TestCase):
     """Verify the _compute_derived dispatch routes kind='cagr' correctly."""
 
     def test_dispatches_to_cagr_path(self) -> None:
-        facts = _make_fy_revenue_facts(
-            {2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0}
-        )
+        facts = _make_fy_revenue_facts({2021: 50.0, 2022: 70.0, 2023: 90.0, 2024: 100.0})
         meta = METRIC_MAP["revenue_cagr_3y"]
         result = _compute_derived(
             facts,
