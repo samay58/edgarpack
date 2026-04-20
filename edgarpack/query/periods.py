@@ -1313,6 +1313,11 @@ def parse_period_spec(spec: str) -> list[str]:
                 "annual:N, or quarterly:N)"
             )
         head, num = m.group(1), m.group(2)
+        if head == "mrp" and num is not None and int(num) > 0:
+            raise ValueError(
+                f"unknown period selector: {tok!r} "
+                "(mrp does not support -N offsets; use plain 'mrp')"
+            )
         if num is None or int(num) == 0:
             canonical = head
         else:

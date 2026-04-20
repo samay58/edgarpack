@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from collections import Counter
 import shutil
 import sys
 import textwrap
@@ -66,6 +67,94 @@ async def _resolve_cli_company(query: str) -> Any:
     )
 
 
+def _canonical_company_label(resolved: Any, fallback: str) -> str:
+    """Best-effort display label for a resolved company argument."""
+    aliases = getattr(resolved, "aliases", ()) or ()
+    if aliases:
+        first = aliases[0]
+        if isinstance(first, str) and first.strip():
+            return first.strip()
+    ticker = getattr(resolved, "ticker", None)
+    if isinstance(ticker, str) and ticker.strip():
+        return ticker.strip().upper()
+    return fallback
+
+
+def _preferred_company_arg(resolved: Any, fallback: str) -> str:
+    """Best command-line company token for examples and remediation text."""
+    ticker = getattr(resolved, "ticker", None)
+    if isinstance(ticker, str) and ticker.strip():
+        return ticker.strip().upper()
+    return fallback
+
+
+def _group_build_warnings(warnings: list[str]) -> list[str]:
+    """Collapse repeated low-signal build warnings into grouped summaries."""
+    counts = Counter(warnings)
+    lines: list[str] = []
+
+    duplicate_count = counts.pop("Duplicate section ID detected, suffix added", 0)
+    if duplicate_count:
+        noun = "section" if duplicate_count == 1 else "sections"
+        verb = "was" if duplicate_count == 1 else "were"
+        lines.append(f"Duplicate section IDs: {duplicate_count} {noun} {verb} de-duped")
+
+    preamble_count = counts.pop("Content before first detected section", 0)
+    if preamble_count:
+        noun = "boundary issue" if preamble_count == 1 else "boundary issues"
+        lines.append(f"Content before first detected section: {preamble_count} {noun}")
+
+    token_count = counts.pop("Token counts are approximate (tiktoken not installed)", 0)
+    if token_count:
+        lines.append("Token counts are approximate (tiktoken not installed)")
+
+    for message, count in sorted(counts.items()):
+        if count == 1:
+            lines.append(message)
+        else:
+            lines.append(f"{message} ({count}x)")
+    return lines
+
+
+def _register_pack_result(result: Any, *, ticker: str | None = None) -> None:
+    """Register a successful standalone build in PackRegistry."""
+    from .harvest.registry import PackRegistry
+    from .pack.manifest import compute_sha256
+
+    filing = result.filing_meta or {}
+    accession = filing.get("accession")
+    cik = filing.get("cik")
+    form_type = filing.get("form_type")
+    filing_date = filing.get("filing_date")
+    company_name = filing.get("company_name")
+    if not all(
+        isinstance(value, str) and value.strip()
+        for value in (accession, cik, form_type, filing_date, company_name)
+    ):
+        return
+
+    manifest_path = Path(result.output_dir) / "manifest.json"
+    manifest_hash = compute_sha256(manifest_path.read_bytes()) if manifest_path.exists() else None
+
+    registry = PackRegistry()
+    try:
+        registry.register(
+            accession=accession,
+            cik=cik,
+            ticker=ticker,
+            company_name=company_name,
+            form_type=form_type,
+            filing_date=filing_date,
+            sections_count=int(result.sections_count),
+            tokens_total=int(result.tokens_total),
+            pack_dir=str(result.output_dir),
+            manifest_hash=manifest_hash,
+            warnings=result.warnings if result.warnings else None,
+        )
+    finally:
+        registry.close()
+
+
 def app(argv: list[str] | None = None) -> None:
     """Console script entrypoint (kept as `app` for packaging compatibility)."""
     try:
@@ -90,11 +179,14 @@ def main(argv: list[str] | None = None) -> int:
 
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p_build = sub.add_parser("build", help="Build a filing pack")
+    p_build = sub.add_parser(
+        "build",
+        help="Build and register a filing pack for later `which` / `query` use",
+    )
     p_build.add_argument(
         "company",
         nargs="?",
-        help='Ticker, CIK, or company name (e.g. NVDA, 0001045810, "NVIDIA")',
+        help='Ticker or company name first (e.g. FIG, Figma, NVDA). CIK also accepted.',
     )
     p_build.add_argument(
         "--cik",
@@ -203,7 +295,10 @@ def main(argv: list[str] | None = None) -> int:
         "query",
         help="Query financial metrics for a company (cited from SEC filings)",
     )
-    p_query.add_argument("company", help="Ticker symbol (NVDA) or CIK number")
+    p_query.add_argument(
+        "company",
+        help="Ticker symbol (NVDA), CIK number, or company name (e.g. NVIDIA)",
+    )
     p_query.add_argument(
         "metrics",
         nargs="?",
@@ -459,7 +554,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_which.add_argument(
         "company",
-        help="Ticker symbol (FIG) or CIK number",
+        help="Ticker or company name (e.g. FIG, Figma). CIK also accepted.",
     )
     p_which.add_argument(
         "--format",
@@ -624,6 +719,19 @@ def _cmd_build(args: Any) -> int:
     async def _run() -> int:
         from .pack.build import build_pack
 
+        resolved_label = args.company or args.cik or "company"
+        resolved_ticker: str | None = None
+        if args.company:
+            try:
+                resolved = await _resolve_cli_company(args.company)
+            except (UnknownCompany, AmbiguousCompany):
+                resolved = None
+            if resolved is not None:
+                resolved_label = _preferred_company_arg(resolved, args.company)
+                ticker = getattr(resolved, "ticker", None)
+                if isinstance(ticker, str) and ticker.strip():
+                    resolved_ticker = ticker.strip().upper()
+
         rc, cik = await _cik_from_company_args(args)
         if rc != 0 or cik is None:
             return rc
@@ -642,6 +750,8 @@ def _cmd_build(args: Any) -> int:
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
+        _register_pack_result(result, ticker=resolved_ticker)
+
         print("✓ Pack built")
         print(f"  Output: {result.output_dir}")
         print(f"  Company: {result.filing_meta.get('company_name', 'Unknown')}")
@@ -649,13 +759,15 @@ def _cmd_build(args: Any) -> int:
         print(f"  Filing Date: {result.filing_meta.get('filing_date', 'Unknown')}")
         print(f"  Sections: {result.sections_count}")
         print(f"  Tokens: {result.tokens_total:,}")
+        print(f"  Registry: ready for `edgarpack which {resolved_label}`")
 
         if result.warnings:
-            print(f"\nWarnings ({len(result.warnings)}):")
-            for w in result.warnings[:10]:
+            grouped = _group_build_warnings(result.warnings)
+            print(f"\nNon-fatal warnings ({len(grouped)} groups from {len(result.warnings)} events):")
+            for w in grouped[:10]:
                 print(f"  - {w}")
-            if len(result.warnings) > 10:
-                print(f"  ... and {len(result.warnings) - 10} more")
+            if len(grouped) > 10:
+                print(f"  ... and {len(grouped) - 10} more groups")
 
         return 0
 
@@ -1149,7 +1261,7 @@ def _cmd_query(args: Any) -> int:
             metric_input = expanded
             metric_list_for_render = expanded
 
-        async def _fetch(period: str) -> "QueryResult":  # noqa: F821
+        async def _fetch(period: str):
             return await financials(
                 company=args.company,
                 metrics=metric_input,
@@ -1166,6 +1278,25 @@ def _cmd_query(args: Any) -> int:
                 result = gathered[0]
         except MetricNotFound as e:
             print(f"Error: {e}", file=sys.stderr)
+            metric_names = metric_list_for_render or []
+            if len(metric_names) == 1:
+                missing = metric_names[0]
+                if missing == "subscription_customers":
+                    print(
+                        "Tip: `subscription_customers` maps to the catalog metric "
+                        "`customer_count`.",
+                        file=sys.stderr,
+                    )
+                print(
+                    f"Company-specific KPI slugs come from `edgarpack which {args.company}`.",
+                    file=sys.stderr,
+                )
+                print(
+                    f"Run `edgarpack which {args.company}` first to see available slugs, "
+                    "or retry with a catalog metric like `customer_count` if you want "
+                    "the generic Layer B path.",
+                    file=sys.stderr,
+                )
             return 2
         except AmbiguousCompany as e:
             print(f"Error: {e}", file=sys.stderr)
@@ -1689,6 +1820,63 @@ def _format_kpi_value(value: float | None, unit: str | None, magnitude: str | No
     return f"{prefix}{rendered}{suffix}" if suffix or prefix else rendered
 
 
+def _render_which_empty_state(
+    *,
+    display_name: str,
+    command_label: str,
+    cik: str,
+    diagnostics: Any,
+) -> str:
+    """Return an actionable empty-state message for `edgarpack which`."""
+    if diagnostics.total_registered_packs == 0:
+        return (
+            f"No registered packs found for {display_name} (CIK: {cik}).\n"
+            f"Build one first with `edgarpack build {command_label} --form 10-K`."
+        )
+    if diagnostics.unreadable_manifest_packs >= diagnostics.eligible_packs > 0:
+        return (
+            f"No KPIs shown for {display_name} because all {diagnostics.eligible_packs} "
+            "candidate filing packs were unreadable on disk.\n"
+            f"Rebuild a fresh pack with `edgarpack build {command_label} --form 10-K --force`."
+        )
+    if diagnostics.llm_failed_packs > 0 and diagnostics.discovered_packs == 0:
+        return (
+            f"No KPIs shown for {display_name} because discovery failed on "
+            f"{diagnostics.llm_failed_packs} filing(s).\n"
+            "Check that `codex` or `claude` is available, then retry with "
+            f"`edgarpack which {command_label} --no-cache`."
+        )
+    if diagnostics.empty_packs > 0:
+        return (
+            f"Discovery completed for {display_name}, but none of the scanned filings "
+            "contained qualifying qualitative KPIs.\n"
+            f"Try `edgarpack which {command_label} --no-cache` after building a more relevant "
+            "10-K or 10-Q if you expect KPIs to be present."
+        )
+    return (
+        f"No disclosed KPIs found for {display_name} (CIK: {cik}).\n"
+        f"Try `edgarpack which {command_label} --no-cache` after building a 10-K or 10-Q."
+    )
+
+
+def _render_which_diagnostics(diagnostics: Any) -> str | None:
+    """Render one concise stderr summary for non-fatal discovery issues."""
+    fragments: list[str] = []
+    if diagnostics.cached_packs:
+        fragments.append(f"{diagnostics.cached_packs} cached")
+    if diagnostics.discovered_packs:
+        fragments.append(f"{diagnostics.discovered_packs} analyzed")
+    if diagnostics.unreadable_manifest_packs:
+        fragments.append(f"{diagnostics.unreadable_manifest_packs} skipped (missing/corrupt manifest)")
+    if diagnostics.llm_failed_packs:
+        fragments.append(f"{diagnostics.llm_failed_packs} discovery failure(s)")
+    if diagnostics.empty_packs:
+        fragments.append(f"{diagnostics.empty_packs} with no qualifying KPIs")
+    if not fragments:
+        return None
+    return "Discovery summary: " + ", ".join(fragments)
+
+
 def _render_which_table(aggregates: list, max_periods: int) -> str:
     """Render a compact table view of discovered + catalog KPIs.
 
@@ -1701,7 +1889,7 @@ def _render_which_table(aggregates: list, max_periods: int) -> str:
     metric that was disclosed in FY2023 but dropped in FY2024).
     """
     if not aggregates:
-        return "No disclosed KPIs found. Run a harvest / build first or try --no-cache."
+        return ""
 
     all_labels: list[str] = []
     seen: set[str] = set()
@@ -1782,42 +1970,69 @@ def _cmd_which(args: Any) -> int:
     import json as _json
 
     from .harvest.registry import PackRegistry
-    from .query.kpi_discover import discover_kpis
+    from .query.kpi_discover import DiscoveryDiagnostics, DiscoveryProgressEvent, discover_kpis
 
-    async def _resolve() -> tuple[int, str | None]:
-        from .sec.tickers import resolve_ticker
-
+    async def _resolve() -> tuple[int, Any | None]:
         try:
-            cik, _ = await resolve_ticker(args.company)
-            return 0, cik
-        except ValueError as e:
+            resolved = await _resolve_cli_company(args.company)
+            return 0, resolved
+        except (UnknownCompany, AmbiguousCompany, ValueError) as e:
             print(f"Error: {e}", file=sys.stderr)
             return 2, None
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1, None
 
-    rc, cik = asyncio.run(_resolve())
-    if rc != 0 or cik is None:
+    rc, resolved = asyncio.run(_resolve())
+    if rc != 0 or resolved is None:
         return rc
+    cik = getattr(resolved, "cik", None)
+    if not isinstance(cik, str) or not cik.strip():
+        print(
+            f"Error: {args.company} does not resolve to a public SEC filer with a CIK.",
+            file=sys.stderr,
+        )
+        return 2
+    company_label = _preferred_company_arg(resolved, args.company)
+    display_name = _canonical_company_label(resolved, args.company)
+
+    print(
+        f"Resolving company {args.company} -> {display_name} (CIK {cik})",
+        file=sys.stderr,
+    )
 
     registry = PackRegistry()
     try:
-        packs = registry.list_packs(cik=cik, limit=5)
+        packs = registry.list_packs(cik=cik, limit=200)
         if not packs:
             print(
-                f"No packs registered for CIK {cik} ({args.company}). Run "
-                f"`edgarpack build --cik {cik} --form 10-K` first.",
+                f"No registered packs found for {display_name} (CIK: {cik}). Run "
+                f"`edgarpack build {company_label} --form 10-K` first.",
                 file=sys.stderr,
             )
             return 1
 
+        diagnostics = DiscoveryDiagnostics()
+
+        def _progress(event: DiscoveryProgressEvent) -> None:
+            if event.phase == "pack" and event.pack is not None:
+                pack = event.pack
+                filing_date = pack.filing_date or "unknown"
+                print(
+                    f"Running KPI discovery on filing {event.index}/{event.total} "
+                    f"({pack.form_type} {filing_date})",
+                    file=sys.stderr,
+                )
+
+        print(f"Loading up to {len(packs)} registered pack(s)", file=sys.stderr)
         try:
             aggregates = discover_kpis(
                 cik=cik,
                 pack_registry=registry,
                 force=bool(args.no_cache),
                 include_catalog=(args.only != "discovered"),
+                diagnostics=diagnostics,
+                progress_callback=_progress,
             )
         except Exception as e:
             print(f"Error running discovery: {e}", file=sys.stderr)
@@ -1829,6 +2044,10 @@ def _cmd_which(args: Any) -> int:
         aggregates = [a for a in aggregates if a.source == "discovered"]
     elif args.only == "catalog":
         aggregates = [a for a in aggregates if a.source == "catalog"]
+
+    summary = _render_which_diagnostics(diagnostics)
+    if summary:
+        print(summary, file=sys.stderr)
 
     if args.which_format == "json":
         payload = {
@@ -1842,7 +2061,18 @@ def _cmd_which(args: Any) -> int:
         return 0
 
     print(f"Disclosed KPIs for {packs[0].company_name} (CIK: {cik}):\n")
-    print(_render_which_table(aggregates, int(args.max_periods)))
+    if aggregates:
+        print("Rendering KPI table", file=sys.stderr)
+        print(_render_which_table(aggregates, int(args.max_periods)))
+    else:
+        print(
+            _render_which_empty_state(
+                display_name=display_name,
+                command_label=company_label,
+                cik=cik,
+                diagnostics=diagnostics,
+            )
+        )
     return 0
 
 

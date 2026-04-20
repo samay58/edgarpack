@@ -70,17 +70,68 @@ edgarpack comps NVDA AMD --metrics revenue --period ltm-1
 edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm --audit
 ```
 
+### Multi-period grid (single company)
+
+`query` accepts a comma-separated list of scalar period selectors to render a
+metrics x periods grid. Rows are metrics in the caller's order. Columns are
+the periods, newest on the LEFT (matches the order typed on the CLI).
+
+```bash
+# Three-year annual performance view
+edgarpack query NVDA revenue,net_income,gross_margin --period lfy,lfy-1,lfy-2
+
+# Trailing windows
+edgarpack query NVDA revenue --period ltm,ltm-1,ltm-2
+
+# Same quarter, three years back (YoY anchor)
+edgarpack query NVDA revenue --period mrq,mrq-1,mrq-2
+
+# Mix (allowed: all scalar selectors)
+edgarpack query NVDA revenue --period lfy,ltm,mrq
+```
+
+Rules for the CSV form:
+
+- Scalar selectors only. `annual:N` and `quarterly:N` are series selectors and
+  cannot be combined with anything else.
+- `lfy-0`, `ltm-0`, `mrq-0` canonicalize to `lfy` / `ltm` / `mrq`. Duplicates
+  are removed while preserving first-seen order.
+- Default `--citations` becomes `footer` for multi-period grids (inline markers
+  get noisy in a table). Pass `--citations inline` or `off` to override.
+
+### Preset metric packs
+
+`--preset perf` expands to a curated analyst panel. Combines with `--metrics`
+(preset first, explicit metrics appended, duplicates removed):
+
+```bash
+edgarpack query NVDA --preset perf --period lfy,lfy-1,lfy-2
+
+# Preset plus extras
+edgarpack query NVDA --preset perf --metrics fcf_to_net_income,rule_of_40
+```
+
+`perf` contents: `revenue`, `revenue_growth_yoy`, `revenue_cagr_3y`,
+`gross_margin`, `operating_margin`, `net_margin`, `r_and_d_intensity`,
+`sga_intensity`, `fcf_margin`.
+
 ## Period Selectors
 
 | Selector | Meaning | Use Case |
 |----------|---------|----------|
 | `lfy` | Last fiscal year (most recent 10-K/20-F) | Annual comparisons, default |
+| `lfy-N` | Fiscal year N positions back from the latest | Multi-year annual history |
 | `mrq` | Most recent quarter (standalone 3-month) | Latest quarterly performance |
+| `mrq-N` | Same fiscal quarter, N years back (YoY anchor) | Year-over-year quarterly comparison |
 | `mrp` | Most recent period (whatever was filed last) | Freshest available data point |
 | `ltm` | Last twelve months (trailing) | Apples-to-apples comparison across fiscal calendars |
-| `ltm-1` | Prior-year trailing twelve months | TTM growth baselines and year-back comps |
+| `ltm-N` | Trailing twelve months, N years back | TTM growth baselines; `ltm-1` is the one-year-back window |
 | `annual:N` | Last N fiscal years | Revenue trends, multi-year analysis |
 | `quarterly:N` | Last N quarters (standalone) | Quarterly trend analysis |
+
+The CSV form on `--period` (``lfy,lfy-1,lfy-2``) accepts any scalar selector
+above and renders a metrics x periods grid. Staleness is auto-skipped for any
+offset selector with N >= 1 (`lfy-N`, `ltm-N`, `mrq-N`).
 
 ### LTM Methodology
 
@@ -156,6 +207,44 @@ Some metrics are computed from other metrics rather than read directly from XBRL
 | `roa` | net_income / total_assets | ratio |
 | `current_ratio` | current_assets / current_liabilities | ratio |
 | `debt_to_equity` | total_debt / stockholders_equity | ratio |
+
+### Growth, trend, intensity, and quality
+
+| Metric | Formula | Unit |
+|--------|---------|------|
+| `revenue_growth_yoy` | revenue / revenue_prev1 - 1 | ratio |
+| `net_income_growth_yoy` | net_income / net_income_prev1 - 1 | ratio |
+| `operating_income_growth_yoy` | operating_income / operating_income_prev1 - 1 | ratio |
+| `eps_growth_yoy` | eps_diluted / eps_diluted_prev1 - 1 | ratio |
+| `gross_margin_trend` | gross_margin - gross_margin_prev1 | ratio |
+| `operating_margin_trend` | operating_margin - operating_margin_prev1 | ratio |
+| `net_margin_trend` | net_margin - net_margin_prev1 | ratio |
+| `r_and_d_intensity` | rd_expense / revenue | ratio |
+| `sga_intensity` | sga_expense / revenue | ratio |
+| `sm_intensity` | sm_expense / revenue | ratio (best-effort) |
+| `capex_intensity` | capex / revenue | ratio |
+| `fcf_to_net_income` | free_cash_flow / net_income | ratio |
+| `rule_of_40` | revenue_growth_yoy + fcf_margin | ratio |
+
+`sm_expense` resolves `SellingAndMarketingExpense`, `MarketingExpense`, and
+related tags. It returns `None` for filers that only tag aggregate SG&A; no
+silent substitution.
+
+### CAGR
+
+| Metric | Formula | Unit |
+|--------|---------|------|
+| `revenue_cagr_3y` / `revenue_cagr_5y` | `(revenue / revenue[-N]) ^ (1/N) - 1` | ratio |
+| `net_income_cagr_3y` / `net_income_cagr_5y` | `(net_income / net_income[-N]) ^ (1/N) - 1` | ratio |
+| `eps_diluted_cagr_3y` / `eps_diluted_cagr_5y` | `(eps_diluted / eps_diluted[-N]) ^ (1/N) - 1` | ratio |
+| `fcf_cagr_3y` / `fcf_cagr_5y` | `(fcf / fcf[-N]) ^ (1/N) - 1` | ratio |
+
+CAGR metrics are FY-anchored regardless of the parent period. When `--period`
+is `ltm` / `ltm-N` / `mrq` / `mrq-N`, the CAGR endpoints substitute to the
+nearest fiscal-year equivalent (`ltm` -> `lfy`, `ltm-2` -> `lfy-2`, etc.) so
+the math stays over annual values. CAGR returns `None` when either endpoint
+is missing, the starting value is zero, or the signs flip across the window
+(crossing zero makes CAGR meaningless).
 
 Cross-year validation: if the numerator and denominator come from different fiscal years (stale data for one concept), the derived metric returns `None` rather than producing a misleading ratio.
 

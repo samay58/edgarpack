@@ -145,12 +145,25 @@ class TestFormatFinancialPerfTable(unittest.TestCase):
         self.assertIn("[C1]", out)
         self.assertIn("Citations:", out)
 
-    def test_stacked_mode_narrow_terminal(self) -> None:
+    def test_stacked_mode_when_table_too_wide(self) -> None:
+        """Dynamic stacking: only fall back to stacked layout when the grid
+        actually exceeds the terminal width."""
+        # 20 cols is far too narrow for a 4-column grid with $100.0B cells.
+        out = format_financial_perf_table(
+            self.results, self.metrics, self.periods, terminal_width=20
+        )
+        self.assertIn("Revenue\n  LFY:", out)
+
+    def test_table_mode_when_grid_fits(self) -> None:
+        """Even a 60-col terminal should render as a table for 2 metrics x 3 periods."""
         out = format_financial_perf_table(
             self.results, self.metrics, self.periods, terminal_width=60
         )
-        # Stacked mode: metric label on its own line, periods indented below.
-        self.assertIn("Revenue\n  LFY:", out)
+        # Single header line with dashes underneath
+        self.assertIn("Metric", out)
+        self.assertRegex(out, r"-{3,}\s+-{3,}")
+        # Not stacked: "Revenue" followed by cells, not "  LFY:"
+        self.assertNotIn("Revenue\n  LFY:", out)
 
     def test_na_cell_when_metric_missing(self) -> None:
         results = dict(self.results)

@@ -90,15 +90,26 @@ packs/
 
 ## Period vocabulary
 
-- `lfy`: last fiscal year
-- `mrq`: most recent quarter (standalone three-month value for duration metrics)
+- `lfy`, `lfy-N`: last fiscal year (and N years back)
+- `mrq`, `mrq-N`: most recent quarter (standalone 3-month); `mrq-N` returns the same fiscal quarter N years back
 - `mrp`: most recent reported period
-- `ltm`: trailing twelve months
-- `ltm-1`: prior-year trailing twelve months (same formula, fiscal-year-shifted anchor)
+- `ltm`, `ltm-N`: trailing twelve months (and N years back; `ltm-1` is the prior year's TTM window)
 - `annual:N`: last N fiscal years
 - `quarterly:N`: last N quarters
 
-Full query model, JSON formats, and citation semantics in [`docs/QUERY.md`](docs/QUERY.md).
+Pass a CSV to `--period` on `query` to render a metrics x periods grid:
+
+```bash
+edgarpack query NVDA revenue,net_income,gross_margin --period lfy,lfy-1,lfy-2
+edgarpack query NVDA --preset perf --period ltm,ltm-1,ltm-2
+```
+
+`--preset perf` expands to a curated analyst panel
+(`revenue`, `revenue_growth_yoy`, `revenue_cagr_3y`, margins, `r_and_d_intensity`, `sga_intensity`, `fcf_margin`).
+Newest period column is on the LEFT, matching the order typed on the CLI.
+
+Full query model, JSON formats, derived metric catalog (including CAGR),
+and citation semantics in [`docs/QUERY.md`](docs/QUERY.md).
 
 ## Commands
 

@@ -447,7 +447,17 @@ def format_financial_perf_table(
         data_rows.append(row)
 
     width = terminal_width or 120
-    stacked_mode = width < 96 and len(periods) > 1
+
+    # Compute required table width from actual content; only fall back to
+    # stacked layout if the grid genuinely won't fit. The static 96-col
+    # threshold used by ``format_comps_table`` is too conservative for this
+    # view, which usually has far fewer columns.
+    all_rows = [header_parts] + data_rows
+    col_widths = [
+        max(len(row[i]) for row in all_rows) for i in range(len(header_parts))
+    ]
+    required_width = sum(col_widths) + 2 * (len(header_parts) - 1)
+    stacked_mode = len(periods) > 1 and required_width > width
 
     lines: list[str] = []
     primary_result = next(iter(results_by_period.values()), None)
@@ -465,10 +475,6 @@ def format_financial_perf_table(
         if lines and lines[-1] == "":
             lines.pop()
     else:
-        all_rows = [header_parts] + data_rows
-        col_widths = [
-            max(len(row[i]) for row in all_rows) for i in range(len(header_parts))
-        ]
         header_line = "  ".join(
             header_parts[i].ljust(col_widths[i]) for i in range(len(header_parts))
         )

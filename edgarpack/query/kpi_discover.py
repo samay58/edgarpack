@@ -22,18 +22,51 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
+from typing import Callable
 
 from ..harvest.registry import PackRecord, PackRegistry
 from .kpi_extract import (
     KPI_CATALOG,
     DiscoveredKpi,
+    DiscoveryExtractResult,
     _load_pack_manifest,
     _resolve_period_end,
-    extract_discoveries,
+    extract_discoveries_detailed,
 )
 from .learned_registry import CompanyKpiRow, LearnedRegistry
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DiscoveryDiagnostics:
+    """Structured per-run stats for a `which` invocation."""
+
+    total_registered_packs: int = 0
+    eligible_packs: int = 0
+    cached_packs: int = 0
+    discovered_packs: int = 0
+    unreadable_manifest_packs: int = 0
+    llm_failed_packs: int = 0
+    empty_packs: int = 0
+
+
+@dataclass(frozen=True)
+class DiscoveryProgressEvent:
+    """Structured discovery progress event emitted to the CLI layer."""
+
+    phase: str
+    index: int = 0
+    total: int = 0
+    pack: PackRecord | None = None
+
+
+@dataclass(frozen=True)
+class PackDiscoveryResult:
+    """Result of attempting discovery for a single filing pack."""
+
+    discovered: list[DiscoveredKpi]
+    status: str  # cached | discovered | unreadable_manifest | llm_failed | empty
 
 
 @dataclass(frozen=True)
@@ -136,7 +169,7 @@ def _discover_pack(
     pack_record: PackRecord,
     learned_reg: LearnedRegistry,
     force: bool = False,
-) -> list[DiscoveredKpi]:
+) -> PackDiscoveryResult:
     """Run or replay the discovery LLM pass for one pack.
 
     On cache hit (any company_kpis row exists for this accession), reads
@@ -149,29 +182,34 @@ def _discover_pack(
     accession = pack_record.accession
 
     if not force and learned_reg.company_kpi_has_accession(cik, accession):
-        return [_cached_row_to_discovered(row) for row in learned_reg.company_kpi_list(
-            cik=cik, accession=accession
-        )]
+        cached_rows = learned_reg.company_kpi_list(cik=cik, accession=accession)
+        if not cached_rows:
+            return PackDiscoveryResult(discovered=[], status="empty")
+        return PackDiscoveryResult(
+            discovered=[_cached_row_to_discovered(row) for row in cached_rows],
+            status="cached",
+        )
 
     pack_dir = Path(pack_record.pack_dir)
     try:
         manifest = _load_pack_manifest(pack_dir)
     except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
-        logger.warning(
+        logger.info(
             "Discovery: cannot read manifest for %s (accn=%s): %s",
             pack_dir,
             accession,
             e,
         )
-        return []
+        return PackDiscoveryResult(discovered=[], status="unreadable_manifest")
 
     existing_slugs = learned_reg.company_kpi_distinct_slugs(cik)
-    discovered = extract_discoveries(
+    extraction = extract_discoveries_detailed(
         pack_dir=pack_dir,
         pack_record=pack_record,
         manifest=manifest,
         existing_slugs=existing_slugs,
     )
+    discovered = extraction.kpis
 
     if force:
         # Drop prior rows for this accession before writing fresh ones so a
@@ -180,20 +218,22 @@ def _discover_pack(
         learned_reg.company_kpi_clear(cik=cik, accession=accession)
 
     if not discovered:
-        # Persist a sentinel so the next `which` call doesn't re-invoke the
-        # LLM on a filing that genuinely has no qualifying KPIs.
-        period_end_iso = ""
-        filing = manifest.get("filing", {}) if isinstance(manifest, dict) else {}
-        por = filing.get("period_of_report") if isinstance(filing, dict) else None
-        if isinstance(por, str) and por.strip():
-            period_end_iso = por.strip()
-        learned_reg.company_kpi_mark_empty(
-            cik=cik,
-            accession=accession,
-            form_type=pack_record.form_type,
-            period_end=period_end_iso,
-        )
-        return []
+        if extraction.status == "no_kpis":
+            # Persist a sentinel so the next `which` call doesn't re-invoke the
+            # LLM on a filing that genuinely has no qualifying KPIs.
+            period_end_iso = ""
+            filing = manifest.get("filing", {}) if isinstance(manifest, dict) else {}
+            por = filing.get("period_of_report") if isinstance(filing, dict) else None
+            if isinstance(por, str) and por.strip():
+                period_end_iso = por.strip()
+            learned_reg.company_kpi_mark_empty(
+                cik=cik,
+                accession=accession,
+                form_type=pack_record.form_type,
+                period_end=period_end_iso,
+            )
+            return PackDiscoveryResult(discovered=[], status="empty")
+        return PackDiscoveryResult(discovered=[], status="llm_failed")
 
     for kpi in discovered:
         learned_reg.company_kpi_upsert(
@@ -215,7 +255,7 @@ def _discover_pack(
             source_substring=kpi.source_substring,
             confidence=kpi.confidence,
         )
-    return discovered
+    return PackDiscoveryResult(discovered=discovered, status="discovered")
 
 
 def _cached_row_to_discovered(row: CompanyKpiRow) -> DiscoveredKpi:
@@ -306,6 +346,8 @@ def discover_kpis(
     pack_registry: PackRegistry | None = None,
     force: bool = False,
     include_catalog: bool = True,
+    diagnostics: DiscoveryDiagnostics | None = None,
+    progress_callback: Callable[[DiscoveryProgressEvent], None] | None = None,
 ) -> list[CompanyKpiAggregate]:
     """Return the per-slug aggregate of KPIs disclosed by a company.
 
@@ -330,10 +372,19 @@ def discover_kpis(
 
     try:
         packs = pack_registry.list_packs(cik=cik, limit=200)
+        if diagnostics is not None:
+            diagnostics.total_registered_packs = len(packs)
         if not packs:
             return []
 
         packs_by_accn: dict[str, PackRecord] = {p.accession: p for p in packs}
+        eligible_packs = [
+            p
+            for p in packs
+            if (p.form_type or "").upper().startswith(("10-K", "10-Q", "20-F"))
+        ]
+        if diagnostics is not None:
+            diagnostics.eligible_packs = len(eligible_packs)
 
         # Run / replay discovery per pack. 10-Ks and 10-Qs are the primary
         # targets; other forms (8-K, S-1) rarely carry KPIs but there's no
@@ -344,16 +395,33 @@ def discover_kpis(
         per_slug_definition: dict[str, str | None] = {}
         per_slug_aliases: dict[str, list[str]] = {}
 
-        for pack in packs:
-            form = (pack.form_type or "").upper()
-            if not (form.startswith("10-K") or form.startswith("10-Q") or form.startswith("20-F")):
-                continue
-            discovered = _discover_pack(
+        for idx, pack in enumerate(eligible_packs, start=1):
+            if progress_callback is not None:
+                progress_callback(
+                    DiscoveryProgressEvent(
+                        phase="pack",
+                        index=idx,
+                        total=len(eligible_packs),
+                        pack=pack,
+                    )
+                )
+            pack_result = _discover_pack(
                 pack_record=pack,
                 learned_reg=learned_reg,
                 force=force,
             )
-            for kpi in discovered:
+            if diagnostics is not None:
+                if pack_result.status == "cached":
+                    diagnostics.cached_packs += 1
+                elif pack_result.status == "discovered":
+                    diagnostics.discovered_packs += 1
+                elif pack_result.status == "unreadable_manifest":
+                    diagnostics.unreadable_manifest_packs += 1
+                elif pack_result.status == "llm_failed":
+                    diagnostics.llm_failed_packs += 1
+                elif pack_result.status == "empty":
+                    diagnostics.empty_packs += 1
+            for kpi in pack_result.discovered:
                 slug = kpi.slug
                 if slug.startswith("__"):
                     continue
@@ -503,6 +571,8 @@ def lookup_company_kpi(
 
 __all__ = [
     "CompanyKpiAggregate",
+    "DiscoveryDiagnostics",
+    "DiscoveryProgressEvent",
     "PeriodPoint",
     "discover_kpis",
     "lookup_company_kpi",

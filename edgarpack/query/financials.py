@@ -256,7 +256,8 @@ async def financials(
     """Query financial metrics for a single company.
 
     Args:
-        company: Ticker symbol ("NVDA") or CIK number ("1045810").
+        company: Ticker symbol ("NVDA"), CIK number ("1045810"), or
+                 company name ("NVIDIA").
         metrics: Metric name(s). String for single, list for multiple,
                  None for all available metrics.
         period: Period selector: "lfy", "mrq", "ltm", "ltm-1", "mrp",
@@ -375,7 +376,7 @@ async def financials(
                         message=(
                             f"Discovered KPI '{metric}' has no cached row for "
                             f"period '{period}'. Run `edgarpack which "
-                            f"{cik}` to refresh discovery, or check the "
+                            f"{company}` to refresh discovery, or check the "
                             f"period against what's available."
                         ),
                     )

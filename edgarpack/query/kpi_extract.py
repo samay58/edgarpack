@@ -506,11 +506,11 @@ def _run_llm_raw(prompt: str, timeout: int = _LLM_TIMEOUT_SECONDS_KPI) -> str | 
             timeout=timeout,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
-        logger.warning("KPI LLM call failed: %s", e)
+        logger.info("KPI LLM call failed: %s", e)
         return None
 
     if completed.returncode != 0:
-        logger.warning(
+        logger.info(
             "KPI LLM returned non-zero: %s",
             (completed.stderr or "")[:200],
         )
@@ -1028,6 +1028,14 @@ class DiscoveredKpi:
     reused_slug: bool = False
 
 
+@dataclass(frozen=True)
+class DiscoveryExtractResult:
+    """Detailed result for one filing's free-form KPI discovery pass."""
+
+    kpis: list[DiscoveredKpi]
+    status: str  # success | no_kpis | no_backend | llm_failed
+
+
 _DISCOVERY_MAX_ITEMS = 40  # sane bound; real filings rarely list more than 15
 _DISCOVERY_TIMEOUT_SECONDS = 90  # longer than single-KPI extract; more work
 
@@ -1183,7 +1191,7 @@ def _load_chunks_index(pack_dir: Path) -> list[dict]:
                 if isinstance(obj, dict):
                     chunks.append(obj)
     except OSError as e:
-        logger.warning("Could not read chunks.ndjson at %s: %s", chunks_path, e)
+        logger.info("Could not read chunks.ndjson at %s: %s", chunks_path, e)
     return chunks
 
 
@@ -1278,7 +1286,7 @@ def _clean_discovered_item(
     if not source_substring:
         return None
     if not _verify_excerpt_in_text(source_substring, source_text):
-        logger.warning(
+        logger.info(
             "Discovery firewall rejected substring for slug=%s: %s",
             slug,
             source_substring[:80],
@@ -1336,13 +1344,13 @@ def _clean_discovered_item(
     )
 
 
-def extract_discoveries(
+def extract_discoveries_detailed(
     *,
     pack_dir: Path,
     pack_record: PackRecord,
     manifest: dict,
     existing_slugs: list[str] | None = None,
-) -> list[DiscoveredKpi]:
+) -> DiscoveryExtractResult:
     """Run the discovery LLM on a single pack and return validated KPIs.
 
     Returns an empty list when:
@@ -1359,15 +1367,15 @@ def extract_discoveries(
     sections = manifest.get("sections", [])
     selected = _select_sections(sections)
     if not selected:
-        return []
+        return DiscoveryExtractResult(kpis=[], status="no_kpis")
 
     raw_text = _read_section_text(pack_dir, selected)
     if not raw_text:
-        return []
+        return DiscoveryExtractResult(kpis=[], status="no_kpis")
     text = _trim_to_budget(raw_text)
 
     if not _llm_backend_available_kpi():
-        return []
+        return DiscoveryExtractResult(kpis=[], status="no_backend")
 
     filing_meta = manifest.get("filing", {})
     period_of_report = str(filing_meta.get("period_of_report") or "")
@@ -1381,10 +1389,12 @@ def extract_discoveries(
     )
     raw = _run_llm_raw(prompt, timeout=_DISCOVERY_TIMEOUT_SECONDS)
     if raw is None:
-        return []
+        return DiscoveryExtractResult(kpis=[], status="llm_failed")
     items = _parse_discovery_response(raw)
+    if items is None:
+        return DiscoveryExtractResult(kpis=[], status="llm_failed")
     if not items:
-        return []
+        return DiscoveryExtractResult(kpis=[], status="no_kpis")
 
     selected_ids = {str(s.get("id", "")) for s in selected}
     existing_set = set(existing)
@@ -1443,4 +1453,22 @@ def extract_discoveries(
             )
         )
 
-    return results
+    if not results:
+        return DiscoveryExtractResult(kpis=[], status="no_kpis")
+    return DiscoveryExtractResult(kpis=results, status="success")
+
+
+def extract_discoveries(
+    *,
+    pack_dir: Path,
+    pack_record: PackRecord,
+    manifest: dict,
+    existing_slugs: list[str] | None = None,
+) -> list[DiscoveredKpi]:
+    """Backward-compatible wrapper returning only discovered KPI rows."""
+    return extract_discoveries_detailed(
+        pack_dir=pack_dir,
+        pack_record=pack_record,
+        manifest=manifest,
+        existing_slugs=existing_slugs,
+    ).kpis

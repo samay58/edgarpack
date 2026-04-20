@@ -31,6 +31,7 @@ METRIC_ALIASES: dict[str, str] = {
     "capex": "capex",
     "eps": "eps_diluted",
     "shares": "shares_diluted",
+    "subscription_customers": "customer_count",
 }
 
 

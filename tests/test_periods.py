@@ -1870,6 +1870,11 @@ class TestParsePeriodSpec(unittest.TestCase):
         self.assertEqual(parse_period_spec("lfy-0"), ["lfy"])
         self.assertEqual(parse_period_spec("ltm-0"), ["ltm"])
         self.assertEqual(parse_period_spec("mrq-0"), ["mrq"])
+        self.assertEqual(parse_period_spec("mrp-0"), ["mrp"])
+
+    def test_rejects_mrp_offsets(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_period_spec("mrp-1")
 
     def test_dedupe_preserves_first_occurrence(self) -> None:
         self.assertEqual(
