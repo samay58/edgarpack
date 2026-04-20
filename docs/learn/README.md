@@ -5,22 +5,25 @@ How the system works, traced through what actually happens.
 ## The napkin sketch
 
 ```
-You run a CLI command (build, query, comps, list).
+You run a CLI command (build, query, comps, compare, which, list).
   The CLI parses your args and dispatches to a subcommand.
     v
-  Resolve company:  ticker -> CIK
+  Resolve identity: name/ticker/CIK -> ResolvedCompany (source = sec | hkex | private)
     v
-  Fetch from SEC:   submissions / archives / companyfacts / filing HTML
-    (rate-limited token bucket, cached on disk by SHA256, atomic writes)
+  Route by source:
+    sec   -> submissions / archives / companyfacts / filing HTML over SECClient
+            (rate-limited token bucket, SHA256 disk cache, atomic writes)
+    hkex  -> read prebuilt pack's facts.json (HKEX extractor ran at pack time)
     v
-  Parse (build only): strip iXBRL -> clean HTML -> semantic normalize -> render markdown -> sectionize
+  Parse (build only):  strip iXBRL -> clean HTML -> semantic normalize -> render markdown -> sectionize
+  Pack  (build only):  write full.md, sections/*.md, llms.txt, facts.json, manifest.json (hashes)
+  Period (query):      alias -> metric (layer_zero, presets), pick ltm/lfy/lfy-N/mrq facts, run formulas
+  Discover (which):    LLM-scan MD&A + cached catalog -> DiscoveredKpi rows across periods
+  Compare:             fan out query(company, period) per input, USD-convert, mismatch-guard
     v
-  Pack (build only):  write full.md, sections/*.md, llms.txt, manifest.json with hashes
-  Period (query):     pick the right facts for ltm/lfy/mrq/etc, do the LTM math
+  Cite:                every value carries company, accession, filing date, anchor URL
     v
-  Cite:               attach company, accession, filing date, and an anchor URL to every value
-    v
-  Print or write:     a table with citations, or a pack directory on disk
+  Render:              table / json / markdown / pack directory on disk
 ```
 
 That is the entire lifecycle. Everything below fills in the details. For the higher-level "what is this and why" answer, read [`ARCHITECTURE.md`](../../ARCHITECTURE.md) at the repo root. This learn pack picks up where ARCHITECTURE.md leaves off and walks the actual code.
@@ -48,6 +51,12 @@ Trails trace a concrete action through the code. Each one starts with something 
 - [Trail 4: How a number gets a deep-link URL back to the filing](trail-4-citation-anchors.md) (~10 min)
   The part the README says "really matters". Inline XBRL fact_id parsing, the (concept, value) compound key, the URL fallback chain.
 
+- [Trail 5: How `edgarpack compare AAPL MSFT GOOGL --period lfy` builds a side-by-side table](trail-5-compare-companies.md) (~12 min)
+  Fan-out over `financials()`. Identity routing (SEC vs HKEX vs private), sequential resolution, spot-vs-average currency conversion, and the fiscal-year mismatch guard that keeps a multi-company table honest.
+
+- [Trail 6: How `edgarpack which FIG` finds the KPIs a company actually discloses](trail-6-which-kpi-discovery.md) (~14 min)
+  The qualitative counterpart to `query`. Per-pack LLM scans over MD&A, cached catalog merge, per-slug aggregation across filings, and the `lookup_company_kpi` side door that lets `query` hit discovered metrics without a second LLM call.
+
 ## Reference
 
 When you need to look up a specific function or module, use the reference docs. They cover every exported function with purpose, inputs, outputs, design choices, and invariants.
@@ -61,6 +70,8 @@ Trails tell you the story. Reference is the dictionary.
 - [`ref/ref-financials.md`](ref/ref-financials.md) covers `edgarpack/query/financials.py`. The query orchestrator. Derived metrics with cycle protection, staleness, the low-debt sanity check.
 - [`ref/ref-periods.md`](ref/ref-periods.md) covers `edgarpack/query/periods.py`. The hairiest module in the codebase. Period semantics, LTM math, anchor selection, ix:nonFraction parsing.
 - [`ref/ref-query-models.md`](ref/ref-query-models.md) covers `edgarpack/query/models.py`. The citation contract. CitedValue, DerivedValue, QueryResult.
+- [`ref/ref-identity.md`](ref/ref-identity.md) covers `edgarpack/identity.py`. The routing seam. `IdentityIndex`, `ResolvedCompany`, SEC vs HKEX routing, ambiguity caught at load time.
+- [`ref/ref-query-layer-zero.md`](ref/ref-query-layer-zero.md) covers `edgarpack/query/layer_zero.py` + `edgarpack/query/presets.py`. Metric alias resolution, `suggest_metrics` for "did you mean", and preset expansion.
 
 ## How to use this
 
@@ -72,12 +83,15 @@ Trails tell you the story. Reference is the dictionary.
 
 ## What's deliberately not covered (yet)
 
-This learn pack focuses on the core CLI lifecycle: `build`, `query`, `comps`, `list`. The following are deliberately omitted from the first pass and will get their own learn packs (or extensions to this one) later:
+This learn pack focuses on the core CLI lifecycle: `build`, `query`, `comps`, `compare`, `which`, `list`. The following are deliberately omitted from the first pass and will get their own learn packs (or extensions to this one) later:
 
 - `edgarpack/harvest/`: batch orchestrator on top of `build_pack`. Separate concern.
 - `edgarpack/diff/`, `edgarpack/index/`, `edgarpack/insights/`: analytical layers on top of built packs. Useful but not load-bearing for understanding the core lifecycle.
 - `edgarpack/china/`: China Lens is a separate sub-product with its own pipeline (acquire / extract / translate / synthesize / qa). Deserves its own learn pack.
+- `edgarpack/hk/`: HKEX extractor. Runs at pack time and populates `facts.json`; `identity.py` routing reads the output. Linked from Trail 5; promote to a ref if it grows.
 - `edgarpack/api/`, `edgarpack/site/`: rendering and serving layers. Once you understand the core CLI lifecycle these become straightforward wrappers.
+- `edgarpack/fx/`: USD conversion tables. Linked from Trail 5 as a pure data lookup.
+- `edgarpack/sse/`: server-sent events for the translation pipeline. Outside the core query/pack lifecycle.
 
 The current omissions are tracked in [`manifest.yml`](manifest.yml) under `omitted:`. Future runs will reconsider them.
 
