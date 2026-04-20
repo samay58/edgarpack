@@ -998,6 +998,22 @@ def _fy_equivalent(period: str) -> str:
     return p
 
 
+def _parent_fy_back(period: str) -> int | None:
+    """Return the FY offset (years back) for a parent period, or None if unknown.
+
+    ``lfy``, ``ltm``, ``mrq``, ``mrp`` -> 0.
+    ``lfy-N`` / ``ltm-N`` / ``mrq-N`` -> N.
+    Series selectors and anything else -> None.
+    """
+    p = period.strip().lower()
+    if p in ("lfy", "ltm", "mrq", "mrp"):
+        return 0
+    m = re.match(r"^(lfy|ltm|mrq)-(\d+)$", p)
+    if m:
+        return int(m.group(2))
+    return None
+
+
 def _compute_cagr(
     facts: dict[str, Any],
     metric: str,
@@ -1024,12 +1040,25 @@ def _compute_cagr(
     if base_meta is None:
         return None
 
-    anchor_period = _fy_equivalent(period)
+    # Total years back from the current FY for the parent period. This lets
+    # us bake the offset into a canonical ``lfy-K`` period string so the
+    # router (which hardcodes period_offset from the regex group) still
+    # returns the right FY.
+    parent_back = _parent_fy_back(period)
+    if parent_back is None:
+        return None
+    # Combine with an explicit caller-provided period_offset (negative offsets
+    # walk further back; positive would walk forward but CAGR doesn't use it).
+    parent_back -= period_offset
+
+    def _period_for_back(years_back_total: int) -> str:
+        yrs = max(0, years_back_total)
+        return "lfy" if yrs == 0 else f"lfy-{yrs}"
 
     def _resolve_at(years_back_total: int) -> CitedValue | None:
-        """Resolve the base metric at FY - years_back_total."""
-        # Combine caller's period_offset with the CAGR's requested shift.
-        total_offset = -years_back_total + period_offset
+        """Resolve the base metric at FY - years_back_total using a canonical lfy-K string."""
+        back = parent_back + years_back_total
+        anchor_period = _period_for_back(back)
         if base_meta.derived:
             return _compute_derived(
                 facts,
@@ -1041,7 +1070,6 @@ def _compute_cagr(
                 doc_map,
                 cache={},
                 in_progress=set(),
-                period_offset=total_offset,
             )
         hkex_concept = _hkex_concept_for_metric(facts, base)
         if hkex_concept is not None:
@@ -1061,7 +1089,6 @@ def _compute_cagr(
             anchor_period,
             taxonomy=taxonomy,
             doc_map=doc_map,
-            period_offset=total_offset,
         )
         if isinstance(value, list):
             return value[0] if value else None

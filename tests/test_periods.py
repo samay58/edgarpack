@@ -8,12 +8,15 @@ from edgarpack.query.concepts import MetricMeta
 from edgarpack.query.models import CitedValue, DerivedValue, Diagnostic
 from edgarpack.query.periods import (
     _assert_ltm_invariant,
+    parse_period_spec,
     select_annual_series,
     select_lfy,
     select_ltm,
     select_ltm_minus_1,
+    select_ltm_n,
     select_mrp,
     select_mrq,
+    select_mrq_n,
     select_period,
     select_quarterly_series,
 )
@@ -1665,6 +1668,245 @@ class TestLtmInvariant(unittest.TestCase):
         )
         _assert_ltm_invariant(good, "LTM")
         _assert_ltm_invariant(good, "LTM-1")
+
+
+class TestSelectLtmN(unittest.TestCase):
+    """Generalized ltm-N selector (N >= 2)."""
+
+    def _build_values(self, years: int) -> list[dict]:
+        """Emit FY + Q3 cumulative entries for the newest `years` fiscal years."""
+        values: list[dict] = []
+        base_fy = 2024
+        for i in range(years):
+            fy = base_fy - i
+            accn = f"0000000001-{str(fy + 1)[-2:]}-000001"
+            start = f"{fy}-01-01"
+            end = f"{fy}-12-31"
+            values.append(
+                {
+                    "val": (10 + i) * 10_000_000_000,
+                    "start": start,
+                    "end": end,
+                    "fy": fy,
+                    "fp": "FY",
+                    "form": "10-K",
+                    "accn": accn,
+                    "filed": f"{fy + 1}-03-01",
+                }
+            )
+            # Q3 cumulative for each year
+            values.append(
+                {
+                    "val": (7 + i) * 10_000_000_000,
+                    "start": start,
+                    "end": f"{fy}-09-30",
+                    "fy": fy,
+                    "fp": "Q3",
+                    "form": "10-Q",
+                    "accn": f"0000000001-{str(fy)[-2:]}-000004",
+                    "filed": f"{fy}-11-15",
+                }
+            )
+        return values
+
+    def test_ltm_2_resolves_to_window_two_years_back(self) -> None:
+        facts = _make_facts("Revenues", self._build_values(4))
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=2
+        )
+        self.assertIsNotNone(result)
+        self.assertEqual(result.fiscal_period, "LTM-2")
+
+    def test_ltm_3_resolves(self) -> None:
+        facts = _make_facts("Revenues", self._build_values(5))
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=3
+        )
+        self.assertIsNotNone(result)
+        self.assertEqual(result.fiscal_period, "LTM-3")
+
+    def test_ltm_0_equals_ltm(self) -> None:
+        facts = _make_facts("Revenues", self._build_values(3))
+        baseline = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        zeroed = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=0
+        )
+        self.assertIsNotNone(baseline)
+        self.assertIsNotNone(zeroed)
+        self.assertEqual(baseline.value, zeroed.value)
+        self.assertEqual(baseline.fiscal_period, zeroed.fiscal_period)
+
+
+class TestSelectMrqN(unittest.TestCase):
+    """Generalized mrq-N selector (same fiscal quarter, N years back)."""
+
+    def test_mrq_0_equals_mrq(self) -> None:
+        facts = _make_facts("Revenues", REVENUE_VALUES)
+        baseline = select_mrq(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        zeroed = select_mrq_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=0
+        )
+        self.assertIsNotNone(baseline)
+        self.assertIsNotNone(zeroed)
+        self.assertEqual(baseline.value, zeroed.value)
+
+    def test_mrq_1_picks_same_fp_prior_year(self) -> None:
+        facts = _make_facts("Revenues", REVENUE_VALUES)
+        result = select_mrq_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
+        self.assertIsNotNone(result)
+        # Newest quarter is Q3 FY2024 standalone ($40B); mrq-1 = Q3 FY2023 standalone ($28B)
+        self.assertEqual(result.fiscal_year, 2023)
+        self.assertEqual(result.fiscal_period, "Q3")
+        self.assertEqual(result.value, 28_000_000_000)
+
+    def test_mrq_n_degrades_when_prior_fp_missing(self) -> None:
+        """With only two years of quarterly history, mrq-5 should fall back to earliest prior fp."""
+        # Strip everything except Q3 for FY2023 and FY2024.
+        compact = [
+            v
+            for v in REVENUE_VALUES
+            if v["fp"] == "Q3" and v.get("start") in ("2023-07-30", "2024-07-28")
+        ]
+        facts = _make_facts("Revenues", compact)
+        result = select_mrq_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=5
+        )
+        self.assertIsNotNone(result)
+        # Degraded to earliest available Q3 (FY2023)
+        self.assertEqual(result.fiscal_year, 2023)
+        self.assertEqual(result.fiscal_period, "Q3")
+
+
+class TestSelectPeriodRouter(unittest.TestCase):
+    """Router-level regex dispatch for new selector forms."""
+
+    def test_ltm_2_via_select_period(self) -> None:
+        values = [
+            {
+                "val": 50_000_000_000,
+                "start": "2021-01-01",
+                "end": "2021-12-31",
+                "fy": 2021,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-22-000001",
+                "filed": "2022-03-01",
+            },
+            {
+                "val": 70_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
+            },
+            {
+                "val": 100_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 120_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "fy": 2024,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-25-000001",
+                "filed": "2025-03-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        routed = select_period(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "ltm-2"
+        )
+        self.assertIsNotNone(routed)
+
+    def test_mrq_2_via_select_period(self) -> None:
+        facts = _make_facts("Revenues", REVENUE_VALUES)
+        routed = select_period(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "mrq-2"
+        )
+        direct = select_mrq_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=2
+        )
+        # Both should return the same degraded result (or both None).
+        if direct is None:
+            self.assertIsNone(routed)
+        else:
+            self.assertEqual(routed.value, direct.value)
+
+
+class TestParsePeriodSpec(unittest.TestCase):
+    def test_single_scalar(self) -> None:
+        self.assertEqual(parse_period_spec("lfy"), ["lfy"])
+        self.assertEqual(parse_period_spec("ltm-2"), ["ltm-2"])
+        self.assertEqual(parse_period_spec("mrq-3"), ["mrq-3"])
+
+    def test_csv_preserves_order(self) -> None:
+        self.assertEqual(
+            parse_period_spec("lfy,lfy-1,lfy-2"),
+            ["lfy", "lfy-1", "lfy-2"],
+        )
+        self.assertEqual(
+            parse_period_spec("ltm,ltm-1,ltm-2"),
+            ["ltm", "ltm-1", "ltm-2"],
+        )
+        self.assertEqual(
+            parse_period_spec("mrq,mrq-1,mrq-2"),
+            ["mrq", "mrq-1", "mrq-2"],
+        )
+
+    def test_zero_suffix_canonicalizes(self) -> None:
+        self.assertEqual(parse_period_spec("lfy-0"), ["lfy"])
+        self.assertEqual(parse_period_spec("ltm-0"), ["ltm"])
+        self.assertEqual(parse_period_spec("mrq-0"), ["mrq"])
+
+    def test_dedupe_preserves_first_occurrence(self) -> None:
+        self.assertEqual(
+            parse_period_spec("lfy,lfy-0,lfy-1"),
+            ["lfy", "lfy-1"],
+        )
+
+    def test_case_insensitive(self) -> None:
+        self.assertEqual(parse_period_spec("LFY,LFY-1"), ["lfy", "lfy-1"])
+
+    def test_whitespace_tolerated(self) -> None:
+        self.assertEqual(
+            parse_period_spec(" lfy , lfy-1 , lfy-2 "),
+            ["lfy", "lfy-1", "lfy-2"],
+        )
+
+    def test_rejects_series_mixed_with_scalar(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_period_spec("annual:3,ltm")
+        with self.assertRaises(ValueError):
+            parse_period_spec("ltm,quarterly:4")
+
+    def test_series_alone_allowed(self) -> None:
+        self.assertEqual(parse_period_spec("annual:3"), ["annual:3"])
+        self.assertEqual(parse_period_spec("quarterly:4"), ["quarterly:4"])
+
+    def test_rejects_unknown_selector(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_period_spec("wat")
+        with self.assertRaises(ValueError):
+            parse_period_spec("lfy,bogus")
+
+    def test_rejects_empty(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_period_spec("")
+        with self.assertRaises(ValueError):
+            parse_period_spec(",,")
 
 
 if __name__ == "__main__":
