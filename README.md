@@ -8,9 +8,19 @@ SEC filings turned into clean markdown packs and cited financial queries, one co
 
 ## The problem
 
-Public filings are the best primary source for public-company research. 10-Ks and 10-Qs carry the actual numbers, the actual risk factors, the actual management discussion. They're also a pain to work with programmatically. Raw HTML is noisy, inline XBRL tags break most parsers, section boundaries drift between filers, and the tools that do handle this well hand you an answer and hide the source.
+Public filings are the best primary source for public-company research. 10-Ks and 10-Qs carry the actual numbers, the actual risk factors, the actual management discussion.
 
-I built EdgarPack because I do financial research daily and wanted three things the existing tools didn't give me: clean section-level artifacts I could diff, deterministic output so downstream caches stay valid, and citations on every number that point back to the exact line in the exact filing. The last part is the one that really matters. If I pull an ARR figure out of a 10-K, I want the URL that took me there, not a promise that a model got it right.
+They are also a nightmare for LLMs to parse and work with properly.
+
+Why?
+
+1. The HTML is incredibly noisy. Presentational tags, inline styles, table gymnastics, page-break artifacts.
+2. XBRL (the taxonomy tagging layer) was designed for an older world. The machine-readable facts get tangled into the visible text and bloat every parse.
+3. The tools that do handle this well hand you an answer and hide the building blocks. You cannot diff a section, cite a specific line, or feed the cleaned prose into your own pipeline.
+
+EdgarPack exists to compress a filing down to its substantive pieces and give them back to you as something you can actually work with. Clean section markdown. Deterministic artifacts. Every number cited to the exact accession, concept, and filing URL it came from, so an LLM or a human reviewer can always trace the claim back to primary source.
+
+I built it because I do financial research daily and wanted three things the existing tools did not give me: clean section-level artifacts I could diff, deterministic output so downstream caches stay valid, and citations on every value that point back to the exact line in the exact filing. The last part is the one that really matters. If I pull an ARR figure out of a 10-K, I want the URL that took me there, not a promise that a model got it right.
 
 ## What you get
 
