@@ -20,6 +20,17 @@ Why?
 
 EdgarPack exists to compress a filing down to its substantive pieces and give them back to you as something you can actually work with. Clean section markdown. Deterministic artifacts. Every number cited to the exact accession, concept, and filing URL it came from, so an LLM or a human reviewer can always trace the claim back to primary source.
 
+### By the numbers
+
+Measured against the latest NVDA, AAPL, and TSLA 10-Ks on 2026-04-20, cl100k tokens:
+
+- Raw 10-K HTML is a median of **~595k tokens**. The clean EdgarPack pack is a median of **~102k tokens**. That is an **85.6% reduction**, tight across the three filings (82.9% to 86.1%).
+- The raw filings do not fit in any mainstream LLM context window. The clean packs fit in GPT-4 Turbo's 128k window with room for citations and instructions.
+- At Claude 3.5 Sonnet input pricing ($3 / 1M tokens): raw costs about $1.79 per call, the pack costs about $0.31 per call. Same filing, ~5.8x cheaper to feed in.
+- About a fifth of the win is iXBRL tag stripping. The rest comes from the semantic cleaning, markdown rendering, and polish passes together.
+
+Full methodology, per-filing table, cost breakdown at two providers, and a section on where the win is smaller than you think in [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md). Committed raw artifacts (raw HTML, stripped HTML, clean markdown) under [`benchmarks/artifacts/`](benchmarks/artifacts/) if you want to re-count anything yourself.
+
 I built it because I do financial research daily and wanted three things the existing tools did not give me: clean section-level artifacts I could diff, deterministic output so downstream caches stay valid, and citations on every value that point back to the exact line in the exact filing. The last part is the one that really matters. If I pull an ARR figure out of a 10-K, I want the URL that took me there, not a promise that a model got it right.
 
 ## What you get

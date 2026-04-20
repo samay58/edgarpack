@@ -1,0 +1,193 @@
+{
+  "edgarpack_version": "0.1.0",
+  "filings": [
+    {
+      "accession": "0001045810-26-000021",
+      "cik": "0001045810",
+      "clean_full_md": {
+        "bytes": 462187,
+        "tokens_cl100k": 102007
+      },
+      "company_name": "NVIDIA CORP",
+      "filing_date": "2026-02-25",
+      "form_type": "10-K",
+      "html_files_fetched": [
+        "nvda-20260125.htm",
+        "0001045810-26-000021-index-headers.html",
+        "a2026auditorconsentletter.htm",
+        "nvda-2026xex191.htm",
+        "nvda-2026xex311.htm",
+        "nvda-2026xex312.htm",
+        "nvda-2026xex321.htm",
+        "nvda-2026xex322.htm",
+        "subsidiariesofregistrantfy.htm"
+      ],
+      "primary_document": "nvda-20260125.htm",
+      "raw_combined": {
+        "bytes": 2047880,
+        "tokens_cl100k": 595255
+      },
+      "raw_primary": {
+        "bytes": 1967816,
+        "tokens_cl100k": 571540
+      },
+      "reductions": {
+        "combined_raw_to_clean_pct": 82.86,
+        "combined_raw_to_stripped_pct": 19.3,
+        "primary_raw_to_clean_pct": 82.15,
+        "primary_raw_to_stripped_pct": 20.1,
+        "stripped_to_clean_pct": 78.76
+      },
+      "section_item1a_risk_factors": {
+        "bytes": 116085,
+        "tokens_cl100k": 20503
+      },
+      "stripped_combined": {
+        "bytes": 1714901,
+        "tokens_cl100k": 480365
+      },
+      "ticker": "NVDA",
+      "wall_clock_seconds": {
+        "build_pack_cold": 0.944,
+        "build_pack_warm": 0.001,
+        "fetch_filing_html": 0.003,
+        "ixbrl_strip_combined": 0.03,
+        "resolve_company": 1.555
+      }
+    },
+    {
+      "accession": "0000320193-25-000079",
+      "cik": "0000320193",
+      "clean_full_md": {
+        "bytes": 301547,
+        "tokens_cl100k": 70835
+      },
+      "company_name": "Apple Inc.",
+      "filing_date": "2025-10-31",
+      "form_type": "10-K",
+      "html_files_fetched": [
+        "aapl-20250927.htm",
+        "0000320193-25-000079-index-headers.html",
+        "a10-kexhibit21109272025.htm",
+        "a10-kexhibit23109272025.htm",
+        "a10-kexhibit31109272025.htm",
+        "a10-kexhibit31209272025.htm",
+        "a10-kexhibit32109272025.htm",
+        "a10-kexhibit4109272025.htm"
+      ],
+      "primary_document": "aapl-20250927.htm",
+      "raw_combined": {
+        "bytes": 1707594,
+        "tokens_cl100k": 492156
+      },
+      "raw_primary": {
+        "bytes": 1520208,
+        "tokens_cl100k": 441509
+      },
+      "reductions": {
+        "combined_raw_to_clean_pct": 85.61,
+        "combined_raw_to_stripped_pct": 18.71,
+        "primary_raw_to_clean_pct": 83.96,
+        "primary_raw_to_stripped_pct": 20.85,
+        "stripped_to_clean_pct": 82.3
+      },
+      "section_item1a_risk_factors": {
+        "bytes": 805,
+        "tokens_cl100k": 143
+      },
+      "stripped_combined": {
+        "bytes": 1439554,
+        "tokens_cl100k": 400089
+      },
+      "ticker": "AAPL",
+      "wall_clock_seconds": {
+        "build_pack_cold": 0.919,
+        "build_pack_warm": 0.001,
+        "fetch_filing_html": 0.003,
+        "ixbrl_strip_combined": 0.021,
+        "resolve_company": 1.345
+      }
+    },
+    {
+      "accession": "0001628280-26-003952",
+      "cik": "0001318605",
+      "clean_full_md": {
+        "bytes": 519395,
+        "tokens_cl100k": 113333
+      },
+      "company_name": "Tesla, Inc.",
+      "filing_date": "2026-01-29",
+      "form_type": "10-K",
+      "html_files_fetched": [
+        "tsla-20251231.htm",
+        "0001628280-26-003952-index-headers.html",
+        "tsla-2025x12x31xex1010.htm",
+        "tsla-2025x12x31xex109.htm",
+        "tsla-2025x12x31xex211.htm",
+        "tsla-2025x12x31xex231.htm",
+        "tsla-2025x12x31xex311.htm",
+        "tsla-2025x12x31xex312.htm",
+        "tsla-2025x12x31xex321.htm",
+        "tsla-2025x12x31xex417.htm"
+      ],
+      "primary_document": "tsla-20251231.htm",
+      "raw_combined": {
+        "bytes": 2797342,
+        "tokens_cl100k": 812958
+      },
+      "raw_primary": {
+        "bytes": 2391529,
+        "tokens_cl100k": 692451
+      },
+      "reductions": {
+        "combined_raw_to_clean_pct": 86.06,
+        "combined_raw_to_stripped_pct": 19.97,
+        "primary_raw_to_clean_pct": 83.63,
+        "primary_raw_to_stripped_pct": 23.43,
+        "stripped_to_clean_pct": 82.58
+      },
+      "section_item1a_risk_factors": {
+        "bytes": 486,
+        "tokens_cl100k": 103
+      },
+      "stripped_combined": {
+        "bytes": 2326838,
+        "tokens_cl100k": 650614
+      },
+      "ticker": "TSLA",
+      "wall_clock_seconds": {
+        "build_pack_cold": 1.263,
+        "build_pack_warm": 0.001,
+        "fetch_filing_html": 0.164,
+        "ixbrl_strip_combined": 0.035,
+        "resolve_company": 2.457
+      }
+    }
+  ],
+  "form_type": "10-K",
+  "generated_at": "2026-04-20T19:55:19.375061+00:00",
+  "host": {
+    "os": "Darwin 25.4.0 (arm64)",
+    "processor": "arm",
+    "python": "3.14.3"
+  },
+  "parser_version": "0.2.0",
+  "rollup_median": {
+    "build_pack_cold_seconds_median": 0.94,
+    "build_pack_warm_seconds_median": 0.0,
+    "clean_full_md_tokens_median": 102007.0,
+    "combined_raw_to_clean_reduction_pct_median": 85.61,
+    "primary_raw_to_clean_reduction_pct_median": 83.63,
+    "raw_combined_tokens_median": 595255.0,
+    "raw_primary_tokens_median": 571540.0,
+    "section_item1a_tokens_median": 143.0,
+    "stripped_combined_tokens_median": 480365.0
+  },
+  "sample_tickers": [
+    "NVDA",
+    "AAPL",
+    "TSLA"
+  ],
+  "schema_version": 1,
+  "tokenizer": "cl100k_base"
+}

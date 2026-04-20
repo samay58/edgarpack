@@ -1,0 +1,938 @@
+{
+  "accounting_standard": "US-GAAP",
+  "artifacts": {
+    "filing.full.md": "67c78fefe32bc96a68416eeb840faabe5b908978fd8e68aff4a04025464d935a",
+    "llms.txt": "fa1f83ebfbc1b85ff79b7e3b61fadd90d6a686bbd1024b1188b7b2757763bbaa",
+    "sections/10k_parti_item1_business.md": "b46be7c58918a98b56c9ca246e097e8775f2532a8c20453e9422372cd3d1e213",
+    "sections/10k_parti_item1_business_business_business_1.md": "6c96105d9513c0858db3d457cec76ad0c4f95439dae63aa796b5ef44b8a08300",
+    "sections/10k_parti_item1_item_1_business_business.md": "c242539397cc563601f767f0a9458c329d14ed9103443cf5fd1a685dc4e75893",
+    "sections/10k_parti_item1_of_this_form_10k_under_the.md": "2eec4368097c2ce9f34af8f9fca35916ac7e09a3a8ac9a0cd7c83f287a673767",
+    "sections/10k_parti_item1a_item_1_a_risk_factors_risk.md": "ad2f1a74bf4e28a2e1ae34f7108d1450e2a877bc33198849a8d701ce25cc3f89",
+    "sections/10k_parti_item1a_of_this_form_10k_under_the.md": "4688061abc987ee6a7df1e39face45ca32d54084ba4a41cdb62823540151f0f3",
+    "sections/10k_parti_item1a_of_this_form_10k_under_the_1.md": "c84b566faa6ea68f8d1b207c2a7fd8c73f66b495ddbed5fa8ff85f046df89f01",
+    "sections/10k_parti_item1a_risk_factors.md": "cc55e21bb9c3161c0c98d3b4488efb86bfaa1f3278483b1d0908ca5008d6367c",
+    "sections/10k_parti_item1a_risk_factors_risk_factors.md": "2002c0cb72a54952066453daa5692ad9a06e3be38d0234e446d6b39382af75af",
+    "sections/10k_parti_item1b_item_1_b_unresolved_staff.md": "9519eda8a3aefe7971cb319715b5cf71a6fba18db12ee5fccae0adc589c5efaa",
+    "sections/10k_parti_item1b_unresolved_staff_comments.md": "f958f8d2bd2349534c0e84a9c44e1fc224da76c6b199a4bb79fbeee0193dff23",
+    "sections/10k_parti_item1c_cybersecurity_cybersecurity.md": "1e42fa9e757caa9f759a77110d8fda80bd140c8304a1be7f99ea7c4ea8ab96bd",
+    "sections/10k_parti_item1c_item_1_c_cybersecurity.md": "915f3d9003457bc5fdb1f49efbdf204be8979c91af16086134d0568962ada719",
+    "sections/10k_parti_item2_item_2_properties_properties.md": "b641626062aabde33a5b9b3cebb669a6458f2ff4b4bf11f8f9c88a97283a2581",
+    "sections/10k_parti_item2_properties_properties.md": "3a3025c4864e4477c05859c29427d7615a1f5a0600d39b75987f86d4f07e484a",
+    "sections/10k_parti_item3_item_3_legal_proceedings.md": "b35980f91398b50582d577c28c51e3aaf11fce753765d293f924d0ef3c961a70",
+    "sections/10k_parti_item3_legal_proceedings_legal.md": "bedd9967d39bad4d4d116c68ed14928325fcde55d562bbbee4a025e405190d76",
+    "sections/10k_parti_item4_item_4_mine_safety.md": "1784799d707417fe579dc03c12f112b73dee55d569889d4f0ad1721a4f7de9ee",
+    "sections/10k_parti_item4_mine_safety_disclosures_mine.md": "3563b0e59395c3574eb2f14bad5c8224b84c432acff474ea0ff56f53426f1a63",
+    "sections/10k_partii_item16_form_10k_summary.md": "059981d64515f4cafcf07c91ebc2ecb7b2beba256b76ffbf5ff2632392d4ae63",
+    "sections/10k_partii_item1a_of_this_form_10k_under_the.md": "59fefc7e25152a6f91faaa697b204e6ec06a5715f6c2ecbe06923cc6a9aea11d",
+    "sections/10k_partii_item1b_unresolved_staff_comments.md": "612eede63ff740a80b0a8c297095b7b40c3c395b744def784e35df2beebb485d",
+    "sections/10k_partii_item1c_cybersecurity.md": "0006945edb48700d6deb0f03d02f1b5731565c1ef9929fd631c4fbcd60a703ff",
+    "sections/10k_partii_item2_properties.md": "fd8945b5cf5c918afbfe9acae6b79b4290a97b6646f5543568ee386b2e3a55d7",
+    "sections/10k_partii_item3_legal_proceedings.md": "a37593da6d72879c8b66c182a5a27f489e5f8583c4367ea8c7f5c14b2eb41262",
+    "sections/10k_partii_item4_mine_safety_disclosures.md": "c35db73e1c54aabf5af9b85fd248ce6af0e293c3a0ae01c54518b8120f4b3d46",
+    "sections/10k_partii_item5_item_5_market_for_registrants.md": "bf2f3ab43106b8343e36e6c139a84c5c787584bbdc5831d7838f342a4cfe73a8",
+    "sections/10k_partii_item5_market_for_registrants_common.md": "c1aa06d71414f00cd9da68b414f7fc24199b9d6b311949cde1898d4d3775f353",
+    "sections/10k_partii_item5_market_for_registrants_common_1.md": "032f4831d72eb876c7faad26832e47771e5c549ed0e1c52057808dbf1740bc9a",
+    "sections/10k_partii_item601_b4iii_of_regulation_sk_the.md": "f293336a55405ae5db026eaeae567f89ac253bc0325a08acd4963144eb62e7dd",
+    "sections/10k_partii_item6_item_6_reserved_reserved.md": "16e78bf8d00f81608606d8b9add62d426c1f27275d992c81c1162f7bb93b344b",
+    "sections/10k_partii_item6_reserved.md": "2bed28552263717263b477a482c6407af45cd1fb6d6e3d4f57af3479f918fc6a",
+    "sections/10k_partii_item6_reserved_reserved_reserved_20.md": "ad5dd58f63c81335fee4f757605d7c8567bd3f770800d6d07f88dddaf89bab39",
+    "sections/10k_partii_item7_item_7_managements_discussion.md": "4b8a14de51795494190cc44fd1c7ec2a09ee0d68f45f0eb72e7f6e0bfd740ca9",
+    "sections/10k_partii_item7_managements_discussion.md": "241a5b6c55f9ee40012309c443e5b59784c6543298c9f8e88063bf45e70d268b",
+    "sections/10k_partii_item7_managements_discussion_1.md": "1604fd9372351295ce861c803d010908a6d63539dea780e9f39b8eb6748a2a9b",
+    "sections/10k_partii_item7_managements_discussion_2.md": "f57d5adb08f3ac032ffab3aa2e3e202b445aa6e141f00d9192d92e3a600818c8",
+    "sections/10k_partii_item7_of_the_companys_annual_report.md": "1099a6e85911ae6bf2949c659ed43122100ba9286ed3e9f7ef1f7a58cfea4a2f",
+    "sections/10k_partii_item7_of_this_form_10k_under_the.md": "7f321cb33bb61520c611a58bb074e2c48ab9dd26551fdf6b9ebbc6365072d971",
+    "sections/10k_partii_item7a_item_7_a_quantitative.md": "53a53abf900218542c4f97dedb9c573416462921af44efacc77c395cdf8fa6aa",
+    "sections/10k_partii_item7a_quantitative_qualitative.md": "de25c60deb4521b2c52501de73e57b8e428f0ad6e9e7d260d94ef34cb658a9dd",
+    "sections/10k_partii_item7a_quantitative_qualitative_1.md": "5075e7a8e2d41a7a5f60205fbd78b441a2eea4adb87ab6a7ecf402e2f4f54668",
+    "sections/10k_partii_item8_financial_statements.md": "414674185fbf5e2595fad22d7f40206e04b0bcc486fcadb4964e495cfbc89cda",
+    "sections/10k_partii_item8_financial_statements_1.md": "a7a221ea18624f03b29214236edcb01ade64eca402e83b736acd655ebd4d3c77",
+    "sections/10k_partii_item8_financial_statements_2.md": "b1bdb89b7721e079e1963373d4998b708ca24361ae65053925d986e8d6390f4d",
+    "sections/10k_partii_item8_financial_statements_3.md": "214598b4d314222d8a4bdaa8b829820eac2498f88f054b7222b7af7bb30267e7",
+    "sections/10k_partii_item8_financial_statements_4.md": "20c70a83b3ed6d1b41f5a825a7deeb71b4d0106afc36c6f41f4d1c8d51fadbe0",
+    "sections/10k_partii_item8_financial_statements_5.md": "20c70a83b3ed6d1b41f5a825a7deeb71b4d0106afc36c6f41f4d1c8d51fadbe0",
+    "sections/10k_partii_item8_financial_statements_6.md": "042932b6539aabe160356792fcb2dc5bf27c4f114b02b2be38386d2441e73215",
+    "sections/10k_partii_item8_item_8_financial_statements.md": "89f31517a8f29cefab8369310910d3f546cec532e9b4a0038330826cd57f3490",
+    "sections/10k_partii_item8_of_this_form_10k_describes.md": "eab4364ea6191bf89a8227938c9441817615f10b7eaafdf2268f6017944669b7",
+    "sections/10k_partii_item8_of_this_form_10k_the_impact.md": "83f71286610af3f010fdb8e1b551365571c42959010216812a1e6a78c6b51294",
+    "sections/10k_partii_item8_of_this_form_10k_this_item.md": "2d32a1b3cea2fdfd10071527717debfd14d9a10e1a45a1b8a3cc58503bf84865",
+    "sections/10k_partii_item9_changes_in_disagreements_with.md": "e373aef48ca65b29f0a688ce9f0231e2afbc0114d2f470197df21e01fa929093",
+    "sections/10k_partii_item9_changes_in_disagreements_with_1.md": "5e735f785402511b3c46c8764c1eb041f5a25840dfa1ad2e9c1bcaf8b39885fb",
+    "sections/10k_partii_item9_item_9_changes_in.md": "314f7622eccd8fb83d0d03eb00d748f433c739924560098cc235645ede9bd274",
+    "sections/10k_partii_item9a_controls_procedures.md": "4cac7af7eee0069d1676a4c93f6883077661d0729f673a48667fb619dd43da3e",
+    "sections/10k_partii_item9a_controls_procedures_controls.md": "5f3480b8e06190b320ba0f51419b6db3aec9f0780afcf8c55e1f6e9d435aba31",
+    "sections/10k_partii_item9a_item_9_a_controls_procedures.md": "58112eb910cb8411326590f440adb1795c7199493a64e357cd3c9abadaa106ad",
+    "sections/10k_partii_item9b_item_9_b_other_information.md": "d0a8970cd26c72494043bb4fd3434d4b70c708b9ec3171ed897df158bee29a27",
+    "sections/10k_partii_item9b_other_information.md": "a2b0d3606b470f35443b67d119176076b6cf0165682bf506b25f517f23037982",
+    "sections/10k_partii_item9b_other_information_other.md": "10e54a3b0b6f4fed82c7c918dcf18afdd3b0f19922b0ea49584241e4c427aea4",
+    "sections/10k_partii_item9c_disclosure_regarding_foreign.md": "e0acddae2b27ead08efbd6ab335d268d4c87cf05379e6ddb746f532e372edaa5",
+    "sections/10k_partii_item9c_disclosure_regarding_foreign_1.md": "5c3f7c8e335ab6f956e280fbd5a1bd5e0936810f0a7606fd3cd1b9684efb60b5",
+    "sections/10k_partii_item9c_item_9_c_disclosure_regarding.md": "bfbc10d1df0087b54e0cf142a1d6c59d2f552ed0d0939187739479b341d0c6d7",
+    "sections/10k_partii_itemother_notes_to_consolidated.md": "9976fae7f1d0db58f3855eb9e3cd0f9aac7949a8a582508ea0c846b60ce068ef",
+    "sections/10k_partii_itemother_signatures.md": "2e9e9890891f1373321027a44993604043b4bbe0fd40cee1cb7e593333029a6a",
+    "sections/10k_partiii_item10_directors_executive_officers.md": "89025d5380cfa4ec43f0d593c28339c39499989d7aa27cde802948d634751702",
+    "sections/10k_partiii_item10_directors_executive_officers_1.md": "4806c755a081df348c679899ddd3918e5bfc87f054ea720a1baeed84a2430401",
+    "sections/10k_partiii_item10_item_10_directors_executive.md": "357782b753c29bff42bba9bd3d76980e00f98aaa1059082da9fed105ae0d3d1c",
+    "sections/10k_partiii_item11_executive_compensation.md": "63391f66f0524c315a1586f3779e78852bfc17b9c01546accd8d197905f2a497",
+    "sections/10k_partiii_item11_executive_compensation_1.md": "51eef6c51a548e1d5939a3e9931a326a0e4b9feed6d85dbaebeb346f5bdc5d2b",
+    "sections/10k_partiii_item11_item_11_executive.md": "84e14a3a6eaa3b59c223124141273ed38edccccdccf0211cfcb965714f91e945",
+    "sections/10k_partiii_item12_item_12_security_ownership_of.md": "f0394116084bbe871d9d6319b461128bb440ab8dd9a12c9829c5f44be48c0d2b",
+    "sections/10k_partiii_item12_security_ownership_of_certain.md": "6027d52f49ef8a5bdfcabe344c28dffd03d581d622c735a25fd28802e3f31c7a",
+    "sections/10k_partiii_item12_security_ownership_of_certain_1.md": "f45805569fa9126152c906b9b5ec7bc9f0e48af693ac8ef19490769fc65a948a",
+    "sections/10k_partiii_item13_certain_relationships_related.md": "9b5572ebe9ef369b3e03e32849697e91ddba327d34cc421d9c0cfcfe85be8a41",
+    "sections/10k_partiii_item13_certain_relationships_related_1.md": "027d9ae0de713e700f539c92ffdaaa87b4853f42253309f43baa3a3315fbdefa",
+    "sections/10k_partiii_item13_item_13_certain_relationships.md": "b43a78bda4777404356366857de52dfe323318a10e4f3c184fbca3cd42cbe6bd",
+    "sections/10k_partiii_item14_item_14_principal_accountant.md": "e3437d3de96b897f56c48633e02a23b360cc6a8d701d2dad7f402a8f0af04734",
+    "sections/10k_partiii_item14_principal_accountant_fees.md": "347925525fcf417885412b517696119ee789b528aec383708a59860216cc86a3",
+    "sections/10k_partiii_item14_principal_accountant_fees_1.md": "909eabd509d561f2d6c583a0024603300875d7f505f8f7435fc9f3f3d5f86238",
+    "sections/10k_partiv_item15_exhibit_financial_statement.md": "cdbdf5ffa4bc6686a396e4fd0a0e7dbab7408fe29bb807169496d47c6249c263",
+    "sections/10k_partiv_item15_exhibit_financial_statement_1.md": "b88e3c638ab96d13537b2a64a85fa5a9e9de2b11c7c8db09c2ccde3c1fa4647f",
+    "sections/10k_partiv_item15_item_15_exhibit_financial.md": "5e65c9fdafdd693cc31f16f40fe8272c9f868395ab011f078d459e23a963db3e",
+    "sections/10k_partiv_item16_form_10k_summary_form_10k.md": "ce8b5eaf4013a4bb59b56b6a524400928e82baa43b924b4e57521351e0d0e849",
+    "sections/10k_partiv_item16_item_16_form_10k_summary_form.md": "d3825510edc333d686b10c338a5f1bef0e11c37f28376b19fb863494c6c6d7cb",
+    "sections/10k_partiv_item601_of_regulation_sk_1.md": "05c7187e36b3600c60c24c7f9df1486324ebecc2fad969d13f771662a458b837",
+    "sections/unknown_00.md": "9ff6db19b0d6698c768401218ebda08a361fbd7311bc2b36eca1a2ccf7d88c40"
+  },
+  "filing": {
+    "accession": "0000320193-25-000079",
+    "cik": "0000320193",
+    "company_name": "Apple Inc.",
+    "filing_date": "2025-10-31",
+    "form_type": "10-K",
+    "period_of_report": "2025-09-27"
+  },
+  "generated_at": "2025-10-31T00:00:00Z",
+  "parser_version": "0.2.0",
+  "reporting_currency": "USD",
+  "schema_version": 1,
+  "sections": [
+    {
+      "char_end": 8246,
+      "char_start": 0,
+      "id": "unknown_00",
+      "path": "sections/unknown_00.md",
+      "sha256": "9ff6db19b0d6698c768401218ebda08a361fbd7311bc2b36eca1a2ccf7d88c40",
+      "title": "Preamble",
+      "tokens_approx": 2214
+    },
+    {
+      "char_end": 8256,
+      "char_start": 8246,
+      "id": "10k_parti_item1_item_1_business_business",
+      "path": "sections/10k_parti_item1_item_1_business_business.md",
+      "sha256": "c242539397cc563601f767f0a9458c329d14ed9103443cf5fd1a685dc4e75893",
+      "title": "/ Item 1. / Business / Business / Business / 1 / 1 / 1",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 8353,
+      "char_start": 8256,
+      "id": "10k_parti_item1_business_business_business_1",
+      "path": "sections/10k_parti_item1_business_business_business_1.md",
+      "sha256": "6c96105d9513c0858db3d457cec76ad0c4f95439dae63aa796b5ef44b8a08300",
+      "title": "/ Business / Business / Business / 1 / 1 / 1",
+      "tokens_approx": 27
+    },
+    {
+      "char_end": 8364,
+      "char_start": 8353,
+      "id": "10k_parti_item1a_item_1_a_risk_factors_risk",
+      "path": "sections/10k_parti_item1a_item_1_a_risk_factors_risk.md",
+      "sha256": "ad2f1a74bf4e28a2e1ae34f7108d1450e2a877bc33198849a8d701ce25cc3f89",
+      "title": "/ Item 1 A. / Risk Factors / Risk Factors / Risk Factors / 5 / 5 / 5",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 8474,
+      "char_start": 8364,
+      "id": "10k_parti_item1a_risk_factors_risk_factors",
+      "path": "sections/10k_parti_item1a_risk_factors_risk_factors.md",
+      "sha256": "2002c0cb72a54952066453daa5692ad9a06e3be38d0234e446d6b39382af75af",
+      "title": "/ Risk Factors / Risk Factors / Risk Factors / 5 / 5 / 5",
+      "tokens_approx": 31
+    },
+    {
+      "char_end": 8485,
+      "char_start": 8474,
+      "id": "10k_parti_item1b_item_1_b_unresolved_staff",
+      "path": "sections/10k_parti_item1b_item_1_b_unresolved_staff.md",
+      "sha256": "9519eda8a3aefe7971cb319715b5cf71a6fba18db12ee5fccae0adc589c5efaa",
+      "title": "/ Item 1 B. / Unresolved Staff Comments / Unresolved Staff Comments / Unresolved Staff Comments /",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 8637,
+      "char_start": 8485,
+      "id": "10k_parti_item1b_unresolved_staff_comments",
+      "path": "sections/10k_parti_item1b_unresolved_staff_comments.md",
+      "sha256": "f958f8d2bd2349534c0e84a9c44e1fc224da76c6b199a4bb79fbeee0193dff23",
+      "title": "/ Unresolved Staff Comments / Unresolved Staff Comments / Unresolved Staff Comments / 17 / 17 / 17",
+      "tokens_approx": 37
+    },
+    {
+      "char_end": 8648,
+      "char_start": 8637,
+      "id": "10k_parti_item1c_item_1_c_cybersecurity",
+      "path": "sections/10k_parti_item1c_item_1_c_cybersecurity.md",
+      "sha256": "915f3d9003457bc5fdb1f49efbdf204be8979c91af16086134d0568962ada719",
+      "title": "/ Item 1 C. / Cybersecurity / Cybersecurity / Cybersecurity / 17 / 17 / 17",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 8764,
+      "char_start": 8648,
+      "id": "10k_parti_item1c_cybersecurity_cybersecurity",
+      "path": "sections/10k_parti_item1c_cybersecurity_cybersecurity.md",
+      "sha256": "1e42fa9e757caa9f759a77110d8fda80bd140c8304a1be7f99ea7c4ea8ab96bd",
+      "title": "/ Cybersecurity / Cybersecurity / Cybersecurity / 17 / 17 / 17",
+      "tokens_approx": 32
+    },
+    {
+      "char_end": 8774,
+      "char_start": 8764,
+      "id": "10k_parti_item2_item_2_properties_properties",
+      "path": "sections/10k_parti_item2_item_2_properties_properties.md",
+      "sha256": "b641626062aabde33a5b9b3cebb669a6458f2ff4b4bf11f8f9c88a97283a2581",
+      "title": "/ Item 2. / Properties / Properties / Properties / 17 / 17 / 17",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 8880,
+      "char_start": 8774,
+      "id": "10k_parti_item2_properties_properties",
+      "path": "sections/10k_parti_item2_properties_properties.md",
+      "sha256": "3a3025c4864e4477c05859c29427d7615a1f5a0600d39b75987f86d4f07e484a",
+      "title": "/ Properties / Properties / Properties / 17 / 17 / 17",
+      "tokens_approx": 28
+    },
+    {
+      "char_end": 8890,
+      "char_start": 8880,
+      "id": "10k_parti_item3_item_3_legal_proceedings",
+      "path": "sections/10k_parti_item3_item_3_legal_proceedings.md",
+      "sha256": "b35980f91398b50582d577c28c51e3aaf11fce753765d293f924d0ef3c961a70",
+      "title": "/ Item 3. / Legal Proceedings / Legal Proceedings / Legal Proceedings / 18 / 18 / 18",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 9017,
+      "char_start": 8890,
+      "id": "10k_parti_item3_legal_proceedings_legal",
+      "path": "sections/10k_parti_item3_legal_proceedings_legal.md",
+      "sha256": "bedd9967d39bad4d4d116c68ed14928325fcde55d562bbbee4a025e405190d76",
+      "title": "/ Legal Proceedings / Legal Proceedings / Legal Proceedings / 18 / 18 / 18",
+      "tokens_approx": 31
+    },
+    {
+      "char_end": 9027,
+      "char_start": 9017,
+      "id": "10k_parti_item4_item_4_mine_safety",
+      "path": "sections/10k_parti_item4_item_4_mine_safety.md",
+      "sha256": "1784799d707417fe579dc03c12f112b73dee55d569889d4f0ad1721a4f7de9ee",
+      "title": "/ Item 4. / Mine Safety Disclosures / Mine Safety Disclosures / Mine Safety Disclosures / 18 / 18 /",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 9294,
+      "char_start": 9027,
+      "id": "10k_parti_item4_mine_safety_disclosures_mine",
+      "path": "sections/10k_parti_item4_mine_safety_disclosures_mine.md",
+      "sha256": "3563b0e59395c3574eb2f14bad5c8224b84c432acff474ea0ff56f53426f1a63",
+      "title": "/ Mine Safety Disclosures / Mine Safety Disclosures / Mine Safety Disclosures / 18 / 18 / 18",
+      "tokens_approx": 67
+    },
+    {
+      "char_end": 9304,
+      "char_start": 9294,
+      "id": "10k_partii_item5_item_5_market_for_registrants",
+      "path": "sections/10k_partii_item5_item_5_market_for_registrants.md",
+      "sha256": "bf2f3ab43106b8343e36e6c139a84c5c787584bbdc5831d7838f342a4cfe73a8",
+      "title": "/ Item 5. / Market for Registrant’s Common Equity, Related Stockholder Matters and Issuer Purchases",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 9704,
+      "char_start": 9304,
+      "id": "10k_partii_item5_market_for_registrants_common",
+      "path": "sections/10k_partii_item5_market_for_registrants_common.md",
+      "sha256": "c1aa06d71414f00cd9da68b414f7fc24199b9d6b311949cde1898d4d3775f353",
+      "title": "/ Market for Registrant’s Common Equity, Related Stockholder Matters and Issuer Purchases of Equity",
+      "tokens_approx": 85
+    },
+    {
+      "char_end": 9714,
+      "char_start": 9704,
+      "id": "10k_partii_item6_item_6_reserved_reserved",
+      "path": "sections/10k_partii_item6_item_6_reserved_reserved.md",
+      "sha256": "16e78bf8d00f81608606d8b9add62d426c1f27275d992c81c1162f7bb93b344b",
+      "title": "/ Item 6. / [Reserved] / [Reserved] / [Reserved] / 20 / 20 / 20",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 9820,
+      "char_start": 9714,
+      "id": "10k_partii_item6_reserved_reserved_reserved_20",
+      "path": "sections/10k_partii_item6_reserved_reserved_reserved_20.md",
+      "sha256": "ad5dd58f63c81335fee4f757605d7c8567bd3f770800d6d07f88dddaf89bab39",
+      "title": "/ [Reserved] / [Reserved] / [Reserved] / 20 / 20 / 20",
+      "tokens_approx": 34
+    },
+    {
+      "char_end": 9830,
+      "char_start": 9820,
+      "id": "10k_partii_item7_item_7_managements_discussion",
+      "path": "sections/10k_partii_item7_item_7_managements_discussion.md",
+      "sha256": "4b8a14de51795494190cc44fd1c7ec2a09ee0d68f45f0eb72e7f6e0bfd740ca9",
+      "title": "/ Item 7. / Management’s Discussion and Analysis of Financial Condition and Results of Operations /",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 10161,
+      "char_start": 9830,
+      "id": "10k_partii_item7_managements_discussion",
+      "path": "sections/10k_partii_item7_managements_discussion.md",
+      "sha256": "241a5b6c55f9ee40012309c443e5b59784c6543298c9f8e88063bf45e70d268b",
+      "title": "/ Management’s Discussion and Analysis of Financial Condition and Results of Operations /",
+      "tokens_approx": 60
+    },
+    {
+      "char_end": 10172,
+      "char_start": 10161,
+      "id": "10k_partii_item7a_item_7_a_quantitative",
+      "path": "sections/10k_partii_item7a_item_7_a_quantitative.md",
+      "sha256": "53a53abf900218542c4f97dedb9c573416462921af44efacc77c395cdf8fa6aa",
+      "title": "/ Item 7 A. / Quantitative and Qualitative Disclosures About Market Risk / Quantitative and",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 10423,
+      "char_start": 10172,
+      "id": "10k_partii_item7a_quantitative_qualitative",
+      "path": "sections/10k_partii_item7a_quantitative_qualitative.md",
+      "sha256": "de25c60deb4521b2c52501de73e57b8e428f0ad6e9e7d260d94ef34cb658a9dd",
+      "title": "/ Quantitative and Qualitative Disclosures About Market Risk / Quantitative and Qualitative",
+      "tokens_approx": 56
+    },
+    {
+      "char_end": 10433,
+      "char_start": 10423,
+      "id": "10k_partii_item8_item_8_financial_statements",
+      "path": "sections/10k_partii_item8_item_8_financial_statements.md",
+      "sha256": "89f31517a8f29cefab8369310910d3f546cec532e9b4a0038330826cd57f3490",
+      "title": "/ Item 8. / Financial Statements and Supplementary Data / Financial Statements and Supplementary",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 10638,
+      "char_start": 10433,
+      "id": "10k_partii_item8_financial_statements",
+      "path": "sections/10k_partii_item8_financial_statements.md",
+      "sha256": "414674185fbf5e2595fad22d7f40206e04b0bcc486fcadb4964e495cfbc89cda",
+      "title": "/ Financial Statements and Supplementary Data / Financial Statements and Supplementary Data /",
+      "tokens_approx": 40
+    },
+    {
+      "char_end": 10648,
+      "char_start": 10638,
+      "id": "10k_partii_item9_item_9_changes_in",
+      "path": "sections/10k_partii_item9_item_9_changes_in.md",
+      "sha256": "314f7622eccd8fb83d0d03eb00d748f433c739924560098cc235645ede9bd274",
+      "title": "/ Item 9. / Changes in and Disagreements with Accountants on Accounting and Financial Disclosure /",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 10976,
+      "char_start": 10648,
+      "id": "10k_partii_item9_changes_in_disagreements_with",
+      "path": "sections/10k_partii_item9_changes_in_disagreements_with.md",
+      "sha256": "e373aef48ca65b29f0a688ce9f0231e2afbc0114d2f470197df21e01fa929093",
+      "title": "/ Changes in and Disagreements with Accountants on Accounting and Financial Disclosure / Changes in",
+      "tokens_approx": 66
+    },
+    {
+      "char_end": 10987,
+      "char_start": 10976,
+      "id": "10k_partii_item9a_item_9_a_controls_procedures",
+      "path": "sections/10k_partii_item9a_item_9_a_controls_procedures.md",
+      "sha256": "58112eb910cb8411326590f440adb1795c7199493a64e357cd3c9abadaa106ad",
+      "title": "/ Item 9 A. / Controls and Procedures / Controls and Procedures / Controls and Procedures / 52 / 52",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 11133,
+      "char_start": 10987,
+      "id": "10k_partii_item9a_controls_procedures_controls",
+      "path": "sections/10k_partii_item9a_controls_procedures_controls.md",
+      "sha256": "5f3480b8e06190b320ba0f51419b6db3aec9f0780afcf8c55e1f6e9d435aba31",
+      "title": "/ Controls and Procedures / Controls and Procedures / Controls and Procedures / 52 / 52 / 52",
+      "tokens_approx": 34
+    },
+    {
+      "char_end": 11144,
+      "char_start": 11133,
+      "id": "10k_partii_item9b_item_9_b_other_information",
+      "path": "sections/10k_partii_item9b_item_9_b_other_information.md",
+      "sha256": "d0a8970cd26c72494043bb4fd3434d4b70c708b9ec3171ed897df158bee29a27",
+      "title": "/ Item 9 B. / Other Information / Other Information / Other Information / 53 / 53 / 53",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 11272,
+      "char_start": 11144,
+      "id": "10k_partii_item9b_other_information_other",
+      "path": "sections/10k_partii_item9b_other_information_other.md",
+      "sha256": "10e54a3b0b6f4fed82c7c918dcf18afdd3b0f19922b0ea49584241e4c427aea4",
+      "title": "/ Other Information / Other Information / Other Information / 53 / 53 / 53",
+      "tokens_approx": 31
+    },
+    {
+      "char_end": 11283,
+      "char_start": 11272,
+      "id": "10k_partii_item9c_item_9_c_disclosure_regarding",
+      "path": "sections/10k_partii_item9c_item_9_c_disclosure_regarding.md",
+      "sha256": "bfbc10d1df0087b54e0cf142a1d6c59d2f552ed0d0939187739479b341d0c6d7",
+      "title": "/ Item 9 C. / Disclosure Regarding Foreign Jurisdictions that Prevent Inspections / Disclosure",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 11691,
+      "char_start": 11283,
+      "id": "10k_partii_item9c_disclosure_regarding_foreign",
+      "path": "sections/10k_partii_item9c_disclosure_regarding_foreign.md",
+      "sha256": "e0acddae2b27ead08efbd6ab335d268d4c87cf05379e6ddb746f532e372edaa5",
+      "title": "/ Disclosure Regarding Foreign Jurisdictions that Prevent Inspections / Disclosure Regarding",
+      "tokens_approx": 82
+    },
+    {
+      "char_end": 11702,
+      "char_start": 11691,
+      "id": "10k_partiii_item10_item_10_directors_executive",
+      "path": "sections/10k_partiii_item10_item_10_directors_executive.md",
+      "sha256": "357782b753c29bff42bba9bd3d76980e00f98aaa1059082da9fed105ae0d3d1c",
+      "title": "/ Item 10. / Directors, Executive Officers and Corporate Governance / Directors, Executive Officers",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 11941,
+      "char_start": 11702,
+      "id": "10k_partiii_item10_directors_executive_officers",
+      "path": "sections/10k_partiii_item10_directors_executive_officers.md",
+      "sha256": "89025d5380cfa4ec43f0d593c28339c39499989d7aa27cde802948d634751702",
+      "title": "/ Directors, Executive Officers and Corporate Governance / Directors, Executive Officers and",
+      "tokens_approx": 44
+    },
+    {
+      "char_end": 11952,
+      "char_start": 11941,
+      "id": "10k_partiii_item11_item_11_executive",
+      "path": "sections/10k_partiii_item11_item_11_executive.md",
+      "sha256": "84e14a3a6eaa3b59c223124141273ed38edccccdccf0211cfcb965714f91e945",
+      "title": "/ Item 11. / Executive Compensation / Executive Compensation / Executive Compensation / 53 / 53 / 53",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 12095,
+      "char_start": 11952,
+      "id": "10k_partiii_item11_executive_compensation",
+      "path": "sections/10k_partiii_item11_executive_compensation.md",
+      "sha256": "63391f66f0524c315a1586f3779e78852bfc17b9c01546accd8d197905f2a497",
+      "title": "/ Executive Compensation / Executive Compensation / Executive Compensation / 53 / 53 / 53",
+      "tokens_approx": 32
+    },
+    {
+      "char_end": 12108,
+      "char_start": 12095,
+      "id": "10k_partiii_item12_item_12_security_ownership_of",
+      "path": "sections/10k_partiii_item12_item_12_security_ownership_of.md",
+      "sha256": "f0394116084bbe871d9d6319b461128bb440ab8dd9a12c9829c5f44be48c0d2b",
+      "title": "/ Item 12 . / Security Ownership of Certain Beneficial Owners and Management and Related",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 12469,
+      "char_start": 12108,
+      "id": "10k_partiii_item12_security_ownership_of_certain",
+      "path": "sections/10k_partiii_item12_security_ownership_of_certain.md",
+      "sha256": "6027d52f49ef8a5bdfcabe344c28dffd03d581d622c735a25fd28802e3f31c7a",
+      "title": "/ Security Ownership of Certain Beneficial Owners and Management and Related Stockholder Matters /",
+      "tokens_approx": 69
+    },
+    {
+      "char_end": 12482,
+      "char_start": 12469,
+      "id": "10k_partiii_item13_item_13_certain_relationships",
+      "path": "sections/10k_partiii_item13_item_13_certain_relationships.md",
+      "sha256": "b43a78bda4777404356366857de52dfe323318a10e4f3c184fbca3cd42cbe6bd",
+      "title": "/ Item 13 . / Certain Relationships and Related Transactions, and Director Independence / Certain",
+      "tokens_approx": 6
+    },
+    {
+      "char_end": 12780,
+      "char_start": 12482,
+      "id": "10k_partiii_item13_certain_relationships_related",
+      "path": "sections/10k_partiii_item13_certain_relationships_related.md",
+      "sha256": "9b5572ebe9ef369b3e03e32849697e91ddba327d34cc421d9c0cfcfe85be8a41",
+      "title": "/ Certain Relationships and Related Transactions, and Director Independence / Certain Relationships",
+      "tokens_approx": 51
+    },
+    {
+      "char_end": 12791,
+      "char_start": 12780,
+      "id": "10k_partiii_item14_item_14_principal_accountant",
+      "path": "sections/10k_partiii_item14_item_14_principal_accountant.md",
+      "sha256": "e3437d3de96b897f56c48633e02a23b360cc6a8d701d2dad7f402a8f0af04734",
+      "title": "/ Item 14. / Principal Accountant Fees and Services / Principal Accountant Fees and Services /",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 13104,
+      "char_start": 12791,
+      "id": "10k_partiii_item14_principal_accountant_fees",
+      "path": "sections/10k_partiii_item14_principal_accountant_fees.md",
+      "sha256": "347925525fcf417885412b517696119ee789b528aec383708a59860216cc86a3",
+      "title": "/ Principal Accountant Fees and Services / Principal Accountant Fees and Services / Principal",
+      "tokens_approx": 71
+    },
+    {
+      "char_end": 13115,
+      "char_start": 13104,
+      "id": "10k_partiv_item15_item_15_exhibit_financial",
+      "path": "sections/10k_partiv_item15_item_15_exhibit_financial.md",
+      "sha256": "5e65c9fdafdd693cc31f16f40fe8272c9f868395ab011f078d459e23a963db3e",
+      "title": "/ Item 15. / Exhibit and Financial Statement Schedules / Exhibit and Financial Statement Schedules",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 13315,
+      "char_start": 13115,
+      "id": "10k_partiv_item15_exhibit_financial_statement",
+      "path": "sections/10k_partiv_item15_exhibit_financial_statement.md",
+      "sha256": "cdbdf5ffa4bc6686a396e4fd0a0e7dbab7408fe29bb807169496d47c6249c263",
+      "title": "/ Exhibit and Financial Statement Schedules / Exhibit and Financial Statement Schedules / Exhibit",
+      "tokens_approx": 41
+    },
+    {
+      "char_end": 13326,
+      "char_start": 13315,
+      "id": "10k_partiv_item16_item_16_form_10k_summary_form",
+      "path": "sections/10k_partiv_item16_item_16_form_10k_summary_form.md",
+      "sha256": "d3825510edc333d686b10c338a5f1bef0e11c37f28376b19fb863494c6c6d7cb",
+      "title": "/ Item 16. / Form 10-K Summary / Form 10-K Summary / Form 10-K Summary / 57 / 57 / 57",
+      "tokens_approx": 5
+    },
+    {
+      "char_end": 13695,
+      "char_start": 13326,
+      "id": "10k_partiv_item16_form_10k_summary_form_10k",
+      "path": "sections/10k_partiv_item16_form_10k_summary_form_10k.md",
+      "sha256": "ce8b5eaf4013a4bb59b56b6a524400928e82baa43b924b4e57521351e0d0e849",
+      "title": "/ Form 10-K Summary / Form 10-K Summary / Form 10-K Summary / 57 / 57 / 57",
+      "tokens_approx": 92
+    },
+    {
+      "char_end": 13762,
+      "char_start": 13695,
+      "id": "10k_parti_item1_of_this_form_10k_under_the",
+      "path": "sections/10k_parti_item1_of_this_form_10k_under_the.md",
+      "sha256": "2eec4368097c2ce9f34af8f9fca35916ac7e09a3a8ac9a0cd7c83f287a673767",
+      "title": "of this Form 10-K under the heading “Business” and Part II, Item 7 of this Form 10-K under the",
+      "tokens_approx": 19
+    },
+    {
+      "char_end": 14819,
+      "char_start": 13762,
+      "id": "10k_partii_item7_of_this_form_10k_under_the",
+      "path": "sections/10k_partii_item7_of_this_form_10k_under_the.md",
+      "sha256": "7f321cb33bb61520c611a58bb074e2c48ab9dd26551fdf6b9ebbc6365072d971",
+      "title": "of this Form 10-K under the heading “Management’s Discussion and Analysis of Financial Condition",
+      "tokens_approx": 201
+    },
+    {
+      "char_end": 15465,
+      "char_start": 14819,
+      "id": "10k_parti_item1a_of_this_form_10k_under_the",
+      "path": "sections/10k_parti_item1a_of_this_form_10k_under_the.md",
+      "sha256": "4688061abc987ee6a7df1e39face45ca32d54084ba4a41cdb62823540151f0f3",
+      "title": "of this Form 10-K under the heading “Risk Factors.” The Company assumes no obligation to revise or",
+      "tokens_approx": 126
+    },
+    {
+      "char_end": 31752,
+      "char_start": 15465,
+      "id": "10k_parti_item1_business",
+      "path": "sections/10k_parti_item1_business.md",
+      "sha256": "b46be7c58918a98b56c9ca246e097e8775f2532a8c20453e9422372cd3d1e213",
+      "title": "Business",
+      "tokens_approx": 2964
+    },
+    {
+      "char_end": 32552,
+      "char_start": 31752,
+      "id": "10k_parti_item1a_risk_factors",
+      "path": "sections/10k_parti_item1a_risk_factors.md",
+      "sha256": "cc55e21bb9c3161c0c98d3b4488efb86bfaa1f3278483b1d0908ca5008d6367c",
+      "title": "Risk Factors",
+      "tokens_approx": 143
+    },
+    {
+      "char_end": 32725,
+      "char_start": 32552,
+      "id": "10k_partii_item7_managements_discussion_1",
+      "path": "sections/10k_partii_item7_managements_discussion_1.md",
+      "sha256": "1604fd9372351295ce861c803d010908a6d63539dea780e9f39b8eb6748a2a9b",
+      "title": "“Management’s Discussion and Analysis of Financial Condition and Results of Operations” and the",
+      "tokens_approx": 30
+    },
+    {
+      "char_end": 100242,
+      "char_start": 32725,
+      "id": "10k_partii_item8_financial_statements_1",
+      "path": "sections/10k_partii_item8_financial_statements_1.md",
+      "sha256": "a7a221ea18624f03b29214236edcb01ade64eca402e83b736acd655ebd4d3c77",
+      "title": "“Financial Statements and Supplementary Data” of this Form 10-K.",
+      "tokens_approx": 11613
+    },
+    {
+      "char_end": 100293,
+      "char_start": 100242,
+      "id": "10k_partii_item1b_unresolved_staff_comments",
+      "path": "sections/10k_partii_item1b_unresolved_staff_comments.md",
+      "sha256": "612eede63ff740a80b0a8c297095b7b40c3c395b744def784e35df2beebb485d",
+      "title": "Unresolved Staff Comments",
+      "tokens_approx": 15
+    },
+    {
+      "char_end": 102946,
+      "char_start": 100293,
+      "id": "10k_partii_item1c_cybersecurity",
+      "path": "sections/10k_partii_item1c_cybersecurity.md",
+      "sha256": "0006945edb48700d6deb0f03d02f1b5731565c1ef9929fd631c4fbcd60a703ff",
+      "title": "Cybersecurity",
+      "tokens_approx": 441
+    },
+    {
+      "char_end": 103009,
+      "char_start": 102946,
+      "id": "10k_partii_item1a_of_this_form_10k_under_the",
+      "path": "sections/10k_partii_item1a_of_this_form_10k_under_the.md",
+      "sha256": "59fefc7e25152a6f91faaa697b204e6ec06a5715f6c2ecbe06923cc6a9aea11d",
+      "title": "of this Form 10-K under the heading “Risk Factors.”",
+      "tokens_approx": 17
+    },
+    {
+      "char_end": 103554,
+      "char_start": 103009,
+      "id": "10k_partii_item2_properties",
+      "path": "sections/10k_partii_item2_properties.md",
+      "sha256": "fd8945b5cf5c918afbfe9acae6b79b4290a97b6646f5543568ee386b2e3a55d7",
+      "title": "Properties",
+      "tokens_approx": 119
+    },
+    {
+      "char_end": 108979,
+      "char_start": 103554,
+      "id": "10k_partii_item3_legal_proceedings",
+      "path": "sections/10k_partii_item3_legal_proceedings.md",
+      "sha256": "a37593da6d72879c8b66c182a5a27f489e5f8583c4367ea8c7f5c14b2eb41262",
+      "title": "Legal Proceedings",
+      "tokens_approx": 1063
+    },
+    {
+      "char_end": 109101,
+      "char_start": 108979,
+      "id": "10k_partii_item4_mine_safety_disclosures",
+      "path": "sections/10k_partii_item4_mine_safety_disclosures.md",
+      "sha256": "c35db73e1c54aabf5af9b85fd248ce6af0e293c3a0ae01c54518b8120f4b3d46",
+      "title": "Mine Safety Disclosures",
+      "tokens_approx": 38
+    },
+    {
+      "char_end": 113562,
+      "char_start": 109101,
+      "id": "10k_partii_item5_market_for_registrants_common_1",
+      "path": "sections/10k_partii_item5_market_for_registrants_common_1.md",
+      "sha256": "032f4831d72eb876c7faad26832e47771e5c549ed0e1c52057808dbf1740bc9a",
+      "title": "Market for Registrant’s Common Equity, Related Stockholder Matters and Issuer Purchases of Equity",
+      "tokens_approx": 1184
+    },
+    {
+      "char_end": 113640,
+      "char_start": 113562,
+      "id": "10k_partii_item6_reserved",
+      "path": "sections/10k_partii_item6_reserved.md",
+      "sha256": "2bed28552263717263b477a482c6407af45cd1fb6d6e3d4f57af3479f918fc6a",
+      "title": "Reserved",
+      "tokens_approx": 27
+    },
+    {
+      "char_end": 113883,
+      "char_start": 113640,
+      "id": "10k_partii_item7_managements_discussion_2",
+      "path": "sections/10k_partii_item7_managements_discussion_2.md",
+      "sha256": "f57d5adb08f3ac032ffab3aa2e3e202b445aa6e141f00d9192d92e3a600818c8",
+      "title": "Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+      "tokens_approx": 41
+    },
+    {
+      "char_end": 114226,
+      "char_start": 113883,
+      "id": "10k_partii_item8_of_this_form_10k_this_item",
+      "path": "sections/10k_partii_item8_of_this_form_10k_this_item.md",
+      "sha256": "2d32a1b3cea2fdfd10071527717debfd14d9a10e1a45a1b8a3cc58503bf84865",
+      "title": "of this Form 10-K. This Item generally discusses 2025 and 2024 items and year-to-year comparisons",
+      "tokens_approx": 82
+    },
+    {
+      "char_end": 123697,
+      "char_start": 114226,
+      "id": "10k_partii_item7_of_the_companys_annual_report",
+      "path": "sections/10k_partii_item7_of_the_companys_annual_report.md",
+      "sha256": "1099a6e85911ae6bf2949c659ed43122100ba9286ed3e9f7ef1f7a58cfea4a2f",
+      "title": "of the Company’s Annual Report on Form 10-K for the fiscal year ended September 28, 2024.",
+      "tokens_approx": 2513
+    },
+    {
+      "char_end": 126866,
+      "char_start": 123697,
+      "id": "10k_parti_item1a_of_this_form_10k_under_the_1",
+      "path": "sections/10k_parti_item1a_of_this_form_10k_under_the_1.md",
+      "sha256": "c84b566faa6ea68f8d1b207c2a7fd8c73f66b495ddbed5fa8ff85f046df89f01",
+      "title": "of this Form 10-K under the heading “Risk Factors.” As a result, the Company believes, in general,",
+      "tokens_approx": 861
+    },
+    {
+      "char_end": 133366,
+      "char_start": 126866,
+      "id": "10k_partii_item8_of_this_form_10k_the_impact",
+      "path": "sections/10k_partii_item8_of_this_form_10k_the_impact.md",
+      "sha256": "83f71286610af3f010fdb8e1b551365571c42959010216812a1e6a78c6b51294",
+      "title": "of this Form 10-K) and the impact of changes in unrecognized tax benefits, partially offset by a",
+      "tokens_approx": 1414
+    },
+    {
+      "char_end": 135255,
+      "char_start": 133366,
+      "id": "10k_partii_item8_of_this_form_10k_describes",
+      "path": "sections/10k_partii_item8_of_this_form_10k_describes.md",
+      "sha256": "eab4364ea6191bf89a8227938c9441817615f10b7eaafdf2268f6017944669b7",
+      "title": "of this Form 10-K describes the significant accounting policies and methods used in the preparation",
+      "tokens_approx": 327
+    },
+    {
+      "char_end": 138962,
+      "char_start": 135255,
+      "id": "10k_partii_item7a_quantitative_qualitative_1",
+      "path": "sections/10k_partii_item7a_quantitative_qualitative_1.md",
+      "sha256": "5075e7a8e2d41a7a5f60205fbd78b441a2eea4adb87ab6a7ecf402e2f4f54668",
+      "title": "Quantitative and Qualitative Disclosures About Market Risk",
+      "tokens_approx": 756
+    },
+    {
+      "char_end": 164785,
+      "char_start": 138962,
+      "id": "10k_partii_item8_financial_statements_2",
+      "path": "sections/10k_partii_item8_financial_statements_2.md",
+      "sha256": "b1bdb89b7721e079e1963373d4998b708ca24361ae65053925d986e8d6390f4d",
+      "title": "Financial Statements and Supplementary Data",
+      "tokens_approx": 7077
+    },
+    {
+      "char_end": 248785,
+      "char_start": 164785,
+      "id": "10k_partii_itemother_notes_to_consolidated",
+      "path": "sections/10k_partii_itemother_notes_to_consolidated.md",
+      "sha256": "9976fae7f1d0db58f3855eb9e3cd0f9aac7949a8a582508ea0c846b60ce068ef",
+      "title": "Notes to Consolidated Financial Statements",
+      "tokens_approx": 21112
+    },
+    {
+      "char_end": 248894,
+      "char_start": 248785,
+      "id": "10k_partii_item9_changes_in_disagreements_with_1",
+      "path": "sections/10k_partii_item9_changes_in_disagreements_with_1.md",
+      "sha256": "5e735f785402511b3c46c8764c1eb041f5a25840dfa1ad2e9c1bcaf8b39885fb",
+      "title": "Changes in and Disagreements with Accountants on Accounting and Financial Disclosure",
+      "tokens_approx": 24
+    },
+    {
+      "char_end": 252914,
+      "char_start": 248894,
+      "id": "10k_partii_item9a_controls_procedures",
+      "path": "sections/10k_partii_item9a_controls_procedures.md",
+      "sha256": "4cac7af7eee0069d1676a4c93f6883077661d0729f673a48667fb619dd43da3e",
+      "title": "Controls and Procedures",
+      "tokens_approx": 710
+    },
+    {
+      "char_end": 253444,
+      "char_start": 252914,
+      "id": "10k_partii_item8_financial_statements_3",
+      "path": "sections/10k_partii_item8_financial_statements_3.md",
+      "sha256": "214598b4d314222d8a4bdaa8b829820eac2498f88f054b7222b7af7bb30267e7",
+      "title": "Financial Statements and Supplementary Data",
+      "tokens_approx": 115
+    },
+    {
+      "char_end": 254031,
+      "char_start": 253444,
+      "id": "10k_partii_item9b_other_information",
+      "path": "sections/10k_partii_item9b_other_information.md",
+      "sha256": "a2b0d3606b470f35443b67d119176076b6cf0165682bf506b25f517f23037982",
+      "title": "Other Information",
+      "tokens_approx": 125
+    },
+    {
+      "char_end": 254148,
+      "char_start": 254031,
+      "id": "10k_partii_item9c_disclosure_regarding_foreign_1",
+      "path": "sections/10k_partii_item9c_disclosure_regarding_foreign_1.md",
+      "sha256": "5c3f7c8e335ab6f956e280fbd5a1bd5e0936810f0a7606fd3cd1b9684efb60b5",
+      "title": "Disclosure Regarding Foreign Jurisdictions that Prevent Inspections",
+      "tokens_approx": 26
+    },
+    {
+      "char_end": 254556,
+      "char_start": 254148,
+      "id": "10k_partiii_item10_directors_executive_officers_1",
+      "path": "sections/10k_partiii_item10_directors_executive_officers_1.md",
+      "sha256": "4806c755a081df348c679899ddd3918e5bfc87f054ea720a1baeed84a2430401",
+      "title": "Directors, Executive Officers and Corporate Governance",
+      "tokens_approx": 83
+    },
+    {
+      "char_end": 254723,
+      "char_start": 254556,
+      "id": "10k_partiii_item11_executive_compensation_1",
+      "path": "sections/10k_partiii_item11_executive_compensation_1.md",
+      "sha256": "51eef6c51a548e1d5939a3e9931a326a0e4b9feed6d85dbaebeb346f5bdc5d2b",
+      "title": "Executive Compensation",
+      "tokens_approx": 34
+    },
+    {
+      "char_end": 254962,
+      "char_start": 254723,
+      "id": "10k_partiii_item12_security_ownership_of_certain_1",
+      "path": "sections/10k_partiii_item12_security_ownership_of_certain_1.md",
+      "sha256": "f45805569fa9126152c906b9b5ec7bc9f0e48af693ac8ef19490769fc65a948a",
+      "title": "Security Ownership of Certain Beneficial Owners and Management and Related Stockholder Matters",
+      "tokens_approx": 46
+    },
+    {
+      "char_end": 255180,
+      "char_start": 254962,
+      "id": "10k_partiii_item13_certain_relationships_related_1",
+      "path": "sections/10k_partiii_item13_certain_relationships_related_1.md",
+      "sha256": "027d9ae0de713e700f539c92ffdaaa87b4853f42253309f43baa3a3315fbdefa",
+      "title": "Certain Relationships and Related Transactions, and Director Independence",
+      "tokens_approx": 41
+    },
+    {
+      "char_end": 255427,
+      "char_start": 255180,
+      "id": "10k_partiii_item14_principal_accountant_fees_1",
+      "path": "sections/10k_partiii_item14_principal_accountant_fees_1.md",
+      "sha256": "909eabd509d561f2d6c583a0024603300875d7f505f8f7435fc9f3f3d5f86238",
+      "title": "Principal Accountant Fees and Services",
+      "tokens_approx": 61
+    },
+    {
+      "char_end": 258354,
+      "char_start": 255427,
+      "id": "10k_partiv_item15_exhibit_financial_statement_1",
+      "path": "sections/10k_partiv_item15_exhibit_financial_statement_1.md",
+      "sha256": "b88e3c638ab96d13537b2a64a85fa5a9e9de2b11c7c8db09c2ccde3c1fa4647f",
+      "title": "Exhibit and Financial Statement Schedules",
+      "tokens_approx": 752
+    },
+    {
+      "char_end": 292709,
+      "char_start": 258354,
+      "id": "10k_partiv_item601_of_regulation_sk_1",
+      "path": "sections/10k_partiv_item601_of_regulation_sk_1.md",
+      "sha256": "05c7187e36b3600c60c24c7f9df1486324ebecc2fad969d13f771662a458b837",
+      "title": "of Regulation S-K (1)",
+      "tokens_approx": 11381
+    },
+    {
+      "char_end": 292903,
+      "char_start": 292709,
+      "id": "10k_partii_item8_financial_statements_4",
+      "path": "sections/10k_partii_item8_financial_statements_4.md",
+      "sha256": "20c70a83b3ed6d1b41f5a825a7deeb71b4d0106afc36c6f41f4d1c8d51fadbe0",
+      "title": "“Financial Statements and Supplementary Data”",
+      "tokens_approx": 39
+    },
+    {
+      "char_end": 293097,
+      "char_start": 292903,
+      "id": "10k_partii_item8_financial_statements_5",
+      "path": "sections/10k_partii_item8_financial_statements_5.md",
+      "sha256": "20c70a83b3ed6d1b41f5a825a7deeb71b4d0106afc36c6f41f4d1c8d51fadbe0",
+      "title": "“Financial Statements and Supplementary Data”",
+      "tokens_approx": 39
+    },
+    {
+      "char_end": 293861,
+      "char_start": 293097,
+      "id": "10k_partii_item8_financial_statements_6",
+      "path": "sections/10k_partii_item8_financial_statements_6.md",
+      "sha256": "042932b6539aabe160356792fcb2dc5bf27c4f114b02b2be38386d2441e73215",
+      "title": "“Financial Statements and Supplementary Data”",
+      "tokens_approx": 173
+    },
+    {
+      "char_end": 294005,
+      "char_start": 293861,
+      "id": "10k_partii_item601_b4iii_of_regulation_sk_the",
+      "path": "sections/10k_partii_item601_b4iii_of_regulation_sk_the.md",
+      "sha256": "f293336a55405ae5db026eaeae567f89ac253bc0325a08acd4963144eb62e7dd",
+      "title": "(b)(4)(iii) of Regulation S-K. The Registrant hereby undertakes to furnish to the SEC, upon",
+      "tokens_approx": 35
+    },
+    {
+      "char_end": 294099,
+      "char_start": 294005,
+      "id": "10k_partii_item16_form_10k_summary",
+      "path": "sections/10k_partii_item16_form_10k_summary.md",
+      "sha256": "059981d64515f4cafcf07c91ebc2ecb7b2beba256b76ffbf5ff2632392d4ae63",
+      "title": "Form 10-K Summary",
+      "tokens_approx": 33
+    },
+    {
+      "char_end": 299045,
+      "char_start": 294099,
+      "id": "10k_partii_itemother_signatures",
+      "path": "sections/10k_partii_itemother_signatures.md",
+      "sha256": "2e9e9890891f1373321027a44993604043b4bbe0fd40cee1cb7e593333029a6a",
+      "title": "SIGNATURES",
+      "tokens_approx": 1399
+    }
+  ],
+  "source": {
+    "fetched_at": "2025-10-31T00:00:00Z",
+    "url": "https://www.sec.gov/Archives/edgar/data/0000320193/000032019325000079/aapl-20250927.htm"
+  },
+  "tokens_total": 70835,
+  "warnings": [
+    "Content before first detected section",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added",
+    "Duplicate section ID detected, suffix added"
+  ]
+}

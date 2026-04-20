@@ -1,0 +1,53 @@
+{
+  "accession": "0000320193-25-000079",
+  "cik": "0000320193",
+  "clean_full_md": {
+    "bytes": 301547,
+    "tokens_cl100k": 70835
+  },
+  "company_name": "Apple Inc.",
+  "filing_date": "2025-10-31",
+  "form_type": "10-K",
+  "html_files_fetched": [
+    "aapl-20250927.htm",
+    "0000320193-25-000079-index-headers.html",
+    "a10-kexhibit21109272025.htm",
+    "a10-kexhibit23109272025.htm",
+    "a10-kexhibit31109272025.htm",
+    "a10-kexhibit31209272025.htm",
+    "a10-kexhibit32109272025.htm",
+    "a10-kexhibit4109272025.htm"
+  ],
+  "primary_document": "aapl-20250927.htm",
+  "raw_combined": {
+    "bytes": 1707594,
+    "tokens_cl100k": 492156
+  },
+  "raw_primary": {
+    "bytes": 1520208,
+    "tokens_cl100k": 441509
+  },
+  "reductions": {
+    "combined_raw_to_clean_pct": 85.61,
+    "combined_raw_to_stripped_pct": 18.71,
+    "primary_raw_to_clean_pct": 83.96,
+    "primary_raw_to_stripped_pct": 20.85,
+    "stripped_to_clean_pct": 82.3
+  },
+  "section_item1a_risk_factors": {
+    "bytes": 805,
+    "tokens_cl100k": 143
+  },
+  "stripped_combined": {
+    "bytes": 1439554,
+    "tokens_cl100k": 400089
+  },
+  "ticker": "AAPL",
+  "wall_clock_seconds": {
+    "build_pack_cold": 0.919,
+    "build_pack_warm": 0.001,
+    "fetch_filing_html": 0.003,
+    "ixbrl_strip_combined": 0.021,
+    "resolve_company": 1.345
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "accession": "0001628280-26-003952",
+  "cik": "0001318605",
+  "clean_full_md": {
+    "bytes": 519395,
+    "tokens_cl100k": 113333
+  },
+  "company_name": "Tesla, Inc.",
+  "filing_date": "2026-01-29",
+  "form_type": "10-K",
+  "html_files_fetched": [
+    "tsla-20251231.htm",
+    "0001628280-26-003952-index-headers.html",
+    "tsla-2025x12x31xex1010.htm",
+    "tsla-2025x12x31xex109.htm",
+    "tsla-2025x12x31xex211.htm",
+    "tsla-2025x12x31xex231.htm",
+    "tsla-2025x12x31xex311.htm",
+    "tsla-2025x12x31xex312.htm",
+    "tsla-2025x12x31xex321.htm",
+    "tsla-2025x12x31xex417.htm"
+  ],
+  "primary_document": "tsla-20251231.htm",
+  "raw_combined": {
+    "bytes": 2797342,
+    "tokens_cl100k": 812958
+  },
+  "raw_primary": {
+    "bytes": 2391529,
+    "tokens_cl100k": 692451
+  },
+  "reductions": {
+    "combined_raw_to_clean_pct": 86.06,
+    "combined_raw_to_stripped_pct": 19.97,
+    "primary_raw_to_clean_pct": 83.63,
+    "primary_raw_to_stripped_pct": 23.43,
+    "stripped_to_clean_pct": 82.58
+  },
+  "section_item1a_risk_factors": {
+    "bytes": 486,
+    "tokens_cl100k": 103
+  },
+  "stripped_combined": {
+    "bytes": 2326838,
+    "tokens_cl100k": 650614
+  },
+  "ticker": "TSLA",
+  "wall_clock_seconds": {
+    "build_pack_cold": 1.263,
+    "build_pack_warm": 0.001,
+    "fetch_filing_html": 0.164,
+    "ixbrl_strip_combined": 0.035,
+    "resolve_company": 2.457
+  }
+}

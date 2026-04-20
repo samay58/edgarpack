@@ -1,0 +1,54 @@
+{
+  "accession": "0001045810-26-000021",
+  "cik": "0001045810",
+  "clean_full_md": {
+    "bytes": 462187,
+    "tokens_cl100k": 102007
+  },
+  "company_name": "NVIDIA CORP",
+  "filing_date": "2026-02-25",
+  "form_type": "10-K",
+  "html_files_fetched": [
+    "nvda-20260125.htm",
+    "0001045810-26-000021-index-headers.html",
+    "a2026auditorconsentletter.htm",
+    "nvda-2026xex191.htm",
+    "nvda-2026xex311.htm",
+    "nvda-2026xex312.htm",
+    "nvda-2026xex321.htm",
+    "nvda-2026xex322.htm",
+    "subsidiariesofregistrantfy.htm"
+  ],
+  "primary_document": "nvda-20260125.htm",
+  "raw_combined": {
+    "bytes": 2047880,
+    "tokens_cl100k": 595255
+  },
+  "raw_primary": {
+    "bytes": 1967816,
+    "tokens_cl100k": 571540
+  },
+  "reductions": {
+    "combined_raw_to_clean_pct": 82.86,
+    "combined_raw_to_stripped_pct": 19.3,
+    "primary_raw_to_clean_pct": 82.15,
+    "primary_raw_to_stripped_pct": 20.1,
+    "stripped_to_clean_pct": 78.76
+  },
+  "section_item1a_risk_factors": {
+    "bytes": 116085,
+    "tokens_cl100k": 20503
+  },
+  "stripped_combined": {
+    "bytes": 1714901,
+    "tokens_cl100k": 480365
+  },
+  "ticker": "NVDA",
+  "wall_clock_seconds": {
+    "build_pack_cold": 0.944,
+    "build_pack_warm": 0.001,
+    "fetch_filing_html": 0.003,
+    "ixbrl_strip_combined": 0.03,
+    "resolve_company": 1.555
+  }
+}
