@@ -13,6 +13,57 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
+from .errors import AmbiguousCompany, UnknownCompany
+
+
+async def _resolve_cli_company(query: str) -> Any:
+    """Resolve a CLI company-like argument to a canonical ResolvedCompany.
+
+    Tries ``universe.toml`` first (for HKEX routing, private-company detection,
+    and alias fast-path), then falls back to the SEC ticker/name universe.
+
+    Raises:
+        UnknownCompany: nothing matched, with "Did you mean: ..." suggestions.
+        AmbiguousCompany: the name matches multiple SEC titles; user must
+            disambiguate with a ticker.
+    """
+    from .identity import ResolvedCompany, load_identity, resolve
+    from .sec.tickers import resolve_company as resolve_sec_company
+
+    universe_path = Path("universe.toml")
+    index = None
+    if universe_path.exists():
+        try:
+            index = load_identity(universe_path)
+        except AmbiguousCompany:
+            raise
+        except Exception:
+            index = None
+
+    if index is not None:
+        for kwargs in (
+            {"ticker": query, "company": None},
+            {"ticker": None, "company": query},
+        ):
+            try:
+                res = resolve(index, **kwargs)
+            except UnknownCompany:
+                continue
+            # universe.toml entries often omit CIK for US issuers. Fall
+            # through to SEC in that case so callers always get a CIK.
+            if res.cik or res.private or res.source == "HKEX":
+                return res
+
+    cik, ticker, title = await resolve_sec_company(query)
+    return ResolvedCompany(
+        ticker=ticker or query.strip().upper(),
+        listing=None,
+        source="SEC",
+        cik=cik,
+        hk_stock_code=None,
+        aliases=(title,) if title else (),
+        private=False,
+    )
 
 
 def app(argv: list[str] | None = None) -> None:
@@ -41,10 +92,14 @@ def main(argv: list[str] | None = None) -> int:
 
     p_build = sub.add_parser("build", help="Build a filing pack")
     p_build.add_argument(
+        "company",
+        nargs="?",
+        help='Ticker, CIK, or company name (e.g. NVDA, 0001045810, "NVIDIA")',
+    )
+    p_build.add_argument(
         "--cik",
         "-c",
-        required=True,
-        help="CIK number (with or without leading zeros)",
+        help="[deprecated] CIK number. Prefer the positional company argument.",
     )
     p_build.add_argument(
         "--accession",
@@ -80,7 +135,16 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     p_company = sub.add_parser("company-llms", help="Generate company-level llms.txt")
-    p_company.add_argument("--cik", "-c", required=True, help="CIK number")
+    p_company.add_argument(
+        "company",
+        nargs="?",
+        help="Ticker, CIK, or company name",
+    )
+    p_company.add_argument(
+        "--cik",
+        "-c",
+        help="[deprecated] CIK number. Prefer the positional company argument.",
+    )
     p_company.add_argument(
         "--out",
         "-o",
@@ -90,7 +154,16 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     p_list = sub.add_parser("list", help="List recent filings for a company")
-    p_list.add_argument("--cik", "-c", required=True, help="CIK number")
+    p_list.add_argument(
+        "company",
+        nargs="?",
+        help="Ticker, CIK, or company name",
+    )
+    p_list.add_argument(
+        "--cik",
+        "-c",
+        help="[deprecated] CIK number. Prefer the positional company argument.",
+    )
     p_list.add_argument("--form", "-f", help="Filter by form type")
     p_list.add_argument("--limit", "-n", type=int, default=10, help="Number of filings to show")
 
@@ -141,7 +214,17 @@ def main(argv: list[str] | None = None) -> int:
         "--period",
         "-p",
         default="lfy",
-        help="Period: lfy, mrq, ltm, ltm-1, mrp, annual:N, quarterly:N (default: lfy)",
+        help=(
+            "Period selector(s). Scalars: lfy, mrq, ltm, lfy-N, ltm-N, mrq-N, mrp. "
+            "Series: annual:N, quarterly:N. "
+            "CSV list for a multi-period grid: lfy,lfy-1,lfy-2 "
+            "(scalar selectors only; series cannot be combined). Default: lfy."
+        ),
+    )
+    p_query.add_argument(
+        "--preset",
+        choices=["perf"],
+        help="Expand to a curated metric list. Combines with --metrics (union, preset first).",
     )
     p_query.add_argument(
         "--format",
@@ -164,8 +247,11 @@ def main(argv: list[str] | None = None) -> int:
     p_query.add_argument(
         "--citations",
         choices=["inline", "footer", "off"],
-        default="inline",
-        help="Citation placement in table output (default: inline)",
+        default=None,
+        help=(
+            "Citation placement in table output. Default: 'inline' for single-period, "
+            "'footer' for multi-period grids."
+        ),
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
     p_query.add_argument(
@@ -364,6 +450,42 @@ def main(argv: list[str] | None = None) -> int:
         help="Clear everything (required if no filter is provided)",
     )
 
+    p_which = sub.add_parser(
+        "which",
+        help=(
+            "List the qualitative / MD&A KPIs a company discloses across its "
+            "filings (e.g. Figma's key business metrics)."
+        ),
+    )
+    p_which.add_argument(
+        "company",
+        help="Ticker symbol (FIG) or CIK number",
+    )
+    p_which.add_argument(
+        "--format",
+        dest="which_format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    p_which.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Re-run discovery on every filing (expensive; one LLM call per pack)",
+    )
+    p_which.add_argument(
+        "--only",
+        choices=["all", "discovered", "catalog"],
+        default="all",
+        help="Restrict output to discovered-only or catalog-only rows",
+    )
+    p_which.add_argument(
+        "--max-periods",
+        type=int,
+        default=6,
+        help="Max period columns to render in the table view (default: 6)",
+    )
+
     p_compare = sub.add_parser("compare", help="Side-by-side comparison of two or more companies")
     p_compare.add_argument("companies", nargs="+", help="Two or more company tickers or aliases")
     p_compare.add_argument("--metrics", help="Comma-separated metric names")
@@ -417,9 +539,81 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_index(args)
     if args.cmd == "learned":
         return _cmd_learned(args)
+    if args.cmd == "which":
+        return _cmd_which(args)
 
     parser.print_help()
     return 2
+
+
+async def _resolve_ticker_arg(value: str | None) -> tuple[int, str | None]:
+    """Resolve a --ticker flag (which now accepts names) to a canonical ticker."""
+    if not value:
+        return 0, None
+    try:
+        resolved = await _resolve_cli_company(value)
+    except (UnknownCompany, AmbiguousCompany) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2, None
+    return 0, resolved.ticker
+
+
+async def _cik_from_company_args(args: Any) -> tuple[int, str | None]:
+    """Resolve CIK from a build/list/company-llms-style args namespace.
+
+    Returns ``(exit_code, cik)``. ``exit_code == 0`` means success; a non-zero
+    value means the caller should return that code immediately.
+
+    Accepts either the positional ``args.company`` argument or the deprecated
+    ``--cik`` flag. Refuses to proceed if both (or neither) were supplied.
+    """
+    company = getattr(args, "company", None)
+    cik = getattr(args, "cik", None)
+
+    if company and cik:
+        print(
+            "Error: pass either the positional company argument OR --cik, not both.",
+            file=sys.stderr,
+        )
+        return 2, None
+
+    if not company and not cik:
+        print(
+            "Error: a company argument is required (ticker, CIK, or company name).",
+            file=sys.stderr,
+        )
+        return 2, None
+
+    if cik and not company:
+        print(
+            "Warning: --cik is deprecated; pass the ticker, CIK, or company "
+            "name as a positional argument instead.",
+            file=sys.stderr,
+        )
+        return 0, cik
+
+    try:
+        resolved = await _resolve_cli_company(company)
+    except (UnknownCompany, AmbiguousCompany) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2, None
+
+    if resolved.private:
+        print(
+            f"Error: {resolved.ticker} is a private company with no public filings.",
+            file=sys.stderr,
+        )
+        return 2, None
+
+    if not resolved.cik:
+        print(
+            f"Error: no CIK available for {resolved.ticker}. "
+            "Pass --cik explicitly or use a different identifier.",
+            file=sys.stderr,
+        )
+        return 2, None
+
+    return 0, resolved.cik
 
 
 def _cmd_build(args: Any) -> int:
@@ -430,9 +624,13 @@ def _cmd_build(args: Any) -> int:
     async def _run() -> int:
         from .pack.build import build_pack
 
+        rc, cik = await _cik_from_company_args(args)
+        if rc != 0 or cik is None:
+            return rc
+
         try:
             result = await build_pack(
-                cik=args.cik,
+                cik=cik,
                 accession=args.accession,
                 form_type=args.form,
                 out_dir=args.out,
@@ -468,8 +666,12 @@ def _cmd_company_llms(args: Any) -> int:
     async def _run() -> int:
         from .pack.build import build_company_llms
 
+        rc, cik = await _cik_from_company_args(args)
+        if rc != 0 or cik is None:
+            return rc
+
         try:
-            path = await build_company_llms(args.cik, args.out)
+            path = await build_company_llms(cik, args.out)
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
@@ -484,8 +686,12 @@ def _cmd_list(args: Any) -> int:
     async def _run() -> int:
         from .sec.submissions import list_filings
 
+        rc, cik = await _cik_from_company_args(args)
+        if rc != 0 or cik is None:
+            return rc
+
         try:
-            filings = await list_filings(args.cik, form_type=args.form, limit=int(args.limit))
+            filings = await list_filings(cik, form_type=args.form, limit=int(args.limit))
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
@@ -879,32 +1085,36 @@ def _render_query_table(result: Any, args: Any) -> str:
 
 
 def _cmd_query(args: Any) -> int:
-    from pathlib import Path
+    from .identity import load_identity, resolve
 
-    from .identity import AmbiguousCompany, UnknownCompany, load_identity, resolve
-
+    # Universe-local pre-pass: catch private companies and ambiguous aliases
+    # before hitting the SEC resolver. Unknown-to-universe inputs fall through
+    # to financials(), which uses sec.tickers.resolve_company and now handles
+    # ticker / CIK / company-name input transparently.
     resolved = None
     universe_path = Path("universe.toml")
     if universe_path.exists():
         try:
             index = load_identity(universe_path)
+        except AmbiguousCompany as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
         except Exception as e:
             print(f"Error: failed to load universe: {e}", file=sys.stderr)
             return 2
 
-        try:
-            resolved = resolve(index, ticker=args.company, company=None)
-        except UnknownCompany:
+        for kwargs in (
+            {"ticker": args.company, "company": None},
+            {"ticker": None, "company": args.company},
+        ):
             try:
-                resolved = resolve(index, ticker=None, company=args.company)
+                resolved = resolve(index, **kwargs)
+                break
             except UnknownCompany:
-                resolved = None
+                continue
             except AmbiguousCompany as e:
                 print(f"Error: {e}", file=sys.stderr)
                 return 2
-        except AmbiguousCompany as e:
-            print(f"Error: {e}", file=sys.stderr)
-            return 2
 
     if resolved is not None and resolved.private:
         print(
@@ -917,45 +1127,136 @@ def _cmd_query(args: Any) -> int:
     async def _run() -> int:
         from .query.financials import financials
         from .query.layer_zero import MetricNotFound
+        from .query.periods import parse_period_spec
+        from .query.presets import expand_metrics
 
         try:
-            result = await financials(
+            periods = parse_period_spec(args.period)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+
+        try:
+            expanded = expand_metrics(args.metrics, getattr(args, "preset", None))
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+        metric_input: str | list[str] | None
+        metric_list_for_render: list[str] | None = None
+        if expanded is None:
+            metric_input = None
+        else:
+            metric_input = expanded
+            metric_list_for_render = expanded
+
+        async def _fetch(period: str) -> "QueryResult":  # noqa: F821
+            return await financials(
                 company=args.company,
-                metrics=args.metrics,
-                period=args.period,
+                metrics=metric_input,
+                period=period,
                 force=bool(args.force),
             )
+
+        try:
+            if len(periods) == 1:
+                result = await _fetch(periods[0])
+            else:
+                gathered = await asyncio.gather(*[_fetch(p) for p in periods])
+                results_by_period = dict(zip(periods, gathered))
+                result = gathered[0]
         except MetricNotFound as e:
-            # e's __str__ already includes 'Did you mean: ...' when suggestions
-            # are populated. Don't duplicate it.
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+        except AmbiguousCompany as e:
             print(f"Error: {e}", file=sys.stderr)
             return 2
         except ValueError as e:
             msg = str(e)
             print(f"Error: {msg}", file=sys.stderr)
-            return 2 if msg.lower().startswith("unknown ticker") else 1
+            lower = msg.lower()
+            if lower.startswith(("unknown ticker", "unknown company", "ambiguous company")):
+                return 2
+            return 1
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
-        if args.output_format == "json":
-            import json
+        # Single-period path: keep existing behavior byte-for-byte.
+        if len(periods) == 1:
+            if args.output_format == "json":
+                import json
 
-            print(json.dumps(result.to_lean_dict(), indent=2, default=str))
+                print(json.dumps(result.to_lean_dict(), indent=2, default=str))
+                return 0
+
+            if args.output_format == "json-full":
+                import json
+
+                print(json.dumps(result.to_cited_dict(), indent=2, default=str))
+                return 0
+
+            citations_mode = args.citations if args.citations is not None else "inline"
+            args_for_render = _ArgProxy(args, citations=citations_mode)
+            print(_render_query_table(result, args_for_render))
+            return 0
+
+        # Multi-period path: render the metrics x periods grid.
+        from .query.comps import (
+            format_financial_perf_table,
+            multi_period_to_full_json,
+            multi_period_to_lean_json,
+        )
+
+        if metric_list_for_render is None:
+            # Caller requested all metrics; use the first result's keys.
+            metric_list_for_render = list(result.metrics.keys())
+
+        if args.output_format == "json":
+            print(
+                multi_period_to_lean_json(results_by_period, metric_list_for_render, periods)
+            )
             return 0
 
         if args.output_format == "json-full":
-            import json
-
-            print(json.dumps(result.to_cited_dict(), indent=2, default=str))
+            print(
+                multi_period_to_full_json(results_by_period, metric_list_for_render, periods)
+            )
             return 0
 
-        # Table format
-        print(_render_query_table(result, args))
-
+        citations_mode = args.citations if args.citations is not None else "footer"
+        width = shutil.get_terminal_size((120, 20)).columns
+        print(
+            format_financial_perf_table(
+                results_by_period,
+                metric_list_for_render,
+                periods,
+                citations_mode=citations_mode,
+                show_links=args.show_links,
+                audit=bool(args.audit),
+                terminal_width=width,
+            )
+        )
         return 0
 
     return asyncio.run(_run())
+
+
+class _ArgProxy:
+    """Shallow proxy that forwards attribute access but overrides a few fields.
+
+    Used so ``_render_query_table`` sees a resolved ``citations`` value even
+    though the argparse default is ``None`` (for multi-period default
+    inference). Keeps the existing single-period rendering path untouched.
+    """
+
+    def __init__(self, inner: Any, **overrides: Any) -> None:
+        self._inner = inner
+        self._overrides = overrides
+
+    def __getattr__(self, name: str) -> Any:
+        if name in self._overrides:
+            return self._overrides[name]
+        return getattr(self._inner, name)
 
 
 def _cmd_comps(args: Any) -> int:
@@ -1085,16 +1386,19 @@ def _cmd_diff(args: Any) -> int:
             before_dir = Path(args.before)
             after_dir = Path(args.after)
         elif args.ticker:
+            rc, ticker = await _resolve_ticker_arg(args.ticker)
+            if rc != 0 or ticker is None:
+                return rc
+
             from .harvest.registry import PackRegistry
 
             registry = PackRegistry()
-            packs = registry.list_packs(ticker=args.ticker, form_type=args.form)
+            packs = registry.list_packs(ticker=ticker, form_type=args.form)
             registry.close()
 
             if len(packs) < 2:
                 print(
-                    f"Error: need at least 2 {args.form} filings for {args.ticker}, "
-                    f"found {len(packs)}",
+                    f"Error: need at least 2 {args.form} filings for {ticker}, found {len(packs)}",
                     file=sys.stderr,
                 )
                 return 1
@@ -1156,21 +1460,24 @@ def _cmd_timeline(args: Any) -> int:
         from .diff.timeline import build_timeline
         from .harvest.registry import PackRegistry
 
+        rc, ticker = await _resolve_ticker_arg(args.ticker)
+        if rc != 0 or ticker is None:
+            return rc
+
         registry = PackRegistry()
-        packs = registry.list_packs(ticker=args.ticker, form_type=args.form)
+        packs = registry.list_packs(ticker=ticker, form_type=args.form)
         registry.close()
 
         if not packs:
-            print(f"No {args.form} filings found for {args.ticker}", file=sys.stderr)
+            print(f"No {args.form} filings found for {ticker}", file=sys.stderr)
             return 1
 
-        # Sort ascending by filing date
         packs.sort(key=lambda p: p.filing_date)
         pack_dirs = [Path(p.pack_dir) for p in packs if Path(p.pack_dir).exists()]
 
         entries = build_timeline(pack_dirs, args.section)
 
-        print(f"Timeline: {args.ticker} / {args.section} / {args.form}\n")
+        print(f"Timeline: {ticker} / {args.section} / {args.form}\n")
         for entry in entries:
             if not entry.section_found:
                 print(f"  {entry.filing_date} ({entry.accession}): section not found")
@@ -1196,10 +1503,16 @@ def _cmd_timeline(args: Any) -> int:
 def _cmd_search(args: Any) -> int:
     from .index.search import search_corpus
 
+    ticker: str | None = None
+    if args.ticker:
+        rc, ticker = asyncio.run(_resolve_ticker_arg(args.ticker))
+        if rc != 0 or ticker is None:
+            return rc
+
     result = search_corpus(
         query=args.query,
         topic=args.topic,
-        ticker=args.ticker,
+        ticker=ticker,
         form_type=args.form,
         limit=int(args.limit),
     )
@@ -1345,6 +1658,192 @@ def _cmd_learned(args: Any) -> int:
         return 2
     finally:
         reg.close()
+
+
+def _format_kpi_value(value: float | None, unit: str | None, magnitude: str | None) -> str:
+    """Render a discovered KPI value for the `which` table view.
+
+    Compact, human-readable: scales by magnitude, trims trailing zeros,
+    returns a dash for missing values so the column stays aligned.
+    """
+    if value is None:
+        return "-"
+    if unit == "percent":
+        return f"{value:g}%"
+
+    base = value
+    suffix = ""
+    if magnitude == "thousands":
+        suffix = "K"
+    elif magnitude == "millions":
+        suffix = "M"
+    elif magnitude == "billions":
+        suffix = "B"
+
+    if abs(base) >= 1 and base == int(base):
+        rendered = f"{int(base)}"
+    else:
+        rendered = f"{base:g}"
+
+    prefix = "$" if unit == "USD" else ""
+    return f"{prefix}{rendered}{suffix}" if suffix or prefix else rendered
+
+
+def _render_which_table(aggregates: list, max_periods: int) -> str:
+    """Render a compact table view of discovered + catalog KPIs.
+
+    Layout:
+      slug         source    unit       latest   P1   P2   P3 ...
+      paid_seats   discovered count      1.2M    900K 950K ...
+
+    Period columns are the newest-first union across all aggregates. Gaps
+    render as '-' so the drop-off pattern is visually obvious (e.g. a
+    metric that was disclosed in FY2023 but dropped in FY2024).
+    """
+    if not aggregates:
+        return "No disclosed KPIs found. Run a harvest / build first or try --no-cache."
+
+    all_labels: list[str] = []
+    seen: set[str] = set()
+    for agg in aggregates:
+        for point in agg.periods:
+            if point.label not in seen:
+                seen.add(point.label)
+                all_labels.append(point.label)
+
+    all_labels.sort(
+        key=lambda lbl: next(
+            (p.sort_key for agg in aggregates for p in agg.periods if p.label == lbl),
+            "",
+        ),
+        reverse=True,
+    )
+    labels = all_labels[:max_periods]
+
+    slug_w = max(5, min(30, max(len(a.slug) for a in aggregates)))
+    name_w = max(12, min(30, max(len(a.display_name or "") for a in aggregates)))
+    src_w = max(len("source"), max(len(a.source) for a in aggregates))
+    unit_w = max(5, max(len(a.unit or "-") for a in aggregates))
+
+    header = (
+        f"{'slug':<{slug_w}}  {'display':<{name_w}}  {'src':<{src_w}}  "
+        f"{'unit':<{unit_w}}  {'latest':>10}"
+    )
+    for lbl in labels:
+        header += f"  {lbl:>8}"
+
+    separator = f"{'─' * slug_w}  {'─' * name_w}  {'─' * src_w}  {'─' * unit_w}  {'─' * 10}"
+    for _ in labels:
+        separator += f"  {'─' * 8}"
+
+    lines: list[str] = [header, separator]
+
+    alias_lines: list[str] = []
+    for agg in aggregates:
+        latest = agg.latest
+        latest_str = (
+            _format_kpi_value(latest.value, latest.unit or agg.unit, latest.magnitude)
+            if latest
+            else "-"
+        )
+
+        by_label = {p.label: p for p in agg.periods}
+        row = (
+            f"{agg.slug[:slug_w]:<{slug_w}}  "
+            f"{(agg.display_name or '')[:name_w]:<{name_w}}  "
+            f"{agg.source:<{src_w}}  "
+            f"{(agg.unit or '-'):<{unit_w}}  "
+            f"{latest_str:>10}"
+        )
+        for lbl in labels:
+            p = by_label.get(lbl)
+            cell = (
+                _format_kpi_value(p.value, p.unit or agg.unit, p.magnitude)
+                if p is not None
+                else "-"
+            )
+            row += f"  {cell:>8}"
+        lines.append(row)
+
+        if agg.aliases:
+            alias_lines.append(
+                f"  (aliases) {agg.slug}: " + ", ".join(f"'{a}'" for a in agg.aliases)
+            )
+
+    if alias_lines:
+        lines.append("")
+        lines.extend(alias_lines)
+
+    return "\n".join(lines)
+
+
+def _cmd_which(args: Any) -> int:
+    """List the qualitative / MD&A KPIs a company discloses across filings."""
+    import json as _json
+
+    from .harvest.registry import PackRegistry
+    from .query.kpi_discover import discover_kpis
+
+    async def _resolve() -> tuple[int, str | None]:
+        from .sec.tickers import resolve_ticker
+
+        try:
+            cik, _ = await resolve_ticker(args.company)
+            return 0, cik
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2, None
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1, None
+
+    rc, cik = asyncio.run(_resolve())
+    if rc != 0 or cik is None:
+        return rc
+
+    registry = PackRegistry()
+    try:
+        packs = registry.list_packs(cik=cik, limit=5)
+        if not packs:
+            print(
+                f"No packs registered for CIK {cik} ({args.company}). Run "
+                f"`edgarpack build --cik {cik} --form 10-K` first.",
+                file=sys.stderr,
+            )
+            return 1
+
+        try:
+            aggregates = discover_kpis(
+                cik=cik,
+                pack_registry=registry,
+                force=bool(args.no_cache),
+                include_catalog=(args.only != "discovered"),
+            )
+        except Exception as e:
+            print(f"Error running discovery: {e}", file=sys.stderr)
+            return 1
+    finally:
+        registry.close()
+
+    if args.only == "discovered":
+        aggregates = [a for a in aggregates if a.source == "discovered"]
+    elif args.only == "catalog":
+        aggregates = [a for a in aggregates if a.source == "catalog"]
+
+    if args.which_format == "json":
+        payload = {
+            "cik": cik,
+            "company": packs[0].company_name,
+            "ticker": packs[0].ticker,
+            "count": len(aggregates),
+            "kpis": [a.to_json() for a in aggregates],
+        }
+        print(_json.dumps(payload, indent=2, default=str))
+        return 0
+
+    print(f"Disclosed KPIs for {packs[0].company_name} (CIK: {cik}):\n")
+    print(_render_which_table(aggregates, int(args.max_periods)))
+    return 0
 
 
 if __name__ == "__main__":

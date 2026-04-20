@@ -26,6 +26,11 @@ class FilingInfo(BaseModel):
     form_type: str
     filing_date: str
     company_name: str
+    # Fiscal period end date (SEC reportDate). Distinct from filing_date:
+    # 10-Ks are typically filed 60-90 days after fiscal year end, 10-Qs
+    # 40-45 days after quarter end. Optional for backward compatibility
+    # with packs built before this field was added.
+    period_of_report: str | None = None
 
 
 class SectionInfo(BaseModel):
@@ -130,6 +135,11 @@ def create_manifest(
             form_type=filing_meta.form_type,
             filing_date=filing_meta.filing_date.isoformat(),
             company_name=filing_meta.company_name,
+            period_of_report=(
+                filing_meta.period_of_report.isoformat()
+                if getattr(filing_meta, "period_of_report", None) is not None
+                else None
+            ),
         ),
         sections=section_infos,
         artifacts=artifacts,

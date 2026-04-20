@@ -8,7 +8,7 @@ revenue as ``RevenueFromContractWithCustomerExcludingAssessedTax`` while NVIDIA 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 from .kpi_extract import KPI_CATALOG, KpiDef
 
@@ -46,6 +46,12 @@ class MetricMeta:
     # (e.g. ("revenue", -1) resolves to the prior FY's revenue).
     components: tuple[str | tuple[str, int], ...] = ()
     ifrs_concepts: tuple[str, ...] = ()  # IFRS concept names (fallback for non-US filers)
+    # Computation kind. "formula" uses the _eval_formula path; "cagr" short-
+    # circuits to _compute_cagr which does ``(end/start)^(1/N) - 1`` with
+    # FY-anchored components regardless of the parent period selector.
+    kind: Literal["formula", "cagr"] = "formula"
+    cagr_years: int = 0  # only used when kind == "cagr"
+    cagr_base: str = ""  # base metric name, e.g. "revenue"
 
 
 def _normalize_component(comp: str | tuple[str, int]) -> tuple[str, int]:
@@ -123,6 +129,16 @@ METRIC_MAP: dict[str, MetricMeta] = {
         concepts=(
             "SellingGeneralAndAdministrativeExpense",
             "GeneralAndAdministrativeExpense",
+        ),
+        duration=True,
+    ),
+    # Pure S&M (best-effort; many filers only tag aggregate SG&A).
+    "sm_expense": MetricMeta(
+        concepts=(
+            "SellingAndMarketingExpense",
+            "MarketingExpense",
+            "MarketingAndAdvertisingExpense",
+            "AdvertisingExpense",
         ),
         duration=True,
     ),
@@ -474,6 +490,163 @@ METRIC_MAP: dict[str, MetricMeta] = {
         derived=True,
         formula="revenue / headcount",
         components=(("revenue", 0), ("headcount", 0)),
+    ),
+    # Growth family (mirrors existing revenue_growth_yoy).
+    "net_income_growth_yoy": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="net_income / net_income_prev1 - 1",
+        components=(("net_income", 0), ("net_income", -1)),
+    ),
+    "operating_income_growth_yoy": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="operating_income / operating_income_prev1 - 1",
+        components=(("operating_income", 0), ("operating_income", -1)),
+    ),
+    "eps_growth_yoy": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="eps_diluted / eps_diluted_prev1 - 1",
+        components=(("eps_diluted", 0), ("eps_diluted", -1)),
+    ),
+    # Margin trend family (mirrors existing gross_margin_trend).
+    "operating_margin_trend": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="operating_margin - operating_margin_prev1",
+        components=(("operating_margin", 0), ("operating_margin", -1)),
+    ),
+    "net_margin_trend": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="net_margin - net_margin_prev1",
+        components=(("net_margin", 0), ("net_margin", -1)),
+    ),
+    # Intensity family.
+    "sga_intensity": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="sga_expense / revenue",
+        components=(("sga_expense", 0), ("revenue", 0)),
+    ),
+    "sm_intensity": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="sm_expense / revenue",
+        components=(("sm_expense", 0), ("revenue", 0)),
+    ),
+    "capex_intensity": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="capex / revenue",
+        components=(("capex", 0), ("revenue", 0)),
+    ),
+    # Quality / composite.
+    "fcf_to_net_income": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="free_cash_flow / net_income",
+        components=(("free_cash_flow", 0), ("net_income", 0)),
+    ),
+    "rule_of_40": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="revenue_growth_yoy + fcf_margin",
+        components=(("revenue_growth_yoy", 0), ("fcf_margin", 0)),
+    ),
+    # CAGR metrics: (end / start) ** (1/N) - 1, FY-anchored regardless of
+    # parent period. formula is a documentation string only; _compute_cagr
+    # short-circuits the evaluator.
+    "revenue_cagr_3y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(revenue / revenue_prev3) ^ (1/3) - 1",
+        components=(("revenue", 0), ("revenue", -3)),
+        kind="cagr",
+        cagr_years=3,
+        cagr_base="revenue",
+    ),
+    "revenue_cagr_5y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(revenue / revenue_prev5) ^ (1/5) - 1",
+        components=(("revenue", 0), ("revenue", -5)),
+        kind="cagr",
+        cagr_years=5,
+        cagr_base="revenue",
+    ),
+    "net_income_cagr_3y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(net_income / net_income_prev3) ^ (1/3) - 1",
+        components=(("net_income", 0), ("net_income", -3)),
+        kind="cagr",
+        cagr_years=3,
+        cagr_base="net_income",
+    ),
+    "net_income_cagr_5y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(net_income / net_income_prev5) ^ (1/5) - 1",
+        components=(("net_income", 0), ("net_income", -5)),
+        kind="cagr",
+        cagr_years=5,
+        cagr_base="net_income",
+    ),
+    "eps_diluted_cagr_3y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(eps_diluted / eps_diluted_prev3) ^ (1/3) - 1",
+        components=(("eps_diluted", 0), ("eps_diluted", -3)),
+        kind="cagr",
+        cagr_years=3,
+        cagr_base="eps_diluted",
+    ),
+    "eps_diluted_cagr_5y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(eps_diluted / eps_diluted_prev5) ^ (1/5) - 1",
+        components=(("eps_diluted", 0), ("eps_diluted", -5)),
+        kind="cagr",
+        cagr_years=5,
+        cagr_base="eps_diluted",
+    ),
+    "fcf_cagr_3y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(free_cash_flow / free_cash_flow_prev3) ^ (1/3) - 1",
+        components=(("free_cash_flow", 0), ("free_cash_flow", -3)),
+        kind="cagr",
+        cagr_years=3,
+        cagr_base="free_cash_flow",
+    ),
+    "fcf_cagr_5y": MetricMeta(
+        concepts=(),
+        duration=True,
+        derived=True,
+        formula="(free_cash_flow / free_cash_flow_prev5) ^ (1/5) - 1",
+        components=(("free_cash_flow", 0), ("free_cash_flow", -5)),
+        kind="cagr",
+        cagr_years=5,
+        cagr_base="free_cash_flow",
     ),
 }
 

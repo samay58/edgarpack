@@ -968,9 +968,10 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
         )
         self.assertEqual(cited.source, "learned:kpi-llm")
 
-    def test_period_end_is_sentinel_not_filing_date(self) -> None:
-        """period_end should be date.min (unknown) rather than the filing
-        date, which is semantically different from the fiscal period end."""
+    def test_period_end_falls_back_to_filing_date_when_no_period_of_report(self) -> None:
+        """Pre-period-fix packs lack manifest.filing.period_of_report; Layer B
+        falls back to the filing date instead of the legacy date.min sentinel.
+        """
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
         response = {
             "value": 1000,
@@ -1000,9 +1001,51 @@ class TestBuildCitedFromExtraction(unittest.TestCase):
             pack_manifest=manifest,
             primary_document="doc.htm",
         )
-        self.assertEqual(cited.period_end, date.min)
-        # filed should still be the parsed filing date
+        self.assertEqual(cited.period_end, date(2024, 3, 7))
         self.assertEqual(cited.filed, date(2024, 3, 7))
+        self.assertEqual(cited.fiscal_period, "FY")
+
+    def test_period_end_uses_period_of_report_when_present(self) -> None:
+        """Post-period-fix packs populate manifest.filing.period_of_report
+        with the SEC reportDate. Layer B must prefer that over filing_date.
+        """
+        kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
+        response = {
+            "value": 1000,
+            "unit": "USD",
+            "excerpt": "ARR of $1,000",
+            "section_id": "s",
+            "confidence": "high",
+        }
+        pack_record = PackRecord(
+            accession="A-1",
+            cik="C-1",
+            ticker="X",
+            company_name="X",
+            form_type="10-K",
+            filing_date="2024-03-07",
+            sections_count=0,
+            tokens_total=0,
+            pack_dir="/tmp",
+            built_at="2024-03-08T00:00:00+00:00",
+        )
+        manifest = {
+            "filing": {
+                "filing_date": "2024-03-07",
+                "period_of_report": "2023-12-31",
+            }
+        }
+        cited = _build_cited_from_extraction(
+            response=response,
+            metric="arr",
+            kpi_def=kpi,
+            pack_record=pack_record,
+            pack_manifest=manifest,
+            primary_document="doc.htm",
+        )
+        self.assertEqual(cited.period_end, date(2023, 12, 31))
+        self.assertEqual(cited.fiscal_year, 2023)
+        self.assertEqual(cited.fiscal_period, "FY")
 
     def test_document_url_uses_excerpt(self) -> None:
         kpi = KpiDef(phrases=("ARR",), unit_hint="USD")
@@ -1469,12 +1512,12 @@ class TestTryExtractKpi(unittest.TestCase):
         self.assertIsNone(cited)
 
     def test_cache_hit_survives_malformed_filing_date(self) -> None:
-        """A PackRecord with a malformed filing_date should not crash the
-        cache path; it should degrade to sentinel values."""
+        """A malformed filing_date in both manifest and PackRecord should not
+        crash the cache path; it should degrade to sentinel values.
+        """
         self._build_pack()
 
-        # Manually tamper with the pack_record by re-registering with a bad date
-        # (the registry won't let us do this directly, so we use raw SQL)
+        # Tamper the registry filing_date.
         import sqlite3
 
         conn = sqlite3.connect(str(self.registry_db))
@@ -1484,6 +1527,14 @@ class TestTryExtractKpi(unittest.TestCase):
         )
         conn.commit()
         conn.close()
+
+        # Tamper the manifest filing_date too, so _resolve_period_end can't
+        # fall back to a valid manifest date.
+        manifest_path = self.pack_dir / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest.setdefault("filing", {})["filing_date"] = "pending"
+        manifest["filing"].pop("period_of_report", None)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
         from edgarpack.query.learned_registry import LearnedRegistry
 

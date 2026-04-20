@@ -120,14 +120,14 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         conn.close()
 
     def test_fresh_install_has_migrated_schema(self) -> None:
-        """A fresh DB (no pre-existing table) should still end up at user_version=2."""
+        """A fresh DB (no pre-existing table) should end up at the current schema version."""
         from edgarpack.query.learned_registry import LearnedRegistry
 
         reg = LearnedRegistry(db_path=self.db_path)
 
         conn = sqlite3.connect(str(self.db_path))
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        self.assertEqual(version, 2)
+        self.assertGreaterEqual(version, 2)
         cols = [row[1] for row in conn.execute("PRAGMA table_info(learned_concepts)").fetchall()]
         self.assertIn("accession", cols)
         conn.close()
@@ -183,8 +183,8 @@ class TestLearnedRegistryMigration(unittest.TestCase):
 
     def test_v1_to_v2_rebuild_in_isolation(self) -> None:
         """Migrating a true v1 database (user_version=1, has accession column,
-        old PK) should produce a v2 database (user_version=2, new PK) with the
-        existing row fully preserved including its non-empty accession."""
+        old PK) should produce a database at user_version >= 2 (new PK) with
+        the existing row fully preserved including its non-empty accession."""
         self._create_v1_schema_with_row()
 
         from edgarpack.query.learned_registry import LearnedRegistry
@@ -192,10 +192,10 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         reg = LearnedRegistry(db_path=self.db_path)
         reg.close()
 
-        # user_version bumped to 2
+        # user_version bumped to >= 2 (current schema may be higher)
         conn = sqlite3.connect(str(self.db_path))
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        self.assertEqual(version, 2)
+        self.assertGreaterEqual(version, 2)
 
         # Row preserved with all fields intact
         conn.row_factory = sqlite3.Row

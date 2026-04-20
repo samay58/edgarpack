@@ -84,6 +84,7 @@ class CompanyColumn:
     period: str
     reporting_currency: str
     metrics: dict[str, dict[str, Any]]
+    diagnostics: list[dict[str, str]] | None = None
 
 
 def _flatten(value: CitedValue | list[CitedValue] | None) -> CitedValue | None:
@@ -166,12 +167,18 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
             entry["usd_value"] = float(cv.value)
             entry["fx_rate"] = 1.0
         metrics_dict[m] = entry
+    diagnostics_out: list[dict[str, str]] = [
+        {"metric": d.metric, "kind": d.kind, "message": d.message}
+        for d in result.diagnostics
+    ]
+
     return CompanyColumn(
         ticker=name,
         company=company,
         period=period_label,
         reporting_currency=currency,
         metrics=metrics_dict,
+        diagnostics=diagnostics_out or None,
     )
 
 
@@ -234,6 +241,19 @@ def _period_header(period_request: str, columns: list[CompanyColumn]) -> str:
     return f"Period: {period_request} — fiscal years differ: {pairs}"
 
 
+def _diagnostics_lines(columns: list[CompanyColumn]) -> list[str]:
+    """Render a flat warnings block so mislabeled LTM values never hide silently."""
+    lines: list[str] = []
+    for c in columns:
+        if not c.diagnostics:
+            continue
+        for d in c.diagnostics:
+            lines.append(f"  ! {c.ticker}.{d.get('metric', '?')}: {d.get('message', '')}")
+    if lines:
+        lines.insert(0, "warnings:")
+    return lines
+
+
 def _format_table(columns: list[CompanyColumn], metric_keys: list[str], period_request: str) -> str:
     headers = ["metric"] + [c.ticker for c in columns]
     rows: list[list[str]] = []
@@ -252,6 +272,10 @@ def _format_table(columns: list[CompanyColumn], metric_keys: list[str], period_r
     lines.append("")
     for c in columns:
         lines.append(f"  {c.ticker}: {c.company}, {c.period}, reported in {c.reporting_currency}")
+    diag_lines = _diagnostics_lines(columns)
+    if diag_lines:
+        lines.append("")
+        lines.extend(diag_lines)
     return "\n".join(lines)
 
 
@@ -268,6 +292,12 @@ def _format_markdown(
     lines.append("")
     for c in columns:
         lines.append(f"_{c.ticker}: {c.company}, {c.period}, {c.reporting_currency}_")
+    diag_lines = _diagnostics_lines(columns)
+    if diag_lines:
+        lines.append("")
+        lines.append(f"**{diag_lines[0]}**")
+        for line in diag_lines[1:]:
+            lines.append(f"- {line.strip().lstrip('!').strip()}")
     return "\n".join(lines)
 
 
@@ -282,6 +312,7 @@ def _format_json(columns: list[CompanyColumn], period_request: str) -> str:
                     "period": c.period,
                     "reporting_currency": c.reporting_currency,
                     "metrics": c.metrics,
+                    **({"diagnostics": c.diagnostics} if c.diagnostics else {}),
                 }
                 for c in columns
             ],

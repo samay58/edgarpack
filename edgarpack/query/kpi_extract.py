@@ -84,6 +84,70 @@ def _load_pack_manifest(pack_dir: Path) -> dict:
     return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
+def _infer_fiscal_period_label(form_type: str, period_end: _date) -> str:
+    """Derive a fiscal_period label ('FY' or 'Q1'..'Q4') from form + period_end.
+
+    10-K -> 'FY'. 10-Q -> Q from the calendar-quarter the period_end falls in.
+    Non-calendar fiscal years won't map their Q1-Q4 to calendar quarters, but
+    the value remains stable per (company, filing) and preserves ordering for
+    the `which` command's period matrix. Returns '' for unknown form types so
+    downstream code can detect the uninferred case.
+    """
+    form = (form_type or "").upper()
+    if form.startswith("10-K") or form.startswith("20-F"):
+        return "FY"
+    if form.startswith("10-Q"):
+        if period_end == _date.min:
+            return ""
+        month = period_end.month
+        quarter = (month - 1) // 3 + 1  # 1..4
+        return f"Q{quarter}"
+    return ""
+
+
+def _resolve_period_end(
+    pack_manifest: dict,
+    pack_record: PackRecord,
+) -> tuple[_date, int, str]:
+    """Resolve (period_end, fiscal_year, fiscal_period) for a pack.
+
+    Resolution order:
+      1. manifest.filing.period_of_report (canonical, set from SEC reportDate
+         for packs built with the post-Layer-B-period-fix build pipeline).
+      2. pack_record.filing_date (older packs; approximation that's off by
+         up to 60-90 days for 10-Ks and 40-45 days for 10-Qs, but stable and
+         monotone per company).
+      3. (_date.min, 0, '') sentinel when both sources are unparseable.
+    """
+    filing = pack_manifest.get("filing", {}) if isinstance(pack_manifest, dict) else {}
+
+    raw = filing.get("period_of_report")
+    if isinstance(raw, str) and raw.strip():
+        try:
+            period_end = _date.fromisoformat(raw.strip())
+            return (
+                period_end,
+                period_end.year,
+                _infer_fiscal_period_label(pack_record.form_type, period_end),
+            )
+        except ValueError:
+            pass
+
+    fallback_raw = filing.get("filing_date") or pack_record.filing_date
+    if isinstance(fallback_raw, str) and fallback_raw.strip():
+        try:
+            filed = _date.fromisoformat(fallback_raw.strip())
+            return (
+                filed,
+                filed.year,
+                _infer_fiscal_period_label(pack_record.form_type, filed),
+            )
+        except ValueError:
+            pass
+
+    return _date.min, 0, ""
+
+
 _PERIOD_TO_FORM: dict[str, str] = {
     "lfy": "10-K",
     "mrq": "10-Q",
@@ -420,13 +484,15 @@ def _build_extraction_prompt(
     )
 
 
-def _extract_via_llm(prompt: str) -> dict | None:
+def _run_llm_raw(prompt: str, timeout: int = _LLM_TIMEOUT_SECONDS_KPI) -> str | None:
+    """Run the detected KPI LLM backend on a prompt and return stdout.
+
+    Factored out so _extract_via_llm (catalog extraction) and the discovery
+    pipeline (edgarpack which) share the same subprocess invocation shape
+    but can parse the response differently. Returns None on any failure.
+    """
     if _LLM_CMD_KPI is None:
         return None
-
-    # Build the command based on which backend was detected.
-    # codex: `codex exec "prompt"` (positional arg)
-    # claude: `claude -p "prompt"` (print mode, positional arg)
     if _LLM_CMD_KPI == "codex":
         cmd = [_LLM_CMD_KPI, "exec", prompt]
     else:
@@ -437,21 +503,26 @@ def _extract_via_llm(prompt: str) -> dict | None:
             cmd,
             capture_output=True,
             text=True,
-            timeout=_LLM_TIMEOUT_SECONDS_KPI,
+            timeout=timeout,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
-        logger.warning("KPI LLM extract failed: %s", e)
+        logger.warning("KPI LLM call failed: %s", e)
         return None
 
     if completed.returncode != 0:
         logger.warning(
-            "KPI LLM extract returned non-zero: %s",
+            "KPI LLM returned non-zero: %s",
             (completed.stderr or "")[:200],
         )
         return None
 
     raw = (completed.stdout or "").strip()
-    if not raw:
+    return raw or None
+
+
+def _extract_via_llm(prompt: str) -> dict | None:
+    raw = _run_llm_raw(prompt)
+    if raw is None:
         return None
 
     try:
@@ -584,11 +655,11 @@ def _build_cited_from_extraction(
     except ValueError:
         filed = _date.min
 
-    fiscal_year = filed.year if filed != _date.min else 0
-    # Layer B v2 only extracts from 10-Ks in practice, but guard against
-    # the non-10-K case with an empty string sentinel rather than an
-    # invalid "Q" placeholder (spec expects FY/Q1/Q2/Q3/Q4).
-    fiscal_period = "FY" if pack_record.form_type.startswith("10-K") else ""
+    # Layer B period fix: pull period_of_report from the manifest when
+    # available (post-period-fix builds); fall back to filing_date for older
+    # packs. Either is strictly better than the legacy date.min sentinel
+    # which broke downstream period filtering.
+    period_end, fiscal_year, fiscal_period = _resolve_period_end(pack_manifest, pack_record)
 
     concept = kpi_def.phrases[0] if kpi_def.phrases else metric
 
@@ -597,13 +668,7 @@ def _build_cited_from_extraction(
         unit=str(response.get("unit") or kpi_def.unit_hint),
         metric=metric,
         concept=concept,
-        # Sentinel: pack manifest doesn't carry period_of_report in v2, so we
-        # can't reliably set period_end. Using date.min marks it as "unknown"
-        # for downstream consumers rather than silently using the filing date
-        # (which is semantically different from the fiscal period end).
-        # TODO(layer-b): pull period_of_report from the pack manifest once
-        # harvest/runner.py writes it.
-        period_end=_date.min,
+        period_end=period_end,
         fiscal_year=fiscal_year,
         fiscal_period=fiscal_period,
         form_type=pack_record.form_type,
@@ -759,7 +824,10 @@ def try_extract_kpi(
                     )
                     return None
                 primary_doc = manifest.get("filing", {}).get("primary_document", "")
-                fiscal_year_cached, filed_cached = _parse_filing_date_safe(pack_record.filing_date)
+                _, filed_cached = _parse_filing_date_safe(pack_record.filing_date)
+                period_end_cached, fiscal_year_cached, fiscal_period_cached = (
+                    _resolve_period_end(manifest, pack_record)
+                )
                 # Note: excerpt_text is not persisted in learned_concepts (v2
                 # schema), so cached CitedValues fall back to the concept-label
                 # text fragment in document_url rather than the tight excerpt
@@ -771,9 +839,9 @@ def try_extract_kpi(
                     unit=kpi_def.unit_hint,
                     metric=metric,
                     concept=cached.concept,
-                    period_end=_date.min,
+                    period_end=period_end_cached,
                     fiscal_year=fiscal_year_cached,
-                    fiscal_period="FY" if pack_record.form_type.startswith("10-K") else "",
+                    fiscal_period=fiscal_period_cached,
                     form_type=pack_record.form_type,
                     filed=filed_cached,
                     accession=accession,
@@ -927,3 +995,452 @@ def try_extract_kpi(
         # own_registry=False and only the outer (this) call closes it.
         if own_registry:
             pack_registry.close()
+
+
+# ---------------------------------------------------------------------------
+# Per-company KPI discovery (`edgarpack which`)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class DiscoveredKpi:
+    """A single free-form KPI the LLM discovered in a filing.
+
+    Distinct from catalog KPIs: these are mined per-company (e.g. Figma's
+    'paid seats', Costco's 'warehouse count') rather than matched against a
+    fixed list. Written one row per filing-disclosure into company_kpis and
+    aggregated across filings by kpi_discover.discover_kpis.
+    """
+
+    slug: str
+    display_name: str
+    unit: str | None
+    magnitude: str | None
+    value: float | None
+    period_end: str
+    fiscal_year: int
+    fiscal_period: str
+    definition: str | None
+    section_id: str | None
+    chunk_id: str | None
+    source_substring: str
+    confidence: float
+    reused_slug: bool = False
+
+
+_DISCOVERY_MAX_ITEMS = 40  # sane bound; real filings rarely list more than 15
+_DISCOVERY_TIMEOUT_SECONDS = 90  # longer than single-KPI extract; more work
+
+
+_SLUG_SAFE = re.compile(r"[^a-z0-9_]+")
+
+
+def _slugify(text: str) -> str:
+    """Normalize a display name to a snake_case slug.
+
+    Fallback used when the LLM returns a malformed slug or we need to coin
+    one from a raw display_name. Conservative: lowercase, ASCII-only,
+    single underscores between tokens. Empty output when input is empty.
+    """
+    if not text:
+        return ""
+    base = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    base = base.lower()
+    base = _SLUG_SAFE.sub("_", base)
+    base = re.sub(r"_+", "_", base).strip("_")
+    return base
+
+
+def _build_discovery_prompt(
+    company: str,
+    form_type: str,
+    filing_date: str,
+    period_of_report: str,
+    existing_slugs: list[str],
+    text: str,
+) -> str:
+    """Prompt for the 'list every disclosed business KPI' pass.
+
+    Asks for a JSON list, each entry self-cited with a verbatim substring
+    the hallucination firewall can verify. existing_slugs is the list of
+    slugs already coined for this company so the LLM can reuse them when
+    the raw disclosure name has drifted ('active designers' -> 'paid_seats').
+    """
+    existing_hint = (
+        "Existing slugs for this company (reuse when the disclosure means the same "
+        "thing, even if the text uses a different name):\n  "
+        + ", ".join(f"'{s}'" for s in existing_slugs)
+        + "\n\n"
+        if existing_slugs
+        else ""
+    )
+    return (
+        "You are cataloguing every recurring business / operating KPI a company "
+        "discloses in its SEC filing. Be conservative. Skip anything ambiguous.\n\n"
+        f"Company: {company}\n"
+        f"Filing: {form_type} filed {filing_date}\n"
+        f"Period of report: {period_of_report or 'unknown'}\n\n"
+        "Include:\n"
+        "- Recurring operating / business metrics that the company uses to run the "
+        "business and track health across periods (e.g. 'paid seats', 'daily active "
+        "users', 'warehouse count', 'same-store sales', 'net dollar retention', "
+        "'remaining performance obligations', 'take rate', 'members').\n"
+        "- Metrics disclosed in a 'Key Business Metrics' / 'Key Performance "
+        "Indicators' / 'Operating Data' / 'Segment Data' section or in MD&A prose "
+        "that reference a specific number.\n\n"
+        "Exclude:\n"
+        "- GAAP income-statement / balance-sheet line items (revenue, cost of "
+        "revenue, gross profit, operating income, net income, EBITDA, assets, "
+        "liabilities, equity, cash, debt, interest expense, tax rate, etc.).\n"
+        "- One-off / non-recurring numbers (restructuring charges, M&A purchase "
+        "price, litigation settlement, a single customer's contract size, named "
+        "executive compensation).\n"
+        "- Forward-looking guidance, targets, and competitor figures.\n"
+        "- Percentages that are just a ratio of two GAAP items (gross margin, "
+        "operating margin, R&D intensity, debt to equity).\n\n"
+        "For each KPI you include:\n"
+        "- slug: lower_snake_case stable identifier. Short and canonical.\n"
+        "- display_name: the company's own wording, trimmed.\n"
+        "- unit: 'USD' | 'count' | 'percent' | 'days' | 'pure' (pure = dimensionless "
+        "ratio) | null if the disclosure doesn't fit any of these.\n"
+        "- magnitude: 'thousands' | 'millions' | 'billions' | null when the number "
+        "is stated as-is.\n"
+        "- value: the numeric value, in the stated magnitude (do NOT scale; e.g. "
+        "'$3.44 billion' -> 3.44, magnitude='billions'). Null if no specific "
+        "value was disclosed but the metric was named.\n"
+        "- period_end: ISO date (YYYY-MM-DD) of the period the value covers, if "
+        "stated. Null otherwise.\n"
+        "- definition: one-sentence paraphrase of how the company defines it, if "
+        "present; null otherwise.\n"
+        "- section_id: the `--- [section_id] ---` marker closest above the "
+        "source text. Must be one of the section IDs that appear in the text.\n"
+        "- source_substring: a verbatim substring of the text (30-200 chars) "
+        "containing the value. Must appear EXACTLY in the input. No paraphrasing.\n"
+        "- confidence: 0.0-1.0.\n\n"
+        f"{existing_hint}"
+        "Respond with strict JSON of the shape:\n"
+        "  { \"kpis\": [ { ... }, { ... } ] }\n"
+        "No prose, no markdown fences. Empty list if the company does not "
+        "disclose any qualifying KPIs.\n\n"
+        f"TEXT (with `--- [section_id] ---` markers):\n{text}\n"
+    )
+
+
+def _parse_discovery_response(raw: str) -> list[dict] | None:
+    """Parse the discovery LLM response. Tolerates surrounding whitespace,
+    markdown fences, and stray prose. Returns the list of KPI dicts or None
+    on unrecoverable failure."""
+    if not raw:
+        return None
+
+    candidates: list[str] = [raw]
+    # Strip possible ```json ... ``` fences the LLM sometimes injects
+    # despite being told not to.
+    fence_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\}|\[[\s\S]*?\])\s*```", raw)
+    if fence_match:
+        candidates.insert(0, fence_match.group(1))
+
+    # Also try the first top-level JSON object in the stream.
+    obj_match = re.search(r"\{[\s\S]*\}", raw)
+    if obj_match:
+        candidates.append(obj_match.group(0))
+
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            kpis = parsed.get("kpis")
+            if isinstance(kpis, list):
+                return [item for item in kpis if isinstance(item, dict)]
+        elif isinstance(parsed, list):
+            return [item for item in parsed if isinstance(item, dict)]
+    return None
+
+
+def _load_chunks_index(pack_dir: Path) -> list[dict]:
+    """Load optional/chunks.ndjson if present. Returns empty list otherwise.
+
+    Chunks give finer-grained provenance than section IDs. The `which`
+    command populates chunk_id when available so the resulting CitedValues
+    can deep-link to the exact chunk in a downstream reader.
+    """
+    chunks_path = pack_dir / "optional" / "chunks.ndjson"
+    if not chunks_path.exists():
+        return []
+    chunks: list[dict] = []
+    try:
+        with chunks_path.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(obj, dict):
+                    chunks.append(obj)
+    except OSError as e:
+        logger.warning("Could not read chunks.ndjson at %s: %s", chunks_path, e)
+    return chunks
+
+
+def _lookup_chunk_id(
+    chunks: list[dict],
+    section_id: str | None,
+    substring: str,
+) -> str | None:
+    """Find the chunk_id whose text contains the given substring.
+
+    Scopes to the given section_id when possible. Returns None when chunks
+    aren't loaded, the substring doesn't match, or the pack wasn't built
+    with chunks. Uses the same normalization as the hallucination firewall
+    so zero-width / whitespace differences don't cause misses.
+    """
+    if not chunks or not substring:
+        return None
+    needle = _normalize_for_match(substring)
+    if not needle:
+        return None
+
+    scoped: list[dict] = (
+        [c for c in chunks if c.get("section_id") == section_id] if section_id else chunks
+    )
+    for pool in (scoped, chunks):
+        for chunk in pool:
+            text = chunk.get("text", "")
+            if not isinstance(text, str):
+                continue
+            if needle in _normalize_for_match(text):
+                cid = chunk.get("chunk_id")
+                if isinstance(cid, str) and cid:
+                    return cid
+    return None
+
+
+def _coerce_float(value: object) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        f = float(value)
+        return f if math.isfinite(f) else None
+    if isinstance(value, str):
+        try:
+            f = float(value.replace(",", "").strip())
+        except ValueError:
+            return None
+        return f if math.isfinite(f) else None
+    return None
+
+
+def _coerce_confidence(value: object) -> float:
+    f = _coerce_float(value)
+    if f is None:
+        return 0.0
+    if f < 0.0:
+        return 0.0
+    if f > 1.0:
+        # Some models return 80 instead of 0.8; clamp gracefully.
+        if f <= 100.0:
+            return f / 100.0
+        return 1.0
+    return f
+
+
+_DISCOVERY_UNIT_ALLOWED = frozenset({"USD", "count", "percent", "days", "pure"})
+_DISCOVERY_MAG_ALLOWED = frozenset({"thousands", "millions", "billions"})
+
+
+def _clean_discovered_item(
+    item: dict,
+    selected_section_ids: set[str],
+    source_text: str,
+    existing_slugs: set[str],
+) -> DiscoveredKpi | None:
+    """Validate one LLM-returned KPI dict into a DiscoveredKpi.
+
+    Rejects items whose source_substring does not appear in the text
+    (hallucination firewall), whose section_id is unknown, or whose slug
+    is empty after normalization. Silently clamps unknown unit/magnitude
+    to None rather than rejecting the whole row.
+    """
+    display_name = str(item.get("display_name") or "").strip()
+    raw_slug = str(item.get("slug") or "").strip().lower()
+    slug = _slugify(raw_slug) or _slugify(display_name)
+    if not slug:
+        return None
+
+    reused = slug in existing_slugs
+
+    source_substring = str(item.get("source_substring") or "").strip()
+    if not source_substring:
+        return None
+    if not _verify_excerpt_in_text(source_substring, source_text):
+        logger.warning(
+            "Discovery firewall rejected substring for slug=%s: %s",
+            slug,
+            source_substring[:80],
+        )
+        return None
+
+    section_id_raw = item.get("section_id")
+    section_id: str | None = None
+    if isinstance(section_id_raw, str) and section_id_raw.strip():
+        cand = section_id_raw.strip()
+        if cand in selected_section_ids:
+            section_id = cand
+
+    unit_raw = item.get("unit")
+    unit: str | None = unit_raw if isinstance(unit_raw, str) and unit_raw in _DISCOVERY_UNIT_ALLOWED else None
+
+    magnitude_raw = item.get("magnitude")
+    magnitude: str | None = (
+        magnitude_raw
+        if isinstance(magnitude_raw, str) and magnitude_raw in _DISCOVERY_MAG_ALLOWED
+        else None
+    )
+
+    value = _coerce_float(item.get("value"))
+
+    period_end_raw = str(item.get("period_end") or "").strip()
+    if period_end_raw:
+        try:
+            _date.fromisoformat(period_end_raw)
+        except ValueError:
+            period_end_raw = ""
+
+    definition_raw = item.get("definition")
+    definition = (
+        str(definition_raw).strip() if isinstance(definition_raw, str) and definition_raw.strip() else None
+    )
+
+    confidence = _coerce_confidence(item.get("confidence"))
+
+    return DiscoveredKpi(
+        slug=slug,
+        display_name=display_name or slug.replace("_", " ").title(),
+        unit=unit,
+        magnitude=magnitude,
+        value=value,
+        period_end=period_end_raw,
+        fiscal_year=0,
+        fiscal_period="",
+        definition=definition,
+        section_id=section_id,
+        chunk_id=None,
+        source_substring=source_substring,
+        confidence=confidence,
+        reused_slug=reused,
+    )
+
+
+def extract_discoveries(
+    *,
+    pack_dir: Path,
+    pack_record: PackRecord,
+    manifest: dict,
+    existing_slugs: list[str] | None = None,
+) -> list[DiscoveredKpi]:
+    """Run the discovery LLM on a single pack and return validated KPIs.
+
+    Returns an empty list when:
+      - the pack has no qualifying sections,
+      - the LLM backend is unavailable,
+      - the LLM returned nothing valid,
+      - every returned item failed the hallucination firewall.
+
+    Callers get back a deterministically validated list: every item's
+    source_substring appears verbatim in the selected sections.
+    """
+    existing = list(existing_slugs or [])
+
+    sections = manifest.get("sections", [])
+    selected = _select_sections(sections)
+    if not selected:
+        return []
+
+    raw_text = _read_section_text(pack_dir, selected)
+    if not raw_text:
+        return []
+    text = _trim_to_budget(raw_text)
+
+    if not _llm_backend_available_kpi():
+        return []
+
+    filing_meta = manifest.get("filing", {})
+    period_of_report = str(filing_meta.get("period_of_report") or "")
+    prompt = _build_discovery_prompt(
+        company=filing_meta.get("company_name", pack_record.company_name),
+        form_type=filing_meta.get("form_type", pack_record.form_type),
+        filing_date=filing_meta.get("filing_date", pack_record.filing_date),
+        period_of_report=period_of_report,
+        existing_slugs=existing,
+        text=text,
+    )
+    raw = _run_llm_raw(prompt, timeout=_DISCOVERY_TIMEOUT_SECONDS)
+    if raw is None:
+        return []
+    items = _parse_discovery_response(raw)
+    if not items:
+        return []
+
+    selected_ids = {str(s.get("id", "")) for s in selected}
+    existing_set = set(existing)
+
+    # Period metadata once per pack (every extracted row inherits it).
+    period_end_date, fiscal_year, fiscal_period = _resolve_period_end(manifest, pack_record)
+    period_end_str = (
+        period_end_date.isoformat() if period_end_date and period_end_date != _date.min else ""
+    )
+
+    chunks = _load_chunks_index(pack_dir)
+
+    results: list[DiscoveredKpi] = []
+    seen_slugs: set[str] = set()
+    for raw_item in items[:_DISCOVERY_MAX_ITEMS]:
+        cleaned = _clean_discovered_item(raw_item, selected_ids, text, existing_set)
+        if cleaned is None:
+            continue
+        if cleaned.slug in seen_slugs:
+            continue
+        seen_slugs.add(cleaned.slug)
+
+        chunk_id = _lookup_chunk_id(chunks, cleaned.section_id, cleaned.source_substring)
+
+        # Each row inherits the pack's period metadata. The LLM's own
+        # period_end guess is kept when it's populated and parseable, since
+        # 10-Qs sometimes cite prior-period figures; otherwise we back-fill
+        # from the pack's period_of_report.
+        final_period_end = cleaned.period_end or period_end_str
+        final_fy = fiscal_year
+        final_fp = fiscal_period
+        if cleaned.period_end:
+            try:
+                d = _date.fromisoformat(cleaned.period_end)
+                final_fy = d.year
+                final_fp = _infer_fiscal_period_label(pack_record.form_type, d)
+            except ValueError:
+                pass
+
+        results.append(
+            DiscoveredKpi(
+                slug=cleaned.slug,
+                display_name=cleaned.display_name,
+                unit=cleaned.unit,
+                magnitude=cleaned.magnitude,
+                value=cleaned.value,
+                period_end=final_period_end,
+                fiscal_year=final_fy,
+                fiscal_period=final_fp,
+                definition=cleaned.definition,
+                section_id=cleaned.section_id,
+                chunk_id=chunk_id,
+                source_substring=cleaned.source_substring,
+                confidence=cleaned.confidence,
+                reused_slug=cleaned.reused_slug,
+            )
+        )
+
+    return results

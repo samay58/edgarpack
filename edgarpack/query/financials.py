@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from datetime import date as _date
 from typing import Any
 
@@ -21,8 +22,10 @@ from .concepts import (
     get_scope_warning,
     resolve_concept,
 )
+from .kpi_discover import lookup_company_kpi
 from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
+from .learned_registry import CompanyKpiRow, LearnedRegistry
 from .models import CitedValue, DerivedValue, Diagnostic, QueryResult
 from .periods import parse_fact_ids_from_html, select_period
 from .self_heal import try_learn
@@ -33,15 +36,20 @@ _DerivedCache = dict[str, CitedValue | None]
 
 # Staleness thresholds: max fiscal-year gap (current_year - fy) before
 # a value is rejected as stale.  Series queries ("annual:N", "quarterly:N")
+# and explicit offset selectors (``lfy-N``, ``ltm-N``, ``mrq-N`` for N>=1)
 # skip the check entirely since the caller explicitly asks for history.
-_STALENESS_YEARS: dict[str, int] = {"ltm-1": 3}
+_STALENESS_YEARS: dict[str, int] = {}
 _STALENESS_DEFAULT = 2
+_OFFSET_PERIOD_RE = re.compile(r"^(lfy|ltm|mrq)-(\d+)$")
 
 
 def _staleness_limit(period: str) -> int:
     """Max fiscal-year age before a value is rejected as stale."""
     p = period.strip().lower()
     if p.startswith("annual:") or p.startswith("quarterly:"):
+        return 999
+    m = _OFFSET_PERIOD_RE.match(p)
+    if m and int(m.group(2)) >= 1:
         return 999
     return _STALENESS_YEARS.get(p, _STALENESS_DEFAULT)
 
@@ -52,6 +60,89 @@ def _is_stale(cited: CitedValue, period: str) -> bool:
     if limit >= 999:
         return False
     return cited.fiscal_year < _date.today().year - limit
+
+
+def _discovered_slugs_for_cik(cik: str) -> set[str]:
+    """Return every discovered slug the company_kpis cache has for this CIK.
+
+    Used as the third tier of the unknown-metric guard so a query like
+    `edgarpack query FIG paid_seats --period lfy` doesn't fail
+    MetricNotFound before even trying the discovered path. Empty set when
+    no discovery pass has run or the registry lookup fails.
+    """
+    reg = LearnedRegistry()
+    try:
+        return set(reg.company_kpi_distinct_slugs(cik))
+    except Exception:  # pragma: no cover - registry DB should always open
+        return set()
+    finally:
+        reg.close()
+
+
+def _apply_magnitude(value: float | None, magnitude: str | None) -> float | None:
+    """Expand a magnitude hint into base units.
+
+    The `which` discovery pass stores values with an associated magnitude
+    (e.g. value=3.44 magnitude='billions'). `financials()` consumers expect
+    base units, so expand before returning.
+    """
+    if value is None:
+        return None
+    if magnitude == "thousands":
+        return value * 1_000.0
+    if magnitude == "millions":
+        return value * 1_000_000.0
+    if magnitude == "billions":
+        return value * 1_000_000_000.0
+    return value
+
+
+def _cited_from_company_kpi_row(
+    row: CompanyKpiRow,
+    *,
+    cik: str,
+    company: str,
+) -> CitedValue:
+    """Turn a stored CompanyKpiRow into a CitedValue query consumers expect.
+
+    `concept` is set to the display_name (or slug) since there's no XBRL
+    concept behind a discovered metric. `source='learned:kpi-discovered'`
+    distinguishes these rows from catalog Layer B hits so downstream
+    renderers can flag them. `excerpt_text` is the verbatim source
+    substring (populates document_url's text-fragment anchor).
+    """
+    try:
+        period_end = _date.fromisoformat(row.period_end) if row.period_end else _date.min
+    except ValueError:
+        period_end = _date.min
+    try:
+        extracted_iso = row.extracted_at.split("T", 1)[0] if row.extracted_at else ""
+        filed = _date.fromisoformat(extracted_iso) if extracted_iso else _date.min
+    except ValueError:
+        filed = _date.min
+
+    expanded_value = _apply_magnitude(row.value, row.magnitude)
+    unit = row.unit or "pure"
+
+    return CitedValue(
+        value=expanded_value,
+        unit=unit,
+        metric=row.slug,
+        concept=row.display_name or row.slug,
+        period_end=period_end,
+        fiscal_year=row.fiscal_year,
+        fiscal_period=row.fiscal_period,
+        form_type=row.form_type or "",
+        filed=filed,
+        accession=row.accession,
+        cik=cik,
+        company=company,
+        taxonomy="kpi-discovered",
+        primary_document="",
+        fact_id="",
+        excerpt_text=row.source_substring or "",
+        source="learned:kpi-discovered",
+    )
 
 
 async def _build_doc_map(cik: str, force: bool = False) -> dict[str, str]:
@@ -212,12 +303,21 @@ async def financials(
     else:
         metric_list = list(metrics)
 
-    # Layer 0: alias dereferencing + unknown-metric guard
+    # Layer 0: alias dereferencing + unknown-metric guard.
+    # Resolution order: METRIC_MAP -> KPI_CATALOG -> company_kpis
+    # (company-specific discovered slugs, populated by `edgarpack which`).
+    discovered_slugs = _discovered_slugs_for_cik(cik)
     resolved_list: list[str] = []
     for m in metric_list:
         resolved = resolve_alias(m)
-        if resolved not in METRIC_MAP and resolved not in KPI_CATALOG:
-            combined_known = set(METRIC_MAP.keys()) | set(KPI_CATALOG.keys())
+        if (
+            resolved not in METRIC_MAP
+            and resolved not in KPI_CATALOG
+            and resolved not in discovered_slugs
+        ):
+            combined_known = (
+                set(METRIC_MAP.keys()) | set(KPI_CATALOG.keys()) | discovered_slugs
+            )
             suggestions = suggest_metrics(resolved, combined_known, n=3)
             raise MetricNotFound(m, suggestions=suggestions)
         resolved_list.append(resolved)
@@ -230,15 +330,41 @@ async def financials(
     for metric in metric_list:
         meta = METRIC_MAP.get(metric)
         if meta is None:
-            # KPI-only metric (in KPI_CATALOG but not METRIC_MAP).
-            # Layer B extracts these from the pack's MD&A/segment sections.
-            cited = _kpi_extract_mod.try_extract_kpi(
-                metric=metric,
-                cik=cik,
-                company=company_name,
-                period=period,
-            )
-            if cited is not None:
+            if metric in KPI_CATALOG:
+                # KPI-only metric (in KPI_CATALOG but not METRIC_MAP).
+                # Layer B extracts these from the pack's MD&A/segment sections.
+                cited = _kpi_extract_mod.try_extract_kpi(
+                    metric=metric,
+                    cik=cik,
+                    company=company_name,
+                    period=period,
+                )
+                if cited is not None:
+                    result_metrics[metric] = cited
+                else:
+                    result_metrics[metric] = None
+                    diagnostics_list.append(
+                        Diagnostic(
+                            metric=metric,
+                            kind="layer_b_unresolved",
+                            message=(
+                                f"Layer B could not resolve '{metric}': no pack, "
+                                f"no LLM backend, or the value was not found in "
+                                f"MD&A/segment sections."
+                            ),
+                        )
+                    )
+                continue
+
+            # Company-specific discovered KPI (populated by `edgarpack which`).
+            # Resolves against the cached company_kpis rows; no LLM call.
+            company_row = lookup_company_kpi(cik=cik, slug=metric, period=period)
+            if company_row is not None:
+                cited = _cited_from_company_kpi_row(
+                    company_row,
+                    cik=cik,
+                    company=company_name,
+                )
                 result_metrics[metric] = cited
             else:
                 result_metrics[metric] = None
@@ -247,11 +373,10 @@ async def financials(
                         metric=metric,
                         kind="layer_b_unresolved",
                         message=(
-                            f"Layer B could not resolve '{metric}': no pack, "
-                            f"no LLM backend, or the value was not found in "
-                            f"MD&A/segment sections. TODO(v2.1): refactor "
-                            f"try_extract_kpi to return a structured result tuple "
-                            f"so the orchestrator can produce precise diagnostic kinds."
+                            f"Discovered KPI '{metric}' has no cached row for "
+                            f"period '{period}'. Run `edgarpack which "
+                            f"{cik}` to refresh discovery, or check the "
+                            f"period against what's available."
                         ),
                     )
                 )
@@ -268,6 +393,7 @@ async def financials(
                 doc_map,
                 cache=derived_cache,
                 in_progress=set(),
+                diagnostics=diagnostics_list,
             )
             if cited is not None and _is_stale(cited, period):
                 cited = None
@@ -299,6 +425,7 @@ async def financials(
                 period,
                 taxonomy=taxonomy,
                 doc_map=doc_map,
+                diagnostics=diagnostics_list,
             )
 
             if isinstance(value, list):
@@ -446,6 +573,7 @@ async def financials(
                     doc_map,
                     cache={},
                     in_progress=set(),
+                    diagnostics=diagnostics_list,
                 )
                 if cited_retry is not None and not _is_stale(cited_retry, period):
                     result_metrics[m] = cited_retry
@@ -605,6 +733,7 @@ def _compute_derived(
     cache: _DerivedCache | None = None,
     in_progress: set[str] | None = None,
     period_offset: int = 0,
+    diagnostics: list[Diagnostic] | None = None,
 ) -> CitedValue | None:
     """Compute a derived metric from its components with cycle protection."""
     if cache is None:
@@ -618,6 +747,20 @@ def _compute_derived(
     if cache_key in in_progress:
         cache[cache_key] = None
         return None
+
+    if meta.kind == "cagr":
+        result = _compute_cagr(
+            facts,
+            metric,
+            meta,
+            company,
+            cik,
+            period,
+            doc_map,
+            period_offset=period_offset,
+        )
+        cache[cache_key] = result
+        return result
 
     if not meta.components or not meta.formula:
         cache[cache_key] = None
@@ -650,6 +793,7 @@ def _compute_derived(
                 cache=cache,
                 in_progress=in_progress,
                 period_offset=comp_offset,
+                diagnostics=diagnostics,
             )
         else:
             # HKEX packs tag concepts under their own taxonomy (hkfrs); use
@@ -677,6 +821,7 @@ def _compute_derived(
                 taxonomy=taxonomy,
                 doc_map=doc_map,
                 period_offset=comp_offset,
+                diagnostics=diagnostics,
             )
             if isinstance(value, list):
                 comp_value = value[0] if value else None
@@ -836,6 +981,139 @@ def _eval_formula(formula: str, components: dict[str, CitedValue]) -> float | No
     return None
 
 
+def _fy_equivalent(period: str) -> str:
+    """Map a parent period to its FY-anchored equivalent for CAGR math.
+
+    CAGR is computed over annual values regardless of whether the caller asked
+    for ``ltm``, ``mrq``, or an FY-anchored selector. ``ltm`` / ``mrq`` /
+    ``mrp`` collapse to ``lfy``; ``ltm-N`` / ``mrq-N`` collapse to ``lfy-N``.
+    ``lfy`` / ``lfy-N`` pass through unchanged.
+    """
+    p = period.strip().lower()
+    if p in ("ltm", "mrq", "mrp"):
+        return "lfy"
+    m = re.match(r"^(ltm|mrq)-(\d+)$", p)
+    if m:
+        return f"lfy-{m.group(2)}"
+    return p
+
+
+def _compute_cagr(
+    facts: dict[str, Any],
+    metric: str,
+    meta: MetricMeta,
+    company: str,
+    cik: str,
+    period: str,
+    doc_map: dict[str, str] | None,
+    period_offset: int = 0,
+) -> DerivedValue | None:
+    """Compute ``(end / start) ** (1/N) - 1`` on FY-anchored components.
+
+    Returns ``None`` when the base metric cannot be resolved for either
+    endpoint, when the start value is zero, or when the signs differ (crossing
+    zero makes CAGR meaningless). A sign-flip or zero-start condition adds a
+    warning to the returned value if the value is otherwise computable.
+    """
+    n = meta.cagr_years
+    base = meta.cagr_base
+    if n <= 0 or not base:
+        return None
+
+    base_meta = METRIC_MAP.get(base)
+    if base_meta is None:
+        return None
+
+    anchor_period = _fy_equivalent(period)
+
+    def _resolve_at(years_back_total: int) -> CitedValue | None:
+        """Resolve the base metric at FY - years_back_total."""
+        # Combine caller's period_offset with the CAGR's requested shift.
+        total_offset = -years_back_total + period_offset
+        if base_meta.derived:
+            return _compute_derived(
+                facts,
+                base,
+                base_meta,
+                company,
+                cik,
+                anchor_period,
+                doc_map,
+                cache={},
+                in_progress=set(),
+                period_offset=total_offset,
+            )
+        hkex_concept = _hkex_concept_for_metric(facts, base)
+        if hkex_concept is not None:
+            concept, taxonomy = hkex_concept
+        else:
+            resolved = resolve_concept(base, facts)
+            if resolved is None:
+                return None
+            concept, taxonomy = resolved
+        value = select_period(
+            facts,
+            concept,
+            base,
+            base_meta,
+            company,
+            cik,
+            anchor_period,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+            period_offset=total_offset,
+        )
+        if isinstance(value, list):
+            return value[0] if value else None
+        return value
+
+    end_cv = _resolve_at(0)
+    start_cv = _resolve_at(n)
+
+    if end_cv is None or start_cv is None:
+        return None
+    if end_cv.value is None or start_cv.value is None:
+        return None
+
+    end_val = float(end_cv.value)
+    start_val = float(start_cv.value)
+    if start_val == 0:
+        return None
+    if (end_val > 0) != (start_val > 0):
+        # Sign flip across the window makes CAGR meaningless.
+        return None
+
+    try:
+        ratio = end_val / start_val
+        # Guard against negative ratio (defensive; sign-flip check above
+        # should already cover this).
+        if ratio <= 0:
+            return None
+        cagr = ratio ** (1.0 / n) - 1.0
+    except (ValueError, ZeroDivisionError, OverflowError):
+        return None
+
+    return DerivedValue(
+        value=cagr,
+        unit="pure",
+        metric=metric,
+        concept=meta.formula or f"cagr({base},{n})",
+        period_start=start_cv.period_end,
+        period_end=end_cv.period_end,
+        fiscal_year=end_cv.fiscal_year,
+        fiscal_period=f"CAGR-{n}Y",
+        form_type=end_cv.form_type,
+        filed=end_cv.filed,
+        accession=end_cv.accession,
+        cik=cik,
+        company=company,
+        taxonomy=end_cv.taxonomy,
+        primary_document=end_cv.primary_document,
+        derived=True,
+        components={"end": end_cv, "start": start_cv},
+    )
+
+
 def _derived_unit(metric: str, components: dict[str, CitedValue]) -> str:
     """Determine the unit for a derived metric."""
     # Ratios produce "pure" (dimensionless)
@@ -849,6 +1127,23 @@ def _derived_unit(metric: str, components: dict[str, CitedValue]) -> str:
         "roa",
         "current_ratio",
         "debt_to_equity",
+        # Growth family
+        "revenue_growth_yoy",
+        "net_income_growth_yoy",
+        "operating_income_growth_yoy",
+        "eps_growth_yoy",
+        # Margin trend family
+        "gross_margin_trend",
+        "operating_margin_trend",
+        "net_margin_trend",
+        # Intensity family
+        "r_and_d_intensity",
+        "sga_intensity",
+        "sm_intensity",
+        "capex_intensity",
+        # Quality / composite
+        "fcf_to_net_income",
+        "rule_of_40",
     }
     if metric in ratio_metrics:
         return "pure"
@@ -998,6 +1293,7 @@ async def _query_hkex_pack(
                 reporting_currency_by_concept[concept] = first_unit
 
     result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
+    diagnostics_list: list[Diagnostic] = []
 
     # Derive meta lookup per metric: HKFact concepts aren't in METRIC_MAP
     # under GAAP taxonomy, but we know their duration/instant nature from
@@ -1051,6 +1347,7 @@ async def _query_hkex_pack(
                 cik_str,
                 period,
                 taxonomy=taxonomy,
+                diagnostics=diagnostics_list,
             )
 
             if isinstance(value, list):
@@ -1086,6 +1383,7 @@ async def _query_hkex_pack(
             doc_map=None,
             cache=derived_cache,
             in_progress=set(),
+            diagnostics=diagnostics_list,
         )
         if cited is not None:
             # Propagate HKEX metadata (accounting standard + reporting currency).
@@ -1095,8 +1393,18 @@ async def _query_hkex_pack(
             # Use the native currency of the first non-headcount component.
             ratio_or_growth = metric in {
                 "revenue_growth_yoy",
+                "net_income_growth_yoy",
+                "operating_income_growth_yoy",
+                "eps_growth_yoy",
                 "gross_margin_trend",
+                "operating_margin_trend",
+                "net_margin_trend",
                 "r_and_d_intensity",
+                "sga_intensity",
+                "sm_intensity",
+                "capex_intensity",
+                "fcf_to_net_income",
+                "rule_of_40",
                 "gross_margin",
                 "operating_margin",
                 "net_margin",
@@ -1120,6 +1428,7 @@ async def _query_hkex_pack(
         cik=cik_str,
         period=period,
         metrics=result_metrics,
+        diagnostics=diagnostics_list,
     )
 
 

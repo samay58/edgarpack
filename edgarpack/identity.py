@@ -12,17 +12,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from .errors import AmbiguousCompany, UnknownCompany
 from .harvest.universe import CompanySpec, load_universe
 
+__all__ = [
+    "AmbiguousCompany",
+    "IdentityIndex",
+    "ResolvedCompany",
+    "Source",
+    "UnknownCompany",
+    "load_identity",
+    "resolve",
+]
+
 Source = Literal["SEC", "HKEX"]
-
-
-class UnknownCompany(ValueError):  # noqa: N818
-    pass
-
-
-class AmbiguousCompany(ValueError):  # noqa: N818
-    pass
 
 
 @dataclass(frozen=True)
@@ -131,6 +134,7 @@ def resolve(
     suggestions = difflib.get_close_matches(key, alias_keys, n=3)
     if not suggestions:
         suggestions = alias_keys[:3]
+    rendered = [f"{a} ({index.by_alias[a].ticker})" for a in suggestions]
     raise UnknownCompany(
-        f"Unknown company {company!r}. Did you mean: {', '.join(suggestions) or 'none'}?"
+        f"Unknown company {company!r}. Did you mean: {', '.join(rendered) or 'none'}?"
     )

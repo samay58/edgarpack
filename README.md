@@ -20,6 +20,9 @@ Three commands cover most of it.
 
 ```bash
 edgarpack query NVDA revenue,net_income --period ltm
+# ticker, CIK, or company name all work:
+edgarpack query "NVIDIA" revenue,net_income --period ltm
+edgarpack query "apple inc" revenue --period lfy
 ```
 
 Each value carries a citation reference and a reproducible formula. Revenue for LTM is computed from the most recent 10-Q plus the last 10-K minus the prior-year 10-Q, and the output tells you which three filings it used.
@@ -35,7 +38,10 @@ A comps table with inline citations by default. Drop `--citations off` if you wa
 **Build a filing pack:**
 
 ```bash
-edgarpack build --cik 0001045810 --form 10-K
+edgarpack build NVDA --form 10-K
+# CIK and company names work too:
+edgarpack build 0001045810 --form 10-K
+edgarpack build "NVIDIA" --form 10-K
 ```
 
 One full-filing markdown file, one file per detected section, a manifest with hashes and offsets, optional chunk and XBRL artifacts. The output runs through a polish pass that strips TOC page-break spam, recovers bullet lists trapped in tables, normalizes heading levels, and simplifies wide financial tables into a readable blockquote format. Deterministic. Rebuild produces the same bytes.
@@ -97,10 +103,10 @@ Full query model, JSON formats, and citation semantics in [`docs/QUERY.md`](docs
 ## Commands
 
 ```bash
-# Build & browse
-edgarpack build --cik 0001045810 --form 10-K                  # build one filing pack
-edgarpack list --cik 0001045810 --form 10-K --limit 5         # recent filings
-edgarpack company-llms --cik 0001045810 --out ./packs         # llms.txt index for a CIK
+# Build & browse (all accept ticker / CIK / company name)
+edgarpack build NVDA --form 10-K                              # build one filing pack
+edgarpack list "NVIDIA" --form 10-K --limit 5                 # recent filings
+edgarpack company-llms AAPL --out ./packs                     # llms.txt index
 edgarpack site --packs ./packs --out ./site                   # static site generator
 
 # Query & compare
@@ -114,7 +120,7 @@ edgarpack search "export controls" --topic risk:export        # full-text search
 
 # Observatory
 edgarpack diff --ticker NVDA --form 10-K                      # compare latest two filings
-edgarpack timeline --ticker NVDA --section 10k_parti_item1a   # one section over time
+edgarpack timeline --ticker "NVIDIA" --section 10k_parti_item1a   # --ticker also accepts names
 
 # Maintenance
 edgarpack learned list                                        # inspect self-heal concept mappings

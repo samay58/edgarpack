@@ -24,10 +24,13 @@ Migration history:
               PRIMARY KEY (cik, accession, metric) so that per-filing
               rows with the same (cik, metric) but different accessions
               can coexist (Task 4).
+    v2 -> v3: add company_kpis table (per-company discovered KPIs for
+              `edgarpack which`, keyed by (cik, accession, slug)).
 """
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -57,6 +60,35 @@ CREATE INDEX IF NOT EXISTS idx_learned_source
     ON learned_concepts(source);
 CREATE INDEX IF NOT EXISTS idx_learned_hit_count
     ON learned_concepts(hit_count DESC);
+"""
+
+_COMPANY_KPIS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS company_kpis (
+    cik              TEXT NOT NULL,
+    accession        TEXT NOT NULL,
+    slug             TEXT NOT NULL,
+    display_name     TEXT NOT NULL,
+    aliases          TEXT,
+    unit             TEXT,
+    magnitude        TEXT,
+    value            REAL,
+    period_end       TEXT NOT NULL,
+    fiscal_year      INTEGER NOT NULL DEFAULT 0,
+    fiscal_period    TEXT NOT NULL DEFAULT '',
+    form_type        TEXT NOT NULL DEFAULT '',
+    definition       TEXT,
+    section_id       TEXT,
+    chunk_id         TEXT,
+    source_substring TEXT,
+    confidence       REAL,
+    extracted_at     TEXT NOT NULL,
+    PRIMARY KEY (cik, accession, slug)
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_kpis_cik_slug
+    ON company_kpis(cik, slug);
+CREATE INDEX IF NOT EXISTS idx_company_kpis_cik_period
+    ON company_kpis(cik, period_end);
 """
 
 _REBUILD_TABLE_SQL = """
@@ -113,6 +145,40 @@ class LearnedRow:
     accession: str = ""
 
 
+@dataclass(frozen=True)
+class CompanyKpiRow:
+    """Per-filing discovered KPI row backing `edgarpack which`.
+
+    Represents a single KPI disclosure found in one filing. The `which`
+    aggregator merges rows across filings on (cik, slug) to produce the
+    per-company period matrix surfaced to the user.
+
+    aliases is a JSON-serialized list of prior display names the
+    canonicalization pass has mapped to this slug. Empty list (or None when
+    never set) means the slug is new or the raw display name is the only
+    known spelling.
+    """
+
+    cik: str
+    accession: str
+    slug: str
+    display_name: str
+    aliases: list[str]
+    unit: str | None
+    magnitude: str | None
+    value: float | None
+    period_end: str
+    fiscal_year: int
+    fiscal_period: str
+    form_type: str
+    definition: str | None
+    section_id: str | None
+    chunk_id: str | None
+    source_substring: str | None
+    confidence: float | None
+    extracted_at: str
+
+
 class LearnedRegistry:
     """SQLite-backed registry of learned metric -> concept mappings."""
 
@@ -155,6 +221,13 @@ class LearnedRegistry:
             # per-filing rows with the same (cik, metric) can coexist.
             conn.executescript(_REBUILD_TABLE_SQL)
             conn.execute("PRAGMA user_version = 2")
+            current_version = 2
+        if current_version < 3:
+            # v2 -> v3: add company_kpis table for per-company discovered
+            # KPIs surfaced by `edgarpack which`. Idempotent create so
+            # re-running on a v3 db is harmless.
+            conn.executescript(_COMPANY_KPIS_SCHEMA)
+            conn.execute("PRAGMA user_version = 3")
         conn.commit()
 
     def close(self) -> None:
@@ -345,6 +418,214 @@ class LearnedRegistry:
         cur = conn.execute(sql, tuple(params))
         conn.commit()
         return cur.rowcount or 0
+
+    # ------------------------------------------------------------------
+    # company_kpis DAO (`edgarpack which`)
+    # ------------------------------------------------------------------
+
+    def company_kpi_has_accession(self, cik: str, accession: str) -> bool:
+        """True when any company_kpis row exists for this (cik, accession).
+
+        Used as the cache-hit check for `discover_kpis`: one extraction pass
+        persists multiple rows for a filing at once, so the presence of any
+        row means the pass has already run. The special sentinel slug
+        `__no_kpis_found__` records a negative result.
+        """
+        conn = self._get_conn()
+        row = conn.execute(
+            "SELECT 1 FROM company_kpis WHERE cik = ? AND accession = ? LIMIT 1",
+            (cik, accession),
+        ).fetchone()
+        return row is not None
+
+    def company_kpi_upsert(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        slug: str,
+        display_name: str,
+        aliases: list[str] | None = None,
+        unit: str | None = None,
+        magnitude: str | None = None,
+        value: float | None = None,
+        period_end: str,
+        fiscal_year: int = 0,
+        fiscal_period: str = "",
+        form_type: str = "",
+        definition: str | None = None,
+        section_id: str | None = None,
+        chunk_id: str | None = None,
+        source_substring: str | None = None,
+        confidence: float | None = None,
+    ) -> None:
+        conn = self._get_conn()
+        conn.execute(
+            """
+            INSERT INTO company_kpis (
+                cik, accession, slug, display_name, aliases,
+                unit, magnitude, value, period_end,
+                fiscal_year, fiscal_period, form_type,
+                definition, section_id, chunk_id, source_substring,
+                confidence, extracted_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(cik, accession, slug) DO UPDATE SET
+                display_name     = excluded.display_name,
+                aliases          = excluded.aliases,
+                unit             = excluded.unit,
+                magnitude        = excluded.magnitude,
+                value            = excluded.value,
+                period_end       = excluded.period_end,
+                fiscal_year      = excluded.fiscal_year,
+                fiscal_period    = excluded.fiscal_period,
+                form_type        = excluded.form_type,
+                definition       = excluded.definition,
+                section_id       = excluded.section_id,
+                chunk_id         = excluded.chunk_id,
+                source_substring = excluded.source_substring,
+                confidence       = excluded.confidence,
+                extracted_at     = excluded.extracted_at
+            """,
+            (
+                cik,
+                accession,
+                slug,
+                display_name,
+                json.dumps(aliases or []),
+                unit,
+                magnitude,
+                value,
+                period_end,
+                int(fiscal_year or 0),
+                fiscal_period or "",
+                form_type or "",
+                definition,
+                section_id,
+                chunk_id,
+                source_substring,
+                confidence,
+                datetime.now(UTC).isoformat(),
+            ),
+        )
+        conn.commit()
+
+    def company_kpi_mark_empty(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        form_type: str = "",
+        period_end: str = "",
+    ) -> None:
+        """Persist a negative-result marker for a (cik, accession) pass.
+
+        The marker is a sentinel row with slug='__no_kpis_found__'. It exists
+        so a subsequent `company_kpi_has_accession` call returns True and
+        skips re-running the LLM on a filing that genuinely has no KPIs.
+        """
+        self.company_kpi_upsert(
+            cik=cik,
+            accession=accession,
+            slug="__no_kpis_found__",
+            display_name="",
+            aliases=[],
+            unit=None,
+            value=None,
+            period_end=period_end or "",
+            form_type=form_type,
+        )
+
+    def company_kpi_list(
+        self,
+        *,
+        cik: str,
+        slug: str | None = None,
+        accession: str | None = None,
+        include_sentinel: bool = False,
+    ) -> list[CompanyKpiRow]:
+        sql = "SELECT * FROM company_kpis WHERE cik = ?"
+        params: list[object] = [cik]
+        if slug is not None:
+            sql += " AND slug = ?"
+            params.append(slug)
+        if accession is not None:
+            sql += " AND accession = ?"
+            params.append(accession)
+        if not include_sentinel:
+            sql += " AND slug != '__no_kpis_found__'"
+        sql += " ORDER BY period_end DESC, slug ASC"
+        conn = self._get_conn()
+        cur = conn.execute(sql, tuple(params))
+        return [_company_kpi_row_to_dataclass(r) for r in cur.fetchall()]
+
+    def company_kpi_distinct_slugs(self, cik: str) -> list[str]:
+        """Return all slugs known for this CIK across all cached filings.
+
+        Fed into the canonicalization pass so a new filing can reuse slugs
+        coined by earlier filings (drift dedupe: 'active designers' in 2023
+        -> 'paid_seats' coined in 2024).
+        """
+        conn = self._get_conn()
+        rows = conn.execute(
+            "SELECT DISTINCT slug FROM company_kpis "
+            "WHERE cik = ? AND slug != '__no_kpis_found__' "
+            "ORDER BY slug",
+            (cik,),
+        ).fetchall()
+        return [r["slug"] for r in rows]
+
+    def company_kpi_clear(
+        self,
+        *,
+        cik: str | None = None,
+        accession: str | None = None,
+    ) -> int:
+        if cik is None and accession is None:
+            raise ValueError(
+                "company_kpi_clear: refusing to clear entire table without cik/accession"
+            )
+        sql = "DELETE FROM company_kpis WHERE 1=1"
+        params: list[object] = []
+        if cik is not None:
+            sql += " AND cik = ?"
+            params.append(cik)
+        if accession is not None:
+            sql += " AND accession = ?"
+            params.append(accession)
+        conn = self._get_conn()
+        cur = conn.execute(sql, tuple(params))
+        conn.commit()
+        return cur.rowcount or 0
+
+
+def _company_kpi_row_to_dataclass(row: sqlite3.Row) -> CompanyKpiRow:
+    raw_aliases = row["aliases"] if row["aliases"] else "[]"
+    try:
+        aliases = json.loads(raw_aliases) if isinstance(raw_aliases, str) else []
+    except json.JSONDecodeError:
+        aliases = []
+    if not isinstance(aliases, list):
+        aliases = []
+    return CompanyKpiRow(
+        cik=row["cik"],
+        accession=row["accession"],
+        slug=row["slug"],
+        display_name=row["display_name"] or "",
+        aliases=[str(a) for a in aliases],
+        unit=row["unit"],
+        magnitude=row["magnitude"],
+        value=row["value"],
+        period_end=row["period_end"] or "",
+        fiscal_year=int(row["fiscal_year"] or 0),
+        fiscal_period=row["fiscal_period"] or "",
+        form_type=row["form_type"] or "",
+        definition=row["definition"],
+        section_id=row["section_id"],
+        chunk_id=row["chunk_id"],
+        source_substring=row["source_substring"],
+        confidence=row["confidence"],
+        extracted_at=row["extracted_at"] or "",
+    )
 
 
 def _row_to_dataclass(row: sqlite3.Row) -> LearnedRow:

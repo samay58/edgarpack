@@ -356,6 +356,7 @@ class Diagnostic(BaseModel):
         "layer_b_not_found",
         "layer_b_hallucinated_excerpt",
         "layer_b_unresolved",
+        "ltm_incomputable",
     ]
     message: str
 

@@ -19,6 +19,10 @@ class FilingMeta(BaseModel):
     filing_date: date
     primary_document: str
     company_name: str
+    # SEC submissions API returns a distinct reportDate (the fiscal period
+    # this filing covers). Optional so older FilingMeta instances constructed
+    # without it still validate.
+    period_of_report: date | None = None
 
     @property
     def accession_nodash(self) -> str:
@@ -48,6 +52,24 @@ def normalize_form_type(form_type: str) -> str:
 def normalize_cik(cik: str) -> str:
     """Normalize CIK to 10-digit zero-padded format."""
     return cik.lstrip("0").zfill(10)
+
+
+def _parse_report_date(report_dates: list[str], idx: int) -> date | None:
+    """Safely parse a SEC reportDate string at a given index.
+
+    Returns None if the index is out of range, the entry is empty, or the
+    value is not a valid ISO date. The SEC submissions feed usually fills
+    reportDate for 10-K/10-Q but may be blank for amendments or exhibits.
+    """
+    if idx < 0 or idx >= len(report_dates):
+        return None
+    raw = (report_dates[idx] or "").strip()
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return None
 
 
 async def fetch_submissions(cik: str, force: bool = False) -> dict[str, Any]:
@@ -112,6 +134,7 @@ async def get_latest_filing(
     forms = filings.get("form", [])
     accessions = filings.get("accessionNumber", [])
     dates = filings.get("filingDate", [])
+    report_dates = filings.get("reportDate", [])
     docs = filings.get("primaryDocument", [])
 
     # Find matching filings
@@ -125,6 +148,7 @@ async def get_latest_filing(
                 filing_date=date.fromisoformat(dates[i]),
                 primary_document=docs[i],
                 company_name=company_name,
+                period_of_report=_parse_report_date(report_dates, i),
             )
 
     raise ValueError(f"No {form_type} filing found for CIK {cik}")
@@ -164,6 +188,7 @@ async def get_filing_by_accession(
     forms = filings.get("form", [])
     accessions = filings.get("accessionNumber", [])
     dates = filings.get("filingDate", [])
+    report_dates = filings.get("reportDate", [])
     docs = filings.get("primaryDocument", [])
 
     for i, acc in enumerate(accessions):
@@ -175,6 +200,7 @@ async def get_filing_by_accession(
                 filing_date=date.fromisoformat(dates[i]),
                 primary_document=docs[i],
                 company_name=company_name,
+                period_of_report=_parse_report_date(report_dates, i),
             )
 
     raise ValueError(f"Filing {accession} not found for CIK {cik}")
@@ -207,6 +233,7 @@ async def list_filings(
     forms = filings.get("form", [])
     accessions = filings.get("accessionNumber", [])
     dates = filings.get("filingDate", [])
+    report_dates = filings.get("reportDate", [])
     docs = filings.get("primaryDocument", [])
 
     results: list[FilingMeta] = []
@@ -221,6 +248,7 @@ async def list_filings(
                     filing_date=date.fromisoformat(dates[i]),
                     primary_document=docs[i],
                     company_name=company_name,
+                    period_of_report=_parse_report_date(report_dates, i),
                 )
             )
             if len(results) >= limit:

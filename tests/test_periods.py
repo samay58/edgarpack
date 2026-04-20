@@ -5,8 +5,9 @@ from __future__ import annotations
 import unittest
 
 from edgarpack.query.concepts import MetricMeta
-from edgarpack.query.models import DerivedValue
+from edgarpack.query.models import CitedValue, DerivedValue, Diagnostic
 from edgarpack.query.periods import (
+    _assert_ltm_invariant,
     select_annual_series,
     select_lfy,
     select_ltm,
@@ -526,8 +527,13 @@ class TestSelectLtm(unittest.TestCase):
         self.assertEqual(result.components["mrp_prior"].fiscal_year, 2024)
         self.assertEqual(result.components["mrp_prior"].fiscal_period, "Q3")
 
-    def test_ltm_missing_prior_year_quarter_returns_mrp(self) -> None:
-        """Missing prior-year comparable should return MRP rather than crashing."""
+    def test_ltm_missing_prior_year_quarter_returns_none_plus_diagnostic(self) -> None:
+        """Missing prior-year same-quarter means LTM is not computable.
+
+        Old behavior silently returned the 9-month MRP YTD. New contract
+        refuses to mislabel a 9-month value as LTM; returns None and emits
+        a structured ltm_incomputable Diagnostic.
+        """
         values = [
             {
                 "val": 100_000_000_000,
@@ -551,10 +557,112 @@ class TestSelectLtm(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
-        self.assertIsNotNone(result)
-        self.assertNotIsInstance(result, DerivedValue)
-        self.assertEqual(result.value, 90_000_000_000)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertEqual(diagnostics[0].metric, "revenue")
+        self.assertIn("Q3", diagnostics[0].message)
+        self.assertIn("FY2024", diagnostics[0].message)
+
+    def test_ltm_no_annual_history_returns_none_plus_diagnostic(self) -> None:
+        """Filer with only quarterlies and no annual: LTM not computable."""
+        values = [
+            {
+                "val": 75_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-09-30",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-11-01",
+            },
+            {
+                "val": 90_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-09-30",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-11-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertIn("no annual history", diagnostics[0].message)
+
+    def test_ltm_no_lfy_returns_none_plus_diagnostic(self) -> None:
+        """MRP present, Q3 prior present, but no annual at or before FY-1."""
+        values = [
+            {
+                "val": 90_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-09-30",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-11-01",
+            },
+            {
+                "val": 75_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-09-30",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-11-01",
+            },
+            {
+                "val": 140_000_000_000,
+                "start": "2025-01-01",
+                "end": "2025-12-31",
+                "fy": 2025,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-26-000001",
+                "filed": "2026-03-01",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertIn("no prior FY annual", diagnostics[0].message)
 
 
 class TestSelectLtmMinus1(unittest.TestCase):
@@ -645,8 +753,12 @@ class TestSelectLtmMinus1(unittest.TestCase):
         self.assertEqual(result.value, 80_000_000_000)
         self.assertEqual(result.fiscal_year, 2022)
 
-    def test_ltm_minus_1_missing_prior_returns_anchor_quarter(self) -> None:
-        """If LTM-1 prior-year comparable is missing, return anchored quarter value."""
+    def test_ltm_minus_1_missing_prior_returns_none_plus_diagnostic(self) -> None:
+        """LTM-1 anchor is Q3 FY2023; prior-year Q3 FY2022 cumulative is missing.
+
+        Old behavior returned the anchor 9-month YTD value mislabeled as LTM-1.
+        New contract returns None and emits an ltm_incomputable diagnostic.
+        """
         values = [
             {
                 "val": 80_000_000_000,
@@ -690,10 +802,20 @@ class TestSelectLtmMinus1(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
-        self.assertIsNotNone(result)
-        self.assertNotIsInstance(result, DerivedValue)
-        self.assertEqual(result.value, 75_000_000_000)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_minus_1(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertIn("LTM-1", diagnostics[0].message)
 
     def test_ltm_minus_1_q4_anchor_uses_formula_when_prior_available(self) -> None:
         """LTM-1 should not short-circuit on Q4 anchors when formula inputs exist."""
@@ -1144,7 +1266,12 @@ class TestEdgeCaseBoundary(unittest.TestCase):
     """Additional edge cases for boundary conditions in period selection."""
 
     def test_ltm_single_quarter_available(self) -> None:
-        """Only Q1 exists; LTM should degrade to LFY when no full window can be built."""
+        """Only Q1 FY2024 exists alongside FY2023 annual; prior-year Q1 is missing.
+
+        New contract refuses to return the Q1 YTD as LTM. Result is None with a
+        structured diagnostic so the caller can render 'n/a' instead of a
+        mislabeled 3-month value.
+        """
         values = [
             {
                 "val": 100_000_000_000,
@@ -1168,10 +1295,19 @@ class TestEdgeCaseBoundary(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
-        self.assertIsNotNone(result)
-        # Q1 anchor with no prior-year Q1 should degrade gracefully
-        # (either returns a partial value or the MRP itself)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
 
     def test_ltm_minus_1_only_two_years_data(self) -> None:
         """Exactly 2 annual values; LTM-1 should pick the older one for annual-only filer."""
@@ -1413,6 +1549,122 @@ class TestSegmentFiltering(unittest.TestCase):
         extracted = _extract_values(facts, "GrossProfit")
         self.assertEqual(len(extracted), 1)
         self.assertEqual(extracted[0]["val"], 100_000_000_000)
+
+
+class TestLtmInvariant(unittest.TestCase):
+    """Direct unit tests for the _assert_ltm_invariant citation-contract check."""
+
+    def _cv(
+        self,
+        *,
+        value: float = 100.0,
+        fiscal_period: str = "LTM",
+        fiscal_year: int = 2024,
+    ) -> CitedValue:
+        from datetime import date
+
+        return CitedValue(
+            value=value,
+            unit="USD",
+            metric="revenue",
+            concept="Revenues",
+            period_start=date(2023, 1, 1),
+            period_end=date(2024, 9, 30),
+            fiscal_year=fiscal_year,
+            fiscal_period=fiscal_period,
+            form_type="10-Q",
+            filed=date(2024, 11, 1),
+            accession="0000000001-24-000004",
+            cik=CIK,
+            company=COMPANY,
+        )
+
+    def test_none_result_passes(self) -> None:
+        _assert_ltm_invariant(None, "LTM")
+
+    def test_q4_plain_cited_value_passes(self) -> None:
+        _assert_ltm_invariant(self._cv(fiscal_period="FY"), "LTM")
+        _assert_ltm_invariant(self._cv(fiscal_period="Q4"), "LTM")
+
+    def test_plain_q3_cited_value_raises(self) -> None:
+        """A plain CitedValue with fiscal_period=Q3 is exactly the silent-fallback
+        bug we're closing: a 9-month YTD masquerading as LTM."""
+        with self.assertRaises(RuntimeError) as ctx:
+            _assert_ltm_invariant(self._cv(fiscal_period="Q3"), "LTM")
+        self.assertIn("plain CitedValue", str(ctx.exception))
+
+    def test_derived_missing_mrp_prior_raises(self) -> None:
+        mrp = self._cv(fiscal_period="Q3")
+        lfy = self._cv(fiscal_period="FY", fiscal_year=2023)
+        broken = DerivedValue(
+            value=100.0,
+            unit="USD",
+            metric="revenue",
+            concept="Revenues",
+            period_start=mrp.period_start,
+            period_end=mrp.period_end,
+            fiscal_year=mrp.fiscal_year,
+            fiscal_period="LTM",
+            form_type=mrp.form_type,
+            filed=mrp.filed,
+            accession=mrp.accession,
+            cik=CIK,
+            company=COMPANY,
+            derived=True,
+            components={"mrp": mrp, "lfy": lfy},
+        )
+        with self.assertRaises(RuntimeError) as ctx:
+            _assert_ltm_invariant(broken, "LTM")
+        self.assertIn("missing roles", str(ctx.exception))
+
+    def test_derived_with_wrong_fiscal_period_raises(self) -> None:
+        mrp = self._cv(fiscal_period="Q3")
+        lfy = self._cv(fiscal_period="FY", fiscal_year=2023)
+        prior = self._cv(fiscal_period="Q3", fiscal_year=2023)
+        wrong = DerivedValue(
+            value=100.0,
+            unit="USD",
+            metric="revenue",
+            concept="Revenues",
+            period_start=mrp.period_start,
+            period_end=mrp.period_end,
+            fiscal_year=mrp.fiscal_year,
+            fiscal_period="Q3",
+            form_type=mrp.form_type,
+            filed=mrp.filed,
+            accession=mrp.accession,
+            cik=CIK,
+            company=COMPANY,
+            derived=True,
+            components={"mrp": mrp, "lfy": lfy, "mrp_prior": prior},
+        )
+        with self.assertRaises(RuntimeError) as ctx:
+            _assert_ltm_invariant(wrong, "LTM")
+        self.assertIn("expected LTM*", str(ctx.exception))
+
+    def test_derived_with_all_three_roles_passes(self) -> None:
+        mrp = self._cv(fiscal_period="Q3")
+        lfy = self._cv(fiscal_period="FY", fiscal_year=2023)
+        prior = self._cv(fiscal_period="Q3", fiscal_year=2023)
+        good = DerivedValue(
+            value=130.0,
+            unit="USD",
+            metric="revenue",
+            concept="Revenues",
+            period_start=mrp.period_start,
+            period_end=mrp.period_end,
+            fiscal_year=mrp.fiscal_year,
+            fiscal_period="LTM",
+            form_type=mrp.form_type,
+            filed=mrp.filed,
+            accession=mrp.accession,
+            cik=CIK,
+            company=COMPANY,
+            derived=True,
+            components={"mrp": mrp, "lfy": lfy, "mrp_prior": prior},
+        )
+        _assert_ltm_invariant(good, "LTM")
+        _assert_ltm_invariant(good, "LTM-1")
 
 
 if __name__ == "__main__":
