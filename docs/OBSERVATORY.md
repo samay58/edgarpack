@@ -52,18 +52,23 @@ For modified paragraphs:
 
 ## CLI usage
 
+`--ticker` accepts a ticker, a CIK, or a company name. All three route through the same resolver as `query` / `build`.
+
 ```bash
 # Summary: section counts and overall intensity
 edgarpack diff --ticker NVDA --form 10-K
 
 # Full: paragraph-level old/new text for each change
-edgarpack diff --ticker NVDA --form 10-K --format full
+edgarpack diff --ticker "NVIDIA" --form 10-K --format full
 
 # JSON: machine-readable for downstream analysis
 edgarpack diff --ticker NVDA --form 10-K --format json
 
 # By pack path (no registry needed)
 edgarpack diff --before ./packs/CIK/accession-old --after ./packs/CIK/accession-new
+
+# Evolution of one section across every registered filing
+edgarpack timeline --ticker NVDA --section 10k_parti_item1a_risk_factors
 ```
 
 ## API

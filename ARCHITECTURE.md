@@ -67,6 +67,8 @@ The manifest hashes content by artifact path. That makes integrity checks and re
 
 The query layer starts from SEC companyfacts XBRL data. For each metric, it resolves concept tags, selects the requested period, and returns values with filing-level citations. Three data quality guards run on every metric: staleness rejection (values too many fiscal years behind get dropped), segment filtering (prefers consolidated entries over segment breakouts using the SEC `frame` field), and concept scope warnings (flags when the resolved XBRL tag is broader or narrower than the metric name implies).
 
+Company input at this stage is forgiving. The resolver in `edgarpack/sec/tickers.py` accepts a ticker (`NVDA`), a digit CIK (`1045810`), or a company name (`NVIDIA`, `"nvidia corp"`). Names normalize through a conservative suffix strip so `"NVIDIA"` and `"NVIDIA Corp"` both match `"NVIDIA CORP"`. Ambiguous names raise a typed error that lists every candidate and asks for a ticker. Unknown input returns a fuzzy "did you mean" list rather than a blank failure.
+
 Example: how EdgarPack gets NVIDIA's LTM revenue.
 
 1. Resolve `NVDA` to `CIK 0001045810`.
@@ -77,9 +79,17 @@ Example: how EdgarPack gets NVIDIA's LTM revenue.
    - LFY: prior fiscal year annual revenue
    - MRP prior: same fiscal quarter one fiscal year earlier
 5. Compute `LTM = MRP + LFY - MRP prior`.
-6. Return a `DerivedValue` with component citations so each number can be traced to an accession and filing URL.
+6. Return a `DerivedValue` carrying the three component citations so each number traces to an accession and filing URL.
 
-`ltm-1` uses the same formula but shifts the quarter anchor one fiscal year back. If components are missing for the shifted window, the selector degrades to the best anchored reported value with provenance preserved.
+LTM enforces a hard contract: a non-null LTM value must carry `{mrp, lfy, mrp_prior}` component citations. A missing component flips the result to `None` plus an `ltm_incomputable` diagnostic, never to an uncited scalar. `ltm-1` uses the same formula with the anchor shifted one fiscal year back; if prior-year components are missing, the selector degrades to the best anchored reported value and propagates a diagnostic.
+
+When a metric name is not in the hardcoded `METRIC_MAP`, the self-heal path in `edgarpack/query/self_heal.py` takes over: fuzzy-match against available concepts, fall back to LLM-assisted resolution, persist the result in a `learned_concepts` registry, then reuse it on subsequent queries. `edgarpack learned list` inspects the registry; `--strict` on `query` / `comps` rejects anything not in the hardcoded map when you need guaranteed concept provenance.
+
+HKEX-listed companies take a different path. The universe (`universe.toml`) tags filers like Tencent, Baidu, Alibaba, MiniMax, and Zhipu as HKEX-sourced. `financials()` detects this and routes through the pack-local `facts.json` produced by `edgarpack/hk/extract.py` (regex extraction plus a Claude API fallback for tagged-but-unmatched metrics) instead of SEC companyfacts. `compare` then normalizes currency with the bundled `data/fx_rates.csv` when the caller passes `--currency usd`.
+
+### Stage 5: KPI Discovery
+
+Financial metrics are only half of what analysts care about. The `which` command and its backing module `edgarpack/query/kpi_discover.py` pull the qualitative KPIs a company actually discloses in MD&A: paid seats, ARR, NRR, retention bands, segment figures. The discovery pass walks every registered pack for the company, asks an LLM to extract stable key-value pairs from the MD&A sections, caches the result against the pack manifest, and renders a metric-by-period matrix. Discovered KPIs enter the same self-heal registry so they are requestable via `edgarpack query` afterwards.
 
 ## The Citation Model
 
@@ -131,43 +141,69 @@ Each value can also provide URLs such as:
 
 - `edgarpack/query/models.py`: `CitedValue`, `DerivedValue`, and `QueryResult`.
 - `edgarpack/query/concepts.py`: metric metadata and concept resolution.
-- `edgarpack/query/periods.py`: period selection and LTM math.
+- `edgarpack/query/periods.py`: period selection, LTM math, and multi-period grid parsing.
 - `edgarpack/query/financials.py`: single-company query execution.
 - `edgarpack/query/comps.py`: multi-company comparisons.
+- `edgarpack/query/presets.py`: named metric packs for `--preset`.
+- `edgarpack/query/self_heal.py`: fuzzy + LLM-assisted concept resolution fallback.
+- `edgarpack/query/learned_registry.py`: persistent cache of self-healed concept mappings.
+- `edgarpack/query/kpi_discover.py`: cross-filing KPI discovery for `which`.
+- `edgarpack/query/kpi_extract.py`: per-filing KPI extraction shared by discovery and query.
+
+### Stage 5 modules (HKEX path)
+
+- `edgarpack/hk/acquire.py`: HKEX prospectus PDF fetch and cache.
+- `edgarpack/hk/adapter.py`: HKEX pack builder on top of the PDF extractor.
+- `edgarpack/hk/extract.py`: regex-first fact extraction with a Claude API fallback.
+- `edgarpack/hk/llm_extract.py`: LLM extraction pass for metrics the regex layer misses.
+- `edgarpack/compare.py`: cross-market comparison with USD normalization.
 
 ### Supporting modules
 
 - `edgarpack/site/build.py`: static site generator for built packs.
 - `edgarpack/site/templates.py`: HTML template helpers.
 - `edgarpack/site/styles.py`: inline CSS.
-- `edgarpack/cli.py`: command-line entry points.
+- `edgarpack/cli.py`: command-line entry points for every subcommand above.
 - `edgarpack/config.py`: runtime constants and environment bindings.
+- `edgarpack/errors.py`: typed resolver errors (`UnknownCompany`, `AmbiguousCompany`).
+- `edgarpack/identity.py`: SEC + HKEX routing and `universe.toml` alias handling.
 
 ## Running It
 
-Build a pack from a filing:
+Set the SEC user agent once per shell:
 
 ```bash
-EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
-  edgarpack build --cik 0001045810 --form 10-K --out ./packs
+export EDGARPACK_USER_AGENT="Your Name your.email@example.com"
+```
+
+Build a pack from a filing. Positional input accepts a ticker, a CIK, or a name:
+
+```bash
+edgarpack build NVDA --form 10-K --out ./packs
+edgarpack build 0001045810 --form 10-K --out ./packs
+edgarpack build "NVIDIA" --form 10-K --out ./packs
 ```
 
 Query one company's financials:
 
 ```bash
-EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
-  edgarpack query NVDA revenue,net_income --period ltm
-EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
-  edgarpack query NVDA revenue --period ltm-1
+edgarpack query NVDA revenue,net_income --period ltm
+edgarpack query NVDA revenue --period ltm-1
+edgarpack query NVDA --preset perf --period lfy,lfy-1,lfy-2   # multi-period grid
 ```
 
-Run a comps table:
+Run a comps table, or a cross-market compare:
 
 ```bash
-EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
-  edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
-EDGARPACK_USER_AGENT="Your Name your.email@example.com" \
-  edgarpack comps NVDA AMD INTC --metrics revenue --period ltm-1
+edgarpack comps NVDA AMD INTC --metrics revenue,net_income,ebitda --period ltm
+edgarpack compare NVDA BIDU BABA --metrics revenue --currency usd   # SEC + HKEX, USD-normalized
+```
+
+List the qualitative KPIs a company discloses (requires one or more built packs):
+
+```bash
+edgarpack build FIG --form 10-K
+edgarpack which FIG
 ```
 
 Example comps output:

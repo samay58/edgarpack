@@ -5,15 +5,17 @@ EdgarPack's query system pulls financial metrics directly from SEC EDGAR's XBRL 
 ## Architecture
 
 ```
-Ticker/CIK
-  -> resolve_ticker()          # SEC company search
+Ticker / CIK / Company name
+  -> resolve_company()         # SEC ticker list + fuzzy name match
   -> fetch_company_facts()     # XBRL companyfacts JSON
   -> resolve_concept()         # Map "revenue" to the GAAP tag this company uses
   -> select_period()           # Pick LFY, MRQ, MRP, LTM/LTM-1, or series
   -> CitedValue / DerivedValue # Every value carries its provenance
 ```
 
-Single-company queries go through `financials()`. Multi-company comparisons use `comps()`, which runs queries in parallel via `asyncio.gather`.
+Single-company queries go through `financials()`. Multi-company comparisons use `comps()`, which runs queries in parallel via `asyncio.gather`. Cross-market comparisons use `compare` (a separate subcommand that normalizes currencies across SEC + HKEX filers).
+
+Company input is forgiving: tickers (`NVDA`), digit CIKs (`1045810`), and names (`NVIDIA`, `"nvidia corp"`, `"Apple Inc"`) all work. Names normalize through a suffix-aware matcher so `"NVIDIA"` and `"NVIDIA Corp"` both hit the same row. Ambiguous names raise a typed error listing every candidate; unknown input returns a "did you mean" list. See [`edgarpack/sec/tickers.py`](../edgarpack/sec/tickers.py) for the resolver and [`edgarpack/identity.py`](../edgarpack/identity.py) for the `universe.toml` fast-path.
 
 ## Design Choices
 
@@ -97,13 +99,16 @@ Rules for the CSV form:
   cannot be combined with anything else.
 - `lfy-0`, `ltm-0`, `mrq-0` canonicalize to `lfy` / `ltm` / `mrq`. Duplicates
   are removed while preserving first-seen order.
+- `mrp` has no offset form. `mrp-1` (or any `mrp-N`) is a parse error with a
+  clear message. If you want the prior most-recent period, ask for the
+  equivalent scalar directly (for example `lfy-1` or `mrq-1`).
 - Default `--citations` becomes `footer` for multi-period grids (inline markers
   get noisy in a table). Pass `--citations inline` or `off` to override.
 
 ### Preset metric packs
 
-`--preset perf` expands to a curated analyst panel. Combines with `--metrics`
-(preset first, explicit metrics appended, duplicates removed):
+`--preset NAME` expands to a curated list of metrics. Combines with
+`--metrics` (preset first, explicit metrics appended, duplicates removed):
 
 ```bash
 edgarpack query NVDA --preset perf --period lfy,lfy-1,lfy-2
@@ -112,9 +117,13 @@ edgarpack query NVDA --preset perf --period lfy,lfy-1,lfy-2
 edgarpack query NVDA --preset perf --metrics fcf_to_net_income,rule_of_40
 ```
 
-`perf` contents: `revenue`, `revenue_growth_yoy`, `revenue_cagr_3y`,
-`gross_margin`, `operating_margin`, `net_margin`, `r_and_d_intensity`,
-`sga_intensity`, `fcf_margin`.
+Current presets (source of truth: [`edgarpack/query/presets.py`](../edgarpack/query/presets.py)):
+
+| Preset | Expands to |
+|--------|------------|
+| `perf` | `revenue`, `revenue_growth_yoy`, `revenue_cagr_3y`, `gross_margin`, `operating_margin`, `net_margin`, `r_and_d_intensity`, `sga_intensity`, `fcf_margin` |
+
+An unknown preset name raises `ValueError` with the list of known names. Add a preset by editing `PRESETS` in `presets.py`; no config file to wire.
 
 ## Period Selectors
 
@@ -369,6 +378,46 @@ The `document_url` uses Chrome/Edge text fragment scrolling (`#:~:text=Net%20Inc
 `gross_margin`*, `operating_margin`*, `net_margin`*, `ebitda_margin`*, `fcf_margin`*, `roe`*, `roa`*, `current_ratio`*, `debt_to_equity`*
 
 \* = derived metric (computed from components)
+
+## HKEX Path
+
+HKEX-listed filers (Tencent, Baidu, Alibaba, Meituan, MiniMax, Zhipu, etc.) do not file XBRL with SEC, so the XBRL path above does not apply. When the resolver routes a company to the HKEX source via `universe.toml`, `financials()` switches to a pack-local fact store built from the filing's prospectus PDF.
+
+Pipeline:
+
+1. `edgarpack/hk/acquire.py` fetches the prospectus PDF from HKEX.
+2. `edgarpack/hk/adapter.py` runs the PDF through the pack builder to produce section markdown.
+3. `edgarpack/hk/extract.py` runs regex extraction over the financial sections against a per-metric label list. Anything still missing gets a second pass through `edgarpack/hk/llm_extract.py` (Claude API with an on-disk cache keyed by accession).
+4. Final facts are assembled into `facts.json` inside the pack directory, using the filing's `reporting_currency` (HKD, CNY, USD) from the pack manifest.
+
+The query layer reads `facts.json` with the same `CitedValue` / `DerivedValue` shapes it uses for SEC data. For cross-market output, use `compare` and pass `--currency usd`; it normalizes non-USD values through `data/fx_rates.csv` and annotates the footer with the original reporting currency.
+
+```bash
+# Raw HKEX data (native currency)
+edgarpack query BIDU revenue --period lfy
+
+# Cross-market comparison, USD-normalized
+edgarpack compare NVDA BIDU BABA --metrics revenue,gross_margin --currency usd
+```
+
+## KPI Discovery (`which`)
+
+`edgarpack query` serves quantitative metrics mapped to XBRL concepts. `edgarpack which` covers the other half: qualitative KPIs that companies disclose in MD&A (paid seats, ARR, NRR, segment volumes). Run it for any company you have built packs for:
+
+```bash
+edgarpack which FIG                      # table view, up to 6 period columns
+edgarpack which "Figma" --format json    # full payload for downstream tools
+edgarpack which FIG --only discovered    # hide catalog-seeded rows, show fresh extractions
+edgarpack which FIG --no-cache           # re-run discovery on every registered pack
+```
+
+What it does:
+
+- Walks every pack registered for the company, in filing-date order.
+- For each pack, calls `edgarpack/query/kpi_discover.py` which prompts an LLM to extract stable key-value KPIs from MD&A sections, caches the result against the pack manifest hash, and keys cache entries by accession (so restatements arrive as new rows).
+- Renders a metric-by-period matrix so you can see coverage at a glance before asking follow-up questions through `edgarpack query`.
+
+Discovered KPIs flow into the same `learned_concepts` registry (see below) so they become queryable by name. If nothing is registered for the company yet, `which` prints the `edgarpack build <company> --form 10-K` hint and exits non-zero.
 
 ## Self-Heal and Learned Mappings
 

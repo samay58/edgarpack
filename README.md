@@ -14,7 +14,7 @@ I built EdgarPack because I do financial research daily and wanted three things 
 
 ## What you get
 
-Three commands cover most of it.
+A handful of commands cover most of the research loop. The four below are the ones I reach for daily; the full surface is in the [Commands](#commands) section.
 
 **Query one metric from one company:**
 
@@ -34,6 +34,23 @@ edgarpack comps NVDA AMD INTC -m revenue,net_income,ebitda --period ltm
 ```
 
 A comps table with inline citations by default. Drop `--citations off` if you want the clean table for a screenshot.
+
+**Cross-market comparison (USD-normalized):**
+
+```bash
+edgarpack compare NVDA BIDU BABA --metrics revenue,gross_margin --period lfy
+```
+
+`compare` handles SEC + HKEX filers in one table, converts non-USD amounts via the bundled FX file, and leaves a footnote with the original reporting currency for each column.
+
+**List the KPIs a company actually discloses:**
+
+```bash
+edgarpack which FIG
+edgarpack which "Figma"
+```
+
+`which` walks every pack you have built for a company, pulls the qualitative metrics out of MD&A (paid seats, ARR, NRR, etc.), and shows a metric-by-period matrix so you know what you can query before asking. Run `edgarpack build` first for the filings you care about.
 
 **Build a filing pack:**
 
@@ -120,10 +137,12 @@ edgarpack build NVDA --form 10-K                              # build one filing
 edgarpack list "NVIDIA" --form 10-K --limit 5                 # recent filings
 edgarpack company-llms AAPL --out ./packs                     # llms.txt index
 edgarpack site --packs ./packs --out ./site                   # static site generator
+edgarpack which FIG                                           # MD&A KPIs a company discloses
 
 # Query & compare
 edgarpack query NVDA revenue,net_income --period ltm          # single company, cited values
-edgarpack comps NVDA AMD INTC -m revenue,ebitda --period ltm  # side-by-side comparison
+edgarpack comps NVDA AMD INTC -m revenue,ebitda --period ltm  # SEC-to-SEC comps table
+edgarpack compare NVDA BIDU BABA -m revenue --currency usd    # cross-market (SEC + HKEX), USD-normalized
 
 # Bulk harvest & search
 edgarpack harvest --universe universe.toml --refresh          # bulk-download from a spec file
@@ -154,9 +173,9 @@ edgarpack diff --ticker NVDA --form 10-K --format full
 
 The API lives at `/api/v1/observatory/...`. See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full data model and [`web/`](web/) for the Next.js frontend.
 
-## China Lens (experimental)
+## China Lens
 
-An in-progress parallel pipeline for Chinese filings (CNINFO, SSE prospectuses). Different source format, same citation-backed output shape. See [`docs/china-lens/`](docs/china-lens/) for the current state. Not wired into the main CLI yet and living on a feature branch.
+A parallel pipeline for HKEX and CNINFO filings. Same citation shape as the SEC path, different source format. HKEX-listed tickers (like `0700.HK`, `BIDU`, `BABA`, `9988.HK`) are first-class in `query`, `comps`, and `compare`: when the resolver routes a company to HKEX, queries read from the pack's `facts.json` instead of SEC companyfacts, and currencies normalize through `data/fx_rates.csv` when you pass `--currency usd`. The extractor uses regex pattern matching against the prospectus sections first and falls back to a Claude API pass for tagged-but-unmatched metrics. A FastAPI workspace (`edgarpack api`) exposes the Evidence Explorer on top of the same data. See [`docs/china-lens/IMPLEMENTATION_TRACKER.md`](docs/china-lens/IMPLEMENTATION_TRACKER.md) for the current status and the [HKEX section of docs/QUERY.md](docs/QUERY.md#hkex-path) for query-layer details.
 
 ## Development
 

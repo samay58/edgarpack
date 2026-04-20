@@ -1,10 +1,11 @@
 # Testing
 
-Four lanes, in order of how often you'll run them:
+Five lanes, in order of how often you'll run them:
 
 - Fast local regression (every commit)
 - Live SEC smoke (before merging query or parse changes)
 - Expanded live SEC coverage (before refactors or releases)
+- China golden harness (when touching the HKEX extraction pipeline)
 - China Lens local loop (when touching ingestion, search, or storage)
 
 ## Prerequisites
@@ -82,15 +83,38 @@ uv run pytest tests/test_determinism.py -q --run-live-sec --run-slow
 
 This builds the same live filing twice and compares the resulting artifacts byte-for-byte, ignoring only the manifest timestamp field that is expected to differ in-memory before serialization.
 
-## 5. Manual CLI Audit Checks
+## 5. China Golden Harness
 
-These are the quickest useful manual checks for the query UX:
+Use this when touching `edgarpack/hk/*`, `edgarpack/query/financials.py` HKEX routing, or `edgarpack/compare.py` currency normalization. The harness pins numeric answers against a hand-built golden YAML so regressions in HKEX extraction or currency math fail loudly.
+
+```bash
+# Full harness: structural smoke + numeric regression against the golden YAML
+uv run pytest tests/test_china_query_hk.py tests/test_china_query_eval.py -q
+
+# Just the structural smoke checks (fast, no golden comparison)
+uv run pytest tests/test_china_query_hk.py -q
+```
+
+What this covers:
+
+- MiniMax and Zhipu packs under `tests/fixtures/china_packs/` resolve to CIKless HKEX identities without hitting the network.
+- `financials()` reads from `facts.json` (not companyfacts) and returns `reporting_currency`, `accounting_standard`, and `fiscal_year` correctly.
+- Numeric values in the golden YAML (`tests/eval/china_golden.yaml`) match the extracted facts within tolerance; currency-normalized values round-trip through the FX layer.
+
+When a golden comparison fails, the diff is the signal: decide whether the extractor drifted (regression) or the fixture needs updating, then regenerate the YAML by hand with filed-prospectus citations.
+
+## 6. Manual CLI Audit Checks
+
+These are the quickest useful manual checks for the query UX. Tickers, CIKs, and company names are all accepted on input:
 
 ```bash
 edgarpack query AAPL revenue
-edgarpack query NVDA revenue --period ltm --audit
+edgarpack query "NVIDIA" revenue --period ltm --audit
 edgarpack query NVDA gross_margin --period ltm --audit --citations inline --show-links primary
+edgarpack query NVDA --preset perf --period lfy,lfy-1,lfy-2
 edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm --audit
+edgarpack compare NVDA BIDU BABA --metrics revenue --currency usd
+edgarpack which FIG                    # requires one or more built FIG packs
 edgarpack query NVDA revenue --period ltm --format json
 edgarpack query NVDA revenue --period ltm --format json-full
 ```
@@ -100,9 +124,12 @@ What to verify manually:
 - direct metrics show inline citation markers
 - warnings appear directly under the value they qualify
 - `--audit` renders a readable formula/component block for derived and LTM metrics
+- LTM values always carry `{mrp, lfy, mrp_prior}` citations; a scalar LTM without components means something regressed
+- `compare --currency usd` shows USD values with a footnote naming each column's native reporting currency
+- `which` renders a metric-by-period matrix; the build hint appears if no packs are registered
 - lean and full JSON both expose `citations` and `calculations`
 
-## 6. China Lens Local Workflow Check
+## 7. China Lens Local Workflow Check
 
 This is the fastest useful backend loop for China Lens today:
 
@@ -140,4 +167,5 @@ curl -X POST http://127.0.0.1:8000/api/v1/connectors/cninfo/sync \
 - Use fast local regression for routine commits.
 - Use live SEC smoke tests before merging query, pack, parse, or SEC-client changes.
 - Use expanded live SEC coverage before larger refactors or releases.
+- Use the China golden harness when touching HKEX extraction, HKEX-path routing in `financials()`, or `compare` currency logic.
 - Use the China Lens loop when touching ingestion, search, citations, pack generation, or storage.
