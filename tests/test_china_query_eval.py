@@ -54,7 +54,30 @@ def _load_cases() -> list[GoldenCase]:
         for metric_name, periods in company["metrics"].items():
             for period_name, block in periods.items():
                 unit = block.get("unit")
-                if unit in {"headcount", "ratio"}:
+                # "scalar_native" behaves like a currency metric: native vs
+                # USD are distinct values and FX conversion is required to
+                # compare the USD golden. Unlike "ratio" it is NOT
+                # dimensionless. Per-employee currency figures use this.
+                if unit == "scalar_native":
+                    for currency in ("native", "usd"):
+                        cases.append(
+                            GoldenCase(
+                                ticker=company["ticker"],
+                                company=company["company"],
+                                accounting_standard=company["accounting_standard"],
+                                reporting_currency=company["reporting_currency"],
+                                fiscal_year=company["fiscal_year"],
+                                period=period_name,
+                                metric=metric_name,
+                                currency=currency,
+                                expected=block.get(currency),
+                                fx_convention=block.get("fx_convention"),
+                                source=block.get("source", ""),
+                                xfail=block.get("xfail"),
+                                unit=unit,
+                            )
+                        )
+                elif unit in {"headcount", "ratio"}:
                     # Non-currency scalar: compare value directly, no FX.
                     cases.append(
                         GoldenCase(

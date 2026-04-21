@@ -117,8 +117,11 @@ companies:
       revenue_per_employee:
         lfy:
           native: 79280.51948051948
-          unit: ratio
-          source: "Derived: MiniMax FY2024 revenue 30,523,000 USD / 385 employees"
+          usd: 79280.51948051948
+          unit: scalar_native
+          fx_rate: 1.0
+          fx_convention: average
+          source: "Derived: MiniMax FY2024 revenue 30,523,000 USD / 385 employees (USD-native, no FX)"
   - ticker: "02513.HK"
     company: "Zhipu (Knowledge Atlas Technology)"
     accounting_standard: HKFRS
@@ -257,5 +260,8 @@ companies:
       revenue_per_employee:
         lfy:
           native: 353809.7395243488
-          unit: ratio
-          source: "Derived: Zhipu FY2024 revenue 312,414,000 CNY / 883 employees"
+          usd: 48595.67068676738
+          unit: scalar_native
+          fx_rate: 0.137350
+          fx_convention: average
+          source: "Derived: Zhipu FY2024 revenue 312,414,000 CNY / 883 employees -> USD via average FX"
