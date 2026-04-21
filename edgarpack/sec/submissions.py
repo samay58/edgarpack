@@ -1,5 +1,19 @@
-"""SEC submissions API for discovering filings."""
+"""SEC submissions API for discovering filings.
 
+SEC splits high-volume filers' submission histories across multiple JSON
+files. `CIK<cik>.json` holds the most recent window (typically the last
+~1,000 filings) under `filings.recent`, and references older paginated
+files in `filings.files[]`. For heavy filers like META, the recent window
+can cap out in weeks, so accessions older than that are only reachable by
+fetching the referenced pagination files.
+
+This module transparently paginates across both when an accession or form
+match is not present in `recent`. See `_iter_submission_pages`.
+"""
+
+import json
+import logging
+from collections.abc import AsyncIterator
 from datetime import date
 from typing import Any
 
@@ -8,6 +22,12 @@ from pydantic import BaseModel
 from ..config import CACHE_DIR, SEC_DATA_BASE
 from .cache import DiskCache
 from .client import get_client
+
+logger = logging.getLogger(__name__)
+
+# Older submission pagination files are immutable (they only contain filings
+# from a past date range). Cache them aggressively.
+_OLDER_PAGE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 
 
 class FilingMeta(BaseModel):
@@ -91,19 +111,89 @@ async def fetch_submissions(cik: str, force: bool = False) -> dict[str, Any]:
     if not force:
         cached = cache.get(url, max_age_seconds=3600)
         if cached is not None:
-            import json
-
             return json.loads(cached)
 
     client = await get_client()
     data, headers = await client.fetch_json(url)
 
     # Cache the response
-    import json
+    cache.put(url, json.dumps(data).encode(), headers)
+
+    return data
+
+
+async def _fetch_submissions_page(name: str, force: bool = False) -> dict[str, Any]:
+    """Fetch an older submissions pagination file from SEC.
+
+    These files are referenced in `data['filings']['files'][]` on the main
+    submissions.json response. They cover closed historical date ranges and
+    are therefore immutable. We cache them with a long TTL to avoid
+    re-fetching on every historical lookup.
+
+    Returns the flat columnar structure (accessionNumber, form, filingDate,
+    etc. at the top level — not nested under a `filings.recent` key).
+    """
+    url = f"{SEC_DATA_BASE}/submissions/{name}"
+    cache = DiskCache(CACHE_DIR)
+
+    if not force:
+        cached = cache.get(url, max_age_seconds=_OLDER_PAGE_TTL_SECONDS)
+        if cached is not None:
+            return json.loads(cached)
+
+    client = await get_client()
+    data, headers = await client.fetch_json(url)
 
     cache.put(url, json.dumps(data).encode(), headers)
 
     return data
+
+
+async def _iter_submission_pages(
+    data: dict[str, Any],
+    force: bool = False,
+) -> AsyncIterator[dict[str, Any]]:
+    """Yield columnar filing pages for a filer, newest-first.
+
+    First yields `data['filings']['recent']`. Then, if the filer has older
+    paginated files, fetches and yields each older page in the order SEC
+    lists them (which is newest-historical-range first). Older pages return
+    the columnar keys at the top level.
+
+    If fetching an older page fails (network error, 404), a warning is
+    logged and iteration continues with remaining pages. Callers that need
+    a guaranteed hit should treat "iterator exhausted without match" as the
+    not-found signal, not assume every page was reachable.
+
+    Yielded dicts always have the same columnar shape:
+        {
+            "form": [...],
+            "accessionNumber": [...],
+            "filingDate": [...],
+            "reportDate": [...],
+            "primaryDocument": [...],
+            ...
+        }
+    """
+    recent = data.get("filings", {}).get("recent", {}) or {}
+    yield recent
+
+    older_files = data.get("filings", {}).get("files", []) or []
+    for entry in older_files:
+        name = entry.get("name")
+        if not name:
+            continue
+        try:
+            page = await _fetch_submissions_page(name, force=force)
+        except Exception as exc:  # noqa: BLE001 — log + continue on any fetch fault
+            logger.warning(
+                "Failed to fetch older submissions page %s: %s. "
+                "Older filings in that range will not be discoverable.",
+                name,
+                exc,
+            )
+            continue
+        yield page
 
 
 async def get_latest_filing(
@@ -161,16 +251,22 @@ async def get_filing_by_accession(
 ) -> FilingMeta:
     """Get filing metadata by accession number.
 
+    Searches the filer's recent window first, then paginates through older
+    submission files if needed. This lets callers reach filings that have
+    aged out of the recent window, which is common for high-volume filers
+    like META whose recent-window boundary is measured in weeks.
+
     Args:
         cik: CIK number
         accession: Accession number (with or without dashes)
-        force: Bypass cache
+        force: Bypass cache (applies to both the main submissions file and
+            any older pagination files consulted)
 
     Returns:
         FilingMeta for the specified filing
 
     Raises:
-        ValueError: If filing not found
+        ValueError: If filing not found across recent + all older pages.
     """
     data = await fetch_submissions(cik, force=force)
 
@@ -183,25 +279,24 @@ async def get_filing_by_accession(
         # Convert to standard format: XXXXXXXXXX-XX-XXXXXX
         accession = f"{accession[:10]}-{accession[10:12]}-{accession[12:]}"
 
-    filings = data.get("filings", {}).get("recent", {})
+    async for page in _iter_submission_pages(data, force=force):
+        forms = page.get("form", [])
+        accessions = page.get("accessionNumber", [])
+        dates = page.get("filingDate", [])
+        report_dates = page.get("reportDate", [])
+        docs = page.get("primaryDocument", [])
 
-    forms = filings.get("form", [])
-    accessions = filings.get("accessionNumber", [])
-    dates = filings.get("filingDate", [])
-    report_dates = filings.get("reportDate", [])
-    docs = filings.get("primaryDocument", [])
-
-    for i, acc in enumerate(accessions):
-        if acc == accession:
-            return FilingMeta(
-                cik=cik,
-                accession=acc,
-                form_type=forms[i],
-                filing_date=date.fromisoformat(dates[i]),
-                primary_document=docs[i],
-                company_name=company_name,
-                period_of_report=_parse_report_date(report_dates, i),
-            )
+        for i, acc in enumerate(accessions):
+            if acc == accession:
+                return FilingMeta(
+                    cik=cik,
+                    accession=acc,
+                    form_type=forms[i],
+                    filing_date=date.fromisoformat(dates[i]),
+                    primary_document=docs[i],
+                    company_name=company_name,
+                    period_of_report=_parse_report_date(report_dates, i),
+                )
 
     raise ValueError(f"Filing {accession} not found for CIK {cik}")
 
@@ -212,46 +307,52 @@ async def list_filings(
     limit: int = 10,
     force: bool = False,
 ) -> list[FilingMeta]:
-    """List recent filings for a company.
+    """List filings for a company, newest first.
+
+    Starts with the recent window, then paginates through older submission
+    files if the limit has not yet been reached. For high-volume filers,
+    this is how a form filter like `10-K` still surfaces deep history even
+    when the recent window is saturated with Form 4 / 144 / 8-K noise.
 
     Args:
         cik: CIK number
-        form_type: Optional form type filter
-        limit: Maximum number of filings to return
-        force: Bypass cache
+        form_type: Optional form type filter (e.g. "10-K", "10-Q").
+        limit: Maximum number of filings to return.
+        force: Bypass cache (applies to both the main submissions file and
+            any older pagination files consulted).
 
     Returns:
-        List of FilingMeta objects
+        List of FilingMeta objects, newest first, up to `limit` entries.
     """
     data = await fetch_submissions(cik, force=force)
 
     cik = normalize_cik(cik)
     company_name = data.get("name", f"CIK {cik}")
 
-    filings = data.get("filings", {}).get("recent", {})
-
-    forms = filings.get("form", [])
-    accessions = filings.get("accessionNumber", [])
-    dates = filings.get("filingDate", [])
-    report_dates = filings.get("reportDate", [])
-    docs = filings.get("primaryDocument", [])
-
     results: list[FilingMeta] = []
     target_form = normalize_form_type(form_type) if form_type else None
-    for i, form in enumerate(forms):
-        if target_form is None or normalize_form_type(form) == target_form:
-            results.append(
-                FilingMeta(
-                    cik=cik,
-                    accession=accessions[i],
-                    form_type=form,
-                    filing_date=date.fromisoformat(dates[i]),
-                    primary_document=docs[i],
-                    company_name=company_name,
-                    period_of_report=_parse_report_date(report_dates, i),
+
+    async for page in _iter_submission_pages(data, force=force):
+        forms = page.get("form", [])
+        accessions = page.get("accessionNumber", [])
+        dates = page.get("filingDate", [])
+        report_dates = page.get("reportDate", [])
+        docs = page.get("primaryDocument", [])
+
+        for i, form in enumerate(forms):
+            if target_form is None or normalize_form_type(form) == target_form:
+                results.append(
+                    FilingMeta(
+                        cik=cik,
+                        accession=accessions[i],
+                        form_type=form,
+                        filing_date=date.fromisoformat(dates[i]),
+                        primary_document=docs[i],
+                        company_name=company_name,
+                        period_of_report=_parse_report_date(report_dates, i),
+                    )
                 )
-            )
-            if len(results) >= limit:
-                break
+                if len(results) >= limit:
+                    return results
 
     return results

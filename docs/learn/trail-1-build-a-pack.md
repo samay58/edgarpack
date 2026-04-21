@@ -39,7 +39,9 @@ else:
 
 For NVIDIA's latest 10-K, `accession` comes back as `0001045810-24-000123` (example) and `accession_nodash` as `000104581024000123`. Both forms matter: the dashed form is the display/canonical form; the undashed form is what shows up in SEC Archives URL paths.
 
-**Code**: `edgarpack/sec/submissions.py:87` (`get_latest_filing`), `edgarpack/sec/submissions.py:133` (`get_filing_by_accession`)
+For heavy filers (META, AAPL, GOOGL) whose recent window is saturated with Form 4 / 144 noise, `get_filing_by_accession` and `list_filings` transparently page through `data['filings']['files'][]` — SEC's older submission JSONs — when a match isn't in `filings.recent`. The iteration helper `_iter_submission_pages` yields recent first, then each older page; fetches are cached with a long TTL because those pages are immutable. This is how `build META --accession 0001326801-19-000009` reaches the FY2018 10-K even though it's long past the recent-window boundary.
+
+**Code**: `edgarpack/sec/submissions.py:87` (`get_latest_filing`), `edgarpack/sec/submissions.py:133` (`get_filing_by_accession`), `edgarpack/sec/submissions.py` (`_iter_submission_pages`)
 
 ---
 

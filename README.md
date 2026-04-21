@@ -153,9 +153,10 @@ and citation semantics in [`docs/QUERY.md`](docs/QUERY.md).
 ## Commands
 
 ```bash
-# Build & browse (all accept ticker / CIK / company name)
-edgarpack build NVDA --form 10-K                              # build one filing pack
-edgarpack list "NVIDIA" --form 10-K --limit 5                 # recent filings
+# Build & browse (all accept ticker / CIK / company name; paginate into full history)
+edgarpack build NVDA --form 10-K                              # build latest 10-K
+edgarpack build META --accession 0001326801-19-000009         # or any historical accession
+edgarpack list "NVIDIA" --form 10-K --limit 10                # form-filtered, full history
 edgarpack company-llms AAPL --out ./packs                     # llms.txt index
 edgarpack site --packs ./packs --out ./site                   # static site generator
 edgarpack which FIG                                           # MD&A KPIs a company discloses
@@ -184,6 +185,20 @@ edgarpack learned list                                        # inspect self-hea
 edgarpack cache                                               # cache stats or --clear
 edgarpack api --port 8000                                     # China Lens API server
 ```
+
+## Historical reach
+
+`build --accession`, `list`, and the downstream `diff` / `timeline` commands reach across a filer's full submission history, not just the recent window.
+
+SEC splits high-volume filers across paginated submission files. For an active filer like META — thousands of Form 4 / 144 notices per year — the "recent" window can cap out in weeks, pushing older 10-Ks out of view. EdgarPack transparently follows the pagination chain when a match isn't in the recent window, so:
+
+```bash
+edgarpack build META --accession 0001326801-19-000009   # FY2018 10-K, filed 2019
+edgarpack list META --form 10-K --limit 10              # all 10-Ks, not just recent
+edgarpack timeline META --form 10-K                     # full 10-K arc, IPO → today
+```
+
+all work the same way on a ten-year-old filing as on last week's. Older pagination files are immutable, so they're cached with a long TTL after first fetch — repeated historical lookups hit disk, not SEC.
 
 ## Filing Observatory
 
