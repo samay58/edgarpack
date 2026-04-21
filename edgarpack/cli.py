@@ -838,21 +838,58 @@ def _cmd_build(args: Any) -> int:
             return rc
 
         try:
-            result = await build_pack(
-                cik=cik,
-                accession=args.accession,
-                form_type=args.form,
-                out_dir=args.out,
-                with_chunks=bool(args.with_chunks),
-                with_xbrl=bool(args.with_xbrl),
-                force=bool(args.force),
-            )
+            if is_range:
+                from .pack.build import build_pack_range
+
+                results = await build_pack_range(
+                    cik=cik,
+                    form_type=args.form,
+                    last=args.last,
+                    after=args.after,
+                    before=args.before,
+                    out_dir=args.out,
+                    with_chunks=bool(args.with_chunks),
+                    with_xbrl=bool(args.with_xbrl),
+                    force=bool(args.force),
+                )
+            else:
+                result = await build_pack(
+                    cik=cik,
+                    accession=args.accession,
+                    form_type=args.form,
+                    out_dir=args.out,
+                    with_chunks=bool(args.with_chunks),
+                    with_xbrl=bool(args.with_xbrl),
+                    force=bool(args.force),
+                )
+                results = [result]
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
-        _register_pack_result(result, ticker=resolved_ticker)
+        built = 0
+        skipped = 0
+        for result in results:
+            _register_pack_result(result, ticker=resolved_ticker)
+            already_built = any("Pack already exists" in w for w in result.warnings)
+            if already_built:
+                skipped += 1
+            else:
+                built += 1
 
+        if is_range:
+            print(
+                f"{built} pack(s) built, {skipped} skipped (already registered)",
+                file=sys.stderr,
+            )
+            for result in results[:5]:
+                accn = result.filing_meta.get("accession", "?")
+                print(f"  ✓ {accn}  {result.output_dir}")
+            if len(results) > 5:
+                print(f"  ... and {len(results) - 5} more")
+            return 0
+
+        result = results[0]
         print("✓ Pack built")
         print(f"  Output: {result.output_dir}")
         print(f"  Company: {result.filing_meta.get('company_name', 'Unknown')}")
@@ -861,6 +898,16 @@ def _cmd_build(args: Any) -> int:
         print(f"  Sections: {result.sections_count}")
         print(f"  Tokens: {result.tokens_total:,}")
         print(f"  Registry: ready for `edgarpack which {resolved_label}`")
+
+        if any("Pack already exists" in w for w in result.warnings):
+            print(
+                "  Already built. To list other filings: "
+                f"`edgarpack list {resolved_label} --form {args.form or '10-K'}`"
+            )
+            print(
+                "  To pull older filings: "
+                f"`edgarpack build {resolved_label} --form {args.form or '10-K'} --last 5`"
+            )
 
         if result.warnings:
             grouped = _group_build_warnings(result.warnings)
