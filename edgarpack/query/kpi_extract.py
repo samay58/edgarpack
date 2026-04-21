@@ -819,9 +819,21 @@ def try_extract_kpi(
                 pack_dir = Path(pack_record.pack_dir)
                 try:
                     manifest = _load_pack_manifest(pack_dir)
-                except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+                except FileNotFoundError:
                     logger.warning(
-                        "Layer B cache hit but pack manifest unreadable at %s: %s",
+                        "Layer B cache hit but manifest missing at %s", pack_dir
+                    )
+                    return None
+                except json.JSONDecodeError as e:
+                    logger.warning(
+                        "Layer B cache hit but manifest is invalid JSON at %s: %s",
+                        pack_dir,
+                        e,
+                    )
+                    return None
+                except (OSError, UnicodeDecodeError) as e:
+                    logger.warning(
+                        "Layer B cache hit but manifest I/O error at %s: %s",
                         pack_dir,
                         e,
                     )
@@ -873,9 +885,19 @@ def try_extract_kpi(
         pack_dir = Path(pack_record.pack_dir)
         try:
             manifest = _load_pack_manifest(pack_dir)
-        except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+        except FileNotFoundError:
+            logger.warning("Layer B extraction skipped: manifest missing at %s", pack_dir)
+            return None
+        except json.JSONDecodeError as e:
             logger.warning(
-                "Layer B extraction skipped: pack manifest unreadable at %s: %s",
+                "Layer B extraction skipped: manifest invalid JSON at %s: %s",
+                pack_dir,
+                e,
+            )
+            return None
+        except (OSError, UnicodeDecodeError) as e:
+            logger.warning(
+                "Layer B extraction skipped: manifest I/O error at %s: %s",
                 pack_dir,
                 e,
             )
