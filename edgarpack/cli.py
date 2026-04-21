@@ -607,6 +607,47 @@ def main(argv: list[str] | None = None) -> int:
         help="Output format",
     )
 
+    p_build_sse = sub.add_parser(
+        "build-sse",
+        help="Build a pack from an SSE (Shanghai Stock Exchange) prospectus PDF",
+    )
+    p_build_sse.add_argument(
+        "--url", required=True, help="URL of the PDF on the SSE disclosure platform"
+    )
+    p_build_sse.add_argument("--stock-code", required=True, help="SSE stock code (e.g. 301536)")
+    p_build_sse.add_argument("--company", required=True, help="Company name")
+    p_build_sse.add_argument("--filing-date", required=True, help="Filing date (YYYY-MM-DD)")
+    p_build_sse.add_argument(
+        "--out", "-o", type=Path, default=Path("./packs"), help="Output directory"
+    )
+    p_build_sse.add_argument("--pdf", type=Path, help="Local PDF file (skip download)")
+    p_build_sse.add_argument(
+        "--with-chunks", action="store_true", help="Generate chunks.ndjson for RAG"
+    )
+    p_build_sse.add_argument(
+        "--translate",
+        action="store_true",
+        help="Run the zh->en translation pipeline (requires EDGARPACK_DEEPINFRA_KEY)",
+    )
+    p_build_sse.add_argument(
+        "--translate-model",
+        default="deepseek-ai/DeepSeek-V3",
+        help="DeepInfra model ID for translation",
+    )
+    p_build_sse.add_argument("--force", action="store_true", help="Rebuild even if exists")
+
+    p_translate = sub.add_parser(
+        "translate-sse",
+        help="Translate an existing SSE pack to English (requires EDGARPACK_DEEPINFRA_KEY)",
+    )
+    p_translate.add_argument("--pack", type=Path, required=True, help="Path to SSE pack directory")
+    p_translate.add_argument(
+        "--model",
+        default="deepseek-ai/DeepSeek-V3",
+        help="DeepInfra model ID",
+    )
+    p_translate.add_argument("--force", action="store_true", help="Re-translate even if exists")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "compare":
@@ -614,6 +655,10 @@ def main(argv: list[str] | None = None) -> int:
 
         return cmd_compare(args)
 
+    if args.cmd == "build-sse":
+        return _cmd_build_sse(args)
+    if args.cmd == "translate-sse":
+        return _cmd_translate_sse(args)
     if args.cmd == "build":
         return _cmd_build(args)
     if args.cmd == "company-llms":
@@ -780,6 +825,259 @@ def _cmd_build(args: Any) -> int:
                 print(f"  ... and {len(grouped) - 10} more groups")
 
         return 0
+
+    return asyncio.run(_run())
+
+
+def _cmd_build_sse(args: Any) -> int:
+    from datetime import date
+
+    try:
+        filing_date = date.fromisoformat(args.filing_date)
+    except ValueError:
+        print(f"Error: invalid date format: {args.filing_date} (use YYYY-MM-DD)", file=sys.stderr)
+        return 2
+
+    async def _run() -> int:
+        from .pack.build import build_sse_pack
+
+        try:
+            result = await build_sse_pack(
+                url=args.url,
+                stock_code=args.stock_code,
+                company_name=args.company,
+                filing_date=filing_date,
+                out_dir=args.out,
+                pdf_path=args.pdf,
+                with_chunks=bool(args.with_chunks),
+                force=bool(args.force),
+                translate=bool(args.translate),
+                translate_model=args.translate_model,
+            )
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+
+        print("Pack built")
+        print(f"  Output: {result.output_dir}")
+        print(f"  Company: {result.filing_meta.get('company_name', 'Unknown')}")
+        print(f"  Form: {result.filing_meta.get('form_type', 'Unknown')}")
+        print(f"  Filing Date: {result.filing_meta.get('filing_date', 'Unknown')}")
+        print(f"  Sections: {result.sections_count}")
+        print(f"  Tokens: {result.tokens_total:,}")
+
+        if result.warnings:
+            print(f"\nWarnings ({len(result.warnings)}):")
+            for w in result.warnings[:10]:
+                print(f"  - {w}")
+            if len(result.warnings) > 10:
+                print(f"  ... and {len(result.warnings) - 10} more")
+
+        return 0
+
+    return asyncio.run(_run())
+
+
+def _cmd_translate_sse(args: Any) -> int:
+    pack_dir = Path(args.pack)
+    if not pack_dir.exists():
+        print(f"Error: pack directory not found: {pack_dir}", file=sys.stderr)
+        return 2
+
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        print(f"Error: no manifest.json in {pack_dir}", file=sys.stderr)
+        return 2
+
+    import json
+
+    manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    # Check if already translated
+    if not args.force and manifest_data.get("translation"):
+        print("Pack already translated. Use --force to re-translate.", file=sys.stderr)
+        return 0
+
+    async def _run() -> int:
+        from .china.translate.cache import DEFAULT_NAMESPACE, TranslationCache
+        from .china.translate.deepinfra import DeepInfraTranslator
+        from .china.translate.glossary import FinancialGlossary
+        from .china.translate.numbers import tag_numbers
+        from .china.translate.preprocess import preprocess_paragraphs
+        from .china.translate.router import SectionRouter
+        from .china.translate.validators import (
+            GlossaryConsistencyValidator,
+            validate_translation,
+        )
+
+        sections_dir = pack_dir / "sections"
+        if not sections_dir.exists():
+            print(f"Error: no sections/ directory in {pack_dir}", file=sys.stderr)
+            return 1
+
+        # Find Chinese section files (exclude .en.md)
+        zh_files = sorted(f for f in sections_dir.glob("*.md") if not f.name.endswith(".en.md"))
+        if not zh_files:
+            print("No Chinese section files found", file=sys.stderr)
+            return 1
+
+        # Derive stock_code from pack path (packs/sse/{stock_code}/...)
+        stock_code = manifest_data.get("filing", {}).get("stock_code", "")
+        packs_dir = pack_dir.parent.parent.parent  # sse/{code}/{filing_id} -> packs
+
+        glossary = FinancialGlossary.with_company_overlay(stock_code, packs_dir)
+        translator = DeepInfraTranslator(glossary=glossary, model=args.model)
+        router = SectionRouter(translator)
+        cache = TranslationCache(namespace=DEFAULT_NAMESPACE)
+        glossary_validator = GlossaryConsistencyValidator()
+
+        cached_count = 0
+        translated_count = 0
+        en_sections: list[str] = []
+        failed_sections: list[str] = []
+        translated_sections: list[str] = []
+
+        for zh_file in zh_files:
+            section_id = zh_file.stem
+            content = zh_file.read_text(encoding="utf-8")
+            paragraphs = [p for p in content.split("\n\n") if p.strip()]
+            decisions = preprocess_paragraphs(paragraphs)
+
+            uncached_indices: list[int] = []
+            uncached_texts: list[str] = []
+            translation_sources: list[str | None] = [None] * len(decisions)
+            para_results: list[str | None] = [None] * len(decisions)
+
+            for i, decision in enumerate(decisions):
+                if decision.action == "drop":
+                    continue
+                if decision.action == "passthrough":
+                    para_results[i] = decision.cleaned
+                    translation_sources[i] = "passthrough"
+                    continue
+
+                cached = cache.get(decision.cleaned)
+                if cached is not None:
+                    para_results[i] = cached.text_en
+                    cached_count += 1
+                    translation_sources[i] = "cache"
+                else:
+                    uncached_indices.append(i)
+                    uncached_texts.append(decision.cleaned)
+
+            def _validate(index: int, text_zh: str, text_en: str) -> Any:
+                _, number_tags = tag_numbers(text_zh)
+                return validate_translation(
+                    text_zh=text_zh,
+                    text_en=text_en,
+                    number_tags=number_tags,
+                    glossary_terms=glossary.terms,
+                    glossary_validator=glossary_validator,
+                    allow_han=False,
+                    paragraph_index=index,
+                )
+
+            for i, decision in enumerate(decisions):
+                if translation_sources[i] != "cache" or para_results[i] is None:
+                    continue
+                report = _validate(i, decision.cleaned, para_results[i])
+                if report.has_errors:
+                    uncached_indices.append(i)
+                    uncached_texts.append(decision.cleaned)
+                    para_results[i] = None
+                    translation_sources[i] = None
+                    cached_count -= 1
+
+            section_failed = False
+            section_error_messages: list[str] = []
+            if uncached_texts:
+                results = await router.translate_section(section_id, uncached_texts)
+                retry_indices: list[int] = []
+                retry_texts: list[str] = []
+                for idx, result in zip(uncached_indices, results, strict=False):
+                    report = _validate(idx, result.text_zh, result.text_en)
+                    if report.has_errors:
+                        retry_indices.append(idx)
+                        retry_texts.append(result.text_zh)
+                        continue
+                    para_results[idx] = result.text_en
+                    translation_sources[idx] = "translated"
+                    cache.put(result)
+                    translated_count += 1
+
+                if retry_texts:
+                    retry_results = await router.translate_section(
+                        section_id,
+                        retry_texts,
+                        strict=True,
+                    )
+                    for idx, result in zip(retry_indices, retry_results, strict=False):
+                        report = _validate(idx, result.text_zh, result.text_en)
+                        if report.has_errors:
+                            section_failed = True
+                            section_error_messages.extend(
+                                f"p{idx}: {issue.message}"
+                                for issue in report.issues
+                                if issue.severity == "error"
+                            )
+                            break
+                        para_results[idx] = result.text_en
+                        translation_sources[idx] = "translated"
+                        cache.put(result)
+                        translated_count += 1
+
+            if section_failed or any(
+                translation_sources[i] is None and decisions[i].action == "translate"
+                for i in range(len(decisions))
+            ):
+                failed_sections.append(section_id)
+                en_path = sections_dir / f"{section_id}.en.md"
+                if en_path.exists():
+                    en_path.unlink()
+                print(f"  {section_id}: failed closed")
+                for msg in section_error_messages[:3]:
+                    print(f"    - {msg}")
+                continue
+
+            en_content = "\n\n".join(p for p in para_results if p)
+            en_sections.append(en_content)
+            en_path = sections_dir / f"{section_id}.en.md"
+            en_path.write_text(en_content, encoding="utf-8")
+            translated_sections.append(section_id)
+            print(f"  {section_id}: {len(paragraphs)} paragraphs")
+
+        # Write full English filing
+        wrote_full_en = False
+        if en_sections and not failed_sections:
+            full_en = "\n\n---\n\n".join(en_sections)
+            full_en_path = pack_dir / "filing.full.en.md"
+            full_en_path.write_text(full_en, encoding="utf-8")
+            wrote_full_en = True
+        else:
+            full_en_path = pack_dir / "filing.full.en.md"
+            if full_en_path.exists():
+                full_en_path.unlink()
+
+        # Update manifest
+        manifest_data["translation"] = {
+            "provider": translator.provider,
+            "model": args.model,
+            "glossary_version": glossary.version,
+            "cached_paragraphs": cached_count,
+            "translated_paragraphs": translated_count,
+            "failed_sections": failed_sections,
+            "translated_sections": translated_sections,
+            "full_filing_written": wrote_full_en,
+        }
+        manifest_path.write_text(
+            json.dumps(manifest_data, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        await translator.close()
+        cache.close()
+        print(f"\nTranslated: {translated_count} paragraphs, {cached_count} from cache")
+        return 1 if failed_sections else 0
 
     return asyncio.run(_run())
 

@@ -22,8 +22,12 @@ class TestSiteBuild(unittest.TestCase):
             (pack_dir / "sections").mkdir(parents=True, exist_ok=True)
 
             (pack_dir / "filing.full.md").write_text("# Title\n\nBody\n", encoding="utf-8")
+            (pack_dir / "filing.full.en.md").write_text("# Title EN\n\nBody EN\n", encoding="utf-8")
             (pack_dir / "llms.txt").write_text("# Test\n", encoding="utf-8")
             (pack_dir / "sections" / "sec1.md").write_text("## Sec\n\nText\n", encoding="utf-8")
+            (pack_dir / "sections" / "sec1.en.md").write_text(
+                "## Sec EN\n\nText EN\n", encoding="utf-8"
+            )
 
             manifest = {
                 "schema_version": 1,
@@ -48,7 +52,7 @@ class TestSiteBuild(unittest.TestCase):
                         "sha256": "0" * 64,
                     }
                 ],
-                "artifacts": {"filing.full.md": "0" * 64},
+                "artifacts": {"filing.full.md": "0" * 64, "filing.full.en.md": "1" * 64},
                 "warnings": [],
                 "tokens_total": 3,
             }
@@ -62,7 +66,9 @@ class TestSiteBuild(unittest.TestCase):
             self.assertTrue((out / cik / "index.html").exists())
             self.assertTrue((out / cik / accession / "index.html").exists())
             self.assertTrue((out / cik / accession / "full.html").exists())
+            self.assertTrue((out / cik / accession / "full.en.html").exists())
             self.assertTrue((out / cik / accession / "sections" / "sec1.html").exists())
+            self.assertTrue((out / cik / accession / "sections" / "sec1.en.html").exists())
 
     def test_markdown_to_html_sanitizes_links(self) -> None:
         md = "Click [bad](javascript:alert(1)) and [ok](https://example.com)."

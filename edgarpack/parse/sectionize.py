@@ -744,11 +744,16 @@ def sectionize(markdown: str, form_type: str) -> list[Section]:
 
     Args:
         markdown: Full markdown content
-        form_type: Form type (10-K, 10-Q, 8-K)
+        form_type: Form type (10-K, 10-Q, 8-K, IPO-PROSPECTUS)
 
     Returns:
         List of Section objects
     """
+    if form_type.upper() == "IPO-PROSPECTUS":
+        from ..sse.sectionize_cn import find_sections_cn
+
+        return find_sections_cn(markdown)
+
     matches = find_sections(markdown, form_type)
 
     if not matches:

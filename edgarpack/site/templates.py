@@ -179,6 +179,11 @@ def sections_list(items: Iterable[tuple[str, str, str | None]]) -> str:
     return "\n".join(lines)
 
 
+def nav_links(items: Iterable[tuple[str, str]]) -> str:
+    """Render a compact inline nav block."""
+    return " ".join(link(href, text) for text, href in items)
+
+
 def content_page(title: str, stats: list[str], html: str) -> str:
     """Render a content page block with title, stats, and body HTML."""
     lines = [h1(title)]

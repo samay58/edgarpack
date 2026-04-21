@@ -18,6 +18,7 @@ from .templates import (
     filing_overview,
     html_doc,
     link,
+    nav_links,
     sections_list,
 )
 
@@ -119,40 +120,51 @@ def _scan_packs(packs_dir: Path) -> list[PackInfo]:
     if not packs_dir.exists():
         return packs
 
+    # Collect all directories that contain a manifest.json.
+    # SEC layout: packs/{cik}/{accession}/manifest.json  (2 levels)
+    # SSE layout: packs/sse/{stock_code}/{filing_id}/manifest.json  (3 levels)
+    pack_dirs: list[Path] = []
     for cik_dir in packs_dir.iterdir():
         if not cik_dir.is_dir():
             continue
-        for acc_dir in cik_dir.iterdir():
-            if not acc_dir.is_dir():
+        for sub_dir in cik_dir.iterdir():
+            if not sub_dir.is_dir():
                 continue
-            manifest_path = acc_dir / "manifest.json"
-            if not manifest_path.exists():
-                continue
-            try:
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            except Exception:
-                continue
+            if (sub_dir / "manifest.json").exists():
+                pack_dirs.append(sub_dir)
+            else:
+                # Check one level deeper (SSE: sse/{stock_code}/{filing_id}/)
+                for deep_dir in sub_dir.iterdir():
+                    if deep_dir.is_dir() and (deep_dir / "manifest.json").exists():
+                        pack_dirs.append(deep_dir)
 
-            filing = manifest.get("filing", {}) or {}
-            source = manifest.get("source", {}) or {}
+    for pack_dir in pack_dirs:
+        try:
+            manifest = json.loads((pack_dir / "manifest.json").read_text(encoding="utf-8"))
+        except Exception:
+            continue
 
-            cik = str(filing.get("cik") or cik_dir.name)
-            accession = str(filing.get("accession") or acc_dir.name)
+        filing = manifest.get("filing", {}) or {}
+        source = manifest.get("source", {}) or {}
 
-            packs.append(
-                PackInfo(
-                    cik=cik,
-                    accession=accession,
-                    company_name=str(filing.get("company_name") or f"CIK {cik}"),
-                    form_type=str(filing.get("form_type") or "Unknown"),
-                    filing_date=str(filing.get("filing_date") or ""),
-                    tokens_total=int(manifest.get("tokens_total") or 0),
-                    source_url=source.get("url"),
-                    sections=list(manifest.get("sections") or []),
-                    artifacts=dict(manifest.get("artifacts") or {}),
-                    pack_dir=acc_dir,
-                )
+        # SSE packs use stock_code instead of cik
+        cik = str(filing.get("cik") or filing.get("stock_code") or pack_dir.parent.name)
+        accession = str(filing.get("accession") or pack_dir.name)
+
+        packs.append(
+            PackInfo(
+                cik=cik,
+                accession=accession,
+                company_name=str(filing.get("company_name") or f"CIK {cik}"),
+                form_type=str(filing.get("form_type") or "Unknown"),
+                filing_date=str(filing.get("filing_date") or ""),
+                tokens_total=int(manifest.get("tokens_total") or 0),
+                source_url=source.get("url"),
+                sections=list(manifest.get("sections") or []),
+                artifacts=dict(manifest.get("artifacts") or {}),
+                pack_dir=pack_dir,
             )
+        )
 
     return packs
 
@@ -173,9 +185,10 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
     accession = pack.accession
 
     # Overview (from manifest)
+    id_line = f"CIK: {cik} · Accession: {accession}" if cik and accession else f"Code: {cik}"
     meta_lines = [
         f"{pack.form_type} · Filed {pack.filing_date}",
-        f"CIK: {cik} · Accession: {accession}",
+        id_line,
         f"Tokens: {pack.tokens_total:,}",
     ]
 
@@ -183,14 +196,21 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
     section_items: list[tuple[str, str, str | None]] = []
     # Full filing link
     section_items.append(("■ Full Filing", "full.html", f"{pack.tokens_total:,}"))
+    if (out_pack_dir / "filing.full.en.md").exists():
+        section_items.append(("■ Full Filing (English)", "full.en.html", f"{pack.tokens_total:,}"))
 
     for s in pack.sections:
         sid = str(s.get("id") or "")
         title = str(s.get("title") or sid)
         tokens = s.get("tokens_approx")
         tokens_str = f"{int(tokens):,}" if isinstance(tokens, int) else None
-        href = f"sections/{_section_page_name(sid)}.html"
-        section_items.append((title, href, tokens_str))
+        page_name = _section_page_name(sid)
+        href = f"sections/{page_name}.html"
+        section_items.append((f"{title} (Chinese)", href, tokens_str))
+        if (out_pack_dir / "sections" / f"{sid}.en.md").exists():
+            section_items.append(
+                (f"{title} (English)", f"sections/{page_name}.en.html", tokens_str)
+            )
 
     sections_html = sections_list(section_items)
 
@@ -233,10 +253,26 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
     full_html = html_doc(
         title=f"{pack.company_name} {pack.form_type} Full",
         header_left=link("index.html", f"← {pack.company_name}"),
-        header_right=f"{link('filing.full.md', 'Raw MD')}",
+        header_right=nav_links([("Raw MD", "filing.full.md")]),
         body=full_html_body,
     )
     (out_pack_dir / "full.html").write_text(full_html, encoding="utf-8")
+
+    full_en_md_path = out_pack_dir / "filing.full.en.md"
+    if full_en_md_path.exists():
+        full_en_md = full_en_md_path.read_text(encoding="utf-8")
+        full_en_html_body = content_page(
+            title=f"{pack.form_type} · Full Filing (English)",
+            stats=[f"Tokens: {pack.tokens_total:,}", f"Chars: {len(full_en_md):,}"],
+            html=_markdown_to_html(full_en_md),
+        )
+        full_en_html = html_doc(
+            title=f"{pack.company_name} {pack.form_type} Full English",
+            header_left=link("index.html", f"← {pack.company_name}"),
+            header_right=nav_links([("Chinese", "full.html"), ("Raw EN MD", "filing.full.en.md")]),
+            body=full_en_html_body,
+        )
+        (out_pack_dir / "full.en.html").write_text(full_en_html, encoding="utf-8")
 
     # Section pages
     sections_dir = out_pack_dir / "sections"
@@ -244,23 +280,54 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
     for s in pack.sections:
         sid = str(s.get("id") or "")
         title = str(s.get("title") or sid)
+        page_name = _section_page_name(sid)
         md_path = out_pack_dir / str(s.get("path") or f"sections/{sid}.md")
+        en_md_path = out_pack_dir / f"sections/{sid}.en.md"
         md = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
         tokens = s.get("tokens_approx")
         tokens_str = f"{int(tokens):,}" if isinstance(tokens, int) else "?"
 
         body = content_page(
-            title=title,
+            title=f"{title} (Chinese)",
             stats=[f"{tokens_str} tokens · {len(md):,} chars"],
             html=_markdown_to_html(md),
         )
+        header_links = [("Full", "../full.html"), ("Raw MD", _section_md_href(sid))]
+        if en_md_path.exists():
+            header_links.insert(0, ("English", f"{page_name}.en.html"))
         page = html_doc(
             title=f"{pack.company_name} {pack.form_type} {title}",
             header_left=link("../index.html", "← Overview"),
-            header_right=f"{link('../full.html', 'Full')} {link(_section_md_href(sid), 'Raw MD')}",
+            header_right=nav_links(header_links),
             body=body,
         )
-        (sections_dir / f"{_section_page_name(sid)}.html").write_text(page, encoding="utf-8")
+        (sections_dir / f"{page_name}.html").write_text(page, encoding="utf-8")
+
+        if en_md_path.exists():
+            en_md = en_md_path.read_text(encoding="utf-8")
+            en_body = content_page(
+                title=f"{title} (English)",
+                stats=[f"{tokens_str} tokens · {len(en_md):,} chars"],
+                html=_markdown_to_html(en_md),
+            )
+            en_page = html_doc(
+                title=f"{pack.company_name} {pack.form_type} {title} English",
+                header_left=link("../index.html", "← Overview"),
+                header_right=nav_links(
+                    [
+                        ("Chinese", f"{page_name}.html"),
+                        (
+                            "Full EN",
+                            "../full.en.html"
+                            if (out_pack_dir / "filing.full.en.md").exists()
+                            else "../full.html",
+                        ),
+                        ("Raw EN MD", f"{sid}.en.md"),
+                    ]
+                ),
+                body=en_body,
+            )
+            (sections_dir / f"{page_name}.en.html").write_text(en_page, encoding="utf-8")
 
 
 def _section_page_name(section_id: str) -> str:
