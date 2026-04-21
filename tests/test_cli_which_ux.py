@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import json
+import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from edgarpack import cli
+from edgarpack.cli import _render_which_diagnostics
 from edgarpack.harvest.registry import PackRecord, PackRegistry
-from edgarpack.query.kpi_discover import CompanyKpiAggregate, PeriodPoint
+from edgarpack.query.kpi_discover import (
+    CompanyKpiAggregate,
+    DiscoveryDiagnostics,
+    PeriodPoint,
+)
 from edgarpack.query.layer_zero import MetricNotFound
 
 
@@ -213,7 +219,10 @@ def test_cmd_which_shows_progress_and_summary(capsys):
     assert "Resolving company FIG -> Figma, Inc. (CIK 0001579878)" in captured.err
     assert "Loading up to 1 registered pack(s)" in captured.err
     assert "Running KPI discovery on filing 1/1 (10-K 2026-02-18)" in captured.err
-    assert "Discovery summary: 1 analyzed, 1 skipped (missing/corrupt manifest)" in captured.err
+    assert (
+        "Discovery summary: 1 analyzed, 1 skipped "
+        "(manifest missing; run `edgarpack build <ticker>`)"
+    ) in captured.err
     assert "Rendering KPI table" in captured.err
     assert "paid_seats" in captured.out
 
@@ -272,3 +281,38 @@ def test_cmd_query_metric_not_found_adds_actionable_guidance(capsys):
     assert "Tip: `subscription_customers` maps to the catalog metric `customer_count`." in err
     assert "Company-specific KPI slugs come from `edgarpack which CRWD`." in err
     assert "catalog metric like `customer_count`" in err
+
+
+class TestWhichDiagnosticsSplit(unittest.TestCase):
+    def test_missing_manifest_emits_specific_remediation(self) -> None:
+        d = DiscoveryDiagnostics(manifest_missing_packs=3)
+        out = _render_which_diagnostics(d)
+        self.assertIsNotNone(out)
+        self.assertIn("manifest missing", out)
+        self.assertIn("edgarpack build", out)
+
+    def test_invalid_json_emits_specific_hint(self) -> None:
+        d = DiscoveryDiagnostics(manifest_invalid_json_packs=2)
+        out = _render_which_diagnostics(d)
+        self.assertIsNotNone(out)
+        self.assertIn("invalid JSON", out)
+        self.assertIn("doctor", out)
+
+    def test_schema_mismatch_emits_specific_hint(self) -> None:
+        d = DiscoveryDiagnostics(manifest_schema_mismatch_packs=1)
+        out = _render_which_diagnostics(d)
+        self.assertIsNotNone(out)
+        self.assertIn("schema mismatch", out)
+
+    def test_io_error_emits_specific_hint(self) -> None:
+        d = DiscoveryDiagnostics(manifest_io_error_packs=1)
+        out = _render_which_diagnostics(d)
+        self.assertIsNotNone(out)
+        self.assertIn("I/O", out)
+
+    def test_no_manifest_issues_renders_cleanly(self) -> None:
+        d = DiscoveryDiagnostics(cached_packs=2, discovered_packs=1)
+        out = _render_which_diagnostics(d)
+        self.assertIsNotNone(out)
+        self.assertIn("cached", out)
+        self.assertIn("analyzed", out)

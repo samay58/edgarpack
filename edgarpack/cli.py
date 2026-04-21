@@ -2272,9 +2272,25 @@ def _render_which_diagnostics(diagnostics: Any) -> str | None:
         fragments.append(f"{diagnostics.cached_packs} cached")
     if diagnostics.discovered_packs:
         fragments.append(f"{diagnostics.discovered_packs} analyzed")
-    if diagnostics.unreadable_manifest_packs:
+    if diagnostics.manifest_missing_packs:
         fragments.append(
-            f"{diagnostics.unreadable_manifest_packs} skipped (missing/corrupt manifest)"
+            f"{diagnostics.manifest_missing_packs} skipped "
+            "(manifest missing; run `edgarpack build <ticker>`)"
+        )
+    if diagnostics.manifest_invalid_json_packs:
+        fragments.append(
+            f"{diagnostics.manifest_invalid_json_packs} skipped "
+            "(manifest invalid JSON; run `edgarpack doctor <pack-dir>` for details)"
+        )
+    if diagnostics.manifest_schema_mismatch_packs:
+        fragments.append(
+            f"{diagnostics.manifest_schema_mismatch_packs} skipped "
+            "(manifest schema mismatch; rebuild with `edgarpack build <ticker> --force`)"
+        )
+    if diagnostics.manifest_io_error_packs:
+        fragments.append(
+            f"{diagnostics.manifest_io_error_packs} skipped "
+            "(manifest I/O error; check filesystem permissions)"
         )
     if diagnostics.llm_failed_packs:
         fragments.append(f"{diagnostics.llm_failed_packs} discovery failure(s)")
