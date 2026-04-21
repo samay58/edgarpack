@@ -95,10 +95,25 @@ def _flatten(value: CitedValue | list[CitedValue] | None) -> CitedValue | None:
     return value
 
 
-async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColumn:
+async def _fetch_one(
+    name: str, metrics: str | None, period: str, *, strict: bool = False
+) -> tuple[CompanyColumn, list[str]]:
+    """Fetch one column. Returns (column, strict_rejected_metrics).
+
+    When `strict` is True, any CitedValue whose source is not 'hardcoded'
+    is filtered out before column construction; its metric name appears
+    in the returned rejected list so the CLI can surface the rejection.
+    """
     from .query.financials import financials
 
     result = await financials(company=name, metrics=metrics, period=period)
+
+    strict_rejected: list[str] = []
+    if strict:
+        from .query.strict import apply_strict
+
+        strict_rejected = apply_strict(result)
+
     flattened: dict[str, CitedValue] = {}
     for k, v in result.metrics.items():
         cv = _flatten(v)
@@ -171,21 +186,30 @@ async def _fetch_one(name: str, metrics: str | None, period: str) -> CompanyColu
         {"metric": d.metric, "kind": d.kind, "message": d.message} for d in result.diagnostics
     ]
 
-    return CompanyColumn(
-        ticker=name,
-        company=company,
-        period=period_label,
-        reporting_currency=currency,
-        metrics=metrics_dict,
-        diagnostics=diagnostics_out or None,
+    return (
+        CompanyColumn(
+            ticker=name,
+            company=company,
+            period=period_label,
+            reporting_currency=currency,
+            metrics=metrics_dict,
+            diagnostics=diagnostics_out or None,
+        ),
+        strict_rejected,
     )
 
 
-async def _gather(names: list[str], metrics: str | None, period: str) -> list[CompanyColumn]:
+async def _gather(
+    names: list[str], metrics: str | None, period: str, *, strict: bool = False
+) -> tuple[list[CompanyColumn], dict[str, list[str]]]:
     cols: list[CompanyColumn] = []
+    rejected_by_company: dict[str, list[str]] = {}
     for n in names:
-        cols.append(await _fetch_one(n, metrics, period))
-    return cols
+        col, rejected = await _fetch_one(n, metrics, period, strict=strict)
+        cols.append(col)
+        if rejected:
+            rejected_by_company[n] = rejected
+    return cols, rejected_by_company
 
 
 def _abbrev_usd(val: float) -> str:
@@ -355,8 +379,11 @@ def cmd_compare(args: Any) -> int:
     metrics = args.metrics or "revenue,gross_profit,net_income,cash_and_equivalents"
     period = getattr(args, "period", None) or "lfy"
 
+    strict_flag = bool(getattr(args, "strict", False))
     try:
-        columns = asyncio.run(_gather(args.companies, metrics, period))
+        columns, strict_rejected = asyncio.run(
+            _gather(args.companies, metrics, period, strict=strict_flag)
+        )
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
@@ -375,9 +402,23 @@ def cmd_compare(args: Any) -> int:
 
     fmt = getattr(args, "compare_format", None) or "table"
     if fmt == "json":
-        print(_format_json(columns, period))
+        import json as _json
+
+        payload = _json.loads(_format_json(columns, period))
+        if strict_flag and strict_rejected:
+            payload["strict_rejected"] = strict_rejected
+        print(_json.dumps(payload, indent=2, default=str))
     elif fmt == "markdown":
         print(_format_markdown(columns, metric_keys, period))
+        if strict_flag and strict_rejected:
+            flat = sorted({m for v in strict_rejected.values() for m in v})
+            print("")
+            print(f"_Strict mode: rejected learned values for: {', '.join(flat)}_")
     else:
         print(_format_table(columns, metric_keys, period))
+        if strict_flag and strict_rejected:
+            flat = sorted({m for v in strict_rejected.values() for m in v})
+            print("")
+            print(f"Strict mode: rejected learned values for: {', '.join(flat)}")
+            print("Use `edgarpack learned list` to inspect, or re-run without --strict.")
     return 0

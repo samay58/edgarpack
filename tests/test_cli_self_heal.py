@@ -244,5 +244,63 @@ class TestDiagnosticsFooter(unittest.TestCase):
         self.assertNotIn("Diagnostics:", out)
 
 
+class TestStrictHelperParity(unittest.TestCase):
+    """Covers edgarpack-x1y: --strict must mean the same thing across query,
+    comps, and compare. The canonical gate is query.strict.apply_strict."""
+
+    def test_apply_strict_drops_learned_scalar(self) -> None:
+        from edgarpack.query.strict import apply_strict
+
+        qr = QueryResult(
+            company="NVIDIA CORP",
+            cik="0001045810",
+            period="lfy",
+            metrics={
+                "revenue": _cited("revenue", "Revenues", 130e9, source="learned:llm"),
+                "net_income": _cited("net_income", "NetIncomeLoss", 30e9),
+            },
+        )
+        rejected = apply_strict(qr)
+        self.assertEqual(rejected, ["revenue"])
+        self.assertIsNone(qr.metrics["revenue"])
+        self.assertIsNotNone(qr.metrics["net_income"])
+
+    def test_apply_strict_filters_learned_out_of_list(self) -> None:
+        from edgarpack.query.strict import apply_strict
+
+        hardcoded = _cited("revenue", "Revenues", 60e9)
+        learned = _cited("revenue", "Revenues", 55e9, source="learned:fuzzy")
+        qr = QueryResult(
+            company="NVIDIA CORP",
+            cik="0001045810",
+            period="annual:2",
+            metrics={"revenue": [hardcoded, learned]},
+        )
+        rejected = apply_strict(qr)
+        # List still has a hardcoded entry, so the metric itself is not
+        # fully rejected; but the learned entry is gone.
+        self.assertEqual(rejected, [])
+        kept = qr.metrics["revenue"]
+        self.assertIsInstance(kept, list)
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(kept[0].source, "hardcoded")
+
+    def test_apply_strict_is_idempotent(self) -> None:
+        """Second call returns empty rejections so cmd-level pre-filtering
+        does not double-count or misreport."""
+        from edgarpack.query.strict import apply_strict
+
+        qr = QueryResult(
+            company="NVIDIA CORP",
+            cik="0001045810",
+            period="lfy",
+            metrics={"revenue": _cited("revenue", "Revenues", 130e9, source="learned:llm")},
+        )
+        first = apply_strict(qr)
+        second = apply_strict(qr)
+        self.assertEqual(first, ["revenue"])
+        self.assertEqual(second, [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -508,6 +508,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Citation placement in table output (default: inline)",
     )
     p_comps.add_argument("--force", action="store_true", help="Bypass cache")
+    p_comps.add_argument(
+        "--strict",
+        action="store_true",
+        help="Reject values resolved via self-heal (learned mappings, text scans). "
+        "Only deterministic hardcoded METRIC_MAP resolutions survive.",
+    )
 
     p_learned = sub.add_parser(
         "learned",
@@ -605,6 +611,12 @@ def main(argv: list[str] | None = None) -> int:
         choices=["table", "json", "markdown"],
         default="table",
         help="Output format",
+    )
+    p_compare.add_argument(
+        "--strict",
+        action="store_true",
+        help="Reject values resolved via self-heal (learned mappings, text scans). "
+        "Only deterministic hardcoded METRIC_MAP resolutions survive.",
     )
 
     p_build_sse = sub.add_parser(
@@ -1265,6 +1277,15 @@ def _render_query_table(result: Any, args: Any) -> str:
     lines: list[str] = [f"{result.company} (CIK: {result.cik})", ""]
 
     strict = bool(getattr(args, "strict", False))
+    # Strict filtering is canonical in query.strict.apply_strict. When
+    # invoked from _cmd_query the result has already been filtered and
+    # the rejected-name list rides on args. When invoked directly (tests,
+    # library use) we filter here so the render path stays self-contained.
+    strict_rejected_incoming: list[str] = list(getattr(args, "_strict_rejected_names", ()))
+    if strict and not strict_rejected_incoming:
+        from .query.strict import apply_strict as _apply_strict_local
+
+        strict_rejected_incoming = _apply_strict_local(result)
     strict_rejected: list[str] = []
 
     for metric_name, raw_value in result.metrics.items():
@@ -1272,23 +1293,16 @@ def _render_query_table(result: Any, args: Any) -> str:
         lean_value = metrics_lean.get(metric_name)
 
         if raw_value is None:
-            lines.append(f"{label}: N/A")
+            if strict and metric_name in strict_rejected_incoming:
+                lines.append(f"{label}: N/A [strict]")
+                strict_rejected.append(metric_name)
+            else:
+                lines.append(f"{label}: N/A")
             continue
 
         # Self-heal source handling
         def _source_of(v: Any) -> str:
             return getattr(v, "source", "hardcoded")
-
-        scalar_source = (
-            _source_of(raw_value[0])
-            if isinstance(raw_value, list) and raw_value
-            else _source_of(raw_value)
-        )
-
-        if strict and scalar_source != "hardcoded":
-            lines.append(f"{label}: N/A [strict]")
-            strict_rejected.append(metric_name)
-            continue
 
         def _source_badge(v: Any) -> str:
             src = _source_of(v)
@@ -1619,22 +1633,47 @@ def _cmd_query(args: Any) -> int:
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
+        strict_flag = bool(getattr(args, "strict", False))
+        strict_rejected: list[str] = []
+        if strict_flag:
+            from .query.strict import apply_strict
+
+            if len(periods) == 1:
+                strict_rejected = apply_strict(result)
+            else:
+                seen: set[str] = set()
+                for _p, _r in results_by_period.items():
+                    for name in apply_strict(_r):
+                        if name not in seen:
+                            seen.add(name)
+                            strict_rejected.append(name)
+
         # Single-period path: keep existing behavior byte-for-byte.
         if len(periods) == 1:
             if args.output_format == "json":
                 import json
 
-                print(json.dumps(result.to_lean_dict(), indent=2, default=str))
+                payload = result.to_lean_dict()
+                if strict_flag:
+                    payload["strict_rejected"] = strict_rejected
+                print(json.dumps(payload, indent=2, default=str))
                 return 0
 
             if args.output_format == "json-full":
                 import json
 
-                print(json.dumps(result.to_cited_dict(), indent=2, default=str))
+                payload = result.to_cited_dict()
+                if strict_flag:
+                    payload["strict_rejected"] = strict_rejected
+                print(json.dumps(payload, indent=2, default=str))
                 return 0
 
             citations_mode = args.citations if args.citations is not None else "inline"
-            args_for_render = _ArgProxy(args, citations=citations_mode)
+            args_for_render = _ArgProxy(
+                args,
+                citations=citations_mode,
+                _strict_rejected_names=strict_rejected,
+            )
             print(_render_query_table(result, args_for_render))
             return 0
 
@@ -1710,10 +1749,37 @@ def _cmd_comps(args: Any) -> int:
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
+        strict_flag = bool(getattr(args, "strict", False))
+        strict_rejected: dict[str, list[str]] = {}
+        if strict_flag:
+            from .query.strict import apply_strict
+
+            for _company, _result in results.items():
+                rejected = apply_strict(_result)
+                if rejected:
+                    strict_rejected[_company] = rejected
+
         if args.output_format == "json":
-            print(comps_to_lean_json(results, metric_list, args.period))
+            import json
+
+            # comps_to_lean_json returns a JSON string; we want to re-parse
+            # only when we need to attach strict_rejected. For the common
+            # non-strict path the output stays byte-identical.
+            if strict_flag and strict_rejected:
+                payload = json.loads(comps_to_lean_json(results, metric_list, args.period))
+                payload["strict_rejected"] = strict_rejected
+                print(json.dumps(payload, indent=2, default=str))
+            else:
+                print(comps_to_lean_json(results, metric_list, args.period))
         elif args.output_format == "json-full":
-            print(comps_to_json(results))
+            import json
+
+            if strict_flag and strict_rejected:
+                payload = json.loads(comps_to_json(results))
+                payload["strict_rejected"] = strict_rejected
+                print(json.dumps(payload, indent=2, default=str))
+            else:
+                print(comps_to_json(results))
         else:
             width = shutil.get_terminal_size((120, 20)).columns
             print(
@@ -1726,6 +1792,11 @@ def _cmd_comps(args: Any) -> int:
                     terminal_width=width,
                 )
             )
+            if strict_flag and strict_rejected:
+                print("")
+                flat = sorted({m for v in strict_rejected.values() for m in v})
+                print(f"Strict mode: rejected learned values for: {', '.join(flat)}")
+                print("Use `edgarpack learned list` to inspect, or re-run without --strict.")
 
         return 0
 
