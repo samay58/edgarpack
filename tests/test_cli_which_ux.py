@@ -187,7 +187,7 @@ def test_cmd_which_shows_progress_and_summary(capsys):
         diagnostics.total_registered_packs = 1
         diagnostics.eligible_packs = 1
         diagnostics.discovered_packs = 1
-        diagnostics.unreadable_manifest_packs = 1
+        diagnostics.manifest_missing_packs = 1
         if progress_callback is not None:
             from edgarpack.query.kpi_discover import DiscoveryProgressEvent
 

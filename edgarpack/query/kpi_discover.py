@@ -45,9 +45,21 @@ class DiscoveryDiagnostics:
     eligible_packs: int = 0
     cached_packs: int = 0
     discovered_packs: int = 0
-    unreadable_manifest_packs: int = 0
+    manifest_missing_packs: int = 0
+    manifest_invalid_json_packs: int = 0
+    manifest_schema_mismatch_packs: int = 0
+    manifest_io_error_packs: int = 0
     llm_failed_packs: int = 0
     empty_packs: int = 0
+
+    @property
+    def unreadable_manifest_packs(self) -> int:
+        return (
+            self.manifest_missing_packs
+            + self.manifest_invalid_json_packs
+            + self.manifest_schema_mismatch_packs
+            + self.manifest_io_error_packs
+        )
 
 
 @dataclass(frozen=True)
@@ -65,7 +77,9 @@ class PackDiscoveryResult:
     """Result of attempting discovery for a single filing pack."""
 
     discovered: list[DiscoveredKpi]
-    status: str  # cached | discovered | unreadable_manifest | llm_failed | empty
+    status: str
+    # one of: cached | discovered | manifest_missing | manifest_invalid_json
+    #       | manifest_schema_mismatch | manifest_io_error | llm_failed | empty
 
 
 @dataclass(frozen=True)
@@ -190,16 +204,38 @@ def _discover_pack(
         )
 
     pack_dir = Path(pack_record.pack_dir)
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        logger.info("Discovery: manifest.json missing at %s (accn=%s)", pack_dir, accession)
+        return PackDiscoveryResult(discovered=[], status="manifest_missing")
     try:
         manifest = _load_pack_manifest(pack_dir)
-    except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+    except json.JSONDecodeError as e:
         logger.info(
-            "Discovery: cannot read manifest for %s (accn=%s): %s",
+            "Discovery: invalid JSON manifest at %s (accn=%s): %s", pack_dir, accession, e
+        )
+        return PackDiscoveryResult(discovered=[], status="manifest_invalid_json")
+    except (OSError, UnicodeDecodeError) as e:
+        logger.info(
+            "Discovery: manifest I/O error at %s (accn=%s): %s", pack_dir, accession, e
+        )
+        return PackDiscoveryResult(discovered=[], status="manifest_io_error")
+
+    # Schema mismatch: manifest parsed but is the wrong shape for this EdgarPack.
+    schema_version = manifest.get("schema_version") if isinstance(manifest, dict) else None
+    from ..config import SCHEMA_VERSION as _SCHEMA_VERSION
+
+    required_top_level = {"filing", "sections", "parser_version"}
+    missing = required_top_level - set(manifest.keys() if isinstance(manifest, dict) else [])
+    if not isinstance(schema_version, int) or schema_version != _SCHEMA_VERSION or missing:
+        logger.info(
+            "Discovery: manifest schema mismatch at %s (accn=%s): schema=%r missing=%s",
             pack_dir,
             accession,
-            e,
+            schema_version,
+            sorted(missing),
         )
-        return PackDiscoveryResult(discovered=[], status="unreadable_manifest")
+        return PackDiscoveryResult(discovered=[], status="manifest_schema_mismatch")
 
     existing_slugs = learned_reg.company_kpi_distinct_slugs(cik)
     extraction = extract_discoveries_detailed(
@@ -406,16 +442,19 @@ def discover_kpis(
                 force=force,
             )
             if diagnostics is not None:
-                if pack_result.status == "cached":
-                    diagnostics.cached_packs += 1
-                elif pack_result.status == "discovered":
-                    diagnostics.discovered_packs += 1
-                elif pack_result.status == "unreadable_manifest":
-                    diagnostics.unreadable_manifest_packs += 1
-                elif pack_result.status == "llm_failed":
-                    diagnostics.llm_failed_packs += 1
-                elif pack_result.status == "empty":
-                    diagnostics.empty_packs += 1
+                status_map = {
+                    "cached": "cached_packs",
+                    "discovered": "discovered_packs",
+                    "manifest_missing": "manifest_missing_packs",
+                    "manifest_invalid_json": "manifest_invalid_json_packs",
+                    "manifest_schema_mismatch": "manifest_schema_mismatch_packs",
+                    "manifest_io_error": "manifest_io_error_packs",
+                    "llm_failed": "llm_failed_packs",
+                    "empty": "empty_packs",
+                }
+                attr = status_map.get(pack_result.status)
+                if attr is not None:
+                    setattr(diagnostics, attr, getattr(diagnostics, attr) + 1)
             for kpi in pack_result.discovered:
                 slug = kpi.slug
                 if slug.startswith("__"):
