@@ -202,10 +202,17 @@ async def _fetch_one(
 async def _gather(
     names: list[str], metrics: str | None, period: str, *, strict: bool = False
 ) -> tuple[list[CompanyColumn], dict[str, list[str]]]:
+    """Fetch one column per name concurrently.
+
+    Uses asyncio.gather so N tickers hit the SEC / HKEX pipelines in
+    parallel instead of serially. Failed fetches (AmbiguousCompany,
+    unknown ticker, etc.) propagate as before; one bad ticker still
+    sinks the whole command, matching the pre-parallel semantics.
+    """
+    results = await asyncio.gather(*(_fetch_one(n, metrics, period, strict=strict) for n in names))
     cols: list[CompanyColumn] = []
     rejected_by_company: dict[str, list[str]] = {}
-    for n in names:
-        col, rejected = await _fetch_one(n, metrics, period, strict=strict)
+    for n, (col, rejected) in zip(names, results, strict=True):
         cols.append(col)
         if rejected:
             rejected_by_company[n] = rejected

@@ -121,3 +121,41 @@ def test_compare_header_flags_mismatched_fiscal_years():
     assert "fiscal years differ" in first_line
     assert "NVDA=" in first_line
     assert "AMD=" in first_line
+
+
+def test_gather_fetches_concurrently():
+    """Covers edgarpack-r9a: _gather must fan out with asyncio.gather so
+    N tickers hit the pipeline in parallel, not sequentially."""
+    import asyncio
+    import unittest.mock as _mock
+
+    from edgarpack import compare as _compare
+
+    max_in_flight = 0
+    in_flight = 0
+
+    async def _fake_fetch_one(name, metrics, period, *, strict=False):
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        # Yield so sibling tasks can start before we finish.
+        await asyncio.sleep(0.02)
+        in_flight -= 1
+        col = _compare.CompanyColumn(
+            ticker=name,
+            company=name,
+            period="FY2024",
+            reporting_currency="USD",
+            metrics={},
+        )
+        return col, []
+
+    with _mock.patch.object(_compare, "_fetch_one", side_effect=_fake_fetch_one):
+        cols, _ = asyncio.run(
+            _compare._gather(["A", "B", "C", "D"], "revenue", "lfy", strict=False)
+        )
+
+    assert len(cols) == 4
+    assert max_in_flight >= 2, (
+        f"expected concurrent fan-out, saw max {max_in_flight} tasks in flight (sequential path?)"
+    )
