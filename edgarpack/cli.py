@@ -189,7 +189,13 @@ def main(argv: list[str] | None = None) -> int:
 
     p_build = sub.add_parser(
         "build",
-        help="Build and register a filing pack for later `which` / `query` use",
+        help="Build a single filing pack, or a range via --last/--after/--before",
+        description=(
+            "Build and register a filing pack. "
+            "Examples: `edgarpack build AAPL --form 10-K` (latest), "
+            "`edgarpack build AAPL --form 10-K --last 5` (five most recent), "
+            "`edgarpack build AAPL --form 10-K --after 2020-01-01 --before 2022-12-31`."
+        ),
     )
     p_build.add_argument(
         "company",
@@ -209,7 +215,11 @@ def main(argv: list[str] | None = None) -> int:
     p_build.add_argument(
         "--form",
         "-f",
-        help="Form type: 10-K, 10-Q, 8-K (fetches latest)",
+        help=(
+            "Form type: 10-K, 10-Q, 8-K. "
+            "Defaults to 10-K when combined with --last/--after/--before; "
+            "fetches latest when used alone."
+        ),
     )
     p_build.add_argument(
         "--out",
