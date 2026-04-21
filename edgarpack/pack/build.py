@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import shutil
 from datetime import date
@@ -19,7 +20,7 @@ from ..parse.sectionize import sectionize
 from ..parse.semantic_html import reduce_to_semantic
 from ..parse.tokenize import count_tokens, has_tiktoken
 from ..sec.archives import fetch_filing_html
-from ..sec.submissions import get_filing_by_accession, get_latest_filing
+from ..sec.submissions import get_filing_by_accession, get_latest_filing, list_filings
 from ..sec.xbrl import fetch_xbrl_facts
 from .chunks import generate_chunks, write_chunks_ndjson
 from .llms_txt import generate_llms_txt, write_llms_txt
@@ -741,3 +742,52 @@ async def build_company_llms(
     llms_path.write_text(content, encoding="utf-8")
 
     return llms_path
+
+
+async def build_pack_range(
+    cik: str,
+    form_type: str,
+    *,
+    last: int | None = None,
+    after: date | None = None,
+    before: date | None = None,
+    out_dir: Path,
+    with_chunks: bool,
+    with_xbrl: bool,
+    force: bool,
+    concurrency: int = 3,
+) -> list[PackResult]:
+    fetch_limit = max(last or 50, 50)
+    candidates = await list_filings(cik, form_type=form_type, limit=fetch_limit)
+
+    filtered: list = []
+    for meta in candidates:
+        if after is not None and meta.filing_date < after:
+            continue
+        if before is not None and meta.filing_date > before:
+            continue
+        filtered.append(meta)
+
+    filtered.sort(key=lambda m: m.filing_date, reverse=True)
+    if last is not None:
+        filtered = filtered[:last]
+
+    if not filtered:
+        return []
+
+    semaphore = asyncio.Semaphore(max(1, concurrency))
+
+    async def _one(accession: str) -> PackResult:
+        async with semaphore:
+            return await build_pack(
+                cik=cik,
+                accession=accession,
+                form_type=None,
+                out_dir=out_dir,
+                with_chunks=with_chunks,
+                with_xbrl=with_xbrl,
+                force=force,
+            )
+
+    tasks = [_one(m.accession) for m in filtered]
+    return await asyncio.gather(*tasks)
