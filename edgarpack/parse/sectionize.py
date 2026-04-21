@@ -91,6 +91,8 @@ _CANONICAL_ITEM_TITLES = {
     "12": "Security Ownership",
     "13": "Certain Relationships and Related Transactions",
     "14": "Principal Accountant Fees and Services",
+    "15": "Exhibits and Financial Statement Schedules",
+    "16": "Form 10-K Summary",
 }
 
 
@@ -380,6 +382,29 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             re.match(r"^(?:for|see|refer to|please see|as discussed|information)\b", title, re.I)
         )
 
+    # Phrases that only appear inside cross-reference sentences, never in
+    # real item titles. Hit on these anywhere in the cleaned title means
+    # the ITEM_PATTERN match picked up a reference sentence rather than a
+    # heading. Example: "Risk Factors for additional information regarding
+    # our investments." is the tail of a "See Item 1A. Risk Factors for
+    # additional information..." sentence, not a section title.
+    _cross_ref_phrases = re.compile(
+        r"\b(?:for\s+additional\s+information|for\s+further\s+(?:discussion|information)"
+        r"|as\s+discussed\s+(?:in|under|elsewhere)|please\s+see\b|refer\s+to\b"
+        r"|regarding\s+our\b|of\s+this\s+(?:annual\s+report|quarterly\s+report|report)"
+        r"|in\s+this\s+(?:annual\s+report|quarterly\s+report|report))",
+        re.IGNORECASE,
+    )
+
+    def _contains_cross_ref_phrase(title: str) -> bool:
+        return bool(_cross_ref_phrases.search(title))
+
+    def _starts_with_paren_citation(title: str) -> bool:
+        """Reject titles that start with a parenthesized regulation citation
+        like '(b)(32)(ii)' — these are exhibit footnote fragments, not
+        real section headings."""
+        return bool(re.match(r"^\(\s*[a-z0-9]", title, re.IGNORECASE))
+
     def _normalize_item_title(item: str, title: str) -> str:
         clean_title = _truncate_title(_clean_title(title)).strip()
         if item == "other":
@@ -389,10 +414,15 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         needs_fallback = (
             not clean_title
             or _starts_with_cross_reference(clean_title)
+            or _starts_with_paren_citation(clean_title)
+            or _contains_cross_ref_phrase(clean_title)
             or _content_word_count(clean_title) < 3
         )
-        if needs_fallback and canonical:
-            return canonical
+        if needs_fallback:
+            # Prefer the canonical title when we have one; otherwise a
+            # generic "Item N" beats shipping a cross-ref fragment as
+            # the section title.
+            return canonical or f"Item {item}"
         return clean_title or canonical or f"Item {item}"
 
     seen_titles: set[str] = set()

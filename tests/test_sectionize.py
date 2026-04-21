@@ -165,5 +165,52 @@ class TestSectionize(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
 
 
+class TestCrossRefFragmentRejection(unittest.TestCase):
+    """Covers edgarpack-zfr: cross-reference sentences and exhibit citation
+    fragments must not be promoted into real section titles."""
+
+    def test_cross_ref_sentence_falls_back_to_canonical(self) -> None:
+        """'Item 1A. Risk Factors for additional information regarding our
+        investments.' is a cross-reference, not a heading. The title should
+        fall back to the canonical 'Risk Factors'."""
+        from edgarpack.parse.sectionize import find_sections
+
+        md = "Item 1A. Risk Factors for additional information regarding our investments.\n"
+        matches = find_sections(md, "10-K")
+        item_titles = [(m.item, m.title) for m in matches]
+        self.assertIn(("1A", "Risk Factors"), item_titles)
+        # The cross-ref sentence must not appear verbatim as a title.
+        self.assertFalse(
+            any("additional information regarding" in t.lower() for _, t in item_titles)
+        )
+
+    def test_paren_citation_falls_back_to_canonical(self) -> None:
+        """A cell containing a regulation citation like '(b)(32)(ii) of
+        Regulation S-K' should not become the title of an adjacent ITEM
+        match; the canonical title wins instead."""
+        from edgarpack.parse.sectionize import find_sections
+
+        md = "| Item 15 | (b)(32)(ii) of Regulation S-K |\n"
+        matches = find_sections(md, "10-K")
+        item_titles = [(m.item, m.title) for m in matches]
+        # If Item 15 matched at all, its title should be the canonical one.
+        item_15 = [t for item, t in item_titles if item == "15"]
+        for t in item_15:
+            self.assertFalse(t.startswith("("), f"paren-citation leaked into title: {t}")
+            self.assertNotIn("Regulation S-K", t)
+
+    def test_phrase_of_this_annual_report_triggers_fallback(self) -> None:
+        """'Item 7. Management's Discussion in this annual report' must
+        fall back rather than ship a cross-ref body as the MD&A title."""
+        from edgarpack.parse.sectionize import find_sections
+
+        md = "Item 7. Management's Discussion in this annual report of 2024 results.\n"
+        matches = find_sections(md, "10-K")
+        item_7 = [m.title for m in matches if m.item == "7"]
+        self.assertTrue(item_7)
+        for t in item_7:
+            self.assertFalse("in this annual report" in t.lower())
+
+
 if __name__ == "__main__":
     unittest.main()
