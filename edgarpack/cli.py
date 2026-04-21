@@ -1437,39 +1437,78 @@ def _render_citation_lines(
     width: int,
 ) -> list[str]:
     """Render one citation record for table/audit output."""
+    from .query.links import compact_url, osc8, supports_osc8
+
     lines: list[str] = []
     form_type = record.get("form_type")
     fiscal_label = record.get("fiscal_label")
     period = record.get("period")
     accession = record.get("accession")
     filed = record.get("filed")
+
+    primary = record.get("primary_link")
+    primary = primary if isinstance(primary, str) else ""
+    osc8_on = supports_osc8()
+
+    marker_label = f"[{citation_id}]"
+    if show_links != "none" and osc8_on and primary:
+        marker_label = osc8(primary, marker_label)
+
     summary = (
-        f"[{citation_id}] {form_type} {fiscal_label} | period {period} | "
+        f"{marker_label} {form_type} {fiscal_label} | period {period} | "
         f"accn {accession} | filed {filed}"
     )
+    if show_links != "none" and not osc8_on and primary:
+        summary = f"{summary}  {compact_url(primary)}"
     lines.extend(_wrap_cli_text(summary, width, indent="         "))
 
-    if show_links == "primary":
-        link = record.get("primary_link")
-        link_type = record.get("primary_link_type")
-        if isinstance(link, str) and link:
-            lines.extend(
-                _wrap_cli_text(
-                    f"     link({link_type}): {link}",
-                    width,
-                    indent="         ",
-                )
-            )
-    elif show_links == "all":
+    if show_links == "all":
         links = record.get("links", {})
         if isinstance(links, dict):
             for link_key, link_value in links.items():
-                if isinstance(link_value, str):
-                    lines.extend(
-                        _wrap_cli_text(f"     {link_key}: {link_value}", width, indent="         ")
+                if not isinstance(link_value, str) or not link_value:
+                    continue
+                rendered = compact_url(link_value)
+                if osc8_on:
+                    rendered = osc8(link_value, rendered)
+                lines.extend(
+                    _wrap_cli_text(
+                        f"     {link_key}: {rendered}", width, indent="         "
                     )
+                )
 
     return lines
+
+
+def _marker_with_link(
+    marker: str,
+    payload: dict[str, object] | None,
+    citations_lookup: dict[str, dict[str, object]],
+    calculations_lookup: dict[str, dict[str, object]],
+    *,
+    show_links: str,
+) -> str:
+    from .query.links import osc8, supports_osc8
+
+    if show_links == "none" or not marker or not supports_osc8():
+        return marker
+
+    tag = marker.strip().lstrip("[").rstrip("]").split(",")[0].strip()
+    record: dict[str, object] | None = None
+    if tag.startswith(("C",)):
+        record = citations_lookup.get(tag)
+    elif tag.startswith(("L", "D", "G")):
+        calc = calculations_lookup.get(tag)
+        if isinstance(calc, dict):
+            result_cid = calc.get("result_citation_id")
+            if isinstance(result_cid, str):
+                record = citations_lookup.get(result_cid)
+    if not isinstance(record, dict):
+        return marker
+    link = record.get("primary_link")
+    if not isinstance(link, str) or not link:
+        return marker
+    return osc8(link, marker)
 
 
 def _render_query_table(result: Any, args: Any) -> str:
@@ -1539,6 +1578,13 @@ def _render_query_table(result: Any, args: Any) -> str:
                         marker = f" [{calc_id}]"
                     elif isinstance(citation_ids, list) and citation_ids:
                         marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
+                    marker = _marker_with_link(
+                        marker,
+                        payload if isinstance(payload, dict) else None,
+                        citations,
+                        calculations,
+                        show_links=getattr(args, "show_links", "primary"),
+                    )
 
                 lines.append(f"  {item.fiscal_label}: {_format_value(item)}{marker}")
                 if isinstance(payload, dict):
@@ -1563,6 +1609,13 @@ def _render_query_table(result: Any, args: Any) -> str:
                 marker = f" [{calc_id}]"
             elif isinstance(citation_ids, list) and citation_ids:
                 marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
+            marker = _marker_with_link(
+                marker,
+                payload if isinstance(payload, dict) else None,
+                citations,
+                calculations,
+                show_links=getattr(args, "show_links", "primary"),
+            )
 
         source_badge = _source_badge(raw_value)
         lines.append(f"{label}: {_format_value(raw_value)}{marker}{source_badge}")

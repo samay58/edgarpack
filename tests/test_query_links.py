@@ -83,3 +83,68 @@ class TestCompactUrl(unittest.TestCase):
         from edgarpack.query.links import compact_url
 
         self.assertEqual(compact_url(""), "")
+
+
+class TestRenderCitationLinesRouting(unittest.TestCase):
+    def _record(self) -> dict[str, object]:
+        return {
+            "form_type": "10-K",
+            "fiscal_label": "FY2024",
+            "period": "2024-06-29",
+            "accession": "0001652044-24-000073",
+            "filed": "2024-07-31",
+            "primary_link": (
+                "https://www.sec.gov/Archives/edgar/data/1652044/"
+                "000165204424000073/goog-20240629.htm#f-123"
+            ),
+            "primary_link_type": "source_excerpt",
+        }
+
+    def test_no_separate_link_line_in_output(self) -> None:
+        from edgarpack.cli import _render_citation_lines
+
+        with patch("edgarpack.query.links.supports_osc8", return_value=False):
+            lines = _render_citation_lines(
+                "C1", self._record(), show_links="primary", width=120
+            )
+        joined = "\n".join(lines)
+        self.assertNotIn("link(source_excerpt)", joined)
+        # Fallback appends compact URL to footer id line.
+        self.assertIn("sec.gov/Archives", joined)
+        self.assertNotIn("https://www.", joined)
+
+    def test_osc8_wrap_when_terminal_supports(self) -> None:
+        from edgarpack.cli import _render_citation_lines
+
+        with patch("edgarpack.query.links.supports_osc8", return_value=True):
+            lines = _render_citation_lines(
+                "C1", self._record(), show_links="primary", width=120
+            )
+        joined = "\n".join(lines)
+        self.assertIn("\x1b]8;;", joined)
+        # In OSC-8 mode, only the hyperlink payload carries the URL; no
+        # compact-url fallback is appended inline. The URL appears exactly
+        # once (inside the OSC-8 escape sequence).
+        self.assertEqual(joined.count("sec.gov/Archives"), 1)
+
+    def test_show_links_all_includes_compact_url(self) -> None:
+        from edgarpack.cli import _render_citation_lines
+
+        record = self._record()
+        record["links"] = {
+            "source_excerpt": record["primary_link"],
+            "canonical": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1652044",
+        }
+        with patch("edgarpack.query.links.supports_osc8", return_value=True):
+            lines = _render_citation_lines("C1", record, show_links="all", width=120)
+        joined = "\n".join(lines)
+        self.assertIn("sec.gov/cgi-bin", joined)
+
+    def test_show_links_none_prints_marker_only(self) -> None:
+        from edgarpack.cli import _render_citation_lines
+
+        with patch("edgarpack.query.links.supports_osc8", return_value=True):
+            lines = _render_citation_lines("C1", self._record(), show_links="none", width=120)
+        joined = "\n".join(lines)
+        self.assertNotIn("\x1b]8;;", joined)
+        self.assertNotIn("sec.gov", joined)

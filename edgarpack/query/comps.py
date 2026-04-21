@@ -241,6 +241,10 @@ def format_comps_table(
         return "\n".join(lines)
 
     if citations_mode != "off":
+        from .links import compact_url, osc8, supports_osc8
+
+        osc8_on = supports_osc8()
+
         if citation_records:
             lines.append("")
             lines.append("Citations:")
@@ -250,31 +254,35 @@ def format_comps_table(
                 accn = record.get("accession")
                 form_type = record.get("form_type")
                 filed = record.get("filed")
+
+                primary = record.get("primary_link")
+                primary = primary if isinstance(primary, str) else ""
+                label = f"[{cid}]"
+                if show_links != "none" and osc8_on and primary:
+                    label = osc8(primary, label)
+
                 summary = (
-                    f"[{cid}] {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
+                    f"{label} {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
                 )
+                if show_links != "none" and not osc8_on and primary:
+                    summary = f"{summary}  {compact_url(primary)}"
                 lines.extend(_with_width(summary, indent="       "))
-                if show_links == "primary":
-                    link = record.get("primary_link")
-                    link_type = record.get("primary_link_type")
-                    if isinstance(link, str) and link:
-                        lines.extend(
-                            _with_width(
-                                f"     link({link_type}): {link}",
-                                indent="       ",
-                            )
-                        )
-                elif show_links == "all":
+
+                if show_links == "all":
                     links = record.get("links", {})
                     if isinstance(links, dict):
                         for link_key, link_value in links.items():
-                            if isinstance(link_value, str):
-                                lines.extend(
-                                    _with_width(
-                                        f"     {link_key}: {link_value}",
-                                        indent="       ",
-                                    )
+                            if not isinstance(link_value, str) or not link_value:
+                                continue
+                            rendered = compact_url(link_value)
+                            if osc8_on:
+                                rendered = osc8(link_value, rendered)
+                            lines.extend(
+                                _with_width(
+                                    f"     {link_key}: {rendered}",
+                                    indent="       ",
                                 )
+                            )
 
         if calc_records:
             lines.append("")
