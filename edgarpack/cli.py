@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import shutil
 import sys
 import textwrap
@@ -262,6 +263,28 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         metavar="YYYY-MM-DD",
         help="Upper bound on filing date for range builds.",
+    )
+
+    p_doctor = sub.add_parser(
+        "doctor",
+        help="Diagnose a pack directory or sweep every pack for a ticker",
+        description=(
+            "Inspect pack manifest state, artifact inventory, and KPI coverage. "
+            "Pass a pack path for a single-pack report, or a ticker for a sweep."
+        ),
+    )
+    p_doctor.add_argument(
+        "target",
+        help=(
+            "Pack directory (e.g. ./packs/0000320193/0000320193-24-000001) "
+            "or ticker (e.g. AAPL)"
+        ),
+    )
+    p_doctor.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
 
     p_company = sub.add_parser("company-llms", help="Generate company-level llms.txt")
@@ -699,6 +722,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_translate_sse(args)
     if args.cmd == "build":
         return _cmd_build(args)
+    if args.cmd == "doctor":
+        return _cmd_doctor(args)
     if args.cmd == "company-llms":
         return _cmd_company_llms(args)
     if args.cmd == "list":
@@ -800,6 +825,97 @@ async def _cik_from_company_args(args: Any) -> tuple[int, str | None]:
         return 2, None
 
     return 0, resolved.cik
+
+
+def _cmd_doctor(args: Any) -> int:
+    from .harvest.registry import PackRegistry
+    from .pack.doctor import diagnose_pack
+
+    target = args.target
+    target_path = Path(target)
+    is_path = target_path.exists() and target_path.is_dir()
+
+    registry = PackRegistry()
+    results: list = []
+
+    if is_path:
+        diag = diagnose_pack(target_path, registry=registry)
+        results.append(diag)
+    else:
+
+        async def _resolve() -> str | None:
+            try:
+                resolved = await _resolve_cli_company(target)
+            except (UnknownCompany, AmbiguousCompany) as exc:
+                print(f"Error: {exc}", file=sys.stderr)
+                return None
+            return resolved.cik
+
+        cik = asyncio.run(_resolve())
+        if cik is None:
+            return 2
+        records = registry.list_packs(cik=cik)
+        if not records:
+            print(
+                f"No packs registered for {target} (CIK: {cik}). "
+                f"Run `edgarpack build {target}`."
+            )
+            return 0
+        for rec in records:
+            diag = diagnose_pack(Path(rec.pack_dir), registry=registry)
+            results.append(diag)
+
+    if args.format == "json":
+        payload = (
+            results[0].model_dump()
+            if len(results) == 1
+            else {"packs": [r.model_dump() for r in results]}
+        )
+        print(json.dumps(payload, indent=2, default=str))
+        return 0
+
+    for idx, diag in enumerate(results):
+        if idx > 0:
+            print("")
+        header = diag.accession or Path(diag.pack_dir).name
+        print(f"Pack: {header}")
+        print(f"  Path: {diag.pack_dir}")
+        print(f"  Manifest: {diag.manifest_state}", end="")
+        if diag.manifest_error:
+            print(f" ({diag.manifest_error})")
+        else:
+            print("")
+        if diag.manifest_state == "ok":
+            print(
+                f"  Filing: {diag.form_type} filed {diag.filing_date} "
+                f"({diag.company_name})"
+            )
+            print(f"  Sections: {diag.sections_count}  Tokens: {diag.tokens_total:,}")
+            if diag.artifacts_present:
+                art_line = ", ".join(
+                    f"{name} ({diag.artifact_sizes.get(name, 0):,}B)"
+                    for name in diag.artifacts_present
+                )
+                print(f"  Artifacts: {art_line}")
+            print(
+                f"  Coverage: {diag.catalog_concepts_resolved}/"
+                f"{diag.catalog_concepts_total} catalog concepts resolved"
+            )
+            print(f"  Discovered KPIs: {diag.discovered_kpi_count}")
+            health = "healthy" if diag.healthy else "low coverage"
+            print(f"  Health: {health}")
+        if diag.remediation:
+            print(f"  Remediation: {diag.remediation}")
+
+    if len(results) > 1:
+        healthy = sum(1 for r in results if r.healthy)
+        print("")
+        print(
+            f"Summary: {healthy}/{len(results)} packs healthy, "
+            f"{len(results) - healthy} need attention"
+        )
+
+    return 0
 
 
 def _cmd_build(args: Any) -> int:
