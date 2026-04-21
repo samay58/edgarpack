@@ -1,6 +1,10 @@
 # China Lens Implementation Tracker
 
-Status log for the Chinese-filings pipeline. Written to get a new contributor oriented on what already works, what the current surface looks like, and what is still open.
+Status log for the Chinese-filings pipeline.
+
+## Status (2026-04-20): parked
+
+The CLI is the primary product; the Evidence Explorer / FastAPI surface is parked. What is still live: the HKEX query path (`query` / `comps` / `compare` route HKEX filers through `facts.json`) and the SSE prospectus pipeline (`build-sse` / `translate-sse`). What is parked: the FastAPI workspace (`edgarpack api`) and every item in the "Open" list below. The corresponding beads were closed wontfix on 2026-04-20 (`edgarpack-lb1` epic plus `lb1.4`, `lb1.7`, `lb1.11`, `lb1.12`, `lb1.14`, `4o4`, `kax`); see `docs/superpowers/specs/2026-04-20-bead-backlog-trim-design.md`. Reopen the relevant beads if China Lens becomes the product surface again; the sections below are the most recent shipped state, not a roadmap.
 
 ## Mission
 
@@ -105,13 +109,18 @@ Contracts live and tested:
 - `edgarpack-qhn` -- China golden harness: shipped.
 - SSE STAR Market ingestion + translation: shipped (see above).
 
-## Open
+## Open (parked, see Status above)
 
-1. Live CNINFO fetch and page-image rendering on top of the new persistence + object-store boundary. The manifest path is in place; the live fetcher is still stubbed.
+These are the tracked-but-not-being-worked items. Each maps to a wontfix-closed bead. Reopen the bead if you pick the work up again.
+
+1. Live CNINFO fetch and page-image rendering on top of the persistence + object-store boundary. The manifest path is in place; the live fetcher is still stubbed. (`edgarpack-lb1.11`)
 2. Production OCR provider behind the existing extraction fallback path. Today's local loop uses embedded-text extraction with OCR-fallback markers but no real OCR vendor wired in.
-3. Vector retrieval and database-native search on top of the PostgreSQL adapter.
-4. Frontend `web/` integration with the full API surface; Evidence Explorer interactions still need plumbing past the first screen.
+3. Vector retrieval and database-native search on top of the PostgreSQL adapter. (`edgarpack-lb1.12`)
+4. Frontend `web/` integration with the full API surface; Evidence Explorer interactions still need plumbing past the first screen. (`edgarpack-4o4`, `edgarpack-kax`)
 5. End-to-end tests for generate-pack, verify-citation, and bounded ask workflows.
+6. Production hardening: auth, durable async jobs, observability. (`edgarpack-lb1.4`)
+7. Web dependency vulnerabilities (`npm audit`). (`edgarpack-lb1.7`)
+8. Strict mypy baseline restoration. (`edgarpack-lb1.14`)
 
 ## Commands you actually run
 

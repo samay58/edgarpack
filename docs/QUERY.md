@@ -448,7 +448,9 @@ edgarpack learned clear --cik 0001045810
 edgarpack learned clear --all
 ```
 
-The `--strict` flag on `query` and `comps` rejects any value that was resolved through the self-heal path. Only hardcoded `METRIC_MAP` resolutions are returned. Use this when you need guaranteed concept provenance.
+The `--strict` flag on `query`, `comps`, and `compare` rejects any value whose source is not `hardcoded`. Self-heal resolutions (`learned:fuzzy`, `learned:llm`, `learned:kpi-*`) and text-scan fallbacks all drop out; the canonical filter lives in `edgarpack/query/strict.py` so the three commands behave identically. Rejected metric names appear under `strict_rejected` in JSON output and as a trailing summary line in table output.
+
+XBRL fetch failures (timeouts, 5xx, TLS errors) raise `XBRLFetchError` from `edgarpack/sec/xbrl.py` and surface as a `layer_a_fetch_error` Diagnostic on every affected metric. SEC 404 ("filer has no XBRL") still returns `{}` quietly, since that's a real "no data" outcome rather than a fetch failure.
 
 ## What This System Is Good At
 

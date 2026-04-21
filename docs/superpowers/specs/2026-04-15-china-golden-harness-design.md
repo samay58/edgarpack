@@ -6,7 +6,7 @@ Status: approved, pre-plan
 
 ## Problem
 
-`edgarpack query` now works for HKEX AI-lab packs (MiniMax, Zhipu) and SEC ADR paths (BIDU, PDD, BABA, JD). What is working today is held together by about 45 lines of hand-rolled assertions in `tests/test_china_query_hk.py`. Three pieces of queued work can silently regress those values: Tencent and Meituan ingestion (`edgarpack-3yv`), multi-year HKEX extraction (`edgarpack-ej1`), and headcount extraction (`edgarpack-ws7`). The goal is a regression gate that runs on every `pytest tests/` and anchors on hand-verified IR numbers, before any of those three lands.
+`edgarpack query` now works for HKEX AI-lab packs (MiniMax, Zhipu) and SEC ADR paths (BIDU, PDD, BABA, JD). What is working today is held together by about 45 lines of hand-rolled assertions in `tests/test_china_query_hk.py`. Three pieces of queued work can silently regress those values: Tencent and Meituan ingestion (`edgarpack-3yv`, closed 2026-04-20 with followup `edgarpack-sfi` for annual-report shape support), multi-year HKEX extraction (`edgarpack-ej1`), and headcount extraction (`edgarpack-ws7`). The goal is a regression gate that runs on every `pytest tests/` and anchors on hand-verified IR numbers, before any of those three lands.
 
 ## Scope
 
@@ -80,4 +80,4 @@ Curator drift (values edited without citation update). Mitigation: the README sp
 
 ## Open questions parked for follow-up
 
-Tencent and Meituan golden rows land with `edgarpack-3yv`. ADR 20-F golden rows (BIDU, PDD, BABA, JD) land as a separate P2 after a fixture harvest pass. Multi-year rows (FY22, FY23) land with `edgarpack-ej1`. Headcount metric rows land with `edgarpack-ws7`.
+Tencent and Meituan golden rows land once `edgarpack-sfi` (followup to closed `edgarpack-3yv`) ships annual-report shape support in the HK pipeline. ADR 20-F golden rows (BIDU, PDD, BABA, JD) land as a separate P2 after a fixture harvest pass. Multi-year rows (FY22, FY23) land with `edgarpack-ej1`. Headcount metric rows land with `edgarpack-ws7`.

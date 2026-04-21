@@ -8,7 +8,7 @@ Umbrella: edgarpack-2yg (closes when above + 3yv land)
 
 The China AI labs vertical slice ships FY24-only facts for MiniMax and Zhipu with one row-label fix still outstanding on MiniMax. Three gaps block the "compare AI labs on growth, R&D intensity, and revenue-per-employee" story that the cluster was built for. This spec addresses those three gaps as one pass because they live in the same three files and share a test harness.
 
-Scope: bugs/features `edgarpack-483`, `edgarpack-ws7`, `edgarpack-ej1`. Out of scope: Tencent / Meituan ingestion (`edgarpack-3yv`, separate spec).
+Scope: bugs/features `edgarpack-483`, `edgarpack-ws7`, `edgarpack-ej1`. Out of scope: Tencent / Meituan ingestion (`edgarpack-3yv`, closed 2026-04-20; followup `edgarpack-sfi` covers the annual-report shape work that's needed first).
 
 ## What we are shipping
 
@@ -132,7 +132,7 @@ Existing single-metric queries stay green. `edgarpack query NVDA` still routes t
 
 ## Out of scope (deferred)
 
-- Tencent (0700.HK) and Meituan (3690.HK) HKEX ingestion (`edgarpack-3yv`).
+- Tencent (0700.HK) and Meituan (3690.HK) HKEX ingestion (`edgarpack-3yv`, closed 2026-04-20; blocked on `edgarpack-sfi` for annual-report shape support in the HK pipeline).
 - LLM fallback for prior-year gaps.
 - EBITDA, operating_margin, cash_burn derivations beyond the four listed.
 - Quarterly series for HKEX packs.
