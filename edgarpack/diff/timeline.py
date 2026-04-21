@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from ..pack.manifest import load_manifest_dict
 from .models import ChangeType, SectionDelta
 from .section_diff import _classify_section, _compute_section_intensity, compute_interest_score
 from .text_diff import diff_paragraphs
@@ -21,13 +21,6 @@ class TimelineEntry(BaseModel):
     delta: SectionDelta | None = None
     content_preview: str = ""
     tokens: int = 0
-
-
-def _load_pack_manifest(pack_dir: Path) -> dict:
-    manifest_path = pack_dir / "manifest.json"
-    if not manifest_path.exists():
-        return {}
-    return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
 def _read_section_text(pack_dir: Path, section_path: str) -> str:
@@ -54,7 +47,7 @@ def build_timeline(
     prev_text: str | None = None
 
     for pack_dir in pack_dirs:
-        manifest = _load_pack_manifest(pack_dir)
+        manifest = load_manifest_dict(pack_dir, on_missing="empty")
         if not manifest:
             continue
 

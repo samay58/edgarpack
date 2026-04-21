@@ -37,6 +37,7 @@ from datetime import date as _date
 from pathlib import Path
 
 from ..harvest.registry import PackRecord, PackRegistry
+from ..pack.manifest import load_manifest_dict
 from .learned_registry import LearnedRegistry
 from .models import CitedValue
 
@@ -78,10 +79,13 @@ def _parse_filing_date_safe(filing_date: str | None) -> tuple[int, _date]:
 
 
 def _load_pack_manifest(pack_dir: Path) -> dict:
-    manifest_path = pack_dir / "manifest.json"
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"No manifest.json at {manifest_path}. Pack may be incomplete.")
-    return json.loads(manifest_path.read_text(encoding="utf-8"))
+    """Load manifest.json from a pack directory.
+
+    Thin wrapper around `pack.manifest.load_manifest_dict`. Re-exported via
+    `_load_pack_manifest` so existing imports in `kpi_discover` keep working;
+    new callers should import the shared helper directly.
+    """
+    return load_manifest_dict(pack_dir, on_missing="raise")
 
 
 def _infer_fiscal_period_label(form_type: str, period_end: _date) -> str:

@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 from ..config import CACHE_DIR
+from ..pack.manifest import load_manifest_dict
 from .models import ChangeType, DiffResult, SectionDelta
 from .text_diff import diff_paragraphs
 
@@ -59,11 +60,12 @@ _SENTENCE_LIKE_PATTERN = re.compile(r"^(?:our|we|this|that|in|of|as)\b", re.IGNO
 
 
 def _load_manifest(pack_dir: Path) -> dict:
-    """Load and parse manifest.json from a pack directory."""
-    manifest_path = pack_dir / "manifest.json"
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"No manifest.json in {pack_dir}")
-    return json.loads(manifest_path.read_text(encoding="utf-8"))
+    """Load and parse manifest.json from a pack directory.
+
+    Thin wrapper around `pack.manifest.load_manifest_dict` retained for
+    test compatibility. New callers should import the shared helper.
+    """
+    return load_manifest_dict(pack_dir, on_missing="raise")
 
 
 def _read_section(pack_dir: Path, section_path: str) -> str:

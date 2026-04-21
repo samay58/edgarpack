@@ -4,11 +4,38 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
 from ..config import PARSER_VERSION, SCHEMA_VERSION
+
+
+def load_manifest_dict(
+    pack_dir: Path,
+    on_missing: Literal["raise", "empty"] = "raise",
+) -> dict:
+    """Load manifest.json from a pack directory as a plain dict.
+
+    Args:
+        pack_dir: Pack directory containing manifest.json.
+        on_missing: 'raise' (default) raises FileNotFoundError when the file
+            is absent. 'empty' returns {} — used by readers (like timeline)
+            that want to skip incomplete packs silently.
+
+    Returns:
+        Parsed manifest dict, or {} when on_missing='empty' and the file
+        is missing.
+
+    Raises:
+        FileNotFoundError: manifest.json absent and on_missing='raise'.
+    """
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        if on_missing == "empty":
+            return {}
+        raise FileNotFoundError(f"No manifest.json at {manifest_path}. Pack may be incomplete.")
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
 class SourceInfo(BaseModel):

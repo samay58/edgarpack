@@ -341,20 +341,19 @@ class Diagnostic(BaseModel):
     Produced when Layer B (or any future self-heal layer) cannot resolve
     a requested metric. The `kind` field is a closed enum so CLI
     renderers and downstream consumers can filter reliably.
+
+    Kinds currently emitted:
+      - 'layer_b_unresolved': catch-all for any Layer B failure path
+        (no pack, no LLM backend, not found in sections, hallucinated
+        excerpt). `try_extract_kpi` collapses these into one kind; finer
+        granularity will return once that function carries a structured
+        failure reason back to the orchestrator.
+      - 'ltm_incomputable': LTM window could not be assembled because at
+        least one of mrp / lfy / mrp_prior is missing.
     """
 
     metric: str
-    # TODO(v2.1): four of the five kinds are unreachable until
-    # try_extract_kpi is refactored to return a structured result tuple
-    # (see edgarpack/query/financials.py for the corresponding TODO).
-    # The catch-all 'layer_b_unresolved' is currently the only kind
-    # emitted in practice. The others are reserved for when the
-    # orchestrator has per-failure-mode information.
     kind: Literal[
-        "layer_b_no_pack",
-        "layer_b_no_llm_backend",
-        "layer_b_not_found",
-        "layer_b_hallucinated_excerpt",
         "layer_b_unresolved",
         "ltm_incomputable",
     ]
