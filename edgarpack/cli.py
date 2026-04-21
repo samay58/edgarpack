@@ -276,8 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     p_doctor.add_argument(
         "target",
         help=(
-            "Pack directory (e.g. ./packs/0000320193/0000320193-24-000001) "
-            "or ticker (e.g. AAPL)"
+            "Pack directory (e.g. ./packs/0000320193/0000320193-24-000001) or ticker (e.g. AAPL)"
         ),
     )
     p_doctor.add_argument(
@@ -856,10 +855,7 @@ def _cmd_doctor(args: Any) -> int:
             return 2
         records = registry.list_packs(cik=cik)
         if not records:
-            print(
-                f"No packs registered for {target} (CIK: {cik}). "
-                f"Run `edgarpack build {target}`."
-            )
+            print(f"No packs registered for {target} (CIK: {cik}). Run `edgarpack build {target}`.")
             return 0
         for rec in records:
             diag = diagnose_pack(Path(rec.pack_dir), registry=registry)
@@ -886,10 +882,7 @@ def _cmd_doctor(args: Any) -> int:
         else:
             print("")
         if diag.manifest_state == "ok":
-            print(
-                f"  Filing: {diag.form_type} filed {diag.filing_date} "
-                f"({diag.company_name})"
-            )
+            print(f"  Filing: {diag.form_type} filed {diag.filing_date} ({diag.company_name})")
             print(f"  Sections: {diag.sections_count}  Tokens: {diag.tokens_total:,}")
             if diag.artifacts_present:
                 art_line = ", ".join(
@@ -1472,9 +1465,7 @@ def _render_citation_lines(
                 if osc8_on:
                     rendered = osc8(link_value, rendered)
                 lines.extend(
-                    _wrap_cli_text(
-                        f"     {link_key}: {rendered}", width, indent="         "
-                    )
+                    _wrap_cli_text(f"     {link_key}: {rendered}", width, indent="         ")
                 )
 
     return lines

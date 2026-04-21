@@ -820,9 +820,7 @@ def try_extract_kpi(
                 try:
                     manifest = _load_pack_manifest(pack_dir)
                 except FileNotFoundError:
-                    logger.warning(
-                        "Layer B cache hit but manifest missing at %s", pack_dir
-                    )
+                    logger.warning("Layer B cache hit but manifest missing at %s", pack_dir)
                     return None
                 except json.JSONDecodeError as e:
                     logger.warning(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -74,14 +75,12 @@ class TestManifestStateClassification(unittest.TestCase):
         self.assertEqual(result.status, "manifest_io_error")
 
 
-import logging
-
-
 class TestKpiExtractManifestLogging(unittest.TestCase):
     def test_missing_manifest_logs_specific_class(self) -> None:
         # Layer B logs at WARNING. Capture the record and check the message.
         with self.assertLogs("edgarpack.query.kpi_extract", level="WARNING") as cm:
             from edgarpack.query.kpi_extract import _load_pack_manifest
+
             try:
                 _load_pack_manifest(Path("/does/not/exist/pack"))
             except FileNotFoundError:

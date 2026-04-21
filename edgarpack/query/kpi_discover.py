@@ -211,14 +211,10 @@ def _discover_pack(
     try:
         manifest = _load_pack_manifest(pack_dir)
     except json.JSONDecodeError as e:
-        logger.info(
-            "Discovery: invalid JSON manifest at %s (accn=%s): %s", pack_dir, accession, e
-        )
+        logger.info("Discovery: invalid JSON manifest at %s (accn=%s): %s", pack_dir, accession, e)
         return PackDiscoveryResult(discovered=[], status="manifest_invalid_json")
     except (OSError, UnicodeDecodeError) as e:
-        logger.info(
-            "Discovery: manifest I/O error at %s (accn=%s): %s", pack_dir, accession, e
-        )
+        logger.info("Discovery: manifest I/O error at %s (accn=%s): %s", pack_dir, accession, e)
         return PackDiscoveryResult(discovered=[], status="manifest_io_error")
 
     # Schema mismatch: manifest parsed but is the wrong shape for this EdgarPack.

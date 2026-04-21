@@ -104,9 +104,7 @@ class TestRenderCitationLinesRouting(unittest.TestCase):
         from edgarpack.cli import _render_citation_lines
 
         with patch("edgarpack.query.links.supports_osc8", return_value=False):
-            lines = _render_citation_lines(
-                "C1", self._record(), show_links="primary", width=120
-            )
+            lines = _render_citation_lines("C1", self._record(), show_links="primary", width=120)
         joined = "\n".join(lines)
         self.assertNotIn("link(source_excerpt)", joined)
         # Fallback appends compact URL to footer id line.
@@ -117,9 +115,7 @@ class TestRenderCitationLinesRouting(unittest.TestCase):
         from edgarpack.cli import _render_citation_lines
 
         with patch("edgarpack.query.links.supports_osc8", return_value=True):
-            lines = _render_citation_lines(
-                "C1", self._record(), show_links="primary", width=120
-            )
+            lines = _render_citation_lines("C1", self._record(), show_links="primary", width=120)
         joined = "\n".join(lines)
         self.assertIn("\x1b]8;;", joined)
         # In OSC-8 mode, only the hyperlink payload carries the URL; no
