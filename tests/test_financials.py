@@ -1442,6 +1442,46 @@ class TestLayerBWireUp(unittest.TestCase):
         _asyncio.run(_run())
 
 
+class TestXBRLFetchErrorDiagnostic(unittest.IsolatedAsyncioTestCase):
+    """Covers edgarpack-4jc: network/HTTP failures on companyfacts must surface
+    as a layer_a_fetch_error Diagnostic, not silent N/A."""
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_fetch_error_emits_diagnostic(self, mock_resolve, mock_facts, mock_subs) -> None:
+        from edgarpack.sec.xbrl import XBRLFetchError
+
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.side_effect = XBRLFetchError("0001045810", RuntimeError("boom"))
+        mock_subs.return_value = MOCK_SUBMISSIONS
+
+        result = await financials("NVDA", "revenue,net_income", period="lfy")
+
+        self.assertIsNone(result.metrics.get("revenue"))
+        self.assertIsNone(result.metrics.get("net_income"))
+        kinds = [d.kind for d in result.diagnostics]
+        self.assertIn("layer_a_fetch_error", kinds)
+        fetch_errors = [d for d in result.diagnostics if d.kind == "layer_a_fetch_error"]
+        self.assertEqual({d.metric for d in fetch_errors}, {"revenue", "net_income"})
+        self.assertTrue(all("fetch failed" in d.message.lower() for d in fetch_errors))
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_unavailable_stays_silent(self, mock_resolve, mock_facts, mock_subs) -> None:
+        """Empty facts (filer has no XBRL) must NOT emit a fetch_error diagnostic."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = {}
+        mock_subs.return_value = MOCK_SUBMISSIONS
+
+        result = await financials("NVDA", "revenue", period="lfy")
+
+        self.assertIsNone(result.metrics.get("revenue"))
+        kinds = [d.kind for d in result.diagnostics]
+        self.assertNotIn("layer_a_fetch_error", kinds)
+
+
 def test_cited_value_carries_accounting_standard_and_reporting_currency():
     from datetime import date
 

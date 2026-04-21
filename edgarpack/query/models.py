@@ -343,6 +343,9 @@ class Diagnostic(BaseModel):
     renderers and downstream consumers can filter reliably.
 
     Kinds currently emitted:
+      - 'layer_a_fetch_error': SEC companyfacts fetch failed (network,
+        HTTP 5xx, TLS, parse error). Distinct from 'filer has no XBRL'
+        so the CLI can surface 'XBRL fetch failed' instead of silent N/A.
       - 'layer_b_unresolved': catch-all for any Layer B failure path
         (no pack, no LLM backend, not found in sections, hallucinated
         excerpt). `try_extract_kpi` collapses these into one kind; finer
@@ -354,6 +357,7 @@ class Diagnostic(BaseModel):
 
     metric: str
     kind: Literal[
+        "layer_a_fetch_error",
         "layer_b_unresolved",
         "ltm_incomputable",
     ]

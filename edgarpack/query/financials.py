@@ -12,7 +12,7 @@ from ..sec.archives import fetch_file
 from ..sec.client import HTTPError
 from ..sec.submissions import FilingMeta, fetch_submissions
 from ..sec.tickers import resolve_ticker
-from ..sec.xbrl import fetch_company_facts
+from ..sec.xbrl import XBRLFetchError, fetch_company_facts
 from . import kpi_extract as _kpi_extract_mod
 from .concepts import (
     ALL_METRICS,
@@ -301,7 +301,12 @@ async def financials(
 
     cik, company_name = await resolve_ticker(company, force=force)
 
-    facts_data = await fetch_company_facts(cik, force=force)
+    fetch_error_message: str | None = None
+    try:
+        facts_data = await fetch_company_facts(cik, force=force)
+    except XBRLFetchError as e:
+        facts_data = {}
+        fetch_error_message = f"SEC XBRL fetch failed: {e.cause!r}"
     facts = facts_data.get("facts", {})
 
     doc_map = await _build_doc_map(cik, force=force)
@@ -591,6 +596,23 @@ async def financials(
     # (e.g. Ford) may stop tagging consolidated debt in standard XBRL while
     # total liabilities remain correctly reported.
     _check_low_debt(result_metrics, facts, company_name, cik, period, doc_map)
+
+    # Surface XBRL fetch failures as structured diagnostics rather than
+    # silent N/A. Only attach to metrics that actually came back None
+    # (a successful prose-based resolution beats the fetch_error story).
+    if fetch_error_message is not None:
+        for metric_name in metric_list:
+            if result_metrics.get(metric_name) is None and not any(
+                d.metric == metric_name and d.kind == "layer_a_fetch_error"
+                for d in diagnostics_list
+            ):
+                diagnostics_list.append(
+                    Diagnostic(
+                        metric=metric_name,
+                        kind="layer_a_fetch_error",
+                        message=fetch_error_message,
+                    )
+                )
 
     result = QueryResult(
         company=company_name,

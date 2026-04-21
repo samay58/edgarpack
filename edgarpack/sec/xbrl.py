@@ -8,15 +8,37 @@ from .client import get_client
 from .submissions import normalize_cik
 
 
+class XBRLFetchError(Exception):
+    """Raised by `fetch_company_facts` when the fetch itself failed.
+
+    Distinct from the 'filer has no XBRL' case, which is surfaced by
+    returning {} (the SEC returns 404 for such filers). Callers that care
+    about the distinction should catch this exception and render an
+    explicit diagnostic instead of silent N/A. Callers that don't care
+    can ignore it; they'll still see the {} fallback via the wrapper
+    that swallows the error (not exposed from this module to keep the
+    truthfulness property at the API boundary).
+    """
+
+    def __init__(self, cik: str, cause: Exception):
+        self.cik = cik
+        self.cause = cause
+        super().__init__(f"companyfacts fetch failed for CIK{cik}: {type(cause).__name__}: {cause}")
+
+
 async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
     """Fetch company facts JSON from SEC XBRL API.
 
-    Args:
-        cik: CIK number
-        force: Bypass cache
-
     Returns:
-        Parsed companyfacts JSON
+        Parsed companyfacts JSON on success. {} when the filer has no
+        XBRL facts (SEC 404 response).
+
+    Raises:
+        XBRLFetchError: the underlying HTTP/network/parse call failed for
+            a reason other than "no such filer." Callers that want to
+            distinguish this from the no-data case should catch it and
+            emit a structured diagnostic. Callers that don't care can
+            swallow it via a try/except and fall back to {}.
     """
     cik = normalize_cik(cik)
     url = f"{SEC_DATA_BASE}/api/xbrl/companyfacts/CIK{cik}.json"
@@ -24,19 +46,28 @@ async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
     cache = DiskCache(CACHE_DIR)
 
     if not force:
-        # XBRL data changes less frequently, cache for 24 hours
+        # XBRL data changes less frequently, cache for 24 hours.
         cached = cache.get(url, max_age_seconds=86400)
         if cached is not None:
             import json
 
-            return json.loads(cached)
+            try:
+                return json.loads(cached)
+            except json.JSONDecodeError as e:
+                raise XBRLFetchError(cik, e) from e
 
     client = await get_client()
     try:
         data, headers = await client.fetch_json(url)
-    except Exception:
-        # XBRL data not available for all companies
-        return {}
+    except Exception as e:
+        # Treat SEC 404 as "this filer has no XBRL facts" rather than a
+        # fetch error. Everything else (timeouts, 5xx, TLS, parse errors)
+        # propagates as XBRLFetchError so callers can surface it.
+        from .client import HTTPError
+
+        if isinstance(e, HTTPError) and getattr(e, "status_code", None) == 404:
+            return {}
+        raise XBRLFetchError(cik, e) from e
 
     import json
 
