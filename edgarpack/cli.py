@@ -10,11 +10,19 @@ import shutil
 import sys
 import textwrap
 from collections import Counter
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 from . import __version__
 from .errors import AmbiguousCompany, UnknownCompany
+
+
+def _parse_iso_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"expected YYYY-MM-DD, got {value!r}") from exc
 
 
 async def _resolve_cli_company(query: str) -> Any:
@@ -224,6 +232,26 @@ def main(argv: list[str] | None = None) -> int:
         "--force",
         action="store_true",
         help="Bypass cache and rebuild",
+    )
+    p_build.add_argument(
+        "--last",
+        type=int,
+        default=None,
+        help="Build the N most recent filings of --form. Mutually exclusive with --accession.",
+    )
+    p_build.add_argument(
+        "--after",
+        type=_parse_iso_date,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Lower bound on filing date for range builds.",
+    )
+    p_build.add_argument(
+        "--before",
+        type=_parse_iso_date,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Upper bound on filing date for range builds.",
     )
 
     p_company = sub.add_parser("company-llms", help="Generate company-level llms.txt")
@@ -765,9 +793,29 @@ async def _cik_from_company_args(args: Any) -> tuple[int, str | None]:
 
 
 def _cmd_build(args: Any) -> int:
-    if not args.accession and not args.form:
-        print("Error: either --accession or --form must be provided", file=sys.stderr)
+    last = getattr(args, "last", None)
+    after = getattr(args, "after", None)
+    before = getattr(args, "before", None)
+    range_flags = (last is not None, after is not None, before is not None)
+    is_range = any(range_flags)
+
+    if args.accession and is_range:
+        print(
+            "Error: use either --accession (one filing) or "
+            "--last/--after/--before (a range), not both.",
+            file=sys.stderr,
+        )
         return 2
+
+    if not args.accession and not args.form and not is_range:
+        print(
+            "Error: provide --accession, --form, or --last/--after/--before",
+            file=sys.stderr,
+        )
+        return 2
+
+    if is_range and not args.form:
+        args.form = "10-K"
 
     async def _run() -> int:
         from .pack.build import build_pack
