@@ -6,15 +6,24 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import shutil
 import sys
 import textwrap
 from collections import Counter
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 from . import __version__
 from .errors import AmbiguousCompany, UnknownCompany
+
+
+def _parse_iso_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"expected YYYY-MM-DD, got {value!r}") from exc
 
 
 async def _resolve_cli_company(query: str) -> Any:
@@ -181,7 +190,13 @@ def main(argv: list[str] | None = None) -> int:
 
     p_build = sub.add_parser(
         "build",
-        help="Build and register a filing pack for later `which` / `query` use",
+        help="Build a single filing pack, or a range via --last/--after/--before",
+        description=(
+            "Build and register a filing pack. "
+            "Examples: `edgarpack build AAPL --form 10-K` (latest), "
+            "`edgarpack build AAPL --form 10-K --last 5` (five most recent), "
+            "`edgarpack build AAPL --form 10-K --after 2020-01-01 --before 2022-12-31`."
+        ),
     )
     p_build.add_argument(
         "company",
@@ -201,7 +216,11 @@ def main(argv: list[str] | None = None) -> int:
     p_build.add_argument(
         "--form",
         "-f",
-        help="Form type: 10-K, 10-Q, 8-K (fetches latest)",
+        help=(
+            "Form type: 10-K, 10-Q, 8-K. "
+            "Defaults to 10-K when combined with --last/--after/--before; "
+            "fetches latest when used alone."
+        ),
     )
     p_build.add_argument(
         "--out",
@@ -224,6 +243,47 @@ def main(argv: list[str] | None = None) -> int:
         "--force",
         action="store_true",
         help="Bypass cache and rebuild",
+    )
+    p_build.add_argument(
+        "--last",
+        type=int,
+        default=None,
+        help="Build the N most recent filings of --form. Mutually exclusive with --accession.",
+    )
+    p_build.add_argument(
+        "--after",
+        type=_parse_iso_date,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Lower bound on filing date for range builds.",
+    )
+    p_build.add_argument(
+        "--before",
+        type=_parse_iso_date,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Upper bound on filing date for range builds.",
+    )
+
+    p_doctor = sub.add_parser(
+        "doctor",
+        help="Diagnose a pack directory or sweep every pack for a ticker",
+        description=(
+            "Inspect pack manifest state, artifact inventory, and KPI coverage. "
+            "Pass a pack path for a single-pack report, or a ticker for a sweep."
+        ),
+    )
+    p_doctor.add_argument(
+        "target",
+        help=(
+            "Pack directory (e.g. ./packs/0000320193/0000320193-24-000001) or ticker (e.g. AAPL)"
+        ),
+    )
+    p_doctor.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
 
     p_company = sub.add_parser("company-llms", help="Generate company-level llms.txt")
@@ -673,6 +733,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_translate_sse(args)
     if args.cmd == "build":
         return _cmd_build(args)
+    if args.cmd == "doctor":
+        return _cmd_doctor(args)
     if args.cmd == "company-llms":
         return _cmd_company_llms(args)
     if args.cmd == "list":
@@ -776,10 +838,115 @@ async def _cik_from_company_args(args: Any) -> tuple[int, str | None]:
     return 0, resolved.cik
 
 
+def _cmd_doctor(args: Any) -> int:
+    from .harvest.registry import PackRegistry
+    from .pack.doctor import diagnose_pack
+
+    target = args.target
+    target_path = Path(target)
+    is_path = target_path.exists() and target_path.is_dir()
+
+    registry = PackRegistry()
+    results: list = []
+
+    if is_path:
+        diag = diagnose_pack(target_path, registry=registry)
+        results.append(diag)
+    else:
+
+        async def _resolve() -> str | None:
+            try:
+                resolved = await _resolve_cli_company(target)
+            except (UnknownCompany, AmbiguousCompany) as exc:
+                print(f"Error: {exc}", file=sys.stderr)
+                return None
+            return resolved.cik
+
+        cik = asyncio.run(_resolve())
+        if cik is None:
+            return 2
+        records = registry.list_packs(cik=cik)
+        if not records:
+            print(f"No packs registered for {target} (CIK: {cik}). Run `edgarpack build {target}`.")
+            return 0
+        for rec in records:
+            diag = diagnose_pack(Path(rec.pack_dir), registry=registry)
+            results.append(diag)
+
+    if args.format == "json":
+        payload = (
+            results[0].model_dump()
+            if len(results) == 1
+            else {"packs": [r.model_dump() for r in results]}
+        )
+        print(json.dumps(payload, indent=2, default=str))
+        return 0
+
+    for idx, diag in enumerate(results):
+        if idx > 0:
+            print("")
+        header = diag.accession or Path(diag.pack_dir).name
+        print(f"Pack: {header}")
+        print(f"  Path: {diag.pack_dir}")
+        print(f"  Manifest: {diag.manifest_state}", end="")
+        if diag.manifest_error:
+            print(f" ({diag.manifest_error})")
+        else:
+            print("")
+        if diag.manifest_state == "ok":
+            print(f"  Filing: {diag.form_type} filed {diag.filing_date} ({diag.company_name})")
+            print(f"  Sections: {diag.sections_count}  Tokens: {diag.tokens_total:,}")
+            if diag.artifacts_present:
+                art_line = ", ".join(
+                    f"{name} ({diag.artifact_sizes.get(name, 0):,}B)"
+                    for name in diag.artifacts_present
+                )
+                print(f"  Artifacts: {art_line}")
+            print(
+                f"  Coverage: {diag.catalog_concepts_resolved}/"
+                f"{diag.catalog_concepts_total} catalog concepts resolved"
+            )
+            print(f"  Discovered KPIs: {diag.discovered_kpi_count}")
+            health = "healthy" if diag.healthy else "low coverage"
+            print(f"  Health: {health}")
+        if diag.remediation:
+            print(f"  Remediation: {diag.remediation}")
+
+    if len(results) > 1:
+        healthy = sum(1 for r in results if r.healthy)
+        print("")
+        print(
+            f"Summary: {healthy}/{len(results)} packs healthy, "
+            f"{len(results) - healthy} need attention"
+        )
+
+    return 0
+
+
 def _cmd_build(args: Any) -> int:
-    if not args.accession and not args.form:
-        print("Error: either --accession or --form must be provided", file=sys.stderr)
+    last = getattr(args, "last", None)
+    after = getattr(args, "after", None)
+    before = getattr(args, "before", None)
+    range_flags = (last is not None, after is not None, before is not None)
+    is_range = any(range_flags)
+
+    if args.accession and is_range:
+        print(
+            "Error: use either --accession (one filing) or "
+            "--last/--after/--before (a range), not both.",
+            file=sys.stderr,
+        )
         return 2
+
+    if not args.accession and not args.form and not is_range:
+        print(
+            "Error: provide --accession, --form, or --last/--after/--before",
+            file=sys.stderr,
+        )
+        return 2
+
+    if is_range and not args.form:
+        args.form = "10-K"
 
     async def _run() -> int:
         from .pack.build import build_pack
@@ -802,21 +969,58 @@ def _cmd_build(args: Any) -> int:
             return rc
 
         try:
-            result = await build_pack(
-                cik=cik,
-                accession=args.accession,
-                form_type=args.form,
-                out_dir=args.out,
-                with_chunks=bool(args.with_chunks),
-                with_xbrl=bool(args.with_xbrl),
-                force=bool(args.force),
-            )
+            if is_range:
+                from .pack.build import build_pack_range
+
+                results = await build_pack_range(
+                    cik=cik,
+                    form_type=args.form,
+                    last=args.last,
+                    after=args.after,
+                    before=args.before,
+                    out_dir=args.out,
+                    with_chunks=bool(args.with_chunks),
+                    with_xbrl=bool(args.with_xbrl),
+                    force=bool(args.force),
+                )
+            else:
+                result = await build_pack(
+                    cik=cik,
+                    accession=args.accession,
+                    form_type=args.form,
+                    out_dir=args.out,
+                    with_chunks=bool(args.with_chunks),
+                    with_xbrl=bool(args.with_xbrl),
+                    force=bool(args.force),
+                )
+                results = [result]
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
-        _register_pack_result(result, ticker=resolved_ticker)
+        built = 0
+        skipped = 0
+        for result in results:
+            _register_pack_result(result, ticker=resolved_ticker)
+            already_built = any("Pack already exists" in w for w in result.warnings)
+            if already_built:
+                skipped += 1
+            else:
+                built += 1
 
+        if is_range:
+            print(
+                f"{built} pack(s) built, {skipped} skipped (already registered)",
+                file=sys.stderr,
+            )
+            for result in results[:5]:
+                accn = result.filing_meta.get("accession", "?")
+                print(f"  ✓ {accn}  {result.output_dir}")
+            if len(results) > 5:
+                print(f"  ... and {len(results) - 5} more")
+            return 0
+
+        result = results[0]
         print("✓ Pack built")
         print(f"  Output: {result.output_dir}")
         print(f"  Company: {result.filing_meta.get('company_name', 'Unknown')}")
@@ -825,6 +1029,16 @@ def _cmd_build(args: Any) -> int:
         print(f"  Sections: {result.sections_count}")
         print(f"  Tokens: {result.tokens_total:,}")
         print(f"  Registry: ready for `edgarpack which {resolved_label}`")
+
+        if any("Pack already exists" in w for w in result.warnings):
+            print(
+                "  Already built. To list other filings: "
+                f"`edgarpack list {resolved_label} --form {args.form or '10-K'}`"
+            )
+            print(
+                "  To pull older filings: "
+                f"`edgarpack build {resolved_label} --form {args.form or '10-K'} --last 5`"
+            )
 
         if result.warnings:
             grouped = _group_build_warnings(result.warnings)
@@ -1228,39 +1442,76 @@ def _render_citation_lines(
     width: int,
 ) -> list[str]:
     """Render one citation record for table/audit output."""
+    from .query.links import compact_url, osc8, supports_osc8
+
     lines: list[str] = []
     form_type = record.get("form_type")
     fiscal_label = record.get("fiscal_label")
     period = record.get("period")
     accession = record.get("accession")
     filed = record.get("filed")
+
+    primary = record.get("primary_link")
+    primary = primary if isinstance(primary, str) else ""
+    osc8_on = supports_osc8()
+
+    marker_label = f"[{citation_id}]"
+    if show_links != "none" and osc8_on and primary:
+        marker_label = osc8(primary, marker_label)
+
     summary = (
-        f"[{citation_id}] {form_type} {fiscal_label} | period {period} | "
+        f"{marker_label} {form_type} {fiscal_label} | period {period} | "
         f"accn {accession} | filed {filed}"
     )
+    if show_links != "none" and not osc8_on and primary:
+        summary = f"{summary}  {compact_url(primary)}"
     lines.extend(_wrap_cli_text(summary, width, indent="         "))
 
-    if show_links == "primary":
-        link = record.get("primary_link")
-        link_type = record.get("primary_link_type")
-        if isinstance(link, str) and link:
-            lines.extend(
-                _wrap_cli_text(
-                    f"     link({link_type}): {link}",
-                    width,
-                    indent="         ",
-                )
-            )
-    elif show_links == "all":
+    if show_links == "all":
         links = record.get("links", {})
         if isinstance(links, dict):
             for link_key, link_value in links.items():
-                if isinstance(link_value, str):
-                    lines.extend(
-                        _wrap_cli_text(f"     {link_key}: {link_value}", width, indent="         ")
-                    )
+                if not isinstance(link_value, str) or not link_value:
+                    continue
+                rendered = compact_url(link_value)
+                if osc8_on:
+                    rendered = osc8(link_value, rendered)
+                lines.extend(
+                    _wrap_cli_text(f"     {link_key}: {rendered}", width, indent="         ")
+                )
 
     return lines
+
+
+def _marker_with_link(
+    marker: str,
+    payload: dict[str, object] | None,
+    citations_lookup: dict[str, dict[str, object]],
+    calculations_lookup: dict[str, dict[str, object]],
+    *,
+    show_links: str,
+) -> str:
+    from .query.links import osc8, supports_osc8
+
+    if show_links == "none" or not marker or not supports_osc8():
+        return marker
+
+    tag = marker.strip().lstrip("[").rstrip("]").split(",")[0].strip()
+    record: dict[str, object] | None = None
+    if tag.startswith(("C",)):
+        record = citations_lookup.get(tag)
+    elif tag.startswith(("L", "D", "G")):
+        calc = calculations_lookup.get(tag)
+        if isinstance(calc, dict):
+            result_cid = calc.get("result_citation_id")
+            if isinstance(result_cid, str):
+                record = citations_lookup.get(result_cid)
+    if not isinstance(record, dict):
+        return marker
+    link = record.get("primary_link")
+    if not isinstance(link, str) or not link:
+        return marker
+    return osc8(link, marker)
 
 
 def _render_query_table(result: Any, args: Any) -> str:
@@ -1332,6 +1583,13 @@ def _render_query_table(result: Any, args: Any) -> str:
                         marker = f" [{calc_id}]"
                     elif isinstance(citation_ids, list) and citation_ids:
                         marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
+                    marker = _marker_with_link(
+                        marker,
+                        payload if isinstance(payload, dict) else None,
+                        citations,
+                        calculations,
+                        show_links=getattr(args, "show_links", "primary"),
+                    )
 
                 lines.append(f"  {item.fiscal_label}: {_format_value(item)}{marker}")
                 if isinstance(payload, dict):
@@ -1356,6 +1614,13 @@ def _render_query_table(result: Any, args: Any) -> str:
                 marker = f" [{calc_id}]"
             elif isinstance(citation_ids, list) and citation_ids:
                 marker = f" [{','.join(str(cid) for cid in citation_ids)}]"
+            marker = _marker_with_link(
+                marker,
+                payload if isinstance(payload, dict) else None,
+                citations,
+                calculations,
+                show_links=getattr(args, "show_links", "primary"),
+            )
 
         source_badge = _source_badge(raw_value)
         lines.append(f"{label}: {_format_value(raw_value)}{marker}{source_badge}")
@@ -2238,9 +2503,25 @@ def _render_which_diagnostics(diagnostics: Any) -> str | None:
         fragments.append(f"{diagnostics.cached_packs} cached")
     if diagnostics.discovered_packs:
         fragments.append(f"{diagnostics.discovered_packs} analyzed")
-    if diagnostics.unreadable_manifest_packs:
+    if diagnostics.manifest_missing_packs:
         fragments.append(
-            f"{diagnostics.unreadable_manifest_packs} skipped (missing/corrupt manifest)"
+            f"{diagnostics.manifest_missing_packs} skipped "
+            "(manifest missing; run `edgarpack build <ticker>`)"
+        )
+    if diagnostics.manifest_invalid_json_packs:
+        fragments.append(
+            f"{diagnostics.manifest_invalid_json_packs} skipped "
+            "(manifest invalid JSON; run `edgarpack doctor <pack-dir>` for details)"
+        )
+    if diagnostics.manifest_schema_mismatch_packs:
+        fragments.append(
+            f"{diagnostics.manifest_schema_mismatch_packs} skipped "
+            "(manifest schema mismatch; rebuild with `edgarpack build <ticker> --force`)"
+        )
+    if diagnostics.manifest_io_error_packs:
+        fragments.append(
+            f"{diagnostics.manifest_io_error_packs} skipped "
+            "(manifest I/O error; check filesystem permissions)"
         )
     if diagnostics.llm_failed_packs:
         fragments.append(f"{diagnostics.llm_failed_packs} discovery failure(s)")

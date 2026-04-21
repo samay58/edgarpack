@@ -73,12 +73,17 @@ def _register_calculation(
     citation_records: dict[str, dict[str, object]],
     calc_ids: dict[str, str],
     calc_records: dict[str, dict[str, object]],
+    formula_records: dict[tuple[str, str], dict[str, object]] | None = None,
 ) -> str:
     """Register a ``DerivedValue`` into the calculation id/record maps.
 
     Supports three kinds: ``LTM*`` values use an ``L`` prefix, ``CAGR*``
     values use ``G``, and everything else uses ``D``. Component citations are
     registered at the same time so the records reference stable ``C#`` ids.
+
+    When ``formula_records`` is provided, the formula string is deduped per
+    ``(metric_name, kind)`` so multi-period renderers can print the formula
+    once while keeping per-period calc ids for data-cell markers and audit.
     """
     calc_key = f"{metric_name}|{item.citation_key}"
     existing = calc_ids.get(calc_key)
@@ -129,7 +134,24 @@ def _register_calculation(
         "result_citation_id": result_cid,
         "components": components,
         "warnings": list(item.warnings),
+        "fiscal_label": item.fiscal_label,
     }
+
+    if formula_records is not None:
+        formula_key = (metric_name, kind)
+        rec = formula_records.get(formula_key)
+        if rec is None:
+            rec = {
+                "metric": metric_name,
+                "kind": kind,
+                "formula": formula,
+                "calc_ids": [],
+            }
+            formula_records[formula_key] = rec
+        bound = rec["calc_ids"]
+        if isinstance(bound, list):
+            bound.append(calc_id)
+
     return calc_id
 
 
@@ -241,6 +263,10 @@ def format_comps_table(
         return "\n".join(lines)
 
     if citations_mode != "off":
+        from .links import compact_url, osc8, supports_osc8
+
+        osc8_on = supports_osc8()
+
         if citation_records:
             lines.append("")
             lines.append("Citations:")
@@ -250,31 +276,35 @@ def format_comps_table(
                 accn = record.get("accession")
                 form_type = record.get("form_type")
                 filed = record.get("filed")
+
+                primary = record.get("primary_link")
+                primary = primary if isinstance(primary, str) else ""
+                label = f"[{cid}]"
+                if show_links != "none" and osc8_on and primary:
+                    label = osc8(primary, label)
+
                 summary = (
-                    f"[{cid}] {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
+                    f"{label} {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
                 )
+                if show_links != "none" and not osc8_on and primary:
+                    summary = f"{summary}  {compact_url(primary)}"
                 lines.extend(_with_width(summary, indent="       "))
-                if show_links == "primary":
-                    link = record.get("primary_link")
-                    link_type = record.get("primary_link_type")
-                    if isinstance(link, str) and link:
-                        lines.extend(
-                            _with_width(
-                                f"     link({link_type}): {link}",
-                                indent="       ",
-                            )
-                        )
-                elif show_links == "all":
+
+                if show_links == "all":
                     links = record.get("links", {})
                     if isinstance(links, dict):
                         for link_key, link_value in links.items():
-                            if isinstance(link_value, str):
-                                lines.extend(
-                                    _with_width(
-                                        f"     {link_key}: {link_value}",
-                                        indent="       ",
-                                    )
+                            if not isinstance(link_value, str) or not link_value:
+                                continue
+                            rendered = compact_url(link_value)
+                            if osc8_on:
+                                rendered = osc8(link_value, rendered)
+                            lines.extend(
+                                _with_width(
+                                    f"     {link_key}: {rendered}",
+                                    indent="       ",
                                 )
+                            )
 
         if calc_records:
             lines.append("")
@@ -397,6 +427,7 @@ def format_financial_perf_table(
     citation_records: dict[str, dict[str, object]] = {}
     calc_ids: dict[str, str] = {}
     calc_records: dict[str, dict[str, object]] = {}
+    formula_records: dict[tuple[str, str], dict[str, object]] = {}
     warnings: list[str] = []
 
     def _metric_marker(
@@ -405,7 +436,13 @@ def format_financial_perf_table(
     ) -> str:
         if isinstance(cited, DerivedValue):
             calc_id = _register_calculation(
-                metric, cited, citation_ids, citation_records, calc_ids, calc_records
+                metric,
+                cited,
+                citation_ids,
+                citation_records,
+                calc_ids,
+                calc_records,
+                formula_records=formula_records,
             )
             return f"[{calc_id}]"
         cid = _register_citation(cited, citation_ids, citation_records)
@@ -494,19 +531,60 @@ def format_financial_perf_table(
         )
         return wrapped.splitlines()
 
+    def _append_dedup_calculations(indent: str = "       ") -> None:
+        """Emit one formula summary per (metric, kind) instead of per-period.
+
+        Under ``audit=True`` each bound calc_id also gets a per-period
+        component breakdown so provenance stays traceable."""
+        if not formula_records:
+            return
+        lines.append("")
+        lines.append("Calculations:")
+        for (metric_name, kind), rec in formula_records.items():
+            formula = rec.get("formula", "")
+            bound = rec.get("calc_ids", [])
+            bound_list = [str(cid) for cid in bound] if isinstance(bound, list) else []
+            id_list = ", ".join(bound_list)
+            periods: list[str] = []
+            for cid in bound_list:
+                calc = calc_records.get(cid)
+                if isinstance(calc, dict):
+                    fl = calc.get("fiscal_label")
+                    if isinstance(fl, str) and fl:
+                        periods.append(fl)
+            period_suffix = f"  ({', '.join(periods)})" if periods else ""
+            head = f"[{id_list}] {metric_name} = {formula}{period_suffix}"
+            lines.extend(_wrap(head, indent=indent))
+            if audit:
+                for cid in bound_list:
+                    calc = calc_records.get(cid)
+                    if not isinstance(calc, dict):
+                        continue
+                    fl = calc.get("fiscal_label", "")
+                    components = calc.get("components", [])
+                    if isinstance(components, list):
+                        for comp in components:
+                            if not isinstance(comp, dict):
+                                continue
+                            role = comp.get("role")
+                            c_cid = comp.get("citation_id")
+                            value = comp.get("value")
+                            unit = comp.get("unit")
+                            fiscal = comp.get("fiscal_label") or fl
+                            lines.extend(
+                                _wrap(
+                                    f"  [{cid}] {role}[{c_cid}] value={value} {unit} | {fiscal}",
+                                    indent=indent,
+                                )
+                            )
+
     if citations_mode == "footer":
         if citation_records:
             lines.append("")
             lines.append("Sources:")
             for cid, record in citation_records.items():
                 lines.extend(_wrap(f"{cid}: {record.get('citation', '')}"))
-        if calc_records:
-            lines.append("")
-            lines.append("Calculations:")
-            for calc_id, calc in calc_records.items():
-                formula = calc.get("formula", "")
-                metric_name = calc.get("metric", "")
-                lines.extend(_wrap(f"[{calc_id}] {metric_name} = {formula}", indent="       "))
+        _append_dedup_calculations()
     elif citations_mode == "inline":
         if citation_records:
             lines.append("")
@@ -537,30 +615,7 @@ def format_financial_perf_table(
                                         indent="       ",
                                     )
                                 )
-        if calc_records:
-            lines.append("")
-            lines.append("Calculations:")
-            for calc_id, calc in calc_records.items():
-                formula = calc.get("formula", "")
-                metric_name = calc.get("metric", "")
-                lines.extend(_wrap(f"[{calc_id}] {metric_name} = {formula}", indent="       "))
-                if audit:
-                    components = calc.get("components", [])
-                    if isinstance(components, list):
-                        for comp in components:
-                            if not isinstance(comp, dict):
-                                continue
-                            role = comp.get("role")
-                            cid = comp.get("citation_id")
-                            value = comp.get("value")
-                            unit = comp.get("unit")
-                            fiscal = comp.get("fiscal_label")
-                            lines.extend(
-                                _wrap(
-                                    f"     {role}[{cid}] value={value} {unit} | {fiscal}",
-                                    indent="       ",
-                                )
-                            )
+        _append_dedup_calculations()
 
     if warnings:
         lines.append("")
