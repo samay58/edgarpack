@@ -353,6 +353,12 @@ class Diagnostic(BaseModel):
         failure reason back to the orchestrator.
       - 'ltm_incomputable': LTM window could not be assembled because at
         least one of mrp / lfy / mrp_prior is missing.
+      - 'ltm_degraded': LTM was requested for a discovered KPI; lookup
+        substituted the latest annual (LFY) value so the caller sees why
+        LTM wasn't computed.
+      - 'partial_coverage': a series selector (``annual:N`` /
+        ``quarterly:N``) returned fewer rows than requested because the
+        cached discovery window is shorter than N.
     """
 
     metric: str
@@ -360,6 +366,8 @@ class Diagnostic(BaseModel):
         "layer_a_fetch_error",
         "layer_b_unresolved",
         "ltm_incomputable",
+        "ltm_degraded",
+        "partial_coverage",
     ]
     message: str
 

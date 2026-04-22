@@ -371,15 +371,8 @@ async def financials(
 
             # Company-specific discovered KPI (populated by `edgarpack which`).
             # Resolves against the cached company_kpis rows; no LLM call.
-            company_row = lookup_company_kpi(cik=cik, slug=metric, period=period)
-            if company_row is not None:
-                cited = _cited_from_company_kpi_row(
-                    company_row,
-                    cik=cik,
-                    company=company_name,
-                )
-                result_metrics[metric] = cited
-            else:
+            looked_up = lookup_company_kpi(cik=cik, slug=metric, period=period)
+            if looked_up is None:
                 result_metrics[metric] = None
                 diagnostics_list.append(
                     Diagnostic(
@@ -390,6 +383,54 @@ async def financials(
                             f"period '{period}'. Run `edgarpack which "
                             f"{cik}` to refresh discovery, or check the "
                             f"period against what's available."
+                        ),
+                    )
+                )
+            elif isinstance(looked_up, list):
+                cited_list = [
+                    _cited_from_company_kpi_row(row, cik=cik, company=company_name)
+                    for row in looked_up
+                ]
+                result_metrics[metric] = cited_list if cited_list else None
+                # Partial-coverage diagnostic for series selectors.
+                p_lower = period.strip().lower()
+                if p_lower.startswith("annual:") or p_lower.startswith("quarterly:"):
+                    try:
+                        requested = int(p_lower.split(":", 1)[1])
+                    except ValueError:
+                        requested = 0
+                    if 0 < len(cited_list) < requested:
+                        earliest = cited_list[-1].fiscal_year
+                        diagnostics_list.append(
+                            Diagnostic(
+                                metric=metric,
+                                kind="partial_coverage",
+                                message=(
+                                    f"Only {len(cited_list)} of {requested} "
+                                    f"requested periods available for "
+                                    f"'{metric}'; earliest is FY{earliest}."
+                                ),
+                            )
+                        )
+            else:
+                result_metrics[metric] = _cited_from_company_kpi_row(
+                    looked_up, cik=cik, company=company_name
+                )
+
+            # LTM-degraded diagnostic. Emitted whether the lookup returned
+            # a scalar row (ltm/ltm-N degraded to lfy/lfy-N inside
+            # lookup_company_kpi) or nothing, so the caller sees why LTM
+            # wasn't computed.
+            p_lower = period.strip().lower()
+            if p_lower == "ltm" or p_lower.startswith("ltm-"):
+                diagnostics_list.append(
+                    Diagnostic(
+                        metric=metric,
+                        kind="ltm_degraded",
+                        message=(
+                            f"LTM not computed for discovered KPI "
+                            f"'{metric}'; showing latest annual (10-K) "
+                            f"value instead."
                         ),
                     )
                 )

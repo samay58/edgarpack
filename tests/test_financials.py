@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from edgarpack.query.concepts import MetricMeta
@@ -1528,6 +1530,100 @@ def test_cited_value_defaults_to_us_gaap_usd():
     )
     assert v.accounting_standard == "US-GAAP"
     assert v.reporting_currency == "USD"
+
+
+class TestDiscoveredKpiMultiPeriod(unittest.IsolatedAsyncioTestCase):
+    """financials() returns distinct CitedValues per period for discovered KPIs.
+
+    Seeds the learned registry with six annual rows for a fake CIK and stubs
+    the SEC-side identity, facts, and doc-map calls so only the discovered
+    path runs. Verifies that scalar offsets return distinct rows, series
+    selectors return lists, and LTM / partial-coverage emit diagnostics.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.db_path = Path(self._tmp.name) / "registry.db"
+
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        for yr in (2020, 2021, 2022, 2023, 2024, 2025):
+            reg.company_kpi_upsert(
+                cik="0001564408",
+                accession=f"000-{yr}-ANN",
+                slug="daily_active_users",
+                display_name="Daily Active Users",
+                aliases=[],
+                unit="count",
+                magnitude=None,
+                value=float((yr - 2019) * 50_000_000),
+                period_end=f"{yr}-12-31",
+                fiscal_year=yr,
+                fiscal_period="FY",
+                form_type="10-K",
+                definition=None,
+                section_id=None,
+                chunk_id=None,
+                source_substring=None,
+                confidence=None,
+            )
+        reg.close()
+
+    async def _run(self, period: str):
+        with (
+            patch(
+                f"{_P}.resolve_ticker",
+                new=AsyncMock(return_value=("0001564408", "Snap Inc")),
+            ),
+            patch(
+                f"{_P}.fetch_company_facts",
+                new=AsyncMock(return_value={"facts": {}}),
+            ),
+            patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+            patch(
+                "edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH",
+                self.db_path,
+            ),
+        ):
+            return await financials("SNAP", metrics="daily_active_users", period=period)
+
+    async def test_lfy_vs_lfy_back_three_differ(self) -> None:
+        lfy_result = await self._run("lfy")
+        lfy3_result = await self._run("lfy-3")
+        lfy_cited = lfy_result.metrics["daily_active_users"]
+        lfy3_cited = lfy3_result.metrics["daily_active_users"]
+        self.assertIsNotNone(lfy_cited)
+        self.assertIsNotNone(lfy3_cited)
+        self.assertEqual(lfy_cited.fiscal_year, 2025)
+        self.assertEqual(lfy3_cited.fiscal_year, 2022)
+
+    async def test_annual_six_returns_list(self) -> None:
+        result = await self._run("annual:6")
+        values = result.metrics["daily_active_users"]
+        self.assertIsInstance(values, list)
+        self.assertEqual(len(values), 6)
+        self.assertEqual(
+            [v.fiscal_year for v in values],
+            [2025, 2024, 2023, 2022, 2021, 2020],
+        )
+
+    async def test_ltm_emits_degraded_diagnostic(self) -> None:
+        result = await self._run("ltm")
+        diag_kinds = [d.kind for d in result.diagnostics]
+        self.assertIn("ltm_degraded", diag_kinds)
+        cited = result.metrics["daily_active_users"]
+        self.assertIsNotNone(cited)
+        self.assertEqual(cited.fiscal_year, 2025)
+
+    async def test_annual_partial_coverage_diagnostic(self) -> None:
+        result = await self._run("annual:10")
+        diag_kinds = [d.kind for d in result.diagnostics]
+        self.assertIn("partial_coverage", diag_kinds)
+        values = result.metrics["daily_active_users"]
+        self.assertIsInstance(values, list)
+        self.assertEqual(len(values), 6)
 
 
 if __name__ == "__main__":
