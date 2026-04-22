@@ -403,6 +403,29 @@ class TestCurrencyFormatting(unittest.TestCase):
         )
         self.assertEqual(_format_value(cited), "($532M)")
 
+    def test_empty_unit_does_not_route_to_percent(self) -> None:
+        """Empty unit preserves the pre-refactor fallback (plain 2-decimal),
+        not percent formatting."""
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=12.5,
+            unit="",
+            metric="unknown",
+            concept="Unknown",
+            period_end=date(2025, 12, 31),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2026, 2, 5),
+            accession="a",
+            cik="c",
+            company="co",
+        )
+        self.assertEqual(_format_value(cited), "12.50")
+
 
 class TestCompsLeanJson(unittest.TestCase):
     def test_lean_json_structure(self) -> None:

@@ -8,7 +8,7 @@ import textwrap
 from typing import Any
 
 from .financials import financials
-from .formatting import _CURRENCY_SYMBOLS, format_number  # noqa: F401
+from .formatting import format_number
 from .models import CitedValue, DerivedValue, QueryResult
 
 
@@ -745,4 +745,4 @@ def _format_value(cited: CitedValue) -> str:
     """
     if cited.value is None:
         return "N/A"
-    return format_number(cited.value, cited.unit or "pure")
+    return format_number(cited.value, cited.unit or "")
