@@ -223,6 +223,9 @@ async def _gather(
 def _format_value(v: dict[str, Any] | None) -> str:
     if v is None or v.get("value") is None:
         return "n/a"
+    # Growth is a signed delta (e.g., "+5%", "-3%"), not a finance-negative.
+    # Keep the signed +/- formatter; don't route through format_number
+    # which would wrap negatives in parens.
     if "growth" in (v or {}):
         pct = v["growth"] * 100
         return f"{pct:+.0f}%" if abs(pct) >= 10 else f"{pct:+.1f}%"

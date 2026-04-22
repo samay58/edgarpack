@@ -214,3 +214,14 @@ def test_format_value_none_value_returns_na():
 
     assert _format_value(None) == "n/a"
     assert _format_value({"value": None}) == "n/a"
+
+
+def test_bare_value_empty_currency_renders_two_decimals() -> None:
+    """Empty-currency path routes through format_number's unknown-unit
+    fallback: plain comma thousands with 2 decimals. This is a behavior
+    change from the pre-refactor _format_value which used .0f (no
+    decimals). Pinned explicitly so a future change surfaces the intent."""
+    from edgarpack.compare import _format_value
+
+    v = {"value": 12_345.0, "currency": ""}
+    assert _format_value(v) == "12,345.00"
