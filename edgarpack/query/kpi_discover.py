@@ -556,22 +556,20 @@ def lookup_company_kpi(
     slug: str,
     period: str,
     registry_path: Path | None = None,
-    pack_registry: PackRegistry | None = None,
 ) -> CompanyKpiRow | list[CompanyKpiRow] | None:
     """Resolve (cik, slug, period) to one or more persisted CompanyKpiRows.
 
     Understands: lfy, lfy-N, mrq, mrq-N, mrp, ltm, ltm-N, annual:N,
-    quarterly:N. Scalars return a single row (or None). Series
-    (annual:N, quarterly:N) return a list ordered newest-first.
+    quarterly:N. Scalar selectors return a single ``CompanyKpiRow`` (or
+    ``None`` when no row satisfies the filter). Series selectors
+    (annual:N, quarterly:N) return ``list[CompanyKpiRow]``, possibly
+    empty when the typed filter yields nothing. ``None`` is reserved for
+    the unknown-slug / no-rows-at-all case.
 
     LTM degrades to LFY (and ltm-N to lfy-N). Callers should emit the
     ltm_degraded diagnostic so users see why LTM wasn't computed.
     Unknown selectors fall back to the newest row of any form.
     """
-    own_registry = False
-    if pack_registry is None:
-        pack_registry = PackRegistry()
-        own_registry = True
     learned_reg = LearnedRegistry(db_path=registry_path)
     try:
         rows = learned_reg.company_kpi_list(cik=cik, slug=slug)
@@ -630,7 +628,7 @@ def lookup_company_kpi(
             except ValueError:
                 return None
             annual = sorted((r for r in rows if _is_annual(r)), key=_sort_key, reverse=True)
-            return annual[:n] if annual else None
+            return annual[:n]
 
         if p.startswith("quarterly:"):
             try:
@@ -638,15 +636,13 @@ def lookup_company_kpi(
             except ValueError:
                 return None
             q = sorted((r for r in rows if _is_quarterly(r)), key=_sort_key, reverse=True)
-            return q[:n] if q else None
+            return q[:n]
 
         # Unknown selector: preserve prior most-recent-fallback behavior.
         all_rows = sorted(rows, key=_sort_key, reverse=True)
         return all_rows[0] if all_rows else None
     finally:
         learned_reg.close()
-        if own_registry:
-            pack_registry.close()
 
 
 __all__ = [

@@ -193,6 +193,70 @@ class TestSeries:
         assert [r.fiscal_period for r in rows] == ["Q3", "Q2"]
 
 
+class TestSeriesEmpty:
+    def test_annual_on_quarterly_only_returns_empty_list(self, tmp_path: Path) -> None:
+        db = tmp_path / "learned.db"
+        reg = LearnedRegistry(db_path=db)
+        reg.company_kpi_upsert(
+            cik="0009999999",
+            accession="Q1-2025",
+            slug="daily_active_users",
+            display_name="Daily Active Users",
+            aliases=[],
+            unit="count",
+            magnitude=None,
+            value=100_000_000.0,
+            period_end="2025-03-31",
+            fiscal_year=2025,
+            fiscal_period="Q1",
+            form_type="10-Q",
+            definition=None,
+            section_id=None,
+            chunk_id=None,
+            source_substring=None,
+            confidence=None,
+        )
+        reg.close()
+        rows = lookup_company_kpi(
+            cik="0009999999",
+            slug="daily_active_users",
+            period="annual:3",
+            registry_path=db,
+        )
+        assert rows == []
+
+    def test_quarterly_on_annual_only_returns_empty_list(self, tmp_path: Path) -> None:
+        db = tmp_path / "learned.db"
+        reg = LearnedRegistry(db_path=db)
+        reg.company_kpi_upsert(
+            cik="0008888888",
+            accession="FY2025",
+            slug="daily_active_users",
+            display_name="Daily Active Users",
+            aliases=[],
+            unit="count",
+            magnitude=None,
+            value=300_000_000.0,
+            period_end="2025-12-31",
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            definition=None,
+            section_id=None,
+            chunk_id=None,
+            source_substring=None,
+            confidence=None,
+        )
+        reg.close()
+        rows = lookup_company_kpi(
+            cik="0008888888",
+            slug="daily_active_users",
+            period="quarterly:3",
+            registry_path=db,
+        )
+        assert rows == []
+
+
 class TestMisses:
     def test_unknown_slug_returns_none(self, seeded_registry: Path) -> None:
         assert (

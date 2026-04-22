@@ -698,7 +698,6 @@ class TestLookupAndFinancialsRouting(unittest.TestCase):
             slug="paid_seats",
             period="lfy",
             registry_path=self.registry_db,
-            pack_registry=self.pack_registry,
         )
         self.assertIsNotNone(row)
         assert row is not None
@@ -723,7 +722,6 @@ class TestLookupAndFinancialsRouting(unittest.TestCase):
             return {"filings": {"recent": {}}}
 
         registry_db = self.registry_db
-        pack_registry = self.pack_registry
 
         def _patched_lookup(cik, slug, period, **kwargs):  # noqa: ARG001
             return lookup_company_kpi(
@@ -731,7 +729,6 @@ class TestLookupAndFinancialsRouting(unittest.TestCase):
                 slug=slug,
                 period=period,
                 registry_path=registry_db,
-                pack_registry=pack_registry,
             )
 
         with (
