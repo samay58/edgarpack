@@ -340,6 +340,69 @@ class TestCurrencyFormatting(unittest.TestCase):
         self.assertIn("CHF", formatted)
         self.assertIn("B", formatted)
 
+    def test_arpu_renders_with_two_decimals(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=3.62,
+            unit="USD",
+            metric="average_revenue_per_user",
+            concept="Average Revenue Per User",
+            period_end=date(2025, 12, 31),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2026, 2, 5),
+            accession="0001564408-26-000013",
+            cik="0001564408",
+            company="Snap Inc",
+        )
+        self.assertEqual(_format_value(cited), "$3.62")
+
+    def test_count_unit_renders_474m(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=474_000_000,
+            unit="count",
+            metric="daily_active_users",
+            concept="Daily Active Users",
+            period_end=date(2025, 12, 31),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2026, 2, 5),
+            accession="0001564408-26-000013",
+            cik="0001564408",
+            company="Snap Inc",
+        )
+        self.assertEqual(_format_value(cited), "474M")
+
+    def test_negative_currency_uses_parens(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.comps import _format_value
+
+        cited = CitedValue(
+            value=-532_000_000,
+            unit="USD",
+            metric="operating_income",
+            concept="OperatingIncomeLoss",
+            period_end=date(2025, 12, 31),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2026, 2, 5),
+            accession="0001564408-26-000013",
+            cik="0001564408",
+            company="Snap Inc",
+        )
+        self.assertEqual(_format_value(cited), "($532M)")
+
 
 class TestCompsLeanJson(unittest.TestCase):
     def test_lean_json_structure(self) -> None:

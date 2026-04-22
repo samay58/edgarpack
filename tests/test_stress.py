@@ -11,8 +11,9 @@ import unittest
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
-from edgarpack.query.comps import _format_currency, _format_value
+from edgarpack.query.comps import _format_value
 from edgarpack.query.financials import financials
+from edgarpack.query.formatting import format_number
 from edgarpack.query.models import CitedValue, DerivedValue
 
 _P = "edgarpack.query.financials"
@@ -457,10 +458,9 @@ class TestDivisionByZero(unittest.IsolatedAsyncioTestCase):
 
 class TestNegativeFormatting(unittest.TestCase):
     def test_negative_currency(self) -> None:
-        """Negative monetary values should format correctly."""
-        result = _format_currency(-2_500_000_000, "USD")
-        self.assertIn("-", result)
-        self.assertIn("2.5B", result)
+        """Negative monetary values format with finance-style parentheses."""
+        result = format_number(-2_500_000_000, "USD")
+        self.assertEqual(result, "($2.5B)")
 
     def test_negative_margin(self) -> None:
         """Negative margin should display as negative percentage."""
@@ -479,7 +479,7 @@ class TestNegativeFormatting(unittest.TestCase):
             company="LOSS CORP",
         )
         formatted = _format_value(cited)
-        self.assertEqual(formatted, "-15.0%")
+        self.assertEqual(formatted, "(15.0%)")
 
     def test_negative_net_income(self) -> None:
         """Negative net income should format with negative sign."""
@@ -498,8 +498,7 @@ class TestNegativeFormatting(unittest.TestCase):
             company="LOSS CORP",
         )
         formatted = _format_value(cited)
-        self.assertIn("-", formatted)
-        self.assertIn("500M", formatted)
+        self.assertEqual(formatted, "($500M)")
 
 
 # ---------------------------------------------------------------------------
@@ -808,28 +807,28 @@ class TestFilingDeduplication(unittest.IsolatedAsyncioTestCase):
 
 class TestFormattingBoundaries(unittest.TestCase):
     def test_exact_billion(self) -> None:
-        self.assertEqual(_format_currency(1_000_000_000, "USD"), "$1.0B")
+        self.assertEqual(format_number(1_000_000_000, "USD"), "$1.0B")
 
     def test_just_under_billion(self) -> None:
-        result = _format_currency(999_999_999, "USD")
+        result = format_number(999_999_999, "USD")
         self.assertIn("M", result)
 
     def test_exact_million(self) -> None:
-        self.assertEqual(_format_currency(1_000_000, "USD"), "$1M")
+        self.assertEqual(format_number(1_000_000, "USD"), "$1M")
 
     def test_just_under_million(self) -> None:
-        result = _format_currency(999_999, "USD")
+        result = format_number(999_999, "USD")
         self.assertIn("K", result)
 
     def test_exact_thousand(self) -> None:
-        self.assertEqual(_format_currency(1_000, "USD"), "$1K")
+        self.assertEqual(format_number(1_000, "USD"), "$1K")
 
     def test_just_under_thousand(self) -> None:
-        result = _format_currency(999, "USD")
+        result = format_number(999, "USD")
         self.assertEqual(result, "$999")
 
     def test_zero(self) -> None:
-        self.assertEqual(_format_currency(0, "USD"), "$0")
+        self.assertEqual(format_number(0, "USD"), "$0")
 
     def test_eps_formatting(self) -> None:
         cited = CitedValue(
@@ -864,7 +863,7 @@ class TestFormattingBoundaries(unittest.TestCase):
             company="TEST CORP",
         )
         result = _format_value(cited)
-        self.assertIn("24.0B", result)
+        self.assertIn("24B", result)
 
     def test_na_value(self) -> None:
         cited = CitedValue(
@@ -885,7 +884,7 @@ class TestFormattingBoundaries(unittest.TestCase):
 
     def test_unknown_three_letter_currency(self) -> None:
         """Three-letter currency codes not in the map should still format as monetary."""
-        result = _format_currency(5_000_000_000, "CHF")
+        result = format_number(5_000_000_000, "CHF")
         self.assertIn("5.0B", result)
 
 
