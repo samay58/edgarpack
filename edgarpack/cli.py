@@ -1461,7 +1461,7 @@ def _render_citation_lines(
 
     summary = (
         f"{marker_label} {form_type} {fiscal_label} | period {period} | "
-        f"accn {accession} | filed {filed}"
+        f"filing {accession} | filed {filed}"
     )
     if show_links != "none" and not osc8_on and primary:
         summary = f"{summary}  {compact_url(primary)}"
@@ -1514,6 +1514,28 @@ def _marker_with_link(
     return osc8(link, marker)
 
 
+def _source_badge_for(v: Any) -> str:
+    """Render the source indicator that follows a metric's formatted value.
+
+    - 'hardcoded' -> empty (no badge).
+    - 'learned:kpi-*' -> ' [discovered]' (all discovered-KPI sources collapse
+      to one human label; the specific taxonomy stays on CitedValue.source).
+    - other 'learned:*' -> ' [<source> ✓]' (self-heal learned badge).
+    - warning contains 'unverified' -> ✓ becomes ⚠.
+    """
+    src = getattr(v, "source", "hardcoded")
+    if src == "hardcoded":
+        return ""
+    if src.startswith("learned:kpi-"):
+        return " [discovered]"
+    mark = "✓"
+    for w in getattr(v, "warnings", []):
+        if "unverified" in w.lower():
+            mark = "⚠"
+            break
+    return f" [{src} {mark}]"
+
+
 def _render_query_table(result: Any, args: Any) -> str:
     """Render single-company query output with inline citation/audit ergonomics."""
     from .query.comps import _format_value
@@ -1550,21 +1572,6 @@ def _render_query_table(result: Any, args: Any) -> str:
             else:
                 lines.append(f"{label}: N/A")
             continue
-
-        # Self-heal source handling
-        def _source_of(v: Any) -> str:
-            return getattr(v, "source", "hardcoded")
-
-        def _source_badge(v: Any) -> str:
-            src = _source_of(v)
-            if src == "hardcoded":
-                return ""
-            mark = "✓"
-            for w in getattr(v, "warnings", []):
-                if "unverified" in w.lower():
-                    mark = "⚠"
-                    break
-            return f" [{src} {mark}]"
 
         if isinstance(raw_value, list):
             lines.append(f"{label}:")
@@ -1622,7 +1629,7 @@ def _render_query_table(result: Any, args: Any) -> str:
                 show_links=getattr(args, "show_links", "primary"),
             )
 
-        source_badge = _source_badge(raw_value)
+        source_badge = _source_badge_for(raw_value)
         lines.append(f"{label}: {_format_value(raw_value)}{marker}{source_badge}")
 
         warnings = payload.get("warnings", []) if isinstance(payload, dict) else []
