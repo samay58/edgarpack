@@ -1625,6 +1625,56 @@ class TestDiscoveredKpiMultiPeriod(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(values, list)
         self.assertEqual(len(values), 6)
 
+    async def test_annual_on_quarterly_only_slug_returns_empty_list(self) -> None:
+        """Known slug with no rows of requested form type returns [],
+        distinct from unknown-slug which returns None. No partial_coverage
+        diagnostic because no rows at all (not a coverage shortfall)."""
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "learned.db"
+            reg = LearnedRegistry(db_path=db)
+            reg.company_kpi_upsert(
+                cik="0001564408",
+                accession="Q1-2025",
+                slug="daily_active_users",
+                display_name="Daily Active Users",
+                aliases=[],
+                unit="count",
+                magnitude=None,
+                value=100_000_000.0,
+                period_end="2025-03-31",
+                fiscal_year=2025,
+                fiscal_period="Q1",
+                form_type="10-Q",
+                definition=None,
+                section_id=None,
+                chunk_id=None,
+                source_substring=None,
+                confidence=None,
+            )
+            reg.close()
+
+            with (
+                patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", db),
+                patch(
+                    f"{_P}.resolve_ticker",
+                    new=AsyncMock(return_value=("0001564408", "Snap Inc")),
+                ),
+                patch(
+                    f"{_P}.fetch_company_facts",
+                    new=AsyncMock(return_value={"facts": {}}),
+                ),
+                patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+            ):
+                result = await financials("SNAP", metrics="daily_active_users", period="annual:3")
+
+        values = result.metrics["daily_active_users"]
+        self.assertEqual(values, [])  # empty list, NOT None
+        diag_kinds = [d.kind for d in result.diagnostics]
+        self.assertNotIn("layer_b_unresolved", diag_kinds)
+        self.assertNotIn("partial_coverage", diag_kinds)
+
 
 if __name__ == "__main__":
     unittest.main()

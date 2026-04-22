@@ -371,6 +371,7 @@ async def financials(
 
             # Company-specific discovered KPI (populated by `edgarpack which`).
             # Resolves against the cached company_kpis rows; no LLM call.
+            p_lower = period.strip().lower()
             looked_up = lookup_company_kpi(cik=cik, slug=metric, period=period)
             if looked_up is None:
                 result_metrics[metric] = None
@@ -391,9 +392,8 @@ async def financials(
                     _cited_from_company_kpi_row(row, cik=cik, company=company_name)
                     for row in looked_up
                 ]
-                result_metrics[metric] = cited_list if cited_list else None
+                result_metrics[metric] = cited_list
                 # Partial-coverage diagnostic for series selectors.
-                p_lower = period.strip().lower()
                 if p_lower.startswith("annual:") or p_lower.startswith("quarterly:"):
                     try:
                         requested = int(p_lower.split(":", 1)[1])
@@ -421,7 +421,6 @@ async def financials(
             # a scalar row (ltm/ltm-N degraded to lfy/lfy-N inside
             # lookup_company_kpi) or nothing, so the caller sees why LTM
             # wasn't computed.
-            p_lower = period.strip().lower()
             if p_lower == "ltm" or p_lower.startswith("ltm-"):
                 diagnostics_list.append(
                     Diagnostic(
