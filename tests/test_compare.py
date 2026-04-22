@@ -159,3 +159,58 @@ def test_gather_fetches_concurrently():
     assert max_in_flight >= 2, (
         f"expected concurrent fan-out, saw max {max_in_flight} tasks in flight (sequential path?)"
     )
+
+
+# Format-layer behavior after Task 3 delegation to format_number.
+
+
+def test_format_value_abbrev_usd_large_value():
+    from edgarpack.compare import _format_value
+
+    v = {"value": 5_900_000_000, "currency": "USD", "usd_value": 5_900_000_000}
+    assert _format_value(v) == "$5.9B"
+
+
+def test_format_value_abbrev_usd_negative_parens():
+    from edgarpack.compare import _format_value
+
+    v = {"value": -532_000_000, "currency": "USD", "usd_value": -532_000_000}
+    assert _format_value(v) == "($532M)"
+
+
+def test_format_value_native_with_usd_conversion():
+    from edgarpack.compare import _format_value
+
+    v = {"value": 28_262_000_000, "currency": "EUR", "usd_value": 30_000_000_000}
+    # USD portion scales at B with .0 preserved (B-suffix currency keeps decimals).
+    # Native EUR: 28.262B -> "€28.3B".
+    assert _format_value(v) == "$30.0B (native: €28.3B)"
+
+
+def test_format_value_ratio_uses_pure_formatter():
+    from edgarpack.compare import _format_value
+
+    v = {"value": 0.125, "ratio": 0.125, "currency": "USD"}
+    assert _format_value(v) == "12.5%"
+
+
+def test_format_value_per_employee_usd_small_gets_two_decimals():
+    from edgarpack.compare import _format_value
+
+    # 42.5 is under the $100 small-value threshold -> 2 decimals.
+    v = {"value": 42.5, "per_employee_usd": 42.5}
+    assert _format_value(v) == "$42.50"
+
+
+def test_format_value_headcount_renders_with_scale():
+    from edgarpack.compare import _format_value
+
+    v = {"value": 12_345, "headcount": 12_345}
+    assert _format_value(v) == "12.3K"
+
+
+def test_format_value_none_value_returns_na():
+    from edgarpack.compare import _format_value
+
+    assert _format_value(None) == "n/a"
+    assert _format_value({"value": None}) == "n/a"

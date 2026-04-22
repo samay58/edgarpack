@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from .query.formatting import format_number
 from .query.models import CitedValue
 
 _BALANCE_SHEET_METRICS: frozenset[str] = frozenset(
@@ -219,20 +220,6 @@ async def _gather(
     return cols, rejected_by_company
 
 
-def _abbrev_usd(val: float) -> str:
-    if val is None:
-        return "n/a"
-    absval = abs(val)
-    sign = "-" if val < 0 else ""
-    if absval >= 1_000_000_000:
-        return f"{sign}${absval / 1_000_000_000:,.1f}B"
-    if absval >= 1_000_000:
-        return f"{sign}${absval / 1_000_000:,.1f}M"
-    if absval >= 1_000:
-        return f"{sign}${absval / 1_000:,.1f}K"
-    return f"{sign}${absval:,.0f}"
-
-
 def _format_value(v: dict[str, Any] | None) -> str:
     if v is None or v.get("value") is None:
         return "n/a"
@@ -240,22 +227,21 @@ def _format_value(v: dict[str, Any] | None) -> str:
         pct = v["growth"] * 100
         return f"{pct:+.0f}%" if abs(pct) >= 10 else f"{pct:+.1f}%"
     if "ratio" in (v or {}):
-        return f"{v['ratio'] * 100:.0f}%"
+        return format_number(v["ratio"], "pure")
     if "per_employee_usd" in (v or {}):
-        return f"${int(v['per_employee_usd']):,}"
+        return format_number(float(v["per_employee_usd"]), "USD")
     if "headcount" in (v or {}):
-        return f"{int(v['headcount']):,}"
+        return format_number(float(v["headcount"]), "headcount")
     val = v["value"]
     cur = v.get("currency", "")
     usd = v.get("usd_value")
     if usd is not None and cur != "USD":
-        return f"{_abbrev_usd(usd)} (native: {float(val):,.0f} {cur})"
+        return f"{format_number(float(usd), 'USD')} (native: {format_number(float(val), cur)})"
     if usd is not None:
-        return _abbrev_usd(usd)
-    try:
-        return f"{float(val):,.0f} {cur}".strip()
-    except (TypeError, ValueError):
-        return f"{val} {cur}".strip()
+        return format_number(float(usd), "USD")
+    if cur:
+        return format_number(float(val), cur)
+    return format_number(float(val), "")
 
 
 def _period_header(period_request: str, columns: list[CompanyColumn]) -> str:
