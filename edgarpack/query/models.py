@@ -385,11 +385,18 @@ class QueryResult(BaseModel):
     # Self-heal v2: structured diagnostics for Layer B failures.
     diagnostics: list[Diagnostic] = Field(default_factory=list)
 
+    # The user's original input token (e.g. "snap", "SNAP", or a CIK). When
+    # present, permalink() renders this verbatim instead of the resolved CIK
+    # so the Reproduce line reads back the way the user typed it.
+    display_token: str | None = None
+
     @property
     def permalink(self) -> str:
-        """CLI command that reproduces this query."""
+        """CLI command that reproduces this query. Uses display_token when
+        set (e.g., the ticker the user typed); falls back to the resolved CIK."""
         metric_names = ",".join(self.metrics.keys())
-        return f"edgarpack query {self.cik} {metric_names} --period {self.period}"
+        subject = self.display_token or self.cik
+        return f"edgarpack query {subject} {metric_names} --period {self.period}"
 
     def _iter_metric_items(
         self,

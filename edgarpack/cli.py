@@ -1860,6 +1860,7 @@ def _cmd_query(args: Any) -> int:
                 metrics=metric_input,
                 period=period,
                 force=bool(args.force),
+                display_token=args.company,
             )
 
         try:
@@ -1961,11 +1962,25 @@ def _cmd_query(args: Any) -> int:
             metric_list_for_render = list(result.metrics.keys())
 
         if args.output_format == "json":
-            print(multi_period_to_lean_json(results_by_period, metric_list_for_render, periods))
+            print(
+                multi_period_to_lean_json(
+                    results_by_period,
+                    metric_list_for_render,
+                    periods,
+                    display_token=args.company,
+                )
+            )
             return 0
 
         if args.output_format == "json-full":
-            print(multi_period_to_full_json(results_by_period, metric_list_for_render, periods))
+            print(
+                multi_period_to_full_json(
+                    results_by_period,
+                    metric_list_for_render,
+                    periods,
+                    display_token=args.company,
+                )
+            )
             return 0
 
         citations_mode = args.citations if args.citations is not None else "footer"

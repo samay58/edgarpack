@@ -468,5 +468,74 @@ class TestCompsLeanJson(unittest.TestCase):
         self.assertIn("metrics", nvda)
 
 
+class TestPermalinkDisplayToken(unittest.TestCase):
+    def test_build_permalink_uses_display_token(self) -> None:
+        from edgarpack.query.comps import _build_permalink
+
+        link = _build_permalink(
+            cik="0001564408",
+            company="Snap Inc",
+            metrics=["revenue"],
+            periods=["lfy"],
+            display_token="snap",
+        )
+        self.assertEqual(link, "edgarpack query snap revenue --period lfy")
+
+    def test_build_permalink_falls_back_to_cik(self) -> None:
+        from edgarpack.query.comps import _build_permalink
+
+        link = _build_permalink(
+            cik="0001564408",
+            company="Snap Inc",
+            metrics=["revenue"],
+            periods=["lfy"],
+            display_token=None,
+        )
+        self.assertEqual(link, "edgarpack query 0001564408 revenue --period lfy")
+
+    def test_build_permalink_falls_back_to_company_when_cik_empty(self) -> None:
+        from edgarpack.query.comps import _build_permalink
+
+        link = _build_permalink(
+            cik="",
+            company="Snap Inc",
+            metrics=["revenue"],
+            periods=["lfy"],
+            display_token=None,
+        )
+        self.assertEqual(link, "edgarpack query Snap Inc revenue --period lfy")
+
+
+class TestQueryResultPermalinkDisplayToken(unittest.TestCase):
+    def test_permalink_prefers_display_token(self) -> None:
+        from edgarpack.query.models import QueryResult
+
+        qr = QueryResult(
+            company="Snap Inc",
+            cik="0001564408",
+            period="lfy",
+            metrics={"revenue": None},
+            display_token="snap",
+        )
+        self.assertEqual(
+            qr.permalink,
+            "edgarpack query snap revenue --period lfy",
+        )
+
+    def test_permalink_falls_back_to_cik(self) -> None:
+        from edgarpack.query.models import QueryResult
+
+        qr = QueryResult(
+            company="Snap Inc",
+            cik="0001564408",
+            period="lfy",
+            metrics={"revenue": None},
+        )
+        self.assertEqual(
+            qr.permalink,
+            "edgarpack query 0001564408 revenue --period lfy",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

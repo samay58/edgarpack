@@ -252,6 +252,7 @@ async def financials(
     metrics: str | list[str] | None = None,
     period: str = "lfy",
     force: bool = False,
+    display_token: str | None = None,
 ) -> QueryResult:
     """Query financial metrics for a single company.
 
@@ -297,7 +298,9 @@ async def financials(
                 except _UnknownCompany:
                     pass
             if _resolved_id is not None and _resolved_id.source == "HKEX":
-                return await _query_hkex_pack(_resolved_id, metrics, period)
+                return await _query_hkex_pack(
+                    _resolved_id, metrics, period, display_token=display_token
+                )
 
     cik, company_name = await resolve_ticker(company, force=force)
 
@@ -660,6 +663,7 @@ async def financials(
         period=period,
         metrics=result_metrics,
         diagnostics=diagnostics_list,
+        display_token=display_token,
     )
 
     # Enrich CitedValues with XBRL fact IDs for stable deep-link anchors.
@@ -1320,6 +1324,8 @@ async def _query_hkex_pack(
     resolved: object,
     metrics: str | list[str] | None,
     period: str,
+    *,
+    display_token: str | None = None,
 ) -> QueryResult:
     import json
     from pathlib import Path as _Path
@@ -1526,6 +1532,7 @@ async def _query_hkex_pack(
         period=period,
         metrics=result_metrics,
         diagnostics=diagnostics_list,
+        display_token=display_token,
     )
 
 

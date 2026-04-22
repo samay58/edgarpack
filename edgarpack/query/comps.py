@@ -623,6 +623,8 @@ def multi_period_to_lean_json(
     results_by_period: dict[str, QueryResult],
     metrics: list[str],
     periods: list[str],
+    *,
+    display_token: str | None = None,
 ) -> str:
     """Serialize a multi-period single-company query as lean JSON.
 
@@ -630,7 +632,9 @@ def multi_period_to_lean_json(
     being the existing per-metric lean dict. Filings and citations are
     deduplicated across periods.
     """
-    payload = _build_multi_period_dict(results_by_period, metrics, periods, lean=True)
+    payload = _build_multi_period_dict(
+        results_by_period, metrics, periods, lean=True, display_token=display_token
+    )
     return json.dumps(payload, indent=2, sort_keys=False, default=str)
 
 
@@ -638,10 +642,27 @@ def multi_period_to_full_json(
     results_by_period: dict[str, QueryResult],
     metrics: list[str],
     periods: list[str],
+    *,
+    display_token: str | None = None,
 ) -> str:
     """Serialize a multi-period single-company query as full JSON (verbose)."""
-    payload = _build_multi_period_dict(results_by_period, metrics, periods, lean=False)
+    payload = _build_multi_period_dict(
+        results_by_period, metrics, periods, lean=False, display_token=display_token
+    )
     return json.dumps(payload, indent=2, sort_keys=False, default=str)
+
+
+def _build_permalink(
+    *,
+    cik: str | None,
+    company: str | None,
+    metrics: list[str],
+    periods: list[str],
+    display_token: str | None,
+) -> str:
+    """Build the Reproduce line. Prefers user's input token over CIK."""
+    subject = display_token or cik or company or ""
+    return f"edgarpack query {subject} {','.join(metrics)} --period {','.join(periods)}"
 
 
 def _build_multi_period_dict(
@@ -650,6 +671,7 @@ def _build_multi_period_dict(
     periods: list[str],
     *,
     lean: bool,
+    display_token: str | None = None,
 ) -> dict[str, object]:
     """Build the period-keyed metric dict shape shared by lean and full JSON."""
     primary = next(iter(results_by_period.values()), None)
@@ -723,8 +745,12 @@ def _build_multi_period_dict(
         "company": company,
         "cik": cik,
         "periods": periods,
-        "permalink": (
-            f"edgarpack query {cik or company} {','.join(metrics)} --period {','.join(periods)}"
+        "permalink": _build_permalink(
+            cik=cik,
+            company=company,
+            metrics=metrics,
+            periods=periods,
+            display_token=display_token,
         ),
         "filings": filings,
         "metrics": metrics_out,
