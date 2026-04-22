@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/edgarpack-cover.png" alt="EdgarPack: a 10-K rendered as geological strata being excavated" width="800">
+  <img src="docs/assets/edgarpack-cover.png" alt="EdgarPack: a Form 13F rendered as a subway map, one holding circled and threaded to its CUSIP and accession number" width="800">
 </p>
 
 # EdgarPack
