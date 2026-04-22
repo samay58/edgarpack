@@ -136,7 +136,9 @@ class CitedValue(BaseModel):
 
     @property
     def fiscal_label(self) -> str:
-        """Human-readable fiscal label."""
+        """Human-readable fiscal label (e.g. 'FY2025', 'Q2 FY2025')."""
+        if self.fiscal_period in ("FY", ""):
+            return f"FY{self.fiscal_year}"
         return f"{self.fiscal_period} FY{self.fiscal_year}"
 
     @property

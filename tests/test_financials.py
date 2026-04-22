@@ -1676,5 +1676,71 @@ class TestDiscoveredKpiMultiPeriod(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("partial_coverage", diag_kinds)
 
 
+class TestFiscalLabel(unittest.TestCase):
+    def test_annual_drops_fy_double_prefix(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.models import CitedValue
+
+        cv = CitedValue(
+            value=1,
+            unit="USD",
+            metric="m",
+            concept="c",
+            period_end=date(2025, 12, 31),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2026, 2, 5),
+            accession="a",
+            cik="c",
+            company="co",
+        )
+        self.assertEqual(cv.fiscal_label, "FY2025")
+
+    def test_quarter_label_unchanged(self) -> None:
+        from datetime import date
+
+        from edgarpack.query.models import CitedValue
+
+        cv = CitedValue(
+            value=1,
+            unit="USD",
+            metric="m",
+            concept="c",
+            period_end=date(2025, 6, 30),
+            fiscal_year=2025,
+            fiscal_period="Q2",
+            form_type="10-Q",
+            filed=date(2025, 8, 6),
+            accession="a",
+            cik="c",
+            company="co",
+        )
+        self.assertEqual(cv.fiscal_label, "Q2 FY2025")
+
+    def test_empty_fiscal_period_treated_as_annual(self) -> None:
+        """When fiscal_period is empty string, fallback to FY{year} form."""
+        from datetime import date
+
+        from edgarpack.query.models import CitedValue
+
+        cv = CitedValue(
+            value=1,
+            unit="USD",
+            metric="m",
+            concept="c",
+            period_end=date(2025, 12, 31),
+            fiscal_year=2025,
+            fiscal_period="",
+            form_type="10-K",
+            filed=date(2026, 2, 5),
+            accession="a",
+            cik="c",
+            company="co",
+        )
+        self.assertEqual(cv.fiscal_label, "FY2025")
+
+
 if __name__ == "__main__":
     unittest.main()
