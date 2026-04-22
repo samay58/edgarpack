@@ -123,9 +123,7 @@ class GetFilingByAccessionTest(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value=_fake_older_page()),
             ) as older,
         ):
-            meta = await get_filing_by_accession(
-                "0001326801", "0001326801-25-000017"
-            )
+            meta = await get_filing_by_accession("0001326801", "0001326801-25-000017")
         self.assertEqual(meta.form_type, "10-K")
         self.assertEqual(meta.filing_date, date(2025, 1, 30))
         # Older page should not have been fetched; recent was enough.
@@ -142,9 +140,7 @@ class GetFilingByAccessionTest(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value=_fake_older_page()),
             ),
         ):
-            meta = await get_filing_by_accession(
-                "0001326801", "0001326801-23-000013"
-            )
+            meta = await get_filing_by_accession("0001326801", "0001326801-23-000013")
         self.assertEqual(meta.form_type, "10-K")
         self.assertEqual(meta.filing_date, date(2023, 2, 2))
         self.assertEqual(meta.period_of_report, date(2022, 12, 31))
@@ -161,9 +157,7 @@ class GetFilingByAccessionTest(unittest.IsolatedAsyncioTestCase):
             ),
         ):
             with self.assertRaises(ValueError):
-                await get_filing_by_accession(
-                    "0001326801", "0000000000-00-000000"
-                )
+                await get_filing_by_accession("0001326801", "0000000000-00-000000")
 
 
 class ListFilingsTest(unittest.IsolatedAsyncioTestCase):
