@@ -557,18 +557,16 @@ def lookup_company_kpi(
     period: str,
     registry_path: Path | None = None,
     pack_registry: PackRegistry | None = None,
-) -> CompanyKpiRow | None:
-    """Resolve a single (cik, slug, period) to a persisted CompanyKpiRow.
+) -> CompanyKpiRow | list[CompanyKpiRow] | None:
+    """Resolve (cik, slug, period) to one or more persisted CompanyKpiRows.
 
-    Used by the extended `financials()` resolution order so
-    `edgarpack query FIG paid_seats --period lfy` works without a second
-    LLM pass: the row must already be in the company_kpis cache.
+    Understands: lfy, lfy-N, mrq, mrq-N, mrp, ltm, ltm-N, annual:N,
+    quarterly:N. Scalars return a single row (or None). Series
+    (annual:N, quarterly:N) return a list ordered newest-first.
 
-    Period mapping:
-      lfy   -> most recent row from a 10-K filing
-      mrq   -> most recent row from a 10-Q filing
-      mrp / ltm -> most recent row from any form
-    Unknown period -> most recent row from any form (best-effort fallback).
+    LTM degrades to LFY (and ltm-N to lfy-N). Callers should emit the
+    ltm_degraded diagnostic so users see why LTM wasn't computed.
+    Unknown selectors fall back to the newest row of any form.
     """
     own_registry = False
     if pack_registry is None:
@@ -580,19 +578,71 @@ def lookup_company_kpi(
         if not rows:
             return None
 
+        def _is_annual(r: CompanyKpiRow) -> bool:
+            ft = (r.form_type or "").upper()
+            return ft.startswith("10-K") or ft in {"20-F", "40-F"}
+
+        def _is_quarterly(r: CompanyKpiRow) -> bool:
+            return (r.form_type or "").upper().startswith("10-Q")
+
+        def _sort_key(r: CompanyKpiRow) -> tuple:
+            return (r.fiscal_year or 0, r.period_end or "", r.extracted_at)
+
         p = period.strip().lower()
+
+        # LTM degrades to LFY before we branch on anything else.
+        if p == "ltm":
+            p = "lfy"
+        elif p.startswith("ltm-"):
+            p = "lfy-" + p.split("-", 1)[1]
+
         if p == "lfy":
-            filtered = [r for r in rows if (r.form_type or "").upper().startswith("10-K")]
-        elif p == "mrq":
-            filtered = [r for r in rows if (r.form_type or "").upper().startswith("10-Q")]
-        else:
-            filtered = list(rows)
+            annual = sorted((r for r in rows if _is_annual(r)), key=_sort_key, reverse=True)
+            return annual[0] if annual else None
 
-        if not filtered:
-            filtered = list(rows)
+        if p.startswith("lfy-"):
+            try:
+                n = int(p.split("-", 1)[1])
+            except ValueError:
+                return None
+            annual = sorted((r for r in rows if _is_annual(r)), key=_sort_key, reverse=True)
+            return annual[n] if 0 <= n < len(annual) else None
 
-        filtered.sort(key=lambda r: (r.period_end or "", r.extracted_at), reverse=True)
-        return filtered[0]
+        if p == "mrq":
+            q = sorted((r for r in rows if _is_quarterly(r)), key=_sort_key, reverse=True)
+            return q[0] if q else None
+
+        if p.startswith("mrq-"):
+            try:
+                n = int(p.split("-", 1)[1])
+            except ValueError:
+                return None
+            q = sorted((r for r in rows if _is_quarterly(r)), key=_sort_key, reverse=True)
+            return q[n] if 0 <= n < len(q) else None
+
+        if p == "mrp":
+            all_rows = sorted(rows, key=_sort_key, reverse=True)
+            return all_rows[0] if all_rows else None
+
+        if p.startswith("annual:"):
+            try:
+                n = int(p.split(":", 1)[1])
+            except ValueError:
+                return None
+            annual = sorted((r for r in rows if _is_annual(r)), key=_sort_key, reverse=True)
+            return annual[:n] if annual else None
+
+        if p.startswith("quarterly:"):
+            try:
+                n = int(p.split(":", 1)[1])
+            except ValueError:
+                return None
+            q = sorted((r for r in rows if _is_quarterly(r)), key=_sort_key, reverse=True)
+            return q[:n] if q else None
+
+        # Unknown selector: preserve prior most-recent-fallback behavior.
+        all_rows = sorted(rows, key=_sort_key, reverse=True)
+        return all_rows[0] if all_rows else None
     finally:
         learned_reg.close()
         if own_registry:
