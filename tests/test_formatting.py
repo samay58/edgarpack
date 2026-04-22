@@ -73,3 +73,78 @@ class TestSymbolTable:
         assert _CURRENCY_SYMBOLS["EUR"] == "€"
         assert _CURRENCY_SYMBOLS["GBP"] == "£"
         assert _CURRENCY_SYMBOLS["JPY"] == "¥"
+
+    def test_hkd_multichar_prefix(self) -> None:
+        # "HK$" is the only multi-char prefix in _CURRENCY_SYMBOLS. Trailing
+        # .0 is stripped for K/M suffixes per _render_number's rule.
+        assert format_number(1_000, "HKD") == "HK$1K"
+
+
+class TestHelpers:
+    def test_scale_value_zero_short_circuit(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        assert _scale_value(0.0) == (0.0, "", 0)
+
+    def test_scale_value_small_value_bump(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        assert _scale_value(99.99) == (99.99, "", 2)
+
+    def test_scale_value_hundreds_no_scale(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        assert _scale_value(100.0) == (100.0, "", 0)
+
+    def test_scale_value_k_threshold(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        scaled, suffix, decimals = _scale_value(1_000.0)
+        assert (scaled, suffix, decimals) == (1.0, "K", 1)
+
+    def test_scale_value_m_threshold(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        scaled, suffix, decimals = _scale_value(1_000_000.0)
+        assert (scaled, suffix, decimals) == (1.0, "M", 1)
+
+    def test_scale_value_b_threshold(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        scaled, suffix, decimals = _scale_value(1_000_000_000.0)
+        assert (scaled, suffix, decimals) == (1.0, "B", 1)
+
+    def test_scale_value_trillion_still_in_b_bucket(self) -> None:
+        from edgarpack.query.formatting import _scale_value
+
+        scaled, suffix, decimals = _scale_value(1_000_000_000_000.0)
+        assert (scaled, suffix, decimals) == (1_000.0, "B", 1)
+
+
+class TestFallback:
+    def test_empty_unit_renders_as_plain_number(self) -> None:
+        assert format_number(12.5, "") == "12.50"
+
+    def test_empty_unit_zero(self) -> None:
+        assert format_number(0, "") == "0.00"
+
+    def test_bps_four_letter_hits_fallback(self) -> None:
+        """Non-3-letter-alpha units are treated as unknown (not currency)."""
+        # "bps" IS 3-letter alpha, so it currently hits the currency branch.
+        # Use a non-3-letter token to exercise the fallback:
+        assert format_number(12.5, "ratio") == "12.50"
+
+    def test_bps_three_letter_alpha_currently_treated_as_currency(self) -> None:
+        """Documents the current 3-letter-alpha heuristic: 'bps' is rendered
+        as if it were a currency code. This is a known false positive of
+        the 3-letter alpha fallback. If you need 'bps' to render differently,
+        add it to _COUNT_UNITS or extend the unit branching."""
+        assert format_number(1234, "bps") == "bps 1.2K"
+
+
+class TestEdgeCases:
+    def test_nan_returns_na(self) -> None:
+        assert format_number(float("nan"), "USD") == "N/A"
+
+    def test_inf_returns_na(self) -> None:
+        assert format_number(float("inf"), "USD") == "N/A"

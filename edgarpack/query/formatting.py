@@ -7,6 +7,8 @@ users.
 
 from __future__ import annotations
 
+import math
+
 _CURRENCY_SYMBOLS: dict[str, str] = {
     "USD": "$",
     "EUR": "€",
@@ -60,7 +62,7 @@ def format_number(value: float | None, unit: str) -> str:
     """Canonical formatter for numeric values with unit-aware scale and precision.
 
     Rules:
-      - None -> "N/A".
+      - None or non-finite (NaN, +/-inf) -> "N/A".
       - unit == "pure" -> percent with 1 decimal; negatives in parens.
       - unit == "USD/shares" -> "$X.XX" with 2 decimals; negatives in parens.
       - unit in {"count", "shares", "headcount"} -> scale with 1 decimal
@@ -68,9 +70,22 @@ def format_number(value: float | None, unit: str) -> str:
       - unit in _CURRENCY_SYMBOLS or any 3-letter alpha code -> scale with
         1 decimal (small-value bump to 2 decimals when abs<100), negatives
         in parens. Symbol prefixed (or code + space for unknown codes).
-      - unknown unit -> plain comma thousands with 2 decimals.
+      - unit is a 3-letter alpha code not in _CURRENCY_SYMBOLS -> treated as
+        an ISO-4217 currency code ("CHF 1.2B"). This is a heuristic and will
+        false-positive on non-currency 3-letter tokens like "bps" or "foo".
+        Callers that need a different rendering for such tokens should route
+        through an explicit unit branch.
+      - unknown unit (empty string, non-alpha token, or 4+ chars) -> plain
+        comma thousands with 2 decimals. Negatives keep the minus sign; no
+        parens in this fallback path (no unit to anchor the finance style).
+
+    Unit matching is case-sensitive; callers must pass uppercase ISO codes
+    (e.g., "USD" not "usd"). Internal callers receive unit from
+    ``CitedValue.unit``, which upstream already normalizes to uppercase.
     """
     if value is None:
+        return "N/A"
+    if not math.isfinite(value):
         return "N/A"
 
     if unit == "pure":
