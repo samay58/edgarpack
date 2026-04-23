@@ -47,6 +47,7 @@ async def _build_one(
     semaphore: asyncio.Semaphore,
     with_chunks: bool = False,
     force: bool = False,
+    describe_images: bool = False,
 ) -> PackResult | None:
     """Build a single filing pack and register it."""
     async with semaphore:
@@ -65,6 +66,7 @@ async def _build_one(
                 out_dir=out_dir,
                 with_chunks=with_chunks,
                 force=force,
+                describe_images=describe_images,
             )
 
             # Compute manifest hash for registry
@@ -108,6 +110,7 @@ async def run_harvest(
     concurrency: int = 3,
     with_chunks: bool = False,
     force: bool = False,
+    describe_images: bool = False,
 ) -> dict:
     """Execute a harvest plan with bounded concurrency.
 
@@ -118,6 +121,7 @@ async def run_harvest(
         concurrency: Maximum concurrent SEC requests
         with_chunks: Generate chunks.ndjson for each pack
         force: Rebuild even if already exists
+        describe_images: Generate VLM descriptions for images in registration filings
 
     Returns:
         Summary dict with counts
@@ -131,7 +135,9 @@ async def run_harvest(
     semaphore = asyncio.Semaphore(concurrency)
 
     tasks = [
-        _build_one(item, out_dir, registry, progress, semaphore, with_chunks, force)
+        _build_one(
+            item, out_dir, registry, progress, semaphore, with_chunks, force, describe_images
+        )
         for item in items
     ]
 

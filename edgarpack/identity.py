@@ -77,6 +77,10 @@ def load_identity(path: Path) -> IdentityIndex:
     by_alias: dict[str, ResolvedCompany] = {}
 
     for spec in universe.companies:
+        # Pre-IPO filers (name-only, no ticker) cannot be indexed by ticker.
+        # They are still harvestable via the planner's resolve_filer path.
+        if not spec.ticker:
+            continue
         primary = _resolved_for(spec, spec.ticker)
         by_ticker[spec.ticker.upper()] = primary
         for alt in spec.alt_tickers:

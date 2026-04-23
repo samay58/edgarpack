@@ -20,8 +20,14 @@ from ..parse.sectionize import sectionize
 from ..parse.semantic_html import reduce_to_semantic
 from ..parse.tokenize import count_tokens, has_tiktoken
 from ..sec.archives import fetch_filing_html
-from ..sec.submissions import get_filing_by_accession, get_latest_filing, list_filings
+from ..sec.submissions import (
+    get_filing_by_accession,
+    get_latest_filing,
+    is_registration_form,
+    list_filings,
+)
 from ..sec.xbrl import fetch_xbrl_facts
+from .assets import describe_asset, download_assets
 from .chunks import generate_chunks, write_chunks_ndjson
 from .llms_txt import generate_llms_txt, write_llms_txt
 from .manifest import compute_sha256, create_manifest, write_manifest
@@ -48,13 +54,57 @@ def _decode_html_blob(content: bytes) -> str:
         return content.decode("latin-1")
 
 
-def _process_html_files(html_files: list[tuple[str, bytes]], base_url: str) -> str:
-    """Run the parse pipeline and return a single markdown string."""
+async def _process_html_files_for_form(
+    html_files: list[tuple[str, bytes]],
+    base_url: str,
+    form_type: str,
+    out_dir: Path,
+    describe_images: bool = False,
+) -> str:
+    """Run the parse pipeline; for registration-class forms, preserve and
+    download images and rewrite <img src> to local paths.
+
+    For periodic forms the behavior is the standard strip-and-render pipeline.
+    """
+    from ..parse.s1_headings import inject_s1_headings
+
     combined_html = "\n".join(_decode_html_blob(content) for _, content in html_files)
     html_stripped = strip_ixbrl(combined_html)
-    html_cleaned = clean_html(html_stripped)
+
+    preserve = is_registration_form(form_type)
+    # Inject TOC-driven <h2> tags before clean_html strips id= attributes.
+    # S-1 bodies have no large-font headings; section boundaries live in the
+    # TOC's href="#anchor" links and matching body id="anchor" markers.
+    if preserve:
+        html_stripped = inject_s1_headings(html_stripped)
+    html_cleaned = (
+        clean_html(html_stripped, preserve_images=preserve)
+        if preserve
+        else clean_html(html_stripped)
+    )
     html_semantic = reduce_to_semantic(html_cleaned, base_url=base_url)
-    md = render_markdown(html_semantic)
+
+    asset_map: dict[str, str] = {}
+    if preserve:
+        asset_map = await download_assets(base_url, html_cleaned, Path(out_dir))
+        if describe_images and asset_map:
+            cache_path = Path(out_dir) / "assets" / ".descriptions.json"
+            for src, local_rel in asset_map.items():
+                image_path = Path(out_dir) / local_rel
+                try:
+                    desc = await describe_asset(image_path, cache_path=cache_path)
+                except Exception:
+                    desc = ""
+                if desc:
+                    (image_path.parent / f"{image_path.stem}.desc.txt").write_text(
+                        desc, encoding="utf-8"
+                    )
+
+    md = (
+        render_markdown(html_semantic, asset_map=asset_map)
+        if asset_map
+        else render_markdown(html_semantic)
+    )
     return polish(md)
 
 
@@ -66,6 +116,7 @@ async def build_pack(
     with_chunks: bool = False,
     with_xbrl: bool = False,
     force: bool = False,
+    describe_images: bool = False,
 ) -> PackResult:
     """Build a complete filing pack.
 
@@ -77,6 +128,7 @@ async def build_pack(
         with_chunks: Generate chunks.ndjson
         with_xbrl: Generate xbrl.json
         force: Bypass cache
+        describe_images: Generate VLM descriptions for images in registration filings
 
     Returns:
         PackResult with build info
@@ -140,7 +192,18 @@ async def build_pack(
 
     # Step 4: Process HTML to markdown
     base_url = f"{SEC_ARCHIVES_BASE}/{meta.cik}/{meta.accession_nodash}/"
-    markdown = _process_html_files(html_files, base_url=base_url)
+    # Prefer the resolved meta.form_type over the caller-supplied form_type:
+    # harvest-driven builds pass form_type=None because the accession already
+    # identifies the filing, and the registration-class pipeline gate
+    # (`is_registration_form`) needs the real form string.
+    effective_form_type = form_type or meta.form_type or ""
+    markdown = await _process_html_files_for_form(
+        html_files=html_files,
+        base_url=base_url,
+        form_type=effective_form_type,
+        out_dir=pack_dir,
+        describe_images=describe_images,
+    )
 
     # Step 4b: Prepend filing title
     filed = meta.filing_date.isoformat()
@@ -756,6 +819,7 @@ async def build_pack_range(
     with_xbrl: bool,
     force: bool,
     concurrency: int = 3,
+    describe_images: bool = False,
 ) -> list[PackResult]:
     fetch_limit = max(last or 50, 50)
     candidates = await list_filings(cik, form_type=form_type, limit=fetch_limit)
@@ -787,6 +851,7 @@ async def build_pack_range(
                 with_chunks=with_chunks,
                 with_xbrl=with_xbrl,
                 force=force,
+                describe_images=describe_images,
             )
 
     tasks = [_one(m.accession) for m in filtered]

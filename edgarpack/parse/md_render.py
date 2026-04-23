@@ -3,12 +3,53 @@
 import re
 from html import unescape
 
+_IMG_TAG_RE = re.compile(r"<img\b[^>]*?/?>", re.IGNORECASE)
+# Quote-tolerant attribute extractors: SEC HTML uses double, single, or
+# occasionally unquoted attributes. Each pattern returns the value via
+# whichever alternation branch matches.
+_SRC_RE = re.compile(
+    r"""src\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>"']+))""",
+    re.IGNORECASE,
+)
+_ALT_RE = re.compile(
+    r"""alt\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']*))""",
+    re.IGNORECASE,
+)
 
-def render_markdown(html: str) -> str:
+
+def _first_group(m: re.Match[str] | None) -> str:
+    """Return the first non-empty capture group, or '' when no match."""
+    if not m:
+        return ""
+    return next((g for g in m.groups() if g), "")
+
+
+def _rewrite_images(text: str, asset_map: dict[str, str]) -> str:
+    def _sub(m: re.Match[str]) -> str:
+        tag = m.group(0)
+        src = _first_group(_SRC_RE.search(tag))
+        if not src:
+            return ""
+        alt = _first_group(_ALT_RE.search(tag)).strip()
+        local = asset_map.get(src) or asset_map.get(src.split("/")[-1])
+        if not local:
+            return ""
+        caption = f"\n\n*{alt}*\n" if alt else ""
+        return f"![{alt}]({local}){caption}"
+
+    return _IMG_TAG_RE.sub(_sub, text)
+
+
+def render_markdown(html: str, *, asset_map: dict[str, str] | None = None) -> str:
     """Convert semantic HTML to CommonMark markdown.
 
     Args:
         html: Semantic HTML (should be pre-processed by semantic_html.py)
+        asset_map: Optional mapping of original <img src> values to local
+            relative paths (e.g. {"fig-1.png": "assets/fig-1.png"}). When
+            provided, matching <img> tags are rewritten to ![alt](local)
+            syntax with an italic caption line. When omitted, surviving
+            <img> tags are dropped by the catch-all HTML strip.
 
     Returns:
         CommonMark-compliant markdown string
@@ -129,6 +170,10 @@ def render_markdown(html: str) -> str:
         result,
         flags=re.IGNORECASE,
     )
+
+    # Rewrite <img> tags to markdown before stripping remaining HTML.
+    if asset_map:
+        result = _rewrite_images(result, asset_map)
 
     # Strip remaining tags (divs, spans, etc.)
     result = re.sub(r"<[^>]+>", "", result)

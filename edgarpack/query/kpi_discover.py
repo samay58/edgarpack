@@ -19,12 +19,14 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
 
 from ..harvest.registry import PackRecord, PackRegistry
+from ..sec.submissions import is_registration_form
 from .kpi_extract import (
     KPI_CATALOG,
     DiscoveredKpi,
@@ -35,6 +37,19 @@ from .kpi_extract import (
 from .learned_registry import CompanyKpiRow, LearnedRegistry
 
 logger = logging.getLogger(__name__)
+
+
+def _filter_eligible_packs(packs):
+    out = []
+    for p in packs:
+        ft = (getattr(p, "form_type", "") or "").upper()
+        if ft.startswith(("10-K", "10-Q", "20-F")) or is_registration_form(ft):
+            out.append(p)
+    return out
+
+
+# Public alias for tests.
+_filter_eligible_packs_for_test = _filter_eligible_packs
 
 
 @dataclass
@@ -407,9 +422,7 @@ def discover_kpis(
             return []
 
         packs_by_accn: dict[str, PackRecord] = {p.accession: p for p in packs}
-        eligible_packs = [
-            p for p in packs if (p.form_type or "").upper().startswith(("10-K", "10-Q", "20-F"))
-        ]
+        eligible_packs = _filter_eligible_packs(packs)
         if diagnostics is not None:
             diagnostics.eligible_packs = len(eligible_packs)
 
@@ -645,11 +658,232 @@ def lookup_company_kpi(
         learned_reg.close()
 
 
+# ---------------------------------------------------------------------------
+# Framing-metric extraction (TAM / market size / CAGR)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class FramingHit:
+    """A market-framing claim (TAM, CAGR, market opportunity) extracted from prose."""
+
+    claim: str
+    pattern: str
+    offset: int
+    metric_kind: str = "framing"
+
+
+_FRAMING_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    (
+        "tam_dollar",
+        re.compile(
+            r"(?:total\s+addressable\s+market|TAM)[^.\n]{0,40}?\$[0-9][0-9.,]*\s*(?:billion|million|trillion|B|M|T)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "addressable_market_dollar",
+        re.compile(
+            r"(?:addressable\s+market)[^.\n]{0,40}?\$[0-9][0-9.,]*\s*(?:billion|million|trillion|B|M|T)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "cagr",
+        re.compile(
+            r"(?:growing|growth|expand(?:ing|s)?)[^.\n]{0,40}?\d{1,3}(?:\.\d+)?\s*%\s*(?:CAGR|compound\s+annual\s+growth)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "cagr_simple",
+        re.compile(
+            r"\b\d{1,3}(?:\.\d+)?\s*%\s*CAGR\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "dollar_opportunity",
+        re.compile(
+            r"\$[0-9][0-9.,]*\s*(?:billion|trillion|B|T)\s+(?:market\s+)?opportunity",
+            re.IGNORECASE,
+        ),
+    ),
+]
+
+
+def extract_framing_claims(text: str) -> list[FramingHit]:
+    """Scan prose for TAM / market-size / CAGR / opportunity claims."""
+    if not text:
+        return []
+    return [
+        FramingHit(claim=m.group(0).strip(), pattern=name, offset=m.start())
+        for name, pattern in _FRAMING_PATTERNS
+        for m in pattern.finditer(text)
+    ]
+
+
+@dataclass(frozen=True)
+class DisclosureHit:
+    """An S-1-only disclosure: use of proceeds, dilution, lockup, or principal holder."""
+
+    claim: str
+    disclosure_type: str
+    offset: int
+    metric_kind: str = "s1_disclosure"
+
+
+_USE_OF_PROCEEDS_ITEM = re.compile(
+    r"(?:approximately\s+)?\$[0-9][0-9.,]*\s*(?:billion|million|B|M)\s+for\s+[^.,;]{3,80}",
+    re.IGNORECASE,
+)
+
+_DILUTION_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(
+        r"immediate\s+dilution\s+of\s+\$[0-9][0-9.,]*(?:\s*per\s+share)?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"pro\s+forma\s+net\s+tangible\s+book\s+value\s+of\s+\$[0-9][0-9.,]*(?:\s*per\s+share)?",
+        re.IGNORECASE,
+    ),
+]
+
+_LOCKUP_PATTERN = re.compile(
+    r"lock\s*[-\s]?up\s+(?:period|agreement)[^.\n]{0,60}?\b(\d{2,4})\s*days\b",
+    re.IGNORECASE,
+)
+
+_PRINCIPAL_HOLDER_ROW = re.compile(
+    r"^(?P<name>[A-Z][\w &.,'\-]{2,80}?)\s{2,}"
+    r"(?P<shares>[0-9][0-9,]*)\s{2,}"
+    r"(?P<pct>\d{1,3}(?:\.\d+)?)\s*%",
+    re.MULTILINE,
+)
+
+
+def _find_disclosures(
+    text: str,
+    patterns: list[re.Pattern[str]],
+    disclosure_type: str,
+) -> list[DisclosureHit]:
+    if not text:
+        return []
+    return [
+        DisclosureHit(
+            claim=m.group(0).strip(),
+            disclosure_type=disclosure_type,
+            offset=m.start(),
+        )
+        for pattern in patterns
+        for m in pattern.finditer(text)
+    ]
+
+
+def extract_use_of_proceeds(text: str) -> list[DisclosureHit]:
+    return _find_disclosures(text, [_USE_OF_PROCEEDS_ITEM], "use_of_proceeds")
+
+
+def extract_dilution(text: str) -> list[DisclosureHit]:
+    return _find_disclosures(text, _DILUTION_PATTERNS, "dilution")
+
+
+def extract_lockup(text: str) -> list[DisclosureHit]:
+    return _find_disclosures(text, [_LOCKUP_PATTERN], "lockup")
+
+
+def extract_principal_holders(text: str) -> list[DisclosureHit]:
+    # Whitespace-permissive on purpose: SEC HTML-to-markdown leaves column
+    # tables as space-aligned plaintext rather than pipe-delimited markdown.
+    if not text:
+        return []
+    return [
+        DisclosureHit(
+            claim=f"{m.group('name').strip()} | {m.group('shares')} shares | {m.group('pct')}%",
+            disclosure_type="principal_holder",
+            offset=m.start(),
+        )
+        for m in _PRINCIPAL_HOLDER_ROW.finditer(text)
+    ]
+
+
+@dataclass(frozen=True)
+class S1MetricsBundle:
+    """All S-1-specific extractor output for one registration-class pack.
+
+    Wraps the five text extractors (framing + four disclosure kinds) behind a
+    single entry point so callers don't have to re-read pack markdown per kind.
+    """
+
+    accession: str
+    form_type: str
+    framing: list[FramingHit]
+    use_of_proceeds: list[DisclosureHit]
+    dilution: list[DisclosureHit]
+    lockup: list[DisclosureHit]
+    principal_holders: list[DisclosureHit]
+
+    @property
+    def total_hits(self) -> int:
+        return (
+            len(self.framing)
+            + len(self.use_of_proceeds)
+            + len(self.dilution)
+            + len(self.lockup)
+            + len(self.principal_holders)
+        )
+
+
+def extract_s1_metrics_from_pack(pack_dir: Path) -> S1MetricsBundle | None:
+    """Run all five S-1 extractors over a pack's full markdown.
+
+    Returns None when the pack is not registration-class (so callers can
+    drop it from an aggregation pass) or when `filing.full.md` is missing.
+    """
+    pack_dir = Path(pack_dir)
+    manifest_path = pack_dir / "manifest.json"
+    markdown_path = pack_dir / "filing.full.md"
+    if not manifest_path.exists() or not markdown_path.exists():
+        return None
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    filing = manifest.get("filing") or {}
+    form_type = str(filing.get("form_type", ""))
+    from ..sec.submissions import is_registration_form
+
+    if not is_registration_form(form_type):
+        return None
+
+    text = markdown_path.read_text(encoding="utf-8", errors="replace")
+    return S1MetricsBundle(
+        accession=str(filing.get("accession", "")),
+        form_type=form_type,
+        framing=extract_framing_claims(text),
+        use_of_proceeds=extract_use_of_proceeds(text),
+        dilution=extract_dilution(text),
+        lockup=extract_lockup(text),
+        principal_holders=extract_principal_holders(text),
+    )
+
+
 __all__ = [
     "CompanyKpiAggregate",
+    "DisclosureHit",
     "DiscoveryDiagnostics",
     "DiscoveryProgressEvent",
+    "FramingHit",
     "PeriodPoint",
+    "S1MetricsBundle",
     "discover_kpis",
+    "extract_dilution",
+    "extract_framing_claims",
+    "extract_lockup",
+    "extract_principal_holders",
+    "extract_s1_metrics_from_pack",
+    "extract_use_of_proceeds",
     "lookup_company_kpi",
 ]

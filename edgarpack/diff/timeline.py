@@ -7,6 +7,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ..pack.manifest import load_manifest_dict
+from ..sec.submissions import is_registration_form, normalize_cik
 from .models import ChangeType, SectionDelta
 from .section_diff import _classify_section, _compute_section_intensity, compute_interest_score
 from .text_diff import diff_paragraphs
@@ -118,4 +119,55 @@ def build_timeline(
         )
         prev_text = current_text
 
+    return entries
+
+
+class RegistrationTimelineEntry(BaseModel):
+    """One filing in a pre-IPO S-1 redline chain."""
+
+    accession: str
+    form_type: str
+    filing_date: str
+    pack_dir: Path
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
+def build_registration_timeline(
+    pack_root: Path,
+    cik: str,
+) -> list[RegistrationTimelineEntry]:
+    """Return registration-class filings for a CIK, oldest first.
+
+    Walks `pack_root` for manifest.json files and includes only those whose
+    form is registration-class AND whose filing.cik matches `cik` exactly.
+    Manifests with a missing or empty CIK are skipped (not silently accepted)
+    to prevent cross-CIK leakage from malformed packs. Sorted ascending by
+    filing_date so callers can diff consecutive pairs.
+    """
+    target = normalize_cik(cik)
+    entries: list[RegistrationTimelineEntry] = []
+    for manifest_path in Path(pack_root).rglob("manifest.json"):
+        try:
+            data = load_manifest_dict(manifest_path.parent, on_missing="empty")
+        except Exception:
+            continue
+        if not data:
+            continue
+        filing = data.get("filing", {})
+        form = str(filing.get("form_type", ""))
+        if not is_registration_form(form):
+            continue
+        filing_cik = str(filing.get("cik", "")).strip()
+        if not filing_cik or normalize_cik(filing_cik) != target:
+            continue
+        entries.append(
+            RegistrationTimelineEntry(
+                accession=str(filing.get("accession", "")),
+                form_type=form,
+                filing_date=str(filing.get("filing_date", "")),
+                pack_dir=manifest_path.parent,
+            )
+        )
+    entries.sort(key=lambda e: (e.filing_date, e.accession))
     return entries

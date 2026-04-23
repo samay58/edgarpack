@@ -17,6 +17,7 @@ import re
 from datetime import date
 from typing import Any
 
+from ..sec.submissions import is_registration_form
 from .concepts import MetricMeta
 from .models import CitedValue, DerivedValue, Diagnostic
 
@@ -266,6 +267,8 @@ def _value_to_cited(
 def _is_annual(v: dict[str, Any]) -> bool:
     """Check if a value is from an annual filing."""
     form = str(v.get("form", "")).upper()
+    if is_registration_form(form):
+        return False
     return str(v.get("fp", "")).upper() == "FY" or form in ("10-K", "10-K/A", "20-F", "20-F/A")
 
 
@@ -277,6 +280,8 @@ def _is_quarterly(v: dict[str, Any]) -> bool:
 
 def _is_quarter_form_type(form: str) -> bool:
     """Check if a form type can carry quarterly values."""
+    if is_registration_form(form):
+        return False
     form_upper = form.strip().upper()
     return form_upper.startswith("10-Q") or form_upper in ("10-K", "10-K/A", "20-F", "20-F/A")
 
@@ -1279,7 +1284,10 @@ def select_period(
         raise ValueError(f"Unknown period selector: {period}")
 
 
-_SCALAR_PERIOD_RE = re.compile(r"^(lfy|ltm|mrq|mrp)(?:-(\d+))?$")
+# `pro-forma` is a snapshot-only pseudo-selector (S-1 pro-forma rows).
+# It does not accept -N offsets because the S-1 gives one pro-forma view,
+# not a time-series.
+_SCALAR_PERIOD_RE = re.compile(r"^(lfy|ltm|mrq|mrp|pro-forma)(?:-(\d+))?$")
 _SERIES_PERIOD_RE = re.compile(r"^(annual|quarterly):\d+$")
 
 
@@ -1327,6 +1335,11 @@ def parse_period_spec(spec: str) -> list[str]:
                 f"unknown period selector: {tok!r} "
                 "(mrp does not support -N offsets; use plain 'mrp')"
             )
+        if head == "pro-forma" and num is not None and int(num) > 0:
+            raise ValueError(
+                f"unknown period selector: {tok!r} "
+                "(pro-forma does not support -N offsets; use plain 'pro-forma')"
+            )
         if num is None or int(num) == 0:
             canonical = head
         else:
@@ -1336,3 +1349,12 @@ def parse_period_spec(spec: str) -> list[str]:
         seen.add(canonical)
         result.append(canonical)
     return result
+
+
+def is_snapshot_pseudo_period(period: str) -> bool:
+    """Return True for selectors that only exist for S-1 snapshot data.
+
+    Snapshot pseudo-periods bypass the regular companyfacts lookup path
+    and are routed through edgarpack.query.s1_financials.
+    """
+    return period == "pro-forma"

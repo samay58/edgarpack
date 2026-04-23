@@ -50,6 +50,27 @@ class FilingMeta(BaseModel):
         return self.accession.replace("-", "")
 
 
+REGISTRATION_FORMS: tuple[str, ...] = (
+    "S-1",
+    "S-1/A",
+    "F-1",
+    "F-1/A",
+    "424B1",
+    "424B2",
+    "424B3",
+    "424B4",
+    "424B5",
+    "FWP",
+)
+
+REGISTRATION_SENTINEL: str = "__REGISTRATION__"
+"""Form-counts dict key signaling the full registration-class family budget.
+
+Shared by UniverseConfig.form_counts (producer) and the harvest planner
+(consumer, which expands the sentinel via _list_registration_filings).
+"""
+
+
 def normalize_form_type(form_type: str) -> str:
     """Normalize form type for matching SEC submissions."""
     if not form_type:
@@ -64,9 +85,30 @@ def normalize_form_type(form_type: str) -> str:
         base = "10-Q"
     elif form in {"8K", "8-K"}:
         base = "8-K"
+    elif form in {"S1", "S-1"}:
+        base = "S-1"
+    elif form in {"F1", "F-1"}:
+        base = "F-1"
+    elif form == "FWP":
+        base = "FWP"
+    elif form.startswith("424B") and len(form) == 5 and form[-1].isdigit():
+        base = form
     else:
         base = form
     return f"{base}/A" if amended else base
+
+
+def is_registration_form(form_type: str) -> bool:
+    """Return True when the form belongs to the S-1 / pre-IPO family.
+
+    The family covers S-1, S-1/A, F-1, F-1/A, 424B1-5, and FWP. Used as a
+    single guard across kpi_discover, periods, and diff/timeline so that
+    registration-class filings do not get pulled into 10-K/10-Q logic.
+    """
+    if not form_type:
+        return False
+    normalized = normalize_form_type(form_type)
+    return normalized in REGISTRATION_FORMS
 
 
 def normalize_cik(cik: str) -> str:

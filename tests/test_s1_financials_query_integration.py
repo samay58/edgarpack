@@ -1,0 +1,224 @@
+"""End-to-end integration: edgarpack query on an S-1 filer returns snapshot
+values labeled as s1_snapshot. 10-K rows win for overlapping periods."""
+
+from __future__ import annotations
+
+import importlib
+import json
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+from edgarpack.query.financials import financials
+from edgarpack.query.models import QueryResult
+
+# Ensure the real module object is cached before any test runs
+importlib.import_module("edgarpack.query.financials")
+
+
+def _seed_s1_pack(
+    packs_root: Path,
+    cik: str = "0002021728",
+    accession: str = "0001628280-24-041596",
+    *,
+    revenue_cents: int = 7828700000,
+    is_pro_forma: bool = False,
+    extra_metric: str | None = None,
+    extra_cents: int = 0,
+) -> None:
+    pack = packs_root / cik / accession
+    pack.mkdir(parents=True, exist_ok=True)
+    (pack / "manifest.json").write_text(
+        json.dumps(
+            {
+                "filing": {
+                    "accession": accession,
+                    "form_type": "S-1",
+                    "filing_date": "2024-09-30",
+                    "cik": cik,
+                    "company_name": "Cerebras Systems Inc",
+                }
+            }
+        )
+    )
+    (pack / "filing.full.md").write_text(
+        "# Selected Financial Data\n\nRevenue 78,287\n", encoding="utf-8"
+    )
+    facts = [
+        {
+            "accession": accession,
+            "fiscal_year": 2024,
+            "period_end": "2024-12-31",
+            "metric": "revenue",
+            "value_cents": revenue_cents,
+            "currency": "USD",
+            "is_audited": not is_pro_forma,
+            "is_pro_forma": is_pro_forma,
+            "pro_forma_note": ("assumes IPO price $32.50" if is_pro_forma else None),
+        }
+    ]
+    if extra_metric:
+        facts.append(
+            {
+                "accession": accession,
+                "fiscal_year": 2024,
+                "period_end": "2024-12-31",
+                "metric": extra_metric,
+                "value_cents": extra_cents,
+                "currency": "USD",
+                "is_audited": True,
+                "is_pro_forma": False,
+                "pro_forma_note": None,
+            }
+        )
+    (pack / "s1_financials.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "accession": accession,
+                "extracted_at": "2026-04-22T00:00:00Z",
+                "extraction_status": "ok",
+                "source_sha256": "x",
+                "model": "claude-haiku-4-5-20251001",
+                "facts": facts,
+            }
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_financials_returns_s1_snapshot_when_periodic_empty(tmp_path):
+    _seed_s1_pack(tmp_path)
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {"facts": {}}
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        from edgarpack.errors import UnknownCompany
+
+        raise UnknownCompany("not in map")
+
+    async def fake_resolve_by_name(name):  # noqa: ARG001
+        return "0002021728", "Cerebras Systems Inc."
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            with patch(
+                "edgarpack.sec.tickers.resolve_company_by_name",
+                side_effect=fake_resolve_by_name,
+            ):
+                result = await financials(
+                    company="Cerebras Systems",
+                    metrics=["revenue"],
+                    period="lfy",
+                    pack_root=tmp_path,
+                )
+
+    assert isinstance(result, QueryResult)
+    row = result.metrics.get("revenue")
+    assert row is not None
+    assert row.source == "s1_snapshot"
+    assert row.form_type == "S-1"
+    assert row.accession == "0001628280-24-041596"
+    assert row.value == 78287000.0
+
+
+@pytest.mark.asyncio
+async def test_financials_prefers_10k_over_s1_for_overlapping_period(tmp_path):
+    _seed_s1_pack(tmp_path, revenue_cents=7828700000)
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {
+            "facts": {
+                "us-gaap": {
+                    "Revenues": {
+                        "units": {
+                            "USD": [
+                                {
+                                    "val": 80000000,
+                                    "form": "10-K",
+                                    "fy": 2024,
+                                    "fp": "FY",
+                                    "start": "2024-01-01",
+                                    "end": "2024-12-31",
+                                    "filed": "2025-02-01",
+                                    "accn": "0002021728-25-000001",
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        return "0002021728", "Cerebras Systems Inc."
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            result = await financials(
+                company="CRBS",
+                metrics=["revenue"],
+                period="lfy",
+                pack_root=tmp_path,
+            )
+
+    row = result.metrics.get("revenue")
+    assert row is not None
+    assert row.source != "s1_snapshot"
+    assert row.value == 80000000
+
+
+@pytest.mark.asyncio
+async def test_financials_pro_forma_period_returns_pro_forma_row_only(tmp_path):
+    _seed_s1_pack(tmp_path, extra_metric="cash_and_equivalents", extra_cents=20991200000)
+    pack = tmp_path / "0002021728" / "0001628280-24-041596"
+    cache = json.loads((pack / "s1_financials.json").read_text())
+    cache["facts"].append(
+        {
+            "accession": "0001628280-24-041596",
+            "fiscal_year": 2024,
+            "period_end": "2024-12-31",
+            "metric": "cash_and_equivalents",
+            "value_cents": 110341200000,
+            "currency": "USD",
+            "is_audited": False,
+            "is_pro_forma": True,
+            "pro_forma_note": "assumes IPO price $32.50, midpoint",
+        }
+    )
+    (pack / "s1_financials.json").write_text(json.dumps(cache))
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {"facts": {}}
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        return "0002021728", "Cerebras Systems Inc."
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            result = await financials(
+                company="CRBS",
+                metrics=["cash_and_equivalents"],
+                period="pro-forma",
+                pack_root=tmp_path,
+            )
+
+    row = result.metrics.get("cash_and_equivalents")
+    assert row is not None
+    assert row.is_pro_forma is True
+    assert row.pro_forma_note == "assumes IPO price $32.50, midpoint"
+    assert row.source == "s1_pro_forma"

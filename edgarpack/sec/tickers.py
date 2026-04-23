@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import json
 import re
+import urllib.parse
 from typing import Any
 
 from ..config import CACHE_DIR
@@ -187,3 +188,122 @@ async def resolve_ticker(company: str, force: bool = False) -> tuple[str, str]:
     """
     cik, _ticker, title = await resolve_company(company, force=force)
     return cik, title
+
+
+# ---- Name-based resolution for pre-IPO filers ------------------------------
+
+_EDGAR_SEARCH_URL = "https://efts.sec.gov/LATEST/search-index"
+# Base registration forms for SEC EDGAR search filter. Do NOT include
+# `S-1/A` / `F-1/A`: the slash breaks SEC's form-list parsing (returns
+# HTTP 500 or zero hits). SEC indexes amendments under their base form,
+# so filtering on the bases alone still surfaces all registration-family
+# filings for a given issuer.
+_NAME_SEARCH_FORMS = "S-1,F-1,424B1,424B2,424B3,424B4,424B5,FWP"
+
+
+async def _fetch_edgar_search(entity_name: str, forms: str = _NAME_SEARCH_FORMS) -> str:
+    """Fetch raw JSON text from SEC EDGAR search filtered by issuer name.
+
+    Uses `entityName=`, which matches the filer's registered entity name
+    rather than filing body text. Using the `q=` (full-text) parameter is
+    wrong here: content matches return competitors or peers who merely
+    mention the queried name.
+
+    Split out so tests can mock a deterministic payload.
+    """
+    params = {"q": "", "forms": forms, "entityName": entity_name}
+    url = f"{_EDGAR_SEARCH_URL}?{urllib.parse.urlencode(params)}"
+    client = await get_client()
+    raw_bytes, _headers = await client.fetch(url)
+    return raw_bytes.decode("utf-8", errors="replace")
+
+
+def _name_token_key(text: str) -> str:
+    """Lowercase + strip punctuation so substring matches are whitespace-tolerant."""
+    return re.sub(r"[^a-z0-9 ]+", " ", text.lower())
+
+
+async def resolve_company_by_name(name: str) -> tuple[str, str]:
+    """Resolve a company name to (cik, display_title) via SEC EDGAR search.
+
+    SEC's EDGAR full-text search matches filing CONTENT, not issuer name, so
+    a naive pass can return a peer or competitor whose S-1 happens to mention
+    the query string. To prevent that we accept a hit only when the query
+    appears as a substring of that hit's display_names entry (i.e. the
+    filing's own issuer matches). Content-only matches are discarded.
+
+    Used when the filer has no ticker in SEC's company_tickers.json (the
+    pre-IPO case). Searches registration-class forms only so that the result
+    corresponds to an actual S-1 / F-1 / 424B / FWP filer.
+
+    Raises:
+        UnknownCompany: zero issuer-name matches.
+        AmbiguousCompany: multiple distinct CIKs match the name.
+    """
+    q = (name or "").strip()
+    if not q:
+        raise UnknownCompany("Empty company name")
+
+    raw = await _fetch_edgar_search(q)
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise UnknownCompany(f"Could not parse EDGAR search response for {q!r}") from exc
+
+    query_key = _name_token_key(q)
+    hits = payload.get("hits", {}).get("hits", [])
+    seen: dict[str, str] = {}
+    for hit in hits:
+        src = hit.get("_source", {})
+        ciks = src.get("ciks", []) or []
+        names = src.get("display_names", []) or []
+        for i, cik in enumerate(ciks):
+            if not cik:
+                continue
+            display = names[i] if i < len(names) else ""
+            # Issuer-name check: reject hits where the query only appears in
+            # the filing body (e.g. WhiteFiber's S-1 mentioning Cerebras).
+            if query_key and query_key not in _name_token_key(display):
+                continue
+            padded = normalize_cik(str(cik))
+            if padded not in seen:
+                seen[padded] = display or f"CIK {padded}"
+
+    if not seen:
+        raise UnknownCompany(
+            f"Unknown company {q!r}: no SEC issuer name matches. "
+            "Try the full registered name, or supply cik/ticker directly."
+        )
+    if len(seen) > 1:
+        rendered = ", ".join(f"{title} [{cik}]" for cik, title in seen.items())
+        raise AmbiguousCompany(
+            f"Ambiguous name {q!r}. Matches: {rendered}. Supply `cik` explicitly to disambiguate."
+        )
+    only_cik, only_title = next(iter(seen.items()))
+    return only_cik, only_title
+
+
+async def resolve_filer(spec: CompanySpec) -> tuple[str, str]:  # noqa: F821
+    """Resolve a CompanySpec to (cik, title) trying cik, ticker, then name.
+
+    Import of CompanySpec is deferred to avoid a circular import between
+    edgarpack.sec.tickers and edgarpack.harvest.universe.
+    """
+    # Explicit CIK wins.
+    if spec.cik:
+        return normalize_cik(spec.cik), spec.name or spec.ticker or f"CIK {spec.cik}"
+
+    # Ticker path reuses the existing company_tickers.json map.
+    if spec.ticker:
+        try:
+            cik, title = await resolve_ticker(spec.ticker)
+            return cik, title
+        except (UnknownCompany, AmbiguousCompany):
+            if not spec.name:
+                raise
+
+    # Name path hits SEC EDGAR full-text search over registration forms.
+    if spec.name:
+        return await resolve_company_by_name(spec.name)
+
+    raise UnknownCompany(f"Could not resolve filer {spec.display_label}: no usable identifier")

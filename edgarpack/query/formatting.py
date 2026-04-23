@@ -115,4 +115,26 @@ def format_number(value: float | None, unit: str) -> str:
     return f"{value:,.2f}"
 
 
-__all__ = ["format_number", "_CURRENCY_SYMBOLS"]
+def format_citation_marker(cited) -> str:  # noqa: ANN001 (duck-typed on CitedValue)
+    """Inline citation marker for table renderings.
+
+    - S-1 snapshot rows:   [S-1, 24-041596]
+    - S-1 pro-forma rows:  [S-1 pro-forma, 26-025762] *
+    - Everything else:     empty string (periodic filings already have
+      their own citation machinery via cited.filing_url etc.).
+
+    Accession is rendered in short year-suffix form: take everything from
+    the first dash of the 10-digit CIK prefix onward.
+    """
+    source = getattr(cited, "source", "") or ""
+    accession = getattr(cited, "accession", "") or ""
+    if source not in ("s1_snapshot", "s1_pro_forma"):
+        return ""
+    parts = accession.split("-", 1)
+    short = parts[1] if len(parts) == 2 else accession
+    if source == "s1_pro_forma":
+        return f"[S-1 pro-forma, {short}] *"
+    return f"[S-1, {short}]"
+
+
+__all__ = ["format_number", "format_citation_marker", "_CURRENCY_SYMBOLS"]

@@ -1420,3 +1420,11 @@ listing = "HKEX"
 aliases = ["zhipu", "zhipu ai", "z.ai", "glm", "chatglm"]
 hk_stock_code = "02513"
 alt_tickers = ["02513.HK"]
+
+# ============================================================
+#  Pre-IPO filers (registration-class only)
+# ============================================================
+
+[[companies]]
+name = "Cerebras Systems"
+forms_s1 = 8

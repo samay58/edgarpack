@@ -6,8 +6,14 @@ import sys
 
 from pydantic import BaseModel
 
-from ..sec.submissions import FilingMeta, list_filings, normalize_cik
-from ..sec.tickers import resolve_ticker
+from ..sec.submissions import (
+    REGISTRATION_FORMS,
+    REGISTRATION_SENTINEL,
+    FilingMeta,
+    list_filings,
+    normalize_cik,
+)
+from ..sec.tickers import resolve_filer
 from .registry import PackRegistry
 from .universe import UniverseConfig
 
@@ -44,6 +50,25 @@ class HarvestPlan(BaseModel):
         return [i for i in self.items if not i.already_built]
 
 
+async def _list_registration_filings(cik: str, limit: int) -> list[FilingMeta]:
+    collected: list[FilingMeta] = []
+    for form in REGISTRATION_FORMS:
+        try:
+            hits = await list_filings(cik, form_type=form, limit=limit)
+        except Exception:
+            continue
+        collected.extend(hits)
+
+    seen: set[str] = set()
+    unique: list[FilingMeta] = []
+    for f in sorted(collected, key=lambda x: x.filing_date, reverse=True):
+        if f.accession in seen:
+            continue
+        seen.add(f.accession)
+        unique.append(f)
+    return unique[:limit]
+
+
 async def plan_harvest(
     universe: UniverseConfig,
     registry: PackRegistry,
@@ -51,37 +76,35 @@ async def plan_harvest(
 ) -> HarvestPlan:
     """Build a delta plan comparing universe spec against registry state.
 
-    Resilient to individual ticker/filing failures — logs errors and continues.
+    Resilient to individual ticker/filing failures: logs errors and continues.
     """
     items: list[HarvestItem] = []
     skipped: list[HarvestItem] = []
     errors: list[PlanError] = []
 
     for spec in universe.companies:
-        cik = spec.cik
-        if cik is None:
-            try:
-                resolved_cik, _ = await resolve_ticker(spec.ticker)
-                cik = resolved_cik
-            except Exception as e:
-                msg = str(e)[:120]
-                errors.append(PlanError(ticker=spec.ticker, error=msg))
-                print(f"  SKIP {spec.ticker}: {msg}", file=sys.stderr)
-                continue
-        cik = normalize_cik(cik)
+        try:
+            resolved_cik, _title = await resolve_filer(spec)
+        except Exception as e:
+            msg = str(e)[:120]
+            errors.append(PlanError(ticker=spec.display_label, error=msg))
+            print(f"  SKIP {spec.display_label}: {msg}", file=sys.stderr)
+            continue
+        cik = normalize_cik(resolved_cik)
 
         form_counts = universe.form_counts(spec)
 
         for form_type, count in form_counts.items():
             try:
-                filings: list[FilingMeta] = await list_filings(
-                    cik, form_type=form_type, limit=count
-                )
+                if form_type == REGISTRATION_SENTINEL:
+                    filings: list[FilingMeta] = await _list_registration_filings(cik, count)
+                else:
+                    filings = await list_filings(cik, form_type=form_type, limit=count)
             except Exception as e:
                 msg = str(e)[:120]
-                errors.append(PlanError(ticker=spec.ticker, form_type=form_type, error=msg))
+                errors.append(PlanError(ticker=spec.display_label, form_type=form_type, error=msg))
                 print(
-                    f"  SKIP {spec.ticker} {form_type}: {msg}",
+                    f"  SKIP {spec.display_label} {form_type}: {msg}",
                     file=sys.stderr,
                 )
                 continue
@@ -90,7 +113,7 @@ async def plan_harvest(
                 already_built = registry.has_accession(filing.accession)
                 item = HarvestItem(
                     cik=cik,
-                    ticker=spec.ticker.upper(),
+                    ticker=(spec.ticker or "").upper(),
                     company_name=filing.company_name,
                     accession=filing.accession,
                     form_type=filing.form_type,

@@ -45,13 +45,28 @@ class CitedValue(BaseModel):
     fact_id: str = ""
     warnings: list[str] = Field(default_factory=list)
 
-    # Self-heal provenance. 'hardcoded' for values resolved through METRIC_MAP.
-    # 'learned:cached' for registry hits. 'learned:fuzzy', 'learned:llm', or
-    # 'learned:user' for first-time discoveries that got persisted.
+    # Provenance marker. Recognized values:
+    #   'hardcoded'                  METRIC_MAP resolution (periodic filings).
+    #   'learned:cached'             registry hit on a prior self-heal lookup.
+    #   'learned:fuzzy' | 'learned:llm' | 'learned:user'
+    #                                first-time self-heal discovery persisted.
+    #   'learned:kpi-discovered'     row sourced from the `which` LLM pass.
+    #   'text-scan'                  text-scan fallback (e.g. headcount).
+    #   's1_snapshot'                S-1 audited-historical row (LLM-extracted).
+    #   's1_pro_forma'               S-1 pro-forma row with is_pro_forma=True.
+    #   'no_api_key'                 placeholder row when ANTHROPIC_API_KEY is
+    #                                missing; value is None, accession is empty.
     source: str = "hardcoded"
 
     accounting_standard: Literal["US-GAAP", "IFRS", "HKFRS", "CAS"] = "US-GAAP"
     reporting_currency: str = "USD"
+
+    # S-1 snapshot provenance. Default False so every existing periodic-
+    # filing path works unchanged. Set True only for rows sourced from
+    # s1_financials.extract_or_load_snapshot. pro_forma_note holds the
+    # filing's stated assumption (e.g. "assumes IPO price $32.50").
+    is_pro_forma: bool = False
+    pro_forma_note: str | None = None
 
     # Layer B (Self-heal v2): literal quote from the pack prose that produced
     # this value. Used by document_url to build a tight text-fragment anchor.
@@ -60,6 +75,11 @@ class CitedValue(BaseModel):
 
     @property
     def filing_url(self) -> str:
+        # S-1 snapshot placeholders (source="no_api_key") carry empty
+        # accession / cik; emitting a URL built from empty strings produces
+        # a broken link. Return empty string so downstream renderers drop it.
+        if not self.accession or not self.cik:
+            return ""
         acc_nodash = self.accession.replace("-", "")
         return f"{SEC_ARCHIVES_BASE}/{self.cik.lstrip('0')}/{acc_nodash}/{self.accession}-index.htm"
 

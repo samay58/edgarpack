@@ -70,6 +70,23 @@ TITLED_SECTION_PATTERN = re.compile(
 
 BOLD_HEADING_PATTERN = re.compile(r"\*\*(?P<title>[A-Z0-9][A-Z0-9 &/().,'\-–—]+?)\*\*")
 
+S1_ANCHOR_TITLES = frozenset(
+    {
+        "prospectus summary",
+        "risk factors",
+        "use of proceeds",
+        "capitalization",
+        "dilution",
+        "management's discussion and analysis",
+        "management's discussion and analysis of financial condition and results of operations",
+        "business",
+        "principal stockholders",
+        "underwriting",
+        "selling stockholders",
+        "description of capital stock",
+    }
+)
+
 _CANONICAL_ITEM_TITLES = {
     "1": "Business",
     "1A": "Risk Factors",
@@ -558,8 +575,17 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
 
             if line_stripped.startswith("#"):
                 title = line_stripped.lstrip("#").strip()
-                if _is_valid_general_heading(title, line, line.find("#")):
-                    key = _title_key(title)
+                key = _title_key(title)
+                if title.strip().lower() in S1_ANCHOR_TITLES:
+                    if key not in seen_titles:
+                        seen_titles.add(key)
+                        _add_item_match(
+                            item="other",
+                            title=title,
+                            part=None,
+                            char_pos=char_offsets[line_num],
+                        )
+                elif _is_valid_general_heading(title, line, line.find("#")):
                     if key not in seen_titles:
                         seen_titles.add(key)
                         _add_item_match(

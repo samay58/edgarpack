@@ -6,6 +6,7 @@ import asyncio
 import logging
 import re
 from datetime import date as _date
+from pathlib import Path
 from typing import Any
 
 from ..sec.archives import fetch_file
@@ -33,6 +34,15 @@ from .self_heal import try_learn
 logger = logging.getLogger(__name__)
 
 _DerivedCache = dict[str, CitedValue | None]
+
+
+def _requested_metrics_list(metrics: str | list[str] | None) -> list[str]:
+    if metrics is None:
+        return []
+    if isinstance(metrics, str):
+        return [m.strip() for m in metrics.split(",") if m.strip()]
+    return list(metrics)
+
 
 # Staleness thresholds: max fiscal-year gap (current_year - fy) before
 # a value is rejected as stale.  Series queries ("annual:N", "quarterly:N")
@@ -253,6 +263,7 @@ async def financials(
     period: str = "lfy",
     force: bool = False,
     display_token: str | None = None,
+    pack_root: Path | None = None,
 ) -> QueryResult:
     """Query financial metrics for a single company.
 
@@ -302,7 +313,13 @@ async def financials(
                     _resolved_id, metrics, period, display_token=display_token
                 )
 
-    cik, company_name = await resolve_ticker(company, force=force)
+    try:
+        cik, company_name = await resolve_ticker(company, force=force)
+    except _UnknownCompany:
+        # Fallback for pre-IPO filers: not in company_tickers.json.
+        from ..sec.tickers import resolve_company_by_name as _resolve_by_name
+
+        cik, company_name = await _resolve_by_name(company)
 
     fetch_error_message: str | None = None
     try:
@@ -324,6 +341,10 @@ async def financials(
     # Layer 0: alias dereferencing + unknown-metric guard.
     # Resolution order: METRIC_MAP -> KPI_CATALOG -> company_kpis
     # (company-specific discovered slugs, populated by `edgarpack which`).
+    # S-1 snapshot slugs are also accepted; they pass through the guard and
+    # resolve via augment_with_s1_snapshot at the end of the function.
+    from .s1_financials import METRIC_SLUGS as _S1_METRIC_SLUGS
+
     discovered_slugs = _discovered_slugs_for_cik(cik)
     resolved_list: list[str] = []
     for m in metric_list:
@@ -332,8 +353,14 @@ async def financials(
             resolved not in METRIC_MAP
             and resolved not in KPI_CATALOG
             and resolved not in discovered_slugs
+            and resolved not in _S1_METRIC_SLUGS
         ):
-            combined_known = set(METRIC_MAP.keys()) | set(KPI_CATALOG.keys()) | discovered_slugs
+            combined_known = (
+                set(METRIC_MAP.keys())
+                | set(KPI_CATALOG.keys())
+                | discovered_slugs
+                | _S1_METRIC_SLUGS
+            )
             suggestions = suggest_metrics(resolved, combined_known, n=3)
             raise MetricNotFound(m, suggestions=suggestions)
         resolved_list.append(resolved)
@@ -672,6 +699,35 @@ async def financials(
     if accessions and doc_map:
         fact_id_maps = await _fetch_fact_id_maps(cik, doc_map, accessions)
         _enrich_fact_ids(result, fact_id_maps)
+
+    # Pre-IPO fallback: if any requested metric still has no value, try
+    # pulling it from cached S-1 snapshots for this CIK. 10-K rows already
+    # filled their cells, so those are left alone. Also fires when the user
+    # explicitly asked for the pro-forma pseudo-period.
+    #
+    # result.metrics is keyed on the RESOLVED (alias-normalized, lowercased)
+    # metric slug, so alias the raw request names the same way before
+    # checking emptiness. Without this normalization, a caller passing
+    # `metrics=["Revenue"]` or `metrics=["rev"]` would compute any_empty=True
+    # even when the cell was successfully resolved, spuriously triggering
+    # the S-1 lazy-extraction path on every periodic-filer query.
+    resolved_requested = [
+        resolve_alias((m or "").strip().lower()) for m in _requested_metrics_list(metrics)
+    ]
+    any_empty = any(result.metrics.get(m) is None for m in resolved_requested)
+    if any_empty or period == "pro-forma":
+        from .s1_financials import augment_with_s1_snapshot
+
+        root = Path(pack_root) if pack_root is not None else Path("./packs")
+        result = await augment_with_s1_snapshot(
+            result=result,
+            cik=cik,
+            metrics=list(result.metrics.keys()),
+            period=period,
+            pack_root=root,
+            company=company_name,
+            form_type="S-1",
+        )
 
     return result
 

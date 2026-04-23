@@ -1,0 +1,548 @@
+"""Unit tests for S-1 financial snapshot extraction.
+
+Tests cover the pure-data side of the extractor (dataclasses, cache layer,
+prompt builder, JSON parser). Network calls to Anthropic are monkeypatched
+throughout; a separate live-smoke test exercises the real API path.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+import types
+from pathlib import Path
+from unittest.mock import patch  # noqa: F401 (kept available for future tests)
+
+import pytest
+
+from edgarpack.query.s1_financials import (
+    METRIC_SLUGS,
+    MODEL_ID,
+    PROMPT_SYSTEM,
+    SCHEMA_VERSION,
+    SnapshotFact,
+    SnapshotResult,
+    _call_haiku_extract,
+    build_extraction_prompt,
+    extract_or_load_snapshot,
+    find_financial_data_section,
+    parse_llm_response,
+    source_sha256_for_pack,
+)
+
+
+def test_snapshot_fact_required_fields():
+    fact = SnapshotFact(
+        accession="0001628280-24-041596",
+        fiscal_year=2024,
+        period_end="2024-12-31",
+        metric="revenue",
+        value_cents=7828700000,
+        currency="USD",
+        is_audited=True,
+        is_pro_forma=False,
+        pro_forma_note=None,
+    )
+    assert fact.metric == "revenue"
+    assert fact.value_cents == 7828700000
+    assert fact.currency == "USD"
+    assert fact.is_audited is True
+    assert fact.is_pro_forma is False
+    assert fact.pro_forma_note is None
+
+
+def test_snapshot_fact_pro_forma_with_assumption():
+    fact = SnapshotFact(
+        accession="0001628280-26-025762",
+        fiscal_year=2025,
+        period_end="2025-12-31",
+        metric="cash_and_equivalents",
+        value_cents=124310000000,
+        currency="USD",
+        is_audited=False,
+        is_pro_forma=True,
+        pro_forma_note="assumes IPO price $32.50, midpoint",
+    )
+    assert fact.is_pro_forma is True
+    assert fact.pro_forma_note is not None
+    assert "$32.50" in fact.pro_forma_note
+
+
+def test_metric_slugs_contains_all_nine_v1_metrics():
+    assert {
+        "revenue",
+        "gross_profit",
+        "operating_income_loss",
+        "net_income_loss",
+        "cash_and_equivalents",
+        "total_assets",
+        "stockholders_equity",
+        "shares_outstanding_basic",
+        "eps_basic",
+    } == METRIC_SLUGS
+
+
+def test_snapshot_result_serializes_to_json():
+    result = SnapshotResult(
+        schema_version=1,
+        accession="0001628280-24-041596",
+        extracted_at="2026-04-22T18:14:00Z",
+        extraction_status="ok",
+        source_sha256="abc123",
+        model="claude-haiku-4-5-20251001",
+        facts=[
+            SnapshotFact(
+                accession="0001628280-24-041596",
+                fiscal_year=2024,
+                period_end="2024-12-31",
+                metric="revenue",
+                value_cents=7828700000,
+                currency="USD",
+                is_audited=True,
+                is_pro_forma=False,
+                pro_forma_note=None,
+            ),
+        ],
+    )
+    payload = json.loads(result.to_json())
+    assert payload["schema_version"] == 1
+    assert payload["accession"] == "0001628280-24-041596"
+    assert payload["extraction_status"] == "ok"
+    assert len(payload["facts"]) == 1
+    assert payload["facts"][0]["metric"] == "revenue"
+    assert payload["facts"][0]["value_cents"] == 7828700000
+
+
+def test_snapshot_result_deserializes_from_json():
+    raw = json.dumps(
+        {
+            "schema_version": 1,
+            "accession": "0001628280-24-041596",
+            "extracted_at": "2026-04-22T18:14:00Z",
+            "extraction_status": "ok",
+            "source_sha256": "abc123",
+            "model": "claude-haiku-4-5-20251001",
+            "facts": [
+                {
+                    "accession": "0001628280-24-041596",
+                    "fiscal_year": 2024,
+                    "period_end": "2024-12-31",
+                    "metric": "revenue",
+                    "value_cents": 7828700000,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                }
+            ],
+        }
+    )
+    result = SnapshotResult.from_json(raw)
+    assert len(result.facts) == 1
+    assert result.facts[0].metric == "revenue"
+    assert result.facts[0].value_cents == 7828700000
+
+
+FIXTURE_DIR = Path(__file__).parent / "fixtures"
+CEREBRAS_SFD = FIXTURE_DIR / "cerebras_selected_financial_data.md"
+
+
+def test_find_financial_data_section_matches_selected_heading():
+    md = CEREBRAS_SFD.read_text(encoding="utf-8")
+    section = find_financial_data_section(md)
+    assert section is not None
+    assert "Revenue" in section
+    assert "78,287" in section
+
+
+def test_find_financial_data_section_matches_summary_alternate():
+    md = "# Summary Consolidated Financial Data\n\nRevenue ... 100\n\n# Other\n\nFoo"
+    section = find_financial_data_section(md)
+    assert section is not None
+    assert "Revenue" in section
+    assert "Foo" not in section  # Stops at next heading
+
+
+def test_find_financial_data_section_returns_none_when_absent():
+    md = "# Risk Factors\n\nInvesting involves risk.\n\n# Business\n\nWe design systems."
+    assert find_financial_data_section(md) is None
+
+
+def test_find_financial_data_section_truncates_to_50kb_ceiling():
+    huge = "# Selected Financial Data\n\n" + ("x" * 100_000)
+    section = find_financial_data_section(huge)
+    assert section is not None
+    assert len(section) <= 50_000 + 200  # tiny slack for heading text itself
+
+
+def test_build_extraction_prompt_includes_section_text():
+    prompt = build_extraction_prompt("# Selected Financial Data\n\nRevenue 100")
+    assert "Selected Financial Data" in prompt
+    assert "Revenue 100" in prompt
+
+
+def test_build_extraction_prompt_enumerates_all_nine_metrics():
+    prompt = build_extraction_prompt("# stub")
+    for slug in (
+        "revenue",
+        "gross_profit",
+        "operating_income_loss",
+        "net_income_loss",
+        "cash_and_equivalents",
+        "total_assets",
+        "stockholders_equity",
+        "shares_outstanding_basic",
+        "eps_basic",
+    ):
+        assert slug in prompt, f"prompt missing metric: {slug}"
+
+
+def test_parse_llm_response_accepts_valid_array():
+    raw = """[
+        {
+            "fiscal_year": 2024,
+            "period_end": "2024-12-31",
+            "metric": "revenue",
+            "value_cents": 7828700000,
+            "currency": "USD",
+            "is_audited": true,
+            "is_pro_forma": false,
+            "pro_forma_note": null
+        }
+    ]"""
+    facts = parse_llm_response(raw, accession="0001628280-24-041596")
+    assert len(facts) == 1
+    assert facts[0].metric == "revenue"
+    assert facts[0].accession == "0001628280-24-041596"
+    assert facts[0].value_cents == 7828700000
+
+
+def test_parse_llm_response_accepts_json_wrapped_in_code_block():
+    raw = """```json
+[
+    {
+        "fiscal_year": 2024,
+        "period_end": "2024-12-31",
+        "metric": "revenue",
+        "value_cents": 7828700000,
+        "currency": "USD",
+        "is_audited": true,
+        "is_pro_forma": false,
+        "pro_forma_note": null
+    }
+]
+```"""
+    facts = parse_llm_response(raw, accession="x")
+    assert len(facts) == 1
+
+
+def test_parse_llm_response_drops_rows_with_unknown_metric():
+    raw = """[
+        {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "bogus",
+         "value_cents": 1, "currency": "USD", "is_audited": true,
+         "is_pro_forma": false, "pro_forma_note": null},
+        {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "revenue",
+         "value_cents": 1, "currency": "USD", "is_audited": true,
+         "is_pro_forma": false, "pro_forma_note": null}
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+    assert len(facts) == 1
+    assert facts[0].metric == "revenue"
+
+
+def test_parse_llm_response_rejects_invalid_json():
+    with pytest.raises(ValueError, match="invalid JSON"):
+        parse_llm_response("not json at all", accession="x")
+
+
+def test_parse_llm_response_rejects_non_array_payload():
+    with pytest.raises(ValueError, match="expected JSON array"):
+        parse_llm_response('{"not": "an array"}', accession="x")
+
+
+def test_parse_llm_response_drops_rows_missing_required_fields():
+    raw = """[
+        {"fiscal_year": 2024, "metric": "revenue"}
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+    assert facts == []
+
+
+def test_prompt_system_forbids_fabrication():
+    assert "not fabricate" in PROMPT_SYSTEM.lower() or "only" in PROMPT_SYSTEM.lower()
+
+
+@pytest.mark.asyncio
+async def test_call_haiku_extract_returns_raw_response_text(monkeypatch):
+    fake_text = (
+        '[{"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "revenue",'
+        ' "value_cents": 7828700000, "currency": "USD", "is_audited": true,'
+        ' "is_pro_forma": false, "pro_forma_note": null}]'
+    )
+
+    class _FakeBlock:
+        type = "text"
+        text = fake_text
+
+    class _FakeMessage:
+        content = [_FakeBlock()]
+
+    class _FakeMessages:
+        async def create(self, **kwargs):  # noqa: ARG002
+            return _FakeMessage()
+
+    class _FakeClient:
+        messages = _FakeMessages()
+
+    fake_module = types.SimpleNamespace(AsyncAnthropic=lambda: _FakeClient())
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    out = await _call_haiku_extract("# stub section")
+    assert out == fake_text
+
+
+@pytest.mark.asyncio
+async def test_call_haiku_extract_raises_when_anthropic_import_fails(monkeypatch):
+    sys.modules.pop("anthropic", None)
+
+    class _BlockAnthropicFinder:
+        def find_spec(self, name, path, target=None):  # noqa: ARG002
+            if name == "anthropic":
+                raise ImportError("anthropic is not installed in test env")
+            return None
+
+    sys.meta_path.insert(0, _BlockAnthropicFinder())
+    try:
+        with pytest.raises(RuntimeError, match="anthropic"):
+            await _call_haiku_extract("# stub")
+    finally:
+        sys.meta_path.pop(0)
+
+
+def test_model_id_is_haiku_4_5():
+    assert MODEL_ID == "claude-haiku-4-5-20251001"
+
+
+# ---------------------------------------------------------------------------
+# Task 5: source_sha256_for_pack + extract_or_load_snapshot
+# ---------------------------------------------------------------------------
+
+
+def _write_pack(
+    root: Path,
+    accession: str = "0001628280-24-041596",
+    *,
+    markdown: str | None = None,
+    form_type: str = "S-1",
+) -> Path:
+    pack = root / accession
+    pack.mkdir(parents=True, exist_ok=True)
+    (pack / "filing.full.md").write_text(
+        markdown if markdown is not None else "# Selected Financial Data\n\nRevenue 78,287",
+        encoding="utf-8",
+    )
+    (pack / "manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "filing": {
+                    "accession": accession,
+                    "form_type": form_type,
+                    "filing_date": "2024-09-30",
+                    "cik": "0002021728",
+                    "company_name": "Cerebras Systems Inc",
+                },
+                "sections": [],
+                "parser_version": "test",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return pack
+
+
+def test_source_sha256_for_pack_is_stable(tmp_path):
+    pack = _write_pack(tmp_path, markdown="hello world")
+    digest_a = source_sha256_for_pack(pack)
+    digest_b = source_sha256_for_pack(pack)
+    assert digest_a == digest_b
+    assert len(digest_a) == 64  # sha256 hex
+
+
+def test_source_sha256_for_pack_changes_on_content_change(tmp_path):
+    pack = _write_pack(tmp_path, markdown="A")
+    digest_a = source_sha256_for_pack(pack)
+    (pack / "filing.full.md").write_text("B", encoding="utf-8")
+    digest_b = source_sha256_for_pack(pack)
+    assert digest_a != digest_b
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_writes_cache_on_first_call(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+
+    async def fake_haiku(_section):
+        return json.dumps(
+            [
+                {
+                    "fiscal_year": 2024,
+                    "period_end": "2024-12-31",
+                    "metric": "revenue",
+                    "value_cents": 7828700000,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                }
+            ]
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", fake_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "ok"
+    assert len(result.facts) == 1
+    assert result.facts[0].metric == "revenue"
+    assert (pack / "s1_financials.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_cache_hit_skips_llm(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nRevenue 1")
+
+    seeded = SnapshotResult(
+        schema_version=SCHEMA_VERSION,
+        accession="0001628280-24-041596",
+        extracted_at="2026-04-22T00:00:00Z",
+        extraction_status="ok",
+        source_sha256=source_sha256_for_pack(pack),
+        model=MODEL_ID,
+        facts=[
+            SnapshotFact(
+                accession="0001628280-24-041596",
+                fiscal_year=2024,
+                period_end="2024-12-31",
+                metric="revenue",
+                value_cents=100,
+                currency="USD",
+                is_audited=True,
+                is_pro_forma=False,
+                pro_forma_note=None,
+            )
+        ],
+    )
+    (pack / "s1_financials.json").write_text(seeded.to_json(), encoding="utf-8")
+
+    called = {"n": 0}
+
+    async def counting_haiku(_section):
+        called["n"] += 1
+        return "[]"
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", counting_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert called["n"] == 0
+    assert len(result.facts) == 1
+    assert result.facts[0].value_cents == 100
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_invalidates_on_source_change(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nA")
+    seeded = SnapshotResult(
+        schema_version=SCHEMA_VERSION,
+        accession="0001628280-24-041596",
+        extracted_at="2026-04-22T00:00:00Z",
+        extraction_status="ok",
+        source_sha256="stale_hash",
+        model=MODEL_ID,
+        facts=[],
+    )
+    (pack / "s1_financials.json").write_text(seeded.to_json(), encoding="utf-8")
+
+    called = {"n": 0}
+
+    async def fresh_haiku(_section):
+        called["n"] += 1
+        return "[]"
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", fresh_haiku)
+
+    await extract_or_load_snapshot(pack)
+    assert called["n"] == 1
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_force_bypasses_cache(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nA")
+    seeded = SnapshotResult(
+        schema_version=SCHEMA_VERSION,
+        accession="0001628280-24-041596",
+        extracted_at="2026-04-22T00:00:00Z",
+        extraction_status="ok",
+        source_sha256=source_sha256_for_pack(pack),
+        model=MODEL_ID,
+        facts=[],
+    )
+    (pack / "s1_financials.json").write_text(seeded.to_json(), encoding="utf-8")
+
+    called = {"n": 0}
+
+    async def forced_haiku(_section):
+        called["n"] += 1
+        return "[]"
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", forced_haiku)
+
+    await extract_or_load_snapshot(pack, force=True)
+    assert called["n"] == 1
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_handles_no_section(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown="# Risk Factors\n\nRisk only, no financial data.")
+
+    called = {"n": 0}
+
+    async def should_not_be_called(_section):
+        called["n"] += 1
+        return "[]"
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_be_called)
+
+    result = await extract_or_load_snapshot(pack)
+    assert called["n"] == 0
+    assert result.extraction_status == "no_financial_data_found"
+    assert result.facts == []
+    assert (pack / "s1_financials.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_handles_parse_failure(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+
+    async def garbage_haiku(_section):
+        return "this is not json"
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", garbage_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "llm_parse_failed"
+    assert result.facts == []
+    assert (pack / "s1_financials.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_handles_missing_api_key(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+
+    async def raising_haiku(_section):
+        raise RuntimeError("anthropic package missing")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", raising_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "no_api_key"
+    assert result.facts == []
+    assert not (pack / "s1_financials.json").exists()

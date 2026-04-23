@@ -70,3 +70,5 @@ tools/codebase-map/
 
 # Environment secrets
 .env
+
+.claude/

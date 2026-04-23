@@ -39,6 +39,7 @@ async def _resolve_cli_company(query: str) -> Any:
     """
     from .identity import ResolvedCompany, load_identity, resolve
     from .sec.tickers import resolve_company as resolve_sec_company
+    from .sec.tickers import resolve_company_by_name
 
     universe_path = Path("universe.toml")
     index = None
@@ -64,7 +65,29 @@ async def _resolve_cli_company(query: str) -> Any:
             if res.cik or res.private or res.source == "HKEX":
                 return res
 
-    cik, ticker, title = await resolve_sec_company(query)
+    # Try the public ticker/name map first. Falls back to EDGAR issuer-name
+    # search for pre-IPO filers (no ticker yet, not in company_tickers.json).
+    # If the fallback also fails or the network is unreachable, surface the
+    # original public-map UnknownCompany rather than crashing.
+    try:
+        cik, ticker, title = await resolve_sec_company(query)
+    except UnknownCompany as public_err:
+        try:
+            pre_ipo_cik, pre_ipo_title = await resolve_company_by_name(query)
+        except (UnknownCompany, AmbiguousCompany):
+            raise
+        except Exception:
+            raise public_err from None
+        return ResolvedCompany(
+            ticker=query.strip().upper(),
+            listing=None,
+            source="SEC",
+            cik=pre_ipo_cik,
+            hk_stock_code=None,
+            aliases=(pre_ipo_title,) if pre_ipo_title else (),
+            private=False,
+        )
+
     return ResolvedCompany(
         ticker=ticker or query.strip().upper(),
         listing=None,
@@ -462,6 +485,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Maximum concurrent SEC requests (default: 3)",
     )
     p_harvest.add_argument("--force", action="store_true", help="Rebuild all packs")
+    p_harvest.add_argument(
+        "--describe-images",
+        action="store_true",
+        help=(
+            "Generate VLM descriptions for images in registration-class filings. "
+            "Requires the optional `anthropic` extra (pip install edgarpack[vlm]). "
+            "Descriptions are hash-cached per image in <pack>/assets/.descriptions.json "
+            "so re-harvests do not re-bill."
+        ),
+    )
 
     p_diff = sub.add_parser(
         "diff",
@@ -487,14 +520,34 @@ def main(argv: list[str] | None = None) -> int:
         "timeline",
         help="Show how a section evolved across filings",
     )
-    p_timeline.add_argument("--ticker", "-t", required=True, help="Company ticker")
+    p_timeline.add_argument("--ticker", "-t", help="Company ticker (required for --series=annual)")
     p_timeline.add_argument(
         "--section",
         "-s",
-        required=True,
-        help="Section ID (e.g. 10k_parti_item1a_risk_factors)",
+        help="Section ID (e.g. 10k_parti_item1a_risk_factors, required for --series=annual)",
     )
     p_timeline.add_argument("--form", "-f", default="10-K", help="Form type (default: 10-K)")
+    p_timeline.add_argument(
+        "--cik",
+        help="CIK for the company (required for --series=registration)",
+    )
+    p_timeline.add_argument(
+        "--packs",
+        type=Path,
+        default=Path("./packs"),
+        help="Packs directory (default: ./packs)",
+    )
+    p_timeline.add_argument(
+        "--series",
+        choices=["annual", "registration"],
+        default="annual",
+        help=(
+            "Which filing series to build the timeline over. "
+            "'annual' (default) is the existing 10-K / 10-Q run. "
+            "'registration' is the S-1 / S-1-A / 424B / FWP redline chain "
+            "for pre-IPO filers."
+        ),
+    )
 
     p_search = sub.add_parser(
         "search",
@@ -1518,6 +1571,10 @@ def _source_badge_for(v: Any) -> str:
     """Render the source indicator that follows a metric's formatted value.
 
     - 'hardcoded' -> empty (no badge).
+    - 's1_snapshot' / 's1_pro_forma' -> inline marker `[S-1, accn-short]`
+      or `[S-1 pro-forma, accn-short] *` so S-1-sourced cells are visually
+      distinct from periodic filings.
+    - 'no_api_key' -> empty (the stderr hint tells the user what to do).
     - 'learned:kpi-*' -> ' [discovered]' (all discovered-KPI sources collapse
       to one human label; the specific taxonomy stays on CitedValue.source).
     - other 'learned:*' -> ' [<source> ✓]' (self-heal learned badge).
@@ -1525,6 +1582,13 @@ def _source_badge_for(v: Any) -> str:
     """
     src = getattr(v, "source", "hardcoded")
     if src == "hardcoded":
+        return ""
+    if src in ("s1_snapshot", "s1_pro_forma"):
+        from .query.formatting import format_citation_marker
+
+        marker = format_citation_marker(v)
+        return f" {marker}" if marker else ""
+    if src == "no_api_key":
         return ""
     if src.startswith("learned:kpi-"):
         return " [discovered]"
@@ -1921,6 +1985,20 @@ def _cmd_query(args: Any) -> int:
                             seen.add(name)
                             strict_rejected.append(name)
 
+        # Emit a one-line hint when S-1 extraction couldn't run due to a
+        # missing API key so the user knows why cells show N/A. Scan every
+        # period's result (not just the first) so --period lfy,pro-forma
+        # surfaces the hint even when only the pro-forma call hit no_api_key.
+        scan_sources = [result] if len(periods) == 1 else list(results_by_period.values())
+        missing_key = any(
+            getattr(v, "source", "") == "no_api_key"
+            for r in scan_sources
+            for v in (r.metrics or {}).values()
+            if v is not None
+        )
+        if missing_key:
+            print(_render_query_no_api_key_hint(), file=sys.stderr)
+
         # Single-period path: keep existing behavior byte-for-byte.
         if len(periods) == 1:
             if args.output_format == "json":
@@ -2139,6 +2217,7 @@ def _cmd_harvest(args: Any) -> int:
             concurrency=int(args.concurrency),
             with_chunks=bool(args.with_chunks),
             force=bool(args.force),
+            describe_images=bool(args.describe_images),
         )
 
         registry.close()
@@ -2245,10 +2324,126 @@ def _cmd_diff(args: Any) -> int:
     return asyncio.run(_run())
 
 
+def _render_registration_timeline(args: Any) -> int:
+    """Print a redline timeline for a pre-IPO filer's S-1 chain.
+
+    For each consecutive pair (S-1 -> S-1/A -> ... -> 424B), runs diff_filings
+    and summarizes section-level adds / removes / modifications with
+    word-weighted change intensity. Top-N most interesting sections surface
+    first; fully-unchanged sections are omitted.
+    """
+    from .diff.section_diff import diff_filings
+    from .diff.timeline import build_registration_timeline
+    from .query.kpi_discover import extract_s1_metrics_from_pack
+
+    if not getattr(args, "cik", None):
+        print("error: --cik is required when --series=registration", file=sys.stderr)
+        return 2
+
+    pack_root = Path(getattr(args, "packs", "./packs"))
+    entries = build_registration_timeline(pack_root=pack_root, cik=args.cik)
+
+    if not entries:
+        print(
+            f"No registration-class filings found for CIK {args.cik} under {pack_root}",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"Registration timeline for CIK {args.cik} ({len(entries)} filings)\n")
+
+    # S-1 metrics snapshot for the most recent filing: framing + disclosures
+    # the filer states in their latest draft. Cheap, reads only that pack.
+    latest = entries[-1]
+    bundle = extract_s1_metrics_from_pack(latest.pack_dir)
+    if bundle and bundle.total_hits:
+        print(f"S-1 disclosures in latest filing ({latest.accession}, {latest.form_type}):")
+        if bundle.framing:
+            print(f"  framing claims: {len(bundle.framing)}")
+            for hit in bundle.framing[:3]:
+                print(f"    - {hit.claim}")
+        if bundle.use_of_proceeds:
+            print(f"  use of proceeds items: {len(bundle.use_of_proceeds)}")
+        if bundle.dilution:
+            print(f"  dilution claims: {len(bundle.dilution)}")
+        if bundle.lockup:
+            print(f"  lockup terms: {len(bundle.lockup)}")
+        if bundle.principal_holders:
+            print(f"  principal holders: {len(bundle.principal_holders)}")
+        print()
+
+    if len(entries) < 2:
+        print("Only one registration filing present. No redline to compute.")
+        return 0
+
+    for before, after in zip(entries, entries[1:], strict=False):
+        header = (
+            f"=== {before.accession} ({before.form_type}, {before.filing_date}) "
+            f"-> {after.accession} ({after.form_type}, {after.filing_date}) ==="
+        )
+        print(header)
+
+        try:
+            result = diff_filings(before.pack_dir, after.pack_dir, detail="sections")
+        except Exception as exc:
+            print(f"  diff failed: {exc}\n")
+            continue
+
+        print(
+            f"  overall intensity: {result.overall_change_intensity:.1%}  "
+            f"(+{result.sections_added} -{result.sections_removed} "
+            f"~{result.sections_modified} ={result.sections_unchanged})"
+        )
+
+        changed = [d for d in result.section_deltas if d.change_type.value != "unchanged"]
+        changed.sort(key=lambda d: d.interest_score, reverse=True)
+        if not changed:
+            print("  no section changes detected.\n")
+            continue
+
+        top_n = 5
+        for delta in changed[:top_n]:
+            marker = {
+                "added": "+",
+                "removed": "-",
+                "modified": "~",
+            }.get(delta.change_type.value, "?")
+            print(
+                f"  {marker} {delta.title}  "
+                f"[{delta.change_intensity:.1%} intensity, score {delta.interest_score:.2f}]"
+            )
+            if delta.change_type.value == "modified":
+                print(
+                    f"      +{delta.paragraphs_added} added, "
+                    f"-{delta.paragraphs_removed} removed, "
+                    f"~{delta.paragraphs_modified} modified"
+                )
+
+        remainder = len(changed) - top_n
+        if remainder > 0:
+            print(f"  ... {remainder} more changed sections omitted.")
+        print()
+
+    return 0
+
+
 def _cmd_timeline(args: Any) -> int:
+    series = getattr(args, "series", "annual")
+
+    if series == "registration":
+        return _render_registration_timeline(args)
+
+    # Annual path (existing behavior, unchanged).
     async def _run() -> int:
         from .diff.timeline import build_timeline
         from .harvest.registry import PackRegistry
+
+        if not getattr(args, "ticker", None):
+            print("error: --ticker is required when --series=annual", file=sys.stderr)
+            return 2
+        if not getattr(args, "section", None):
+            print("error: --section is required when --series=annual", file=sys.stderr)
+            return 2
 
         rc, ticker = await _resolve_ticker_arg(args.ticker)
         if rc != 0 or ticker is None:
@@ -2477,6 +2672,14 @@ def _format_kpi_value(value: float | None, unit: str | None, magnitude: str | No
 
     prefix = "$" if unit == "USD" else ""
     return f"{prefix}{rendered}{suffix}" if suffix or prefix else rendered
+
+
+def _render_query_no_api_key_hint() -> str:
+    return (
+        "Note: S-1 financial extraction requires ANTHROPIC_API_KEY. "
+        "Install with `pip install edgarpack[vlm]` and export your key. "
+        "Disclosures available via `edgarpack which`."
+    )
 
 
 def _render_which_empty_state(
@@ -2750,7 +2953,52 @@ def _cmd_which(args: Any) -> int:
                 diagnostics=diagnostics,
             )
         )
+
+    s1_block = _render_which_s1_metrics(packs)
+    if s1_block:
+        print()
+        print(s1_block)
     return 0
+
+
+def _render_which_s1_metrics(packs: list) -> str:
+    """Render an S-1 disclosures block for any registration-class packs.
+
+    Shown only when the CIK has at least one pack with non-empty extractor
+    output. Kept compact so periodic-filer queries don't get visually heavier.
+    """
+    from .query.kpi_discover import extract_s1_metrics_from_pack
+    from .sec.submissions import is_registration_form
+
+    lines: list[str] = []
+    reg_packs = [p for p in packs if is_registration_form(getattr(p, "form_type", ""))]
+    reg_packs.sort(key=lambda p: getattr(p, "filing_date", "") or "")
+
+    for pack in reg_packs:
+        bundle = extract_s1_metrics_from_pack(Path(pack.pack_dir))
+        if not bundle or not bundle.total_hits:
+            continue
+
+        header = f"S-1 disclosures ({bundle.form_type}, {pack.filing_date}, {bundle.accession}):"
+        lines.append(header)
+
+        for label, hits in (
+            ("framing claims", bundle.framing),
+            ("use of proceeds", bundle.use_of_proceeds),
+            ("dilution", bundle.dilution),
+            ("lockup terms", bundle.lockup),
+            ("principal holders", bundle.principal_holders),
+        ):
+            if not hits:
+                continue
+            lines.append(f"  {label} ({len(hits)}):")
+            for hit in hits[:3]:
+                lines.append(f"    - {hit.claim}")
+            if len(hits) > 3:
+                lines.append(f"    ... {len(hits) - 3} more")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
 
 
 if __name__ == "__main__":

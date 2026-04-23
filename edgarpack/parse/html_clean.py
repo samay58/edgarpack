@@ -28,6 +28,7 @@ REMOVE_TAGS = {
     "meta",
     "link",
     "base",
+    "img",
 }
 
 # HTML void elements (no end tag in normal HTML)
@@ -48,11 +49,11 @@ VOID_TAGS = {
     "wbr",
 }
 
-# Patterns for hidden content in inline styles
+# Inline-CSS patterns that reliably hide an element on their own.
+# Any one of these firing is enough to discard the subtree.
 HIDDEN_STYLE_PATTERNS = [
     re.compile(r"display\s*:\s*none", re.IGNORECASE),
     re.compile(r"visibility\s*:\s*hidden", re.IGNORECASE),
-    re.compile(r"font-size\s*:\s*0(?:px|pt|em|rem)?(?:\s|;|$)", re.IGNORECASE),
     re.compile(r"height\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
     re.compile(r"width\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
     re.compile(r"opacity\s*:\s*0(?:\.0+)?(?:\s|;|$)", re.IGNORECASE),
@@ -62,12 +63,28 @@ HIDDEN_STYLE_PATTERNS = [
     ),
 ]
 
+# `font-size:0` alone is NOT a hide signal. SEC S-1 renderers apply it as a
+# CSS reset on page wrappers (with real width/height) and let child <font>
+# runs override with explicit sizes. Treating it as hidden collapses the
+# whole filing. Only count it when it co-occurs with another zero-size cue.
+_FONT_SIZE_ZERO_PATTERN = re.compile(r"font-size\s*:\s*0(?:px|pt|em|rem)?(?:\s|;|$)", re.IGNORECASE)
+_COMPANION_ZERO_PATTERNS = [
+    re.compile(r"width\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
+    re.compile(r"height\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
+    re.compile(r"opacity\s*:\s*0(?:\.0+)?(?:\s|;|$)", re.IGNORECASE),
+]
+
 
 def is_hidden_style(style: str) -> bool:
     """Return True when inline CSS likely hides the element visually."""
     if not style:
         return False
-    return any(pattern.search(style) for pattern in HIDDEN_STYLE_PATTERNS)
+    if any(pattern.search(style) for pattern in HIDDEN_STYLE_PATTERNS):
+        return True
+    # font-size:0 is only a hide signal when paired with another zero-size cue.
+    if _FONT_SIZE_ZERO_PATTERN.search(style):
+        return any(p.search(style) for p in _COMPANION_ZERO_PATTERNS)
+    return False
 
 
 def is_hidden_element(attributes: dict[str, str] | None) -> bool:
@@ -86,13 +103,13 @@ def is_hidden_element(attributes: dict[str, str] | None) -> bool:
     return is_hidden_style(attributes.get("style", ""))
 
 
-def clean_html(html: str) -> str:
+def clean_html(html: str, *, preserve_images: bool = False) -> str:
     """Clean HTML by removing scripts, styles, hidden content, and normalizing.
 
     Catches the parser errors HTMLParser actually raises on malformed filings
     so cleaning is best-effort. Unexpected exceptions bubble up.
     """
-    parser = _CleaningHTMLParser()
+    parser = _CleaningHTMLParser(preserve_images=preserve_images)
     try:
         parser.feed(html)
         parser.close()
@@ -140,10 +157,11 @@ class _TagContext:
 class _CleaningHTMLParser(HTMLParser):
     """Streaming HTML cleaner that removes unwanted/hidden subtrees and strips attributes."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, preserve_images: bool = False) -> None:
         super().__init__(convert_charrefs=True)
         self.out: list[str] = []
         self._skip_depth = 0
+        self._remove_tags = REMOVE_TAGS - {"img"} if preserve_images else REMOVE_TAGS
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         tag_l = tag.lower()
@@ -155,7 +173,7 @@ class _CleaningHTMLParser(HTMLParser):
 
         attr_dict = {k: (v if v is not None else "") for k, v in attrs}
 
-        if tag_l in REMOVE_TAGS:
+        if tag_l in self._remove_tags:
             if tag_l not in VOID_TAGS:
                 self._skip_depth = 1
             return
