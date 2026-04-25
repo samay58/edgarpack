@@ -1,4 +1,6 @@
-# EdgarPack vNext Clean Rewrite Design
+# Archived: EdgarPack vNext Clean Rewrite Design
+
+Archived 2026-04-25. This was an intermediate Reforge/vNext direction and is not the current EdgarPack roadmap. Current work improves the existing `edgarpack` command and evidence surfaces directly. Keep this file only as historical planning context.
 
 ## Status
 

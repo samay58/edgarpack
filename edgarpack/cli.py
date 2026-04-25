@@ -393,7 +393,7 @@ def main(argv: list[str] | None = None) -> int:
         "-p",
         default="lfy",
         help=(
-            "Period selector(s). Scalars: lfy, mrq, ltm, lfy-N, ltm-N, mrq-N, mrp. "
+            "Period selector(s). Scalars: lfy, mrq, ltm, lfy-N, ltm-N, mrq-N, mrp, pro-forma. "
             "Series: annual:N, quarterly:N. "
             "CSV list for a multi-period grid: lfy,lfy-1,lfy-2 "
             "(scalar selectors only; series cannot be combined). Default: lfy."

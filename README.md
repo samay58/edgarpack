@@ -4,7 +4,7 @@
 
 # EdgarPack
 
-SEC filings turned into clean markdown packs and cited financial queries, one command at a time.
+SEC filings turned into clean markdown packs, cited financial queries, and evidence-linked filing diffs, one command at a time.
 
 ## The problem
 
@@ -16,7 +16,7 @@ Why?
 
 1. The HTML is incredibly noisy. Presentational tags, inline styles, table gymnastics, page-break artifacts.
 2. XBRL (the taxonomy tagging layer) was designed for an older world. The machine-readable facts get tangled into the visible text and bloat every parse.
-3. The tools that do handle this well hand you an answer and hide the building blocks. You cannot diff a section, cite a specific line, or feed the cleaned prose into your own pipeline.
+3. Most tools that handle this well hand you an answer and hide the building blocks. You cannot diff a section, cite a specific line, or feed the cleaned prose into your own pipeline.
 
 EdgarPack exists to compress a filing down to its substantive pieces and give them back to you as something you can actually work with. Clean section markdown. Deterministic artifacts. Every number cited to the exact accession, concept, and filing URL it came from, so an LLM or a human reviewer can always trace the claim back to primary source.
 
@@ -33,9 +33,19 @@ Full methodology, per-filing table, cost breakdown at two providers, and a secti
 
 I built it because I do financial research daily and wanted three things the existing tools did not give me: clean section-level artifacts I could diff, deterministic output so downstream caches stay valid, and citations on every value that point back to the exact line in the exact filing. The last part is the one that really matters. If I pull an ARR figure out of a 10-K, I want the URL that took me there, not a promise that a model got it right.
 
+## Start here
+
+If this is your first time using EdgarPack, read these in order:
+
+1. [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md): the first 15 minutes, from install to your first cited answer.
+2. [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md): practical research recipes for public companies, pre-IPO S-1 filers, cross-market comps, KPI discovery, and filing diffs.
+3. [`docs/QUERY.md`](docs/QUERY.md): the metric, period, citation, JSON, and derived-value reference.
+4. [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md): how to use filing diffs, static HTML reports, and S-1 registration timelines.
+5. [`docs/learn/README.md`](docs/learn/README.md): the code walk-through for engineers and agents once you want internals.
+
 ## What you get
 
-A handful of commands cover most of the research loop. The four below are the ones I reach for daily; the full surface is in the [Commands](#commands) section.
+A handful of commands cover most of the research loop. The commands below are the ones I reach for daily; the full user workflows are in [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md).
 
 **Query one metric from one company:**
 
@@ -83,6 +93,25 @@ edgarpack build "NVIDIA" --form 10-K
 ```
 
 One full-filing markdown file, one file per detected section, a manifest with hashes and offsets, optional chunk and XBRL artifacts. The output runs through a polish pass that strips TOC page-break spam, recovers bullet lists trapped in tables, normalizes heading levels, and simplifies wide financial tables into a readable blockquote format. Deterministic. Rebuild produces the same bytes.
+
+**Review what changed between filings:**
+
+```bash
+edgarpack diff --ticker NVDA --form 10-K
+edgarpack diff --ticker NVDA --form 10-K --format html --out ./reports/nvda-10k.html
+```
+
+The text output is fast triage. The HTML report is the thing to open when you want to actually read the changed paragraphs: old text, new text, collapsed context, section rail, SEC links, and local pack links.
+
+**Work with pre-IPO S-1 filers:**
+
+```bash
+edgarpack build "Cerebras Systems" --form S-1 --last 2
+edgarpack query "Cerebras Systems" revenue --period lfy,lfy-1
+edgarpack timeline --series registration --cik 0002021728 --packs ./packs --format html --out ./reports/cerebras-s1
+```
+
+S-1 filers usually do not have SEC companyfacts yet. EdgarPack reads the built registration packs instead, extracts selected/summary financial data when the table shape is supported, and gives you a registration-timeline redline for the filing chain.
 
 ## Install
 
@@ -173,7 +202,12 @@ edgarpack search "export controls" --topic risk:export        # full-text search
 
 # Observatory
 edgarpack diff --ticker NVDA --form 10-K                      # compare latest two filings
-edgarpack timeline --ticker "NVIDIA" --section 10k_parti_item1a   # --ticker also accepts names
+edgarpack diff --ticker NVDA --form 10-K --format html \
+  --out ./reports/nvda-10k.html                               # static local HTML report
+edgarpack timeline --ticker "NVIDIA" \
+  --section 10k_parti_item1a_risk_factors                    # section arc across filings
+edgarpack timeline --series registration --cik 0002021728 \
+  --packs ./packs --format html --out ./reports/cerebras-s1    # S-1 amendment chain
 
 # SSE (Shanghai Stock Exchange) prospectuses. Requires the [sse] extra.
 edgarpack build-sse --url <pdf-url> --stock-code 301536 \
@@ -195,7 +229,8 @@ SEC splits high-volume filers across paginated submission files. For an active f
 ```bash
 edgarpack build META --accession 0001326801-19-000009   # FY2018 10-K, filed 2019
 edgarpack list META --form 10-K --limit 10              # all 10-Ks, not just recent
-edgarpack timeline META --form 10-K                     # full 10-K arc, IPO → today
+edgarpack timeline --ticker META \
+  --section 10k_parti_item1a_risk_factors              # full risk-factor arc, IPO → today
 ```
 
 all work the same way on a ten-year-old filing as on last week's. Older pagination files are immutable, so they're cached with a long TTL after first fetch — repeated historical lookups hit disk, not SEC.
@@ -210,9 +245,10 @@ What gets filtered out: table-of-contents links, date/fiscal-year rollovers, cro
 
 ```bash
 edgarpack diff --ticker NVDA --form 10-K --format full
+edgarpack diff --ticker NVDA --form 10-K --format html --out ./reports/nvda-10k.html
 ```
 
-The API lives at `/api/v1/observatory/...`. See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full data model and [`web/`](web/) for the Next.js frontend.
+See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full diff workflow, HTML report output, S-1 registration timelines, and API model.
 
 ## China Lens
 

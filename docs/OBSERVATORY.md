@@ -1,99 +1,184 @@
 # Filing Observatory
 
-The observatory diffs filings at the paragraph level and surfaces what actually changed in the prose. Financial tables, signature blocks, TOC links, and date rollovers are filtered out. What remains are the disclosure changes that matter: rewrites to risk factors, new regulatory language, deleted sections, shifts in how a company describes itself.
+The observatory answers one question: what actually changed between filings?
 
-## What the diff engine does
+It is not a byte-level diff. SEC filings change mechanically every year: dates roll forward, tables move, signatures change, table-of-contents links get new anchors. EdgarPack filters that noise and compares disclosure prose at the paragraph level. What remains is the part a human should read: risk-factor rewrites, business-description changes, new regulatory language, deleted sections, and meaningful shifts in how a company talks about itself.
 
-Given two packs for the same company (e.g., NVDA's FY2024 and FY2025 10-Ks), the engine:
+## Fast path
 
-1. Matches sections across filings by stable ID, with a fallback pass that handles sections moving between Parts (e.g., MDA moving from Part II to Part IV between filings).
-2. For each matched section, aligns paragraphs using fingerprinting (exact matches) then Jaccard similarity (fuzzy matches via dynamic programming).
-3. Scores each section by change intensity (word-weighted, so a 3-word date change counts less than a 200-word risk factor rewrite).
-4. Strips noise before output: TOC links, boilerplate, suppressed section types.
+Build enough filings first:
 
-## What gets filtered
+```bash
+edgarpack build NVDA --form 10-K --last 3
+```
 
-**Suppressed entirely** (never appear in diff output):
-- Financial statement sections (Item 8, Item 15 schedules). The numbers change every year. Not insight.
-- Signature blocks. Date rollovers, officer list changes.
+Then triage the latest pair:
 
-**Filtered at the paragraph level** (removed before matching):
-- Table of Contents links. These are standalone `[Table of Contents](#hash)` paragraphs whose anchor hashes change between filings.
+```bash
+edgarpack diff --ticker NVDA --form 10-K
+```
 
-**Marked as boilerplate and hidden** (matched but invisible in output):
-- Cross-reference sentences ("See Item 7 for discussion...", "Refer to Note 12...").
-- Date/fiscal-year rollovers where the only changed words are dates, quarter references, or page numbers. Two detection passes: a strict check (80%+ similarity, all changed words are mechanical tokens) and a ratio check (>60% of changed words are mechanical tokens at any similarity level).
+When you want to read the changed paragraphs, write the static report:
 
-**Kept but damped:**
-- Exhibit index changes (0.15x weight in interest scoring). Exhibit shuffles can occasionally signal something real.
+```bash
+edgarpack diff --ticker NVDA --form 10-K --format html --out ./reports/nvda-10k.html
+```
 
-## Section matching
+Open `./reports/nvda-10k.html` in a browser. It is a local, script-free HTML file. It includes:
 
-Three-pass strategy:
+- filing provenance: company, form, accession, filing date
+- a changed-section rail
+- old/new paragraph rows
+- collapsed unchanged context
+- token-level highlights for modified paragraphs
+- SEC source links
+- local pack-file links
+- reproduce command
 
-1. **Exact ID match.** `10k_parti_item1a_risk_factors` matches `10k_parti_item1a_risk_factors`.
-2. **Fallback match.** For unmatched sections, strip the form+part prefix (`10k_partii_` -> `item7_managements_discussion`) and match by the remainder. Only unique 1:1 matches are paired. This catches sections that move between Parts across filings without treating them as added+removed.
-3. **Genuinely new/removed.** Anything still unmatched after both passes.
+## Pair diffs
 
-## Intensity and ranking
-
-Each section delta carries:
-
-- `change_intensity`: ratio of weighted changed words to total non-boilerplate words (0.0 = identical, 1.0 = fully rewritten).
-- `interest_score`: absolute relevance score for ranking. Prose sections get full weight. Exhibit indices get 0.15x.
-- `section_type`: `prose` or `exhibit_index` (financial statements and signatures are suppressed before output).
-
-Output is sorted by `interest_score` descending, then `change_intensity`, then section ID for stable tie-breaking.
-
-For modified paragraphs:
-- Added/removed paragraphs contribute full word count.
-- Modified paragraphs contribute `word_count * (1 - similarity)`.
-- Boilerplate paragraphs contribute nothing and are invisible in output.
-
-## CLI usage
-
-`--ticker` accepts a ticker, a CIK, or a company name. All three route through the same resolver as `query` / `build`.
+`--ticker` accepts a ticker, CIK, or company name. EdgarPack finds the latest two local packs for the form and compares them.
 
 ```bash
 # Summary: section counts and overall intensity
 edgarpack diff --ticker NVDA --form 10-K
 
-# Full: paragraph-level old/new text for each change
+# Full terminal output: paragraph-level old/new text
 edgarpack diff --ticker "NVIDIA" --form 10-K --format full
 
-# JSON: machine-readable for downstream analysis
+# JSON: machine-readable downstream input
 edgarpack diff --ticker NVDA --form 10-K --format json
 
-# By pack path (no registry needed)
-edgarpack diff --before ./packs/CIK/accession-old --after ./packs/CIK/accession-new
+# HTML: best human reading surface
+edgarpack diff --ticker NVDA --form 10-K --format html --out ./reports/nvda-10k.html
+```
 
-# Evolution of one section across every registered filing
+If you already know the exact pack directories or accessions:
+
+```bash
+edgarpack diff \
+  --before ./packs/0001045810/0001045810-24-000029 \
+  --after ./packs/0001045810/0001045810-25-000023 \
+  --format html \
+  --out ./reports/nvda-pair.html
+```
+
+Use explicit `--before` / `--after` when you are reviewing a specific amendment pair, not just the latest two filings.
+
+## Registration timelines
+
+S-1 work is a filing-chain problem. A company may file an S-1, several S-1/As, then a 424B prospectus. Reading every draft from scratch is wasteful. The registration timeline builds one pair report per transition and an index page that points you to the highest-change steps.
+
+```bash
+edgarpack build "Cerebras Systems" --form S-1 --last 2
+
+edgarpack timeline \
+  --series registration \
+  --cik 0002021728 \
+  --packs ./packs \
+  --format html \
+  --out ./reports/cerebras-s1
+```
+
+The output directory contains:
+
+```text
+reports/cerebras-s1/
+├── index.html
+├── pair-001.html
+├── pair-002.html
+└── ...
+```
+
+Start at `index.html`. It lists each transition, section counts, and overall intensity. Click into the pair reports when a transition looks material.
+
+For ordinary periodic filings, section timelines still work:
+
+```bash
 edgarpack timeline --ticker NVDA --section 10k_parti_item1a_risk_factors
 ```
 
+HTML output is currently for `--series registration`; annual section timelines stay in terminal/JSON-style output.
+
+## What gets filtered
+
+**Suppressed entirely:**
+
+- financial statement sections, where number changes are expected
+- signature blocks
+
+**Filtered at paragraph level:**
+
+- table-of-contents links
+- anchor-only paragraphs
+- cross-reference boilerplate such as "See Item 7..."
+
+**Marked as mechanical and hidden:**
+
+- date rollovers
+- fiscal-year rollovers
+- page-number changes
+- paragraph pairs where the only differences are mechanical tokens
+
+**Kept but damped:**
+
+- exhibit-index changes, because exhibit movement can matter but usually should not dominate the report
+
+The goal is not to hide information. The goal is to stop mechanical churn from burying the disclosure changes.
+
+## How section matching works
+
+The engine matches sections in three passes:
+
+1. Exact section ID: `10k_parti_item1a_risk_factors` to `10k_parti_item1a_risk_factors`.
+2. Reduced section key: strip form/part prefixes so moved sections can still pair.
+3. Add/remove classification: anything still unmatched is genuinely new or removed.
+
+Within matched sections, paragraphs align with a deterministic mix of exact fingerprints and fuzzy Jaccard matching. Modified paragraphs are scored by changed-word weight, not raw line count, so a three-word date update does not look as important as a full rewritten risk paragraph.
+
+## Reading the report
+
+Use the section rail as triage. High-intensity sections are not automatically "important"; they are sections that changed a lot after noise filtering. MD&A often changes heavily because the underlying fiscal year changed. Risk factors, business description, legal proceedings, liquidity, and regulatory sections are usually more interesting.
+
+For every paragraph row, check the evidence line:
+
+- old accession and paragraph position
+- new accession and paragraph position
+- section ID
+- source links
+- optional chunk ID when chunks exist
+
+If a row has no chunk ID, that does not invalidate it. It means the pack did not have chunk coverage for that paragraph. The accession, section, paragraph index, and offsets still anchor the evidence.
+
 ## API
 
-```
+The API exposes the same core model:
+
+```text
 GET /api/v1/observatory/companies/{ticker}/diff?form_type=10-K&detail=full
 ```
 
 - `detail=full`: includes paragraph deltas with old/new text.
-- `detail=sections`: section-level stats only (lighter payload).
+- `detail=sections`: section-level stats only.
+
+The API is a wrapper over the same deterministic diff engine. It is not a separate summarization layer.
 
 ## Caching
 
-Diff results are cached on disk under `~/.edgarpack/diff_cache/`. Cache key is derived from the manifest fingerprints of both filings plus a cache version string. If the diff engine changes behavior (new filtering, new scoring), the cache version bumps and old entries are ignored. Corrupted cache files are detected and recomputed automatically.
+Diff results are cached on disk under `~/.edgarpack/diff_cache/`. The cache key comes from both pack manifests plus a diff-cache version string. If the pack contents or diff behavior change, old cache entries are ignored. Corrupted cache files are recomputed.
 
 ## Module map
 
-- `edgarpack/diff/text_diff.py`: paragraph splitting, TOC filtering, fingerprinting, Jaccard alignment, boilerplate detection.
-- `edgarpack/diff/section_diff.py`: section matching (3-pass), intensity/interest scoring, suppression, output assembly, caching.
-- `edgarpack/diff/timeline.py`: tracks one section across multiple filings using the same scoring. Does not apply section-type suppression (timeline is for drilling into a specific section, including financials).
-- `edgarpack/diff/models.py`: `ParagraphDelta`, `SectionDelta`, `DiffResult` (Pydantic models).
-- `edgarpack/api/observatory/routes.py`: API endpoints with filtering and payload shaping.
+- `edgarpack/diff/text_diff.py`: paragraph splitting, TOC filtering, fingerprinting, fuzzy alignment, boilerplate detection.
+- `edgarpack/diff/section_diff.py`: section matching, intensity scoring, suppression, output assembly, caching.
+- `edgarpack/diff/report_models.py`: report data contract for HTML output.
+- `edgarpack/diff/report_builder.py`: converts a pair of packs into an evidence-linked report model.
+- `edgarpack/diff/html_report.py`: static HTML rendering and safe-link handling.
+- `edgarpack/diff/timeline.py`: annual section timelines and registration-chain discovery.
+- `edgarpack/api/observatory/routes.py`: API endpoints.
 
 ## Known limitations
 
-- **MDA (Item 7)** is rewritten every year because it describes the specific fiscal year's results. The diff engine correctly reports high intensity, but this is expected behavior, not a signal. A future improvement could flag MDA as a section where high change intensity is normal.
-- **Sectionizer fragmentation** occasionally splits cross-reference sentences into their own sections (e.g., a section titled "(b)(32)(ii) of Regulation S-K..."). These are parse artifacts from the sectionizer, not real disclosures.
-- **No semantic ranking within sections.** All paragraph changes in a section are presented equally. The "AI" insertion into a regulatory laundry list is more interesting than the 15th bullet point reordering, but the engine has no way to distinguish them without an LLM pass.
+- MD&A often changes heavily for legitimate year-specific reasons. High intensity there is expected, not automatically a red flag.
+- Sectionizer quality controls report quality. If a pack has garbled section IDs, rebuild after parser fixes rather than hiding it in the renderer.
+- There is no LLM semantic ranking inside sections. All paragraph changes in a section are presented evenly. That is intentional for now: the report is evidence, not generated interpretation.

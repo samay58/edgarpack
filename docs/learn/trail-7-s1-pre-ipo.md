@@ -241,7 +241,7 @@ The same guard fires in `_is_quarter_form_type` (line 283). If a company files a
 
 ## 8. The redline timeline: a different user surface
 
-The other thing pre-IPO research wants is a redline. Companies file S-1, then S-1/A as the SEC asks for revisions, then 424B at pricing. Each amendment changes specific sections. `edgarpack list --series=registration --cik <cik>` walks that chain.
+The other thing pre-IPO research wants is a redline. Companies file S-1, then S-1/A as the SEC asks for revisions, then 424B at pricing. Each amendment changes specific sections. `edgarpack timeline --series registration --cik <cik>` walks that chain.
 
 ```python
 # edgarpack/cli.py:2327
@@ -301,10 +301,10 @@ This works correctly across multi-period queries (`--period lfy,pro-forma`) beca
 
 You need `ANTHROPIC_API_KEY` exported and a built S-1 pack. The repo's universe ships with Cerebras (`CRBRS`).
 
-1. Build a registration-class pack: `edgarpack build CRBRS --form=S-1 --packs=./packs` (one-time; the snapshot is cached after the first query).
+1. Build a registration-class pack: `edgarpack build CRBRS --form S-1 --out ./packs` (one-time; the snapshot is cached after the first query).
 2. Query a metric: `edgarpack query CRBRS revenue`. The first run does a Haiku call and writes `s1_financials.json` next to the pack's `manifest.json`. The second run reads from that cache.
 3. Ask for the pro-forma figure explicitly: `edgarpack query CRBRS revenue --period=pro-forma`. Same data file, different `pick_snapshot_fact` branch.
-4. Walk the redline: `edgarpack list --series=registration --cik 0001750999 --packs=./packs`. Needs at least one S-1 amendment in `./packs` to print pair diffs.
+4. Walk the redline: `edgarpack timeline --series registration --cik 0002021728 --packs ./packs`. Needs at least one S-1 amendment in `./packs` to print pair diffs.
 5. Open the cache: `cat packs/CRBRS/<accession>/s1_financials.json`. Look at the `extraction_status` and the `facts` array. Compare against the filing's Selected Financial Data table.
 6. Force a re-extraction: delete the cache file and re-run the query. The second pass re-prompts Haiku.
 

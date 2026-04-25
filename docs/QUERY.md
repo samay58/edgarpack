@@ -2,6 +2,8 @@
 
 EdgarPack's query system pulls financial metrics directly from SEC EDGAR's XBRL data, resolves the right GAAP/IFRS concept for each company, and returns values with full citation provenance. Every number traces back to a specific filing, accession number, and SEC URL.
 
+If you are new to the CLI, start with [`GETTING_STARTED.md`](GETTING_STARTED.md). If you already know the basics and want recipes, use [`WORKFLOWS.md`](WORKFLOWS.md). This page is the query reference: period selectors, metric behavior, citation fields, JSON output, guards, and derived metrics.
+
 ## Architecture
 
 ```

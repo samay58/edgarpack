@@ -1765,7 +1765,7 @@ bd update edgarpack-nqy --status in_progress
 bd sync
 ```
 
-Expected: bead remains `in_progress` unless the user explicitly wants it closed after this first implementation. Do not close if vNext `trace` remains broader than the current Observatory HTML report.
+Expected: bead remains `in_progress` unless the user explicitly wants it closed after this first implementation. If later trace-style generated findings are still desired, track them as a separate follow-up rather than keeping this HTML-report task open.
 
 - [ ] **Step 4: Pull, push, and verify status**
 
@@ -1788,4 +1788,4 @@ Report:
 - exact test commands and results
 - path to generated HTML report
 - whether full offline suite was run
-- remaining work, especially the deferred vNext `trace` command and generated findings layer
+- remaining work, especially any deferred trace-style generated findings layer

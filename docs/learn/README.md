@@ -2,6 +2,8 @@
 
 How the system works, traced through what actually happens.
 
+This is the internals map. If you are trying EdgarPack for the first time, start with [`../GETTING_STARTED.md`](../GETTING_STARTED.md) and [`../WORKFLOWS.md`](../WORKFLOWS.md). Come back here when you want to understand the code path behind a command or hand a focused implementation task to an agent.
+
 ## The napkin sketch
 
 ```

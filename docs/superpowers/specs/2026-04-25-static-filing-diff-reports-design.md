@@ -4,10 +4,10 @@
 
 Design approved on April 25, 2026.
 
-This spec upgrades the current EdgarPack Filing Observatory first, while keeping the
-internal model compatible with a later vNext `trace` command. It is associated with bead
-`edgarpack-nqy`, but the first implementation lands in the current `edgarpack diff` and
-`edgarpack timeline` surfaces rather than waiting for the clean rewrite.
+This spec upgrades the current EdgarPack Filing Observatory first. Earlier planning
+kept the internal model compatible with a separate `trace` idea, but that
+clean-rewrite path is now archived. The active implementation lands in the current
+`edgarpack diff` and `edgarpack timeline` surfaces.
 
 The visual baseline is the approved Paper mockup direction: a light, dense,
 code-review-for-filings report. The two exported Paper screenshots showed one duplicated
