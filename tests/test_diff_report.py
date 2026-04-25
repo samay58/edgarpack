@@ -522,4 +522,64 @@ def test_render_pair_report_html_escapes_text_and_emits_static_report(
     assert "Reproduce" in html
     assert "<details" in html and "<summary" in html
     assert "--paper" in html and "--serif" in html and "--code" in html
+    assert "old source" in html and "new source" in html
     assert "<script" not in html.lower()
+
+
+def test_render_pair_report_html_rejects_unsafe_hrefs(tmp_path) -> None:
+    before = _write_pack(
+        tmp_path,
+        "S1-001",
+        "Old customer disclosure.",
+        source_url="javascript:alert(1)",
+    )
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        "New customer disclosure.",
+        source_url="data:text/html,<b>x</b>",
+    )
+    report = build_pair_report(before, after)
+    changed = [
+        paragraph
+        for section in report.sections
+        for group in section.groups
+        for paragraph in group.paragraphs
+        if paragraph.change_type == ChangeType.MODIFIED
+    ][0]
+    assert changed.old_anchor is not None
+    assert changed.new_anchor is not None
+    changed.old_anchor.section_path = "javascript:alert(1)"
+    changed.new_anchor.section_path = "../secret.md"
+
+    html = render_pair_report_html(report)
+
+    assert 'href="javascript:' not in html.lower()
+    assert 'href="data:' not in html.lower()
+    assert 'href="../secret.md"' not in html
+    assert "source missing" in html
+    assert "pack path omitted" in html
+
+
+def test_render_pair_report_html_omits_unchanged_empty_hunks(tmp_path) -> None:
+    before = _write_pack_sections(
+        tmp_path,
+        "S1-001",
+        [
+            ("s1_business", "Business", "Stable business disclosure."),
+            ("s1_risk_factors", "Risk Factors", "Old customer disclosure."),
+        ],
+    )
+    after = _write_pack_sections(
+        tmp_path,
+        "S1A-002",
+        [
+            ("s1_business", "Business", "Stable business disclosure."),
+            ("s1_risk_factors", "Risk Factors", "New customer disclosure."),
+        ],
+    )
+
+    html = render_pair_report_html(build_pair_report(before, after))
+
+    assert "Risk Factors" in html
+    assert "Business" not in html

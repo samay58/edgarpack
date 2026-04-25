@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import posixpath
 from html import escape
+from urllib.parse import quote, urlsplit
 
 from .models import ChangeType
 from .report_models import (
@@ -242,6 +244,30 @@ def _span_html(span: TextSpan) -> str:
     return f'<span class="{op_class} {side_class}">{escape(span.text)}</span>'
 
 
+def _safe_http_href(url: str | None) -> str | None:
+    if not url:
+        return None
+    candidate = url.strip()
+    parsed = urlsplit(candidate)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    return escape(candidate, quote=True)
+
+
+def _safe_relative_href(path: str) -> str | None:
+    candidate = path.strip().replace("\\", "/")
+    if not candidate or "\x00" in candidate:
+        return None
+    parsed = urlsplit(candidate)
+    if parsed.scheme or parsed.netloc or candidate.startswith(("/", "#")):
+        return None
+
+    normalized = posixpath.normpath(candidate)
+    if normalized in {"", ".", ".."} or normalized.startswith("../") or "/../" in normalized:
+        return None
+    return escape(quote(normalized, safe="/._-~"), quote=True)
+
+
 def _prose_html(para: ReportParagraphDelta, side: str, css_class: str) -> str:
     if side == "old":
         spans = para.old_spans
@@ -253,32 +279,50 @@ def _prose_html(para: ReportParagraphDelta, side: str, css_class: str) -> str:
     return f'<div class="prose {css_class}">{content}</div>'
 
 
-def _anchor_bits(anchor: EvidenceAnchor | None, label: str) -> list[str]:
+def _anchor_bits(anchor: EvidenceAnchor | None, label: str, source_url: str | None) -> list[str]:
     if anchor is None:
         return [f"<span>{label} chunk missing</span>"]
     chunk_id = anchor.chunk_id or "missing"
-    return [
+    bits = [
         f"<span>{label} accession {escape(anchor.accession)}</span>",
         f"<span>{label} section {escape(anchor.section_id)}</span>",
         f"<span>{label} paragraph {anchor.paragraph_index}</span>",
         f"<span>{label} offset {anchor.char_start}-{anchor.char_end}</span>",
         f"<span>{label} chunk {escape(chunk_id)}</span>",
-        f'<a href="{escape(anchor.section_path, quote=True)}">{label} pack</a>',
     ]
+    source_href = _safe_http_href(source_url)
+    if source_href is not None:
+        bits.append(f'<a href="{source_href}">{label} source</a>')
+    else:
+        bits.append(f"<span>{label} source missing</span>")
+    pack_href = _safe_relative_href(anchor.section_path)
+    if pack_href is not None:
+        bits.append(f'<a href="{pack_href}">{label} pack</a>')
+    else:
+        bits.append(f"<span>{label} pack path omitted</span>")
+    return bits
 
 
-def _evidence_html(para: ReportParagraphDelta) -> str:
+def _evidence_html(
+    para: ReportParagraphDelta,
+    before_source_url: str | None,
+    after_source_url: str | None,
+) -> str:
     bits: list[str] = []
     if para.change_type in {ChangeType.REMOVED, ChangeType.MODIFIED, ChangeType.UNCHANGED}:
-        bits.extend(_anchor_bits(para.old_anchor, "old"))
+        bits.extend(_anchor_bits(para.old_anchor, "old", before_source_url))
     if para.change_type in {ChangeType.ADDED, ChangeType.MODIFIED}:
-        bits.extend(_anchor_bits(para.new_anchor, "new"))
+        bits.extend(_anchor_bits(para.new_anchor, "new", after_source_url))
     if not bits:
         bits.append("<span>chunk status missing</span>")
     return f'<div class="evidence-line">{"".join(bits)}</div>'
 
 
-def _paragraph_html(para: ReportParagraphDelta) -> str:
+def _paragraph_html(
+    para: ReportParagraphDelta,
+    before_source_url: str | None,
+    after_source_url: str | None,
+) -> str:
     marker, marker_class = {
         ChangeType.ADDED: ("+", "marker-added"),
         ChangeType.REMOVED: ("-", "marker-removed"),
@@ -297,7 +341,7 @@ def _paragraph_html(para: ReportParagraphDelta) -> str:
     else:
         blocks.append(_prose_html(para, "old", "old"))
         blocks.append(_prose_html(para, "new", "new"))
-    blocks.append(_evidence_html(para))
+    blocks.append(_evidence_html(para, before_source_url, after_source_url))
     return (
         '<div class="paragraph-row">'
         f'<div class="gutter">p{para_index}</div>'
@@ -307,7 +351,11 @@ def _paragraph_html(para: ReportParagraphDelta) -> str:
     )
 
 
-def _group_html(group: ParagraphGroup) -> str:
+def _group_html(
+    group: ParagraphGroup,
+    before_source_url: str | None,
+    after_source_url: str | None,
+) -> str:
     if group.kind == "collapsed":
         return (
             '<details class="collapsed">'
@@ -315,7 +363,10 @@ def _group_html(group: ParagraphGroup) -> str:
             f"{group.collapsed_word_count} words collapsed</summary>"
             "</details>"
         )
-    return "".join(_paragraph_html(para) for para in group.paragraphs)
+    return "".join(
+        _paragraph_html(para, before_source_url, after_source_url)
+        for para in group.paragraphs
+    )
 
 
 def _section_nav_html(report: DiffReport) -> str:
@@ -342,8 +393,17 @@ def _section_nav_html(report: DiffReport) -> str:
 def _section_html(report: DiffReport) -> str:
     sections = []
     for section in report.sections:
+        if section.change_type == ChangeType.UNCHANGED:
+            continue
         section_id = escape(section.section_id, quote=True)
-        groups = "".join(_group_html(group) for group in section.groups)
+        groups = "".join(
+            _group_html(
+                group,
+                report.before_source.source_url,
+                report.after_source.source_url,
+            )
+            for group in section.groups
+        )
         title = escape(section.title)
         sections.append(
             f'<section class="section-hunk" id="section-{section_id}">'
@@ -359,10 +419,10 @@ def _section_html(report: DiffReport) -> str:
 
 
 def _source_link(url: str | None) -> str:
-    if not url:
+    safe_url = _safe_http_href(url)
+    if safe_url is None:
         return '<p><span aria-label="missing source url">missing</span></p>'
-    safe_url = escape(url, quote=True)
-    return f'<p><a href="{safe_url}">{escape(url)}</a></p>'
+    return f'<p><a href="{safe_url}">{escape(url or "")}</a></p>'
 
 
 def render_pair_report_html(report: DiffReport, reproduce_command: str = "") -> str:
