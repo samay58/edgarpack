@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from edgarpack.diff.html_report import render_pair_report_html
 from edgarpack.diff.report_builder import build_pair_report, build_text_spans
 from edgarpack.diff.report_models import ChangeType, EvidenceAnchor, TextSpan
 
@@ -459,3 +460,66 @@ def test_build_pair_report_does_not_infer_ambiguous_old_section(tmp_path) -> Non
     ][0]
     assert changed.old_anchor is None
     assert changed.old_text == old_body
+
+
+def test_render_pair_report_html_escapes_text_and_emits_static_report(
+    tmp_path,
+) -> None:
+    before = _write_pack(
+        tmp_path,
+        "S1-001",
+        "\n\n".join(
+            [
+                "Intro paragraph.",
+                "Stable paragraph one.",
+                "Stable paragraph two.",
+                "Stable paragraph three.",
+                "Stable paragraph four.",
+                "Stable paragraph five.",
+                "Old <script>alert('x')</script> risk text.",
+            ]
+        ),
+        source_url="https://www.sec.gov/before?x=<script>",
+    )
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        "\n\n".join(
+            [
+                "Intro paragraph.",
+                "Stable paragraph one.",
+                "Stable paragraph two.",
+                "Stable paragraph three.",
+                "Stable paragraph four.",
+                "Stable paragraph five.",
+                "New <b>risk</b> text.",
+            ]
+        ),
+        source_url="https://www.sec.gov/after?x=<b>",
+    )
+
+    report = build_pair_report(before, after)
+    html = render_pair_report_html(
+        report,
+        reproduce_command="edgarpack diff --format html --out <report>",
+    )
+
+    assert "<script" not in html.lower()
+    assert "&lt;script&gt;" in html
+    assert "&lt;b&gt;risk&lt;/b&gt;" in html
+    assert "--out &lt;report&gt;" in html
+    assert "edgarpack" in html
+    assert "S1-001" in html and "S1A-002" in html
+    assert "topbar" in html
+    assert "pair-hero" in html
+    assert "section-rail" in html
+    assert "diff-pane" in html
+    assert "section-hunk" in html
+    assert "paragraph-row" in html
+    assert "evidence-line" in html
+    assert "provenance-footer" in html
+    assert "chunk status" in html.lower()
+    assert "Reproduce" in html
+    assert "<details" in html and "<summary" in html
+    assert "--paper" in html and "--serif" in html and "--code" in html
+    assert "<script" not in html.lower()
