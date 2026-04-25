@@ -13,6 +13,7 @@ from .report_models import (
     ParagraphGroup,
     ReportParagraphDelta,
     TextSpan,
+    TimelineReport,
 )
 
 _CSS = """
@@ -201,6 +202,43 @@ details.collapsed summary { cursor: pointer; }
   margin: .45rem 0 0;
   overflow-wrap: anywhere;
 }
+.timeline-main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+.timeline-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.timeline-row h2 {
+  margin: 0 0 .45rem;
+  font-size: 1rem;
+}
+.timeline-meta {
+  color: var(--muted);
+  font-family: var(--code);
+  font-size: .82rem;
+  overflow-wrap: anywhere;
+}
+.timeline-stats {
+  color: var(--muted);
+  font-family: var(--code);
+  font-size: .86rem;
+  white-space: nowrap;
+}
 pre {
   margin: .5rem 0 0;
   padding: .85rem;
@@ -220,6 +258,8 @@ pre {
   .paragraph-row { grid-template-columns: 3.5rem 2.6rem minmax(0, 1fr); }
   .prose { padding: .95rem 1rem; }
   .provenance-footer { grid-template-columns: 1fr; }
+  .timeline-row { grid-template-columns: 1fr; }
+  .timeline-stats { white-space: normal; }
 }
 @media print {
   body { background: #fff; }
@@ -484,6 +524,71 @@ def render_pair_report_html(report: DiffReport, reproduce_command: str = "") -> 
       <pre>{escape(reproduce_command)}</pre>
     </div>
   </footer>
+</body>
+</html>
+"""
+
+
+def render_timeline_index_html(report: TimelineReport) -> str:
+    """Render a static HTML index for a registration filing timeline."""
+    cik = escape(report.cik)
+    transition_rows: list[str] = []
+    for transition in report.transitions:
+        href = _safe_relative_href(transition.output_file)
+        before_accession = escape(transition.before.accession)
+        after_accession = escape(transition.after.accession)
+        before_meta = (
+            f"{escape(transition.before.form_type)} filed "
+            f"{escape(transition.before.filing_date)}"
+        )
+        after_meta = (
+            f"{escape(transition.after.form_type)} filed "
+            f"{escape(transition.after.filing_date)}"
+        )
+        title = f"{before_accession} -&gt; {after_accession}"
+        title_html = f'<a href="{href}">{title}</a>' if href is not None else title
+        transition_rows.append(
+            '<li class="timeline-row">'
+            "<div>"
+            f"<h2>{title_html}</h2>"
+            f'<div class="timeline-meta">{before_meta} -&gt; {after_meta}</div>'
+            f'<div class="timeline-meta">{escape(transition.before.pack_dir)} -&gt; '
+            f"{escape(transition.after.pack_dir)}</div>"
+            "</div>"
+            '<div class="timeline-stats">'
+            f"+{transition.sections_added} "
+            f"-{transition.sections_removed} "
+            f"~{transition.sections_modified} "
+            f"={transition.sections_unchanged}<br>"
+            f"{transition.overall_change_intensity:.1%} intensity"
+            "</div>"
+            "</li>"
+        )
+    rows_html = "\n".join(transition_rows) or '<li class="crumbs">No filing pairs.</li>'
+    filing_count = len(report.entries)
+    pair_count = len(report.transitions)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registration timeline {cik}</title>
+  <style>{_CSS}</style>
+</head>
+<body>
+  <header class="topbar">
+    <div><span class="brand">edgarpack</span> timeline --series registration --format html</div>
+  </header>
+  <section class="pair-hero">
+    <div class="crumbs">registration timeline</div>
+    <h1>Registration timeline for CIK {cik}</h1>
+    <div class="stats">{filing_count} filings - {pair_count} filing pairs</div>
+  </section>
+  <main class="timeline-main">
+    <ol class="timeline-list">
+      {rows_html}
+    </ol>
+  </main>
 </body>
 </html>
 """

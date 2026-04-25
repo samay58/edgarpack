@@ -554,6 +554,19 @@ def main(argv: list[str] | None = None) -> int:
             "for pre-IPO filers."
         ),
     )
+    p_timeline.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["text", "html"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    p_timeline.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        help="Output directory for --format html",
+    )
 
     p_search = sub.add_parser(
         "search",
@@ -2375,6 +2388,66 @@ def _render_registration_timeline(args: Any) -> int:
         )
         return 1
 
+    if getattr(args, "output_format", "text") == "html":
+        out_dir = getattr(args, "out", None)
+        if out_dir is None:
+            print("error: --out is required when --format html", file=sys.stderr)
+            return 2
+
+        from .diff.html_report import render_pair_report_html, render_timeline_index_html
+        from .diff.report_builder import build_pair_report
+        from .diff.report_models import TimelineReport, TimelineReportEntry, TimelineTransition
+
+        out_dir.mkdir(parents=True, exist_ok=True)
+        timeline_entries = [
+            TimelineReportEntry(
+                accession=entry.accession,
+                form_type=entry.form_type,
+                filing_date=entry.filing_date,
+                pack_dir=str(entry.pack_dir),
+            )
+            for entry in entries
+        ]
+        transitions: list[TimelineTransition] = []
+
+        for idx, (before, after) in enumerate(zip(entries, entries[1:], strict=False), start=1):
+            pair_report = build_pair_report(before.pack_dir, after.pack_dir)
+            output_file = f"pair-{idx:03d}.html"
+            reproduce_command = (
+                "edgarpack timeline "
+                f"--series registration --cik {args.cik} --packs {pack_root} "
+                f"--format html --out {out_dir}"
+            )
+            (out_dir / output_file).write_text(
+                render_pair_report_html(pair_report, reproduce_command=reproduce_command),
+                encoding="utf-8",
+            )
+            transitions.append(
+                TimelineTransition(
+                    index=idx,
+                    before=timeline_entries[idx - 1],
+                    after=timeline_entries[idx],
+                    output_file=output_file,
+                    sections_added=pair_report.sections_added,
+                    sections_removed=pair_report.sections_removed,
+                    sections_modified=pair_report.sections_modified,
+                    sections_unchanged=pair_report.sections_unchanged,
+                    overall_change_intensity=pair_report.overall_change_intensity,
+                )
+            )
+
+        timeline = TimelineReport(
+            cik=args.cik,
+            entries=timeline_entries,
+            transitions=transitions,
+        )
+        (out_dir / "index.html").write_text(
+            render_timeline_index_html(timeline),
+            encoding="utf-8",
+        )
+        print(f"Wrote HTML registration timeline report to {out_dir}")
+        return 0
+
     print(f"Registration timeline for CIK {args.cik} ({len(entries)} filings)\n")
 
     # S-1 metrics snapshot for the most recent filing: framing + disclosures
@@ -2457,6 +2530,13 @@ def _cmd_timeline(args: Any) -> int:
 
     if series == "registration":
         return _render_registration_timeline(args)
+
+    if getattr(args, "output_format", "text") == "html":
+        print(
+            "error: --format html is currently supported only with --series registration",
+            file=sys.stderr,
+        )
+        return 2
 
     # Annual path (existing behavior, unchanged).
     async def _run() -> int:

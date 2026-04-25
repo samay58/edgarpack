@@ -137,3 +137,75 @@ def test_registration_timeline_renders_redline_summary(tmp_path):
     # appear in the ranked changed-section list.
     assert "Dilution" in out
     assert "Risk Factors" in out
+
+
+def test_registration_timeline_html_writes_index_and_pair_pages(tmp_path):
+    cik = "0002021728"
+    packs_root = tmp_path / "packs" / cik
+    out_dir = tmp_path / "report"
+
+    _pack(
+        packs_root,
+        accession="S1-001",
+        form_type="S-1",
+        filing_date="2025-09-30",
+        cik=cik,
+        sections=[
+            (
+                "s1_risk_factors",
+                "sections/risk_factors.md",
+                "Risk Factors",
+                "We depend on a single customer for a material portion of revenue.",
+            ),
+        ],
+    )
+    _pack(
+        packs_root,
+        accession="S1A-002",
+        form_type="S-1/A",
+        filing_date="2025-10-15",
+        cik=cik,
+        sections=[
+            (
+                "s1_risk_factors",
+                "sections/risk_factors.md",
+                "Risk Factors",
+                "We depend on a single customer for the majority of revenue and "
+                "that customer may reduce orders materially.",
+            ),
+        ],
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "edgarpack.cli",
+            "timeline",
+            "--series",
+            "registration",
+            "--cik",
+            cik,
+            "--packs",
+            str(tmp_path / "packs"),
+            "--format",
+            "html",
+            "--out",
+            str(out_dir),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Wrote HTML registration timeline report" in result.stdout
+
+    index_path = out_dir / "index.html"
+    pair_path = out_dir / "pair-001.html"
+    assert index_path.exists()
+    assert pair_path.exists()
+
+    index_html = index_path.read_text(encoding="utf-8")
+    pair_html = pair_path.read_text(encoding="utf-8")
+    assert 'href="pair-001.html"' in index_html
+    assert 'class="diff-pane"' in pair_html
