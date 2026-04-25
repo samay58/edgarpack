@@ -129,3 +129,66 @@ def test_build_pair_report_adds_source_refs_and_paragraph_offsets(tmp_path) -> N
     assert changed.new_anchor.chunk_id is None
     assert changed.old_spans
     assert changed.new_spans
+
+
+def test_build_pair_report_preserves_old_anchors_for_fallback_matched_sections(
+    tmp_path,
+) -> None:
+    old_section_id = "10k_partii_item7_managements_discussion"
+    new_section_id = "10k_parti_item7_managements_discussion"
+    repeated = "Repeated disclosure."
+    old_changed = "We generated revenue from one major customer and rely on continued orders."
+    new_changed = (
+        "We generated revenue from one major customer and rely on continued orders, "
+        "but demand may decline."
+    )
+    old_body = f"{repeated}\n\n{repeated}\n\n{old_changed}"
+    new_body = f"{repeated}\n\n{repeated}\n\n{new_changed}"
+    before = _write_pack(
+        tmp_path,
+        "10K-001",
+        old_body,
+        section_id=old_section_id,
+        title="Management's Discussion and Analysis",
+    )
+    after = _write_pack(
+        tmp_path,
+        "10K-002",
+        new_body,
+        section_id=new_section_id,
+        title="Management's Discussion and Analysis",
+    )
+
+    report = build_pair_report(before, after)
+
+    section = report.sections[0]
+    assert section.section_id == new_section_id
+    assert section.old_ref is not None
+    assert section.old_ref.section_id == old_section_id
+    assert section.old_ref.path == f"sections/{old_section_id}.md"
+    assert section.new_ref is not None
+    assert section.new_ref.section_id == new_section_id
+
+    paragraphs = [paragraph for group in section.groups for paragraph in group.paragraphs]
+    changed = [
+        paragraph for paragraph in paragraphs if paragraph.change_type.value == "modified"
+    ][0]
+    assert changed.old_anchor is not None
+    assert changed.old_anchor.section_id == old_section_id
+    assert changed.old_anchor.section_path == f"sections/{old_section_id}.md"
+    assert changed.old_anchor.paragraph_index == 3
+    assert changed.old_anchor.char_start == len(f"{repeated}\n\n{repeated}\n\n")
+    assert changed.new_anchor is not None
+    assert changed.new_anchor.section_id == new_section_id
+    assert changed.new_anchor.char_start == len(f"{repeated}\n\n{repeated}\n\n")
+
+    repeated_context = [
+        paragraph
+        for paragraph in paragraphs
+        if paragraph.change_type.value == "unchanged" and paragraph.old_text == repeated
+    ]
+    assert [paragraph.old_anchor.paragraph_index for paragraph in repeated_context] == [1, 2]
+    assert [paragraph.old_anchor.char_start for paragraph in repeated_context] == [
+        0,
+        len(f"{repeated}\n\n"),
+    ]

@@ -115,6 +115,35 @@ def _section_text(pack_dir: Path, section: dict | None) -> str:
     return section_path.read_text(encoding="utf-8")
 
 
+def _infer_before_section(
+    before_dir: Path,
+    before_sections: dict[str, dict],
+    delta_paragraphs: list[ParagraphDelta],
+) -> dict | None:
+    old_paragraphs = [delta.old_text for delta in delta_paragraphs if delta.old_text]
+    if not old_paragraphs:
+        return None
+
+    candidates: list[tuple[int, int, str, dict]] = []
+    for section_id, section in before_sections.items():
+        text = _section_text(before_dir, section)
+        matched = [paragraph for paragraph in old_paragraphs if paragraph in text]
+        if matched:
+            candidates.append(
+                (
+                    len(matched),
+                    sum(len(paragraph) for paragraph in matched),
+                    section_id,
+                    section,
+                )
+            )
+
+    if not candidates:
+        return None
+    candidates.sort(key=lambda candidate: (-candidate[0], -candidate[1], candidate[2]))
+    return candidates[0][3]
+
+
 def _paragraph_locations(text: str) -> dict[str, deque[_ParagraphLocation]]:
     """Map split paragraph text to source offsets in the original section text."""
     locations: dict[str, deque[_ParagraphLocation]] = defaultdict(deque)
@@ -208,6 +237,12 @@ def build_pair_report(before_dir: Path, after_dir: Path) -> DiffReport:
     sections: list[ReportSectionDelta] = []
     for delta in diff.section_deltas:
         before_section = before_sections.get(delta.section_id)
+        if before_section is None:
+            before_section = _infer_before_section(
+                before_dir,
+                before_sections,
+                delta.paragraph_deltas,
+            )
         after_section = after_sections.get(delta.section_id)
         old_ref = _section_ref(before_section)
         new_ref = _section_ref(after_section)
