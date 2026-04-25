@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import difflib
 import re
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from pathlib import Path
 
 from ..pack.manifest import load_manifest_dict
@@ -127,20 +127,23 @@ def _infer_before_section(
     candidates: list[tuple[int, int, str, dict]] = []
     for section_id, section in before_sections.items():
         text = _section_text(before_dir, section)
-        matched = [paragraph for paragraph in old_paragraphs if paragraph in text]
-        if matched:
-            candidates.append(
-                (
-                    len(matched),
-                    sum(len(paragraph) for paragraph in matched),
-                    section_id,
-                    section,
-                )
-            )
+        available = Counter(_split_paragraphs(text))
+        matched_count = 0
+        matched_chars = 0
+        for paragraph in old_paragraphs:
+            if available[paragraph] <= 0:
+                continue
+            available[paragraph] -= 1
+            matched_count += 1
+            matched_chars += len(paragraph)
+        if matched_count:
+            candidates.append((matched_count, matched_chars, section_id, section))
 
     if not candidates:
         return None
     candidates.sort(key=lambda candidate: (-candidate[0], -candidate[1], candidate[2]))
+    if len(candidates) > 1 and candidates[0][:2] == candidates[1][:2]:
+        return None
     return candidates[0][3]
 
 

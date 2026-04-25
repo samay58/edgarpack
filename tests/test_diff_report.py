@@ -87,6 +87,43 @@ def _write_pack(
     return pack
 
 
+def _write_pack_sections(
+    root: Path,
+    accession: str,
+    sections: list[tuple[str, str, str]],
+) -> Path:
+    pack = root / accession
+    (pack / "sections").mkdir(parents=True, exist_ok=True)
+    manifest_sections: list[dict[str, object]] = []
+    for section_id, title, body in sections:
+        section_path = pack / "sections" / f"{section_id}.md"
+        section_path.write_text(body, encoding="utf-8")
+        manifest_sections.append(
+            {
+                "id": section_id,
+                "title": title,
+                "path": f"sections/{section_id}.md",
+                "char_start": 0,
+                "char_end": len(body),
+                "tokens_approx": len(body.split()),
+                "sha256": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+            }
+        )
+    manifest = {
+        "source": {"url": "https://www.sec.gov/example.htm"},
+        "filing": {
+            "accession": accession,
+            "cik": "0002021728",
+            "company_name": "Cerebras Systems Inc.",
+            "form_type": "S-1",
+            "filing_date": "2026-04-17",
+        },
+        "sections": manifest_sections,
+    }
+    (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return pack
+
+
 def test_build_pair_report_adds_source_refs_and_paragraph_offsets(tmp_path) -> None:
     before = _write_pack(
         tmp_path,
@@ -192,3 +229,38 @@ def test_build_pair_report_preserves_old_anchors_for_fallback_matched_sections(
         0,
         len(f"{repeated}\n\n"),
     ]
+
+
+def test_build_pair_report_does_not_infer_ambiguous_old_section(tmp_path) -> None:
+    old_section_id = "10k_partii_item7_managements_discussion"
+    new_section_id = "10k_parti_item7_managements_discussion"
+    unrelated_section_id = "10k_parti_item1_business"
+    old_body = "We rely on one customer for revenue."
+    before = _write_pack_sections(
+        tmp_path,
+        "10K-001",
+        [
+            (old_section_id, "Management's Discussion and Analysis", old_body),
+            (unrelated_section_id, "Business", old_body),
+        ],
+    )
+    after = _write_pack(
+        tmp_path,
+        "10K-002",
+        "We rely on one customer for revenue and continued orders.",
+        section_id=new_section_id,
+        title="Management's Discussion and Analysis",
+    )
+
+    report = build_pair_report(before, after)
+
+    section = next(section for section in report.sections if section.section_id == new_section_id)
+    assert section.old_ref is None
+    changed = [
+        paragraph
+        for group in section.groups
+        for paragraph in group.paragraphs
+        if paragraph.change_type.value == "modified"
+    ][0]
+    assert changed.old_anchor is None
+    assert changed.old_text == old_body
