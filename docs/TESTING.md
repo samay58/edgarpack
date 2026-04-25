@@ -115,9 +115,13 @@ edgarpack query NVDA --preset perf --period lfy,lfy-1,lfy-2
 edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm --audit
 edgarpack compare NVDA BIDU BABA --metrics revenue --currency usd
 edgarpack which FIG                    # requires one or more built FIG packs
+edgarpack query "Cerebras Systems" revenue,gross_profit,net_income,operating_cash_flow,capex,free_cash_flow --period lfy,lfy-1
+edgarpack query "Cerebras Systems" capital_expenditures --period lfy,lfy-1
 edgarpack query NVDA revenue --period ltm --format json
 edgarpack query NVDA revenue --period ltm --format json-full
 ```
+
+If you are running from this repo and the shell cannot find `edgarpack`, prefix these with `uv run`.
 
 What to verify manually:
 
@@ -127,6 +131,7 @@ What to verify manually:
 - LTM values always carry `{mrp, lfy, mrp_prior}` citations; a scalar LTM without components means something regressed
 - `compare --currency usd` shows USD values with a footnote naming each column's native reporting currency
 - `which` renders a metric-by-period matrix; the build hint appears if no packs are registered
+- Cerebras S-1 output uses the 2026 S-1 for FY2025/FY2024 and does not fall back to the older 2024 filing
 - lean and full JSON both expose `citations` and `calculations`
 
 ## 7. China Lens Local Workflow Check

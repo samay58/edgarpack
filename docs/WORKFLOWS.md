@@ -100,7 +100,7 @@ edgarpack which FIG --format json
 Once a KPI has been discovered, query can use it:
 
 ```bash
-edgarpack query FIG paid_seats --period lfy
+edgarpack query FIG net_dollar_retention_rate --period lfy
 ```
 
 The right mental model: `which` teaches EdgarPack what this company discloses. `query` then retrieves the specific value.
@@ -133,14 +133,14 @@ Use this when the company has filed S-1s but has not filed a 10-K yet.
 
 ```bash
 edgarpack build "Cerebras Systems" --form S-1 --last 2
-edgarpack query "Cerebras Systems" revenue --period lfy,lfy-1
+edgarpack query "Cerebras Systems" revenue,gross_profit,net_income --period lfy,lfy-1
 ```
 
-For other S-1 metrics:
+For the cash-flow bridge:
 
 ```bash
-edgarpack query "Cerebras Systems" gross_profit,net_income_loss --period lfy,lfy-1
-edgarpack query "Cerebras Systems" cash_and_equivalents --period pro-forma
+edgarpack query "Cerebras Systems" operating_cash_flow,capex,free_cash_flow --period lfy,lfy-1
+edgarpack query "Cerebras Systems" capital_expenditures --period lfy,lfy-1
 ```
 
 The S-1 path is different from the 10-K path:
@@ -148,8 +148,9 @@ The S-1 path is different from the 10-K path:
 - SEC companyfacts is usually empty.
 - EdgarPack reads built S-1 packs.
 - Supported selected/summary financial table shapes parse deterministically.
-- Unsupported shapes may require `ANTHROPIC_API_KEY`.
+- Unsupported shapes may use `ANTHROPIC_API_KEY` if you have it set.
 - Empty newest extraction must stay empty. It should not silently fall back to an older S-1.
+- Public query names stay human: use `net_income`, not `net_income_loss`; use `capital_expenditures` or `capex`, not an internal table label.
 
 For the registration chain:
 
@@ -163,6 +164,14 @@ edgarpack timeline \
 ```
 
 Open `./reports/cerebras-s1/index.html`. Start at the index, then click into the pair reports with the highest intensity.
+
+Use `which` as the quick inventory:
+
+```bash
+edgarpack which "Cerebras Systems"
+```
+
+For S-1 filers, `which` may show two different things: recurring operating KPIs if they exist, and cached queryable S-1 financial metrics from built registration packs. If no recurring operating KPIs are found, that is not a failed financial query. Use `query` for catalog financial metrics.
 
 ## Workflow 6: Filing-change review
 
@@ -214,3 +223,43 @@ edgarpack diff --ticker NVDA --form 10-K --format json
 ```
 
 The rule: make the model read cleaned source and citations, not raw SEC HTML and vibes.
+
+## Workflow 8: Maximum-capability research loop
+
+Use this when you are starting on a new company and want the full EdgarPack loop without getting lost.
+
+```bash
+# 1. Start with cited financials.
+edgarpack query FIG revenue,net_income,gross_margin,free_cash_flow --period lfy
+
+# 2. Build clean source material.
+edgarpack build FIG --form 10-K --last 3
+
+# 3. Discover issuer-specific KPIs.
+edgarpack which FIG
+
+# 4. Query a discovered KPI by slug.
+edgarpack query FIG net_dollar_retention_rate --period lfy
+
+# 5. Compare against peers.
+edgarpack comps FIG ADBE MDB --metrics revenue,gross_margin,free_cash_flow --period lfy
+
+# 6. Review disclosure changes when there are at least two filings.
+edgarpack diff --ticker NVDA --form 10-K --format html --out ./reports/nvda-10k.html
+
+# 7. Hand structured output to another tool.
+edgarpack query FIG revenue,gross_margin,free_cash_flow --period lfy --format json-full
+```
+
+What this gives you:
+
+- `query`: cited values you can verify.
+- `build`: cleaned primary-source files you can read, search, or hand to an LLM.
+- `which`: the company's own operating vocabulary.
+- `comps` / `compare`: peer context with period and currency warnings.
+- `diff` / `timeline`: disclosure changes instead of just financial tables.
+- JSON output: a clean handoff format for agents, notebooks, and downstream tools.
+
+The diff example uses NVIDIA because it has enough 10-K history for a useful report. Swap in your company once you have at least two local packs for the same form.
+
+The order matters. Pull the numbers first, then build the source, then let the filing text tell you which company-specific metrics are worth asking about.

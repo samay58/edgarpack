@@ -4,6 +4,10 @@ The observatory answers one question: what actually changed between filings?
 
 It is not a byte-level diff. SEC filings change mechanically every year: dates roll forward, tables move, signatures change, table-of-contents links get new anchors. EdgarPack filters that noise and compares disclosure prose at the paragraph level. What remains is the part a human should read: risk-factor rewrites, business-description changes, new regulatory language, deleted sections, and meaningful shifts in how a company talks about itself.
 
+If you are new to EdgarPack, read [`GETTING_STARTED.md`](GETTING_STARTED.md) first. Use this page when you already have packs built and want the details of `diff`, static HTML reports, and registration timelines.
+
+If you are working from this repo and `edgarpack` is not on your PATH, prefix any command here with `uv run`.
+
 ## Fast path
 
 Build enough filings first:

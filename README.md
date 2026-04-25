@@ -43,6 +43,8 @@ If this is your first time using EdgarPack, read these in order:
 4. [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md): how to use filing diffs, static HTML reports, and S-1 registration timelines.
 5. [`docs/learn/README.md`](docs/learn/README.md): the code walk-through for engineers and agents once you want internals.
 
+If you installed EdgarPack from PyPI, run commands as `edgarpack ...`. If you are working from this repo, run the same commands as `uv run edgarpack ...`. The docs use `edgarpack` for readability, but the repo-local form is often what you want during development.
+
 ## What you get
 
 A handful of commands cover most of the research loop. The commands below are the ones I reach for daily; the full user workflows are in [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md).
@@ -81,7 +83,7 @@ edgarpack which FIG
 edgarpack which "Figma"
 ```
 
-`which` walks every pack you have built for a company, pulls the qualitative metrics out of MD&A (paid seats, ARR, NRR, etc.), and shows a metric-by-period matrix so you know what you can query before asking. Run `edgarpack build` first for the filings you care about.
+`which` walks every pack you have built for a company, pulls the qualitative metrics out of MD&A (paid customers, ARR, NRR, etc.), and shows a metric-by-period matrix so you know what you can query before asking. Run `edgarpack build` first for the filings you care about.
 
 **Build a filing pack:**
 
@@ -125,6 +127,13 @@ SEC requires a User-Agent on every request in the format `Name email@example.com
 
 ```bash
 export EDGARPACK_USER_AGENT="Your Name your.email@example.com"
+```
+
+If you want LLM-assisted extraction for table shapes EdgarPack cannot parse deterministically, install the VLM extra and export an Anthropic key:
+
+```bash
+uv pip install -e ".[dev,china,vlm]"
+export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 Optional cache location:

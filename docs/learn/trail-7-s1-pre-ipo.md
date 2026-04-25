@@ -299,7 +299,7 @@ This works correctly across multi-period queries (`--period lfy,pro-forma`) beca
 
 ## Try it
 
-You need `ANTHROPIC_API_KEY` exported and a built S-1 pack. The repo's universe ships with Cerebras (`CRBRS`).
+You need a built S-1 pack. The repo's universe ships with Cerebras (`CRBRS`). Common selected/summary financial tables parse deterministically; keep `ANTHROPIC_API_KEY` exported if you want the fallback path for unsupported table shapes.
 
 1. Build a registration-class pack: `edgarpack build CRBRS --form S-1 --out ./packs` (one-time; the snapshot is cached after the first query).
 2. Query a few metrics: `edgarpack query CRBRS revenue,net_income,operating_cash_flow,capex,free_cash_flow --period lfy,lfy-1`. The first run writes `s1_financials.json` next to the pack's `manifest.json`; common S-1 summary tables parse deterministically, and unsupported table shapes use Haiku when `ANTHROPIC_API_KEY` is set. The second run reads from the cache.
