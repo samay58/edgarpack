@@ -511,9 +511,15 @@ def main(argv: list[str] | None = None) -> int:
     p_diff.add_argument(
         "--format",
         dest="output_format",
-        choices=["summary", "full", "json"],
+        choices=["summary", "full", "json", "html"],
         default="summary",
         help="Output format (default: summary)",
+    )
+    p_diff.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        help="Output path for --format html",
     )
 
     p_timeline = sub.add_parser(
@@ -2246,8 +2252,6 @@ def _print_paragraph_delta(pd: Any) -> None:
 
 def _cmd_diff(args: Any) -> int:
     async def _run() -> int:
-        from .diff.section_diff import diff_filings
-
         before_dir: Path | None = None
         after_dir: Path | None = None
 
@@ -2281,6 +2285,27 @@ def _cmd_diff(args: Any) -> int:
         if not before_dir.exists() or not after_dir.exists():
             print("Error: pack directory not found on disk", file=sys.stderr)
             return 1
+
+        if args.output_format == "html":
+            if args.out is None:
+                print("Error: --out is required when --format html", file=sys.stderr)
+                return 2
+
+            from .diff.html_report import render_pair_report_html
+            from .diff.report_builder import build_pair_report
+
+            report = build_pair_report(before_dir, after_dir)
+            reproduce_command = (
+                f"edgarpack diff --before {before_dir} --after {after_dir} "
+                f"--format html --out {args.out}"
+            )
+            html = render_pair_report_html(report, reproduce_command=reproduce_command)
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(html, encoding="utf-8")
+            print(f"Wrote HTML diff report to {args.out}")
+            return 0
+
+        from .diff.section_diff import diff_filings
 
         result = diff_filings(before_dir, after_dir)
 

@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from edgarpack.cli import main
 from edgarpack.diff.html_report import render_pair_report_html
 from edgarpack.diff.report_builder import build_pair_report, build_text_spans
 from edgarpack.diff.report_models import ChangeType, EvidenceAnchor, TextSpan
@@ -583,3 +584,67 @@ def test_render_pair_report_html_omits_unchanged_empty_hunks(tmp_path) -> None:
 
     assert "Risk Factors" in html
     assert "Business" not in html
+
+
+def test_cli_diff_format_html_writes_static_report(tmp_path, capsys) -> None:
+    before = _write_pack(
+        tmp_path,
+        "S1-001",
+        "We depend on a single customer for a material portion of revenue.",
+    )
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        (
+            "We depend on a single customer for the majority of revenue "
+            "and that customer may reduce orders materially."
+        ),
+    )
+    report_path = tmp_path / "reports" / "report.html"
+
+    rc = main(
+        [
+            "diff",
+            "--before",
+            str(before),
+            "--after",
+            str(after),
+            "--format",
+            "html",
+            "--out",
+            str(report_path),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "Wrote HTML diff report" in captured.out
+    assert str(report_path) in captured.out
+    assert captured.err == ""
+    html = report_path.read_text(encoding="utf-8")
+    assert "S1-001" in html
+    assert "S1A-002" in html
+    assert "majority" in html
+    assert "edgarpack diff --before" in html
+
+
+def test_cli_diff_format_html_requires_out(tmp_path, capsys) -> None:
+    before = _write_pack(tmp_path, "S1-001", "Old customer disclosure.")
+    after = _write_pack(tmp_path, "S1A-002", "New customer disclosure.")
+
+    rc = main(
+        [
+            "diff",
+            "--before",
+            str(before),
+            "--after",
+            str(after),
+            "--format",
+            "html",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "--out is required" in captured.err
