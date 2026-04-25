@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from edgarpack.diff.report_builder import build_text_spans
+import hashlib
+import json
+from pathlib import Path
+
+from edgarpack.diff.report_builder import build_pair_report, build_text_spans
 from edgarpack.diff.report_models import ChangeType, EvidenceAnchor, TextSpan
 
 
@@ -43,3 +47,85 @@ def test_build_text_spans_is_deterministic_and_preserves_changed_words() -> None
 
 def test_change_type_is_reexported_for_report_models() -> None:
     assert ChangeType.ADDED.value == "added"
+
+
+def _write_pack(
+    root: Path,
+    accession: str,
+    body: str,
+    *,
+    section_id: str = "s1_risk_factors",
+    title: str = "Risk Factors",
+    source_url: str = "https://www.sec.gov/example.htm",
+) -> Path:
+    pack = root / accession
+    section_path = pack / "sections" / f"{section_id}.md"
+    section_path.parent.mkdir(parents=True, exist_ok=True)
+    section_path.write_text(body, encoding="utf-8")
+    manifest = {
+        "source": {"url": source_url, "fetched_at": "2026-04-17T00:00:00Z"},
+        "filing": {
+            "accession": accession,
+            "cik": "0002021728",
+            "company_name": "Cerebras Systems Inc.",
+            "form_type": "S-1",
+            "filing_date": "2026-04-17",
+        },
+        "sections": [
+            {
+                "id": section_id,
+                "title": title,
+                "path": f"sections/{section_id}.md",
+                "char_start": 0,
+                "char_end": len(body),
+                "tokens_approx": len(body.split()),
+                "sha256": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+            }
+        ],
+    }
+    (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return pack
+
+
+def test_build_pair_report_adds_source_refs_and_paragraph_offsets(tmp_path) -> None:
+    before = _write_pack(
+        tmp_path,
+        "S1-001",
+        "Intro paragraph.\n\nWe depend on a single customer for a material portion of revenue.",
+        source_url="https://www.sec.gov/before.htm",
+    )
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        (
+            "Intro paragraph.\n\n"
+            "We depend on a single customer for the majority of revenue "
+            "and that customer may reduce orders materially."
+        ),
+        source_url="https://www.sec.gov/after.htm",
+    )
+
+    report = build_pair_report(before, after)
+
+    assert report.before_source.accession == "S1-001"
+    assert report.before_source.source_url == "https://www.sec.gov/before.htm"
+    assert report.after_source.accession == "S1A-002"
+    assert report.after_source.source_url == "https://www.sec.gov/after.htm"
+    assert report.chunk_status == "missing"
+    changed = [
+        p
+        for section in report.sections
+        for group in section.groups
+        for p in group.paragraphs
+        if p.change_type.value == "modified"
+    ][0]
+    assert changed.old_anchor is not None
+    assert changed.new_anchor is not None
+    assert changed.old_anchor.paragraph_index == 2
+    assert changed.new_anchor.paragraph_index == 2
+    assert changed.old_anchor.char_start == len("Intro paragraph.\n\n")
+    assert changed.new_anchor.char_start == len("Intro paragraph.\n\n")
+    assert changed.old_anchor.chunk_id is None
+    assert changed.new_anchor.chunk_id is None
+    assert changed.old_spans
+    assert changed.new_spans
