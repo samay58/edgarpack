@@ -7,6 +7,7 @@ import json
 import textwrap
 from typing import Any
 
+from .citations import CitationRegistry, calculation_summary, citation_summary
 from .financials import financials
 from .formatting import format_number
 from .models import CitedValue, DerivedValue, QueryResult
@@ -56,15 +57,9 @@ def _register_citation(
     citation_ids: dict[str, str],
     citation_records: dict[str, dict[str, object]],
 ) -> str:
-    """Register a ``CitedValue`` into the citation id/record maps, dedup by key."""
-    key = cited.citation_key
-    existing = citation_ids.get(key)
-    if existing:
-        return existing
-    cid = f"C{len(citation_ids) + 1}"
-    citation_ids[key] = cid
-    citation_records[cid] = cited.to_citation_record(cid)
-    return cid
+    """Backward-compatible wrapper around the shared citation registry."""
+    registry = CitationRegistry(citation_ids=citation_ids, citations=citation_records)
+    return registry.register_citation(cited)
 
 
 def _register_calculation(
@@ -76,84 +71,15 @@ def _register_calculation(
     calc_records: dict[str, dict[str, object]],
     formula_records: dict[tuple[str, str], dict[str, object]] | None = None,
 ) -> str:
-    """Register a ``DerivedValue`` into the calculation id/record maps.
-
-    Supports three kinds: ``LTM*`` values use an ``L`` prefix, ``CAGR*``
-    values use ``G``, and everything else uses ``D``. Component citations are
-    registered at the same time so the records reference stable ``C#`` ids.
-
-    When ``formula_records`` is provided, the formula string is deduped per
-    ``(metric_name, kind)`` so multi-period renderers can print the formula
-    once while keeping per-period calc ids for data-cell markers and audit.
-    """
-    calc_key = f"{metric_name}|{item.citation_key}"
-    existing = calc_ids.get(calc_key)
-    if existing:
-        return existing
-
-    fp = item.fiscal_period.upper()
-    if fp.startswith("LTM"):
-        prefix = "L"
-    elif fp.startswith("CAGR"):
-        prefix = "G"
-    else:
-        prefix = "D"
-    next_idx = 1 + sum(1 for cid in calc_records if cid.startswith(prefix))
-    calc_id = f"{prefix}{next_idx}"
-    calc_ids[calc_key] = calc_id
-
-    components: list[dict[str, object]] = []
-    for role, component in item.components.items():
-        comp_cid = _register_citation(component, citation_ids, citation_records)
-        components.append(
-            {
-                "role": role,
-                "citation_id": comp_cid,
-                "value": component.value,
-                "unit": component.unit,
-                "fiscal_label": component.fiscal_label,
-                "period": component._period_str(),
-                "accession": component.accession,
-            }
-        )
-
-    result_cid = _register_citation(item, citation_ids, citation_records)
-    if prefix == "L":
-        kind = "ltm"
-        formula = "mrp + lfy - mrp_prior"
-    elif prefix == "G":
-        kind = "cagr"
-        formula = item.concept
-    else:
-        kind = "derived"
-        formula = item.concept
-    calc_records[calc_id] = {
-        "id": calc_id,
-        "metric": metric_name,
-        "kind": kind,
-        "formula": formula,
-        "result_citation_id": result_cid,
-        "components": components,
-        "warnings": list(item.warnings),
-        "fiscal_label": item.fiscal_label,
-    }
-
-    if formula_records is not None:
-        formula_key = (metric_name, kind)
-        rec = formula_records.get(formula_key)
-        if rec is None:
-            rec = {
-                "metric": metric_name,
-                "kind": kind,
-                "formula": formula,
-                "calc_ids": [],
-            }
-            formula_records[formula_key] = rec
-        bound = rec["calc_ids"]
-        if isinstance(bound, list):
-            bound.append(calc_id)
-
-    return calc_id
+    """Backward-compatible wrapper around the shared citation registry."""
+    registry = CitationRegistry(
+        citation_ids=citation_ids,
+        citations=citation_records,
+        calculation_ids=calc_ids,
+        calculations=calc_records,
+        formula_records=formula_records,
+    )
+    return registry.register_calculation(metric_name, item)
 
 
 def format_comps_table(
@@ -188,10 +114,7 @@ def format_comps_table(
     for m in metrics:
         header_parts.append(m.replace("_", " ").title())
 
-    citation_ids: dict[str, str] = {}
-    citation_records: dict[str, dict[str, object]] = {}
-    calc_ids: dict[str, str] = {}
-    calc_records: dict[str, dict[str, object]] = {}
+    registry = CitationRegistry()
     warnings: list[str] = []
 
     # Calculate column widths and emit markers
@@ -206,15 +129,7 @@ def format_comps_table(
                 row.append("N/A")
             else:
                 formatted = _format_value(cited)
-                marker = ""
-                if isinstance(cited, DerivedValue):
-                    calc_id = _register_calculation(
-                        m, cited, citation_ids, citation_records, calc_ids, calc_records
-                    )
-                    marker = f"[{calc_id}]"
-                else:
-                    cid = _register_citation(cited, citation_ids, citation_records)
-                    marker = f"[{cid}]"
+                marker = registry.marker_for(m, cited)
 
                 warn_marker = ""
                 if cited.warnings:
@@ -256,11 +171,37 @@ def format_comps_table(
             )
             lines.append(line)
 
-    if citations_mode == "footer" and citation_records:
-        lines.append("")
-        lines.append("Sources:")
-        for cid, record in citation_records.items():
-            lines.extend(_with_width(f"{cid}: {record.get('citation', '')}"))
+    if citations_mode == "footer":
+        if registry.citations or registry.calculations or warnings:
+            lines.append("")
+        if registry.citations:
+            lines.append("Sources:")
+            for cid, record in registry.citations.items():
+                lines.extend(_with_width(citation_summary(cid, record)))
+        if registry.calculations:
+            if registry.citations:
+                lines.append("")
+            lines.append("Calculations:")
+            for calc_id, calc in registry.calculations.items():
+                lines.extend(_with_width(calculation_summary(calc_id, calc), indent="       "))
+                if audit:
+                    components = calc.get("components", [])
+                    if isinstance(components, list):
+                        for comp in components:
+                            if not isinstance(comp, dict):
+                                continue
+                            role = comp.get("role")
+                            cid = comp.get("citation_id")
+                            value = comp.get("value")
+                            unit = comp.get("unit")
+                            fiscal = comp.get("fiscal_label")
+                            comp_line = f"     {role}[{cid}] value={value} {unit} | {fiscal}"
+                            lines.extend(_with_width(comp_line, indent="       "))
+        if warnings:
+            lines.append("")
+            lines.append("Warnings:")
+            for warning in warnings:
+                lines.extend(_with_width(f"- {warning}", indent="  "))
         return "\n".join(lines)
 
     if citations_mode != "off":
@@ -268,25 +209,17 @@ def format_comps_table(
 
         osc8_on = supports_osc8()
 
-        if citation_records:
+        if registry.citations:
             lines.append("")
             lines.append("Citations:")
-            for cid, record in citation_records.items():
-                period = record.get("period")
-                fiscal = record.get("fiscal_label")
-                accn = record.get("accession")
-                form_type = record.get("form_type")
-                filed = record.get("filed")
-
+            for cid, record in registry.citations.items():
                 primary = record.get("primary_link")
                 primary = primary if isinstance(primary, str) else ""
                 label = f"[{cid}]"
                 if show_links != "none" and osc8_on and primary:
                     label = osc8(primary, label)
 
-                summary = (
-                    f"{label} {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
-                )
+                summary = citation_summary(cid, record).replace(f"[{cid}]", label, 1)
                 if show_links != "none" and not osc8_on and primary:
                     summary = f"{summary}  {compact_url(primary)}"
                 lines.extend(_with_width(summary, indent="       "))
@@ -307,14 +240,11 @@ def format_comps_table(
                                 )
                             )
 
-        if calc_records:
+        if registry.calculations:
             lines.append("")
             lines.append("Calculations:")
-            for calc_id, calc in calc_records.items():
-                formula = calc.get("formula", "")
-                metric_name = calc.get("metric", "")
-                line = f"[{calc_id}] {metric_name} = {formula}"
-                lines.extend(_with_width(line, indent="       "))
+            for calc_id, calc in registry.calculations.items():
+                lines.extend(_with_width(calculation_summary(calc_id, calc), indent="       "))
                 if audit:
                     components = calc.get("components", [])
                     if isinstance(components, list):
@@ -416,30 +346,15 @@ def format_financial_perf_table(
     citations_mode = citations_mode.lower().strip()
     show_links = show_links.lower().strip()
 
-    citation_ids: dict[str, str] = {}
-    citation_records: dict[str, dict[str, object]] = {}
-    calc_ids: dict[str, str] = {}
-    calc_records: dict[str, dict[str, object]] = {}
     formula_records: dict[tuple[str, str], dict[str, object]] = {}
+    registry = CitationRegistry(formula_records=formula_records)
     warnings: list[str] = []
 
     def _metric_marker(
         metric: str,
         cited: CitedValue | DerivedValue,
     ) -> str:
-        if isinstance(cited, DerivedValue):
-            calc_id = _register_calculation(
-                metric,
-                cited,
-                citation_ids,
-                citation_records,
-                calc_ids,
-                calc_records,
-                formula_records=formula_records,
-            )
-            return f"[{calc_id}]"
-        cid = _register_citation(cited, citation_ids, citation_records)
-        return f"[{cid}]"
+        return registry.marker_for(metric, cited)
 
     header_parts = ["Metric"] + [_period_label(p) for p in periods]
 
@@ -540,7 +455,7 @@ def format_financial_perf_table(
             id_list = ", ".join(bound_list)
             periods: list[str] = []
             for cid in bound_list:
-                calc = calc_records.get(cid)
+                calc = registry.calculations.get(cid)
                 if isinstance(calc, dict):
                     fl = calc.get("fiscal_label")
                     if isinstance(fl, str) and fl:
@@ -550,7 +465,7 @@ def format_financial_perf_table(
             lines.extend(_wrap(head, indent=indent))
             if audit:
                 for cid in bound_list:
-                    calc = calc_records.get(cid)
+                    calc = registry.calculations.get(cid)
                     if not isinstance(calc, dict):
                         continue
                     fl = calc.get("fiscal_label", "")
@@ -572,25 +487,18 @@ def format_financial_perf_table(
                             )
 
     if citations_mode == "footer":
-        if citation_records:
+        if registry.citations:
             lines.append("")
             lines.append("Sources:")
-            for cid, record in citation_records.items():
-                lines.extend(_wrap(f"{cid}: {record.get('citation', '')}"))
+            for cid, record in registry.citations.items():
+                lines.extend(_wrap(citation_summary(cid, record)))
         _append_dedup_calculations()
     elif citations_mode == "inline":
-        if citation_records:
+        if registry.citations:
             lines.append("")
             lines.append("Citations:")
-            for cid, record in citation_records.items():
-                period = record.get("period")
-                fiscal = record.get("fiscal_label")
-                accn = record.get("accession")
-                form_type = record.get("form_type")
-                filed = record.get("filed")
-                summary = (
-                    f"[{cid}] {form_type} {fiscal} | period {period} | accn {accn} | filed {filed}"
-                )
+            for cid, record in registry.citations.items():
+                summary = citation_summary(cid, record)
                 lines.extend(_wrap(summary, indent="       "))
                 if show_links == "primary":
                     link = record.get("primary_link")
@@ -678,10 +586,7 @@ def _build_multi_period_dict(
     company = primary.company if primary is not None else ""
     cik = primary.cik if primary is not None else ""
 
-    citation_ids: dict[str, str] = {}
-    citation_records: dict[str, dict[str, object]] = {}
-    calc_ids: dict[str, str] = {}
-    calc_records: dict[str, dict[str, object]] = {}
+    registry = CitationRegistry()
     filings: dict[str, dict[str, object]] = {}
 
     def _add_filing(cited: CitedValue) -> None:
@@ -704,18 +609,14 @@ def _build_multi_period_dict(
 
     def _serialize(cited: CitedValue | DerivedValue, metric_name: str) -> dict[str, object]:
         data = cited.to_lean_metric() if lean else cited.to_cited_dict()
-        cid = _register_citation(cited, citation_ids, citation_records)
+        cid = registry.register_citation(cited)
         data["citation_ids"] = [cid]
         _add_filing(cited)
         if isinstance(cited, DerivedValue):
-            calc_id = _register_calculation(
-                metric_name, cited, citation_ids, citation_records, calc_ids, calc_records
-            )
+            calc_id = registry.register_calculation(metric_name, cited)
             data["calculation_id"] = calc_id
-            component_citation_ids: dict[str, str] = {}
-            for role, comp in cited.components.items():
-                comp_cid = _register_citation(comp, citation_ids, citation_records)
-                component_citation_ids[role] = comp_cid
+            component_citation_ids = registry.component_citation_ids_for(cited)
+            for comp in cited.components.values():
                 _add_filing(comp)
             if component_citation_ids:
                 data["component_citation_ids"] = component_citation_ids
@@ -754,8 +655,8 @@ def _build_multi_period_dict(
         ),
         "filings": filings,
         "metrics": metrics_out,
-        "citations": citation_records,
-        "calculations": calc_records,
+        "citations": registry.citations,
+        "calculations": registry.calculations,
     }
     if diagnostics_by_period:
         result["diagnostics_by_period"] = diagnostics_by_period

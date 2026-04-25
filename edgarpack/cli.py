@@ -1805,6 +1805,8 @@ def _render_query_table(result: Any, args: Any) -> str:
                         _render_citation_lines(cid, record, show_links=args.show_links, width=width)
                     )
         if calculations:
+            from .query.citations import calculation_summary
+
             lines.append("")
             lines.append("Calculations:")
             for calc_id in sorted(
@@ -1814,11 +1816,9 @@ def _render_query_table(result: Any, args: Any) -> str:
                 calc = calculations.get(calc_id)
                 if not isinstance(calc, dict):
                     continue
-                formula = calc.get("formula", "")
-                metric_name = calc.get("metric", "")
                 lines.extend(
                     _wrap_cli_text(
-                        f"[{calc_id}] {metric_name} = {formula}",
+                        calculation_summary(calc_id, calc),
                         width,
                         indent="         ",
                     )

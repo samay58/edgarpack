@@ -10,6 +10,7 @@ from urllib.parse import quote
 from pydantic import BaseModel, Field
 
 from ..config import SEC_ARCHIVES_BASE, SEC_DATA_BASE
+from .citations import CitationRegistry
 
 
 def _concept_to_label(concept: str) -> str:
@@ -418,125 +419,21 @@ class QueryResult(BaseModel):
         subject = self.display_token or self.cik
         return f"edgarpack query {subject} {metric_names} --period {self.period}"
 
-    def _iter_metric_items(
-        self,
-    ) -> list[tuple[str, CitedValue]]:
-        """Flatten metric values into ``(metric_name, cited_value)`` tuples."""
-        items: list[tuple[str, CitedValue]] = []
-        for metric_name, value in self.metrics.items():
-            if value is None:
-                continue
-            if isinstance(value, list):
-                items.extend((metric_name, item) for item in value)
-            else:
-                items.append((metric_name, value))
-        return items
-
-    def _collect_citation_registry(self) -> tuple[dict[str, dict[str, object]], dict[str, str]]:
-        """Build citation registry and lookup map."""
-        citations: dict[str, dict[str, object]] = {}
-        key_to_id: dict[str, str] = {}
-        next_idx = 1
-
-        for _, item in self._iter_metric_items():
-            all_values = [item]
-            if isinstance(item, DerivedValue):
-                all_values.extend(item.components.values())
-            for cited in all_values:
-                key = cited.citation_key
-                if key in key_to_id:
-                    continue
-                citation_id = f"C{next_idx}"
-                next_idx += 1
-                key_to_id[key] = citation_id
-                citations[citation_id] = cited.to_citation_record(citation_id)
-
-        return citations, key_to_id
-
-    @staticmethod
-    def _calculation_record(
-        calc_id: str,
-        metric_name: str,
-        derived: DerivedValue,
-        key_to_id: dict[str, str],
-    ) -> dict[str, object]:
-        """Serialize a derived/LTM value into a normalized calculation record."""
-        result_citation_id = key_to_id.get(derived.citation_key)
-        formula = "mrp + lfy - mrp_prior" if derived._is_ltm_like() else derived.concept
-
-        components: list[dict[str, object]] = []
-        for role, component in derived.components.items():
-            entry: dict[str, object] = {
-                "role": role,
-                "metric": component.metric,
-                "concept": component.concept,
-                "value": component.value,
-                "unit": component.unit,
-                "citation_id": key_to_id.get(component.citation_key),
-                "fiscal_label": component.fiscal_label,
-                "period": component._period_str(),
-                "accession": component.accession,
-                "form_type": component.form_type,
-                "filed": str(component.filed),
-                "primary_link": component.primary_link,
-                "primary_link_type": component.primary_link_type,
-            }
-            if component.warnings:
-                entry["warnings"] = list(component.warnings)
-            components.append(entry)
-
-        record: dict[str, object] = {
-            "id": calc_id,
-            "metric": metric_name,
-            "kind": "ltm" if derived._is_ltm_like() else "derived",
-            "formula": formula,
-            "result": {
-                "value": derived.value,
-                "unit": derived.unit,
-                "citation_id": result_citation_id,
-            },
-            "components": components,
-        }
-        if derived._is_ltm_like():
-            record["ltm_variant"] = derived.fiscal_period.lower()
-            record["window"] = {
-                "start": str(derived.period_start) if derived.period_start else None,
-                "end": str(derived.period_end),
-            }
-            comp_keys = set(derived.components.keys())
-            record["method"] = (
-                "computed" if {"mrp", "lfy", "mrp_prior"}.issubset(comp_keys) else "fallback"
-            )
-        if derived.warnings:
-            record["warnings"] = list(derived.warnings)
-        return record
-
     def _serialize_metrics(
         self,
         *,
         lean: bool,
     ) -> tuple[dict[str, object], dict[str, dict[str, object]], dict[str, dict[str, object]]]:
         """Serialize metrics with additive citation/calculation IDs."""
-        citations, key_to_id = self._collect_citation_registry()
-        calculations: dict[str, dict[str, object]] = {}
-        calc_counts: dict[str, int] = {"D": 1, "L": 1}
+        registry = CitationRegistry()
 
         def _serialize_one(metric_name: str, item: CitedValue) -> dict[str, object]:
             data = item.to_lean_metric() if lean else item.to_cited_dict()
-            citation_id = key_to_id.get(item.citation_key)
-            if citation_id:
-                data["citation_ids"] = [citation_id]
+            data["citation_ids"] = registry.citation_ids_for(item)
 
             if isinstance(item, DerivedValue):
-                prefix = "L" if item._is_ltm_like() else "D"
-                calc_id = f"{prefix}{calc_counts[prefix]}"
-                calc_counts[prefix] += 1
-
-                component_citation_ids: dict[str, str] = {}
-                for role, component in item.components.items():
-                    cid = key_to_id.get(component.citation_key)
-                    if cid:
-                        component_citation_ids[role] = cid
+                calc_id = registry.register_calculation(metric_name, item)
+                component_citation_ids = registry.component_citation_ids_for(item)
 
                 data["calculation_id"] = calc_id
                 if component_citation_ids:
@@ -547,10 +444,6 @@ class QueryResult(BaseModel):
                             component_payload = ltm_components.get(role)
                             if isinstance(component_payload, dict):
                                 component_payload["citation_id"] = cid
-
-                calculations[calc_id] = self._calculation_record(
-                    calc_id, metric_name, item, key_to_id
-                )
 
             return data
 
@@ -581,7 +474,7 @@ class QueryResult(BaseModel):
                 payload["_component"] = True
                 metrics_out[comp_name] = payload
 
-        return metrics_out, citations, calculations
+        return metrics_out, registry.citations, registry.calculations
 
     def to_cited_dict(self) -> dict[str, object]:
         metrics_out, citations, calculations = self._serialize_metrics(lean=False)

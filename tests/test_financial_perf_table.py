@@ -121,9 +121,9 @@ class TestFormatFinancialPerfTable(unittest.TestCase):
         self.assertIn("[C1]", out)
         self.assertIn("Sources:", out)
         # Should have 3 unique accessions -> 3 citation IDs.
-        self.assertIn("C1:", out)
-        self.assertIn("C2:", out)
-        self.assertIn("C3:", out)
+        self.assertIn("[C1]", out)
+        self.assertIn("[C2]", out)
+        self.assertIn("[C3]", out)
 
     def test_off_mode_has_no_citations_section(self) -> None:
         out = format_financial_perf_table(
