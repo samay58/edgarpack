@@ -5,7 +5,7 @@ How the system works, traced through what actually happens.
 ## The napkin sketch
 
 ```
-You run a CLI command (build, query, comps, compare, which, list).
+You run a CLI command (build, query, comps, compare, which, list, diff, timeline).
   The CLI parses your args and dispatches to a subcommand.
     v
   Resolve identity: name/ticker/CIK -> ResolvedCompany (source = sec | hkex | private)
@@ -16,14 +16,19 @@ You run a CLI command (build, query, comps, compare, which, list).
     hkex  -> read prebuilt pack's facts.json (HKEX extractor ran at pack time)
     v
   Parse (build only):  strip iXBRL -> clean HTML -> semantic normalize -> render markdown -> sectionize
+                       (S-1 path injects synthetic headings before sectionize when the form has none)
   Pack  (build only):  write full.md, sections/*.md, llms.txt, facts.json, manifest.json (hashes)
   Period (query):      alias -> metric (layer_zero, presets), pick ltm/lfy/lfy-N/mrq facts, run formulas
+                       pre-IPO filers: lazy LLM-extract a snapshot from the latest S-1 pack and merge
   Discover (which):    LLM-scan MD&A + cached catalog -> DiscoveredKpi rows across periods
+                       (S-1 packs go through extract_s1_metrics_from_pack instead of MD&A scan)
   Compare:             fan out query(company, period) per input, USD-convert, mismatch-guard
+  Diff:                compare two local packs, anchor changed paragraphs, render static HTML
+  Timeline:            walk an S-1 / S-1-A / 424B chain and render pair reports
     v
-  Cite:                every value carries company, accession, filing date, anchor URL
+  Cite:                every value or changed paragraph carries source provenance
     v
-  Render:              table / json / markdown / pack directory on disk
+  Render:              table / json / markdown / pack directory / static HTML report
 ```
 
 That is the entire lifecycle. Everything below fills in the details. For the higher-level "what is this and why" answer, read [`ARCHITECTURE.md`](../../ARCHITECTURE.md) at the repo root. This learn pack picks up where ARCHITECTURE.md leaves off and walks the actual code.
@@ -57,6 +62,12 @@ Trails trace a concrete action through the code. Each one starts with something 
 - [Trail 6: How `edgarpack which FIG` finds the KPIs a company actually discloses](trail-6-which-kpi-discovery.md) (~14 min)
   The qualitative counterpart to `query`. Per-pack LLM scans over MD&A, cached catalog merge, per-slug aggregation across filings, and the `lookup_company_kpi` side door that lets `query` hit discovered metrics without a second LLM call.
 
+- [Trail 7: How `edgarpack query CRBRS revenue` works for a company that has never filed a 10-K](trail-7-s1-pre-ipo.md) (~14 min)
+  The pre-IPO path. Synthetic heading injection at build time, lazy Haiku snapshot extraction at query time, the `s1_snapshot` / `s1_pro_forma` source tags on `CitedValue`, and the `--series=registration` redline timeline. Read this before assuming every cited value comes from XBRL.
+
+- [Trail 8: How `edgarpack diff --format html` turns two packs into a static report](trail-8-static-diff-report.md) (~12 min)
+  The document-review surface. Pair report models, paragraph anchors, token spans, collapsed context, safe SEC and local pack links, and the registration-timeline HTML index.
+
 ## Reference
 
 When you need to look up a specific function or module, use the reference docs. They cover every exported function with purpose, inputs, outputs, design choices, and invariants.
@@ -72,6 +83,8 @@ Trails tell you the story. Reference is the dictionary.
 - [`ref/ref-query-models.md`](ref/ref-query-models.md) covers `edgarpack/query/models.py`. The citation contract. CitedValue, DerivedValue, QueryResult.
 - [`ref/ref-identity.md`](ref/ref-identity.md) covers `edgarpack/identity.py`. The routing seam. `IdentityIndex`, `ResolvedCompany`, SEC vs HKEX routing, ambiguity caught at load time.
 - [`ref/ref-query-layer-zero.md`](ref/ref-query-layer-zero.md) covers `edgarpack/query/layer_zero.py` + `edgarpack/query/presets.py`. Metric alias resolution, `suggest_metrics` for "did you mean", and preset expansion.
+- [`ref/ref-s1-financials.md`](ref/ref-s1-financials.md) covers `edgarpack/query/s1_financials.py` (and the small `parse/s1_headings.py` companion). The pre-IPO snapshot extractor: `SnapshotFact` / `SnapshotResult` contract, the SHA256-keyed cache, the Haiku prompt, the `s1_snapshot` / `s1_pro_forma` source tags, and the registration-pack walkers.
+- [`ref/ref-diff-reports.md`](ref/ref-diff-reports.md) covers `edgarpack/diff/report_models.py`, `edgarpack/diff/report_builder.py`, and `edgarpack/diff/html_report.py`. The static diff-report contract: report models, evidence anchors, token spans, context collapse, safe links, pair pages, and timeline indexes.
 
 ## How to use this
 
@@ -83,10 +96,10 @@ Trails tell you the story. Reference is the dictionary.
 
 ## What's deliberately not covered (yet)
 
-This learn pack focuses on the core CLI lifecycle: `build`, `query`, `comps`, `compare`, `which`, `list`. The following are deliberately omitted from the first pass and will get their own learn packs (or extensions to this one) later:
+This learn pack focuses on the core CLI lifecycle: `build`, `query`, `comps`, `compare`, `which`, `list`, `diff`, and `timeline`. The following are deliberately omitted from the first pass and will get their own learn packs (or extensions to this one) later:
 
 - `edgarpack/harvest/`: batch orchestrator on top of `build_pack`. Separate concern.
-- `edgarpack/diff/`, `edgarpack/index/`, `edgarpack/insights/`: analytical layers on top of built packs. Useful but not load-bearing for understanding the core lifecycle.
+- `edgarpack/index/`, `edgarpack/insights/`: analytical layers on top of built packs. Useful but not load-bearing for understanding the core lifecycle.
 - `edgarpack/china/`: China Lens is a separate sub-product with its own pipeline (acquire / extract / translate / synthesize / qa). Deserves its own learn pack.
 - `edgarpack/hk/`: HKEX extractor. Runs at pack time and populates `facts.json`; `identity.py` routing reads the output. Linked from Trail 5; promote to a ref if it grows.
 - `edgarpack/api/`, `edgarpack/site/`: rendering and serving layers. Once you understand the core CLI lifecycle these become straightforward wrappers.
