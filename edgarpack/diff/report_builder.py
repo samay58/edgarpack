@@ -114,19 +114,35 @@ def _load_chunks(pack_dir: Path) -> _ChunkLookup:
     for line in chunks_path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
-        record = json.loads(line)
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict):
+            continue
+        chunk_id = record.get("chunk_id")
+        section_id = record.get("section_id")
+        if not isinstance(chunk_id, str) or not isinstance(section_id, str):
+            continue
+        try:
+            char_start = int(record.get("char_start", 0))
+            char_end = int(record.get("char_end", 0))
+        except (TypeError, ValueError):
+            continue
+        if char_end < char_start:
+            continue
         chunks.append(
             _ChunkLocation(
-                chunk_id=str(record["chunk_id"]),
-                section_id=str(record["section_id"]),
-                char_start=int(record["char_start"]),
-                char_end=int(record["char_end"]),
+                chunk_id=chunk_id,
+                section_id=section_id,
+                char_start=char_start,
+                char_end=char_end,
             )
         )
     return _ChunkLookup(chunks)
 
 
-def _chunk_status(before_chunks: _ChunkLookup, after_chunks: _ChunkLookup) -> str:
+def _chunk_file_status(before_chunks: _ChunkLookup, after_chunks: _ChunkLookup) -> str:
     before_available = before_chunks.has_chunks
     after_available = after_chunks.has_chunks
     if before_available and after_available:
@@ -134,6 +150,33 @@ def _chunk_status(before_chunks: _ChunkLookup, after_chunks: _ChunkLookup) -> st
     if before_available or after_available:
         return "partial"
     return "missing"
+
+
+def _chunk_status(
+    before_chunks: _ChunkLookup,
+    after_chunks: _ChunkLookup,
+    sections: list[ReportSectionDelta],
+) -> str:
+    file_status = _chunk_file_status(before_chunks, after_chunks)
+    if file_status == "missing":
+        return "missing"
+
+    anchors: list[EvidenceAnchor] = []
+    for section in sections:
+        for group in section.groups:
+            for paragraph in group.paragraphs:
+                if paragraph.change_type == ChangeType.UNCHANGED:
+                    continue
+                if paragraph.old_anchor is not None:
+                    anchors.append(paragraph.old_anchor)
+                if paragraph.new_anchor is not None:
+                    anchors.append(paragraph.new_anchor)
+
+    if not anchors:
+        return file_status
+    if all(anchor.chunk_id for anchor in anchors):
+        return "available" if file_status == "available" else "partial"
+    return "partial"
 
 
 def _filing_ref(pack_dir: Path, manifest: dict) -> FilingSourceRef:
@@ -434,7 +477,7 @@ def build_pair_report(
         report_kind="pair",
         before_source=before_source,
         after_source=after_source,
-        chunk_status=_chunk_status(before_chunks, after_chunks),
+        chunk_status=_chunk_status(before_chunks, after_chunks, sections),
         sections_unchanged=diff.sections_unchanged,
         sections_modified=diff.sections_modified,
         sections_added=diff.sections_added,

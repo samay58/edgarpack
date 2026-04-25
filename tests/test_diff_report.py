@@ -252,6 +252,80 @@ def test_build_pair_report_marks_chunk_status_partial_when_one_side_has_chunks(
     assert report.chunk_status == "partial"
 
 
+def test_build_pair_report_marks_chunk_status_partial_for_uncovered_changed_anchor(
+    tmp_path,
+) -> None:
+    before = _write_pack(tmp_path, "S1-001", "Old customer disclosure.")
+    after = _write_pack(tmp_path, "S1A-002", "New customer disclosure.")
+    _write_chunks(
+        before,
+        [
+            {
+                "chunk_id": "before-unrelated",
+                "section_id": "s1_risk_factors",
+                "char_start": 0,
+                "char_end": 1,
+            }
+        ],
+    )
+    _write_chunks(
+        after,
+        [
+            {
+                "chunk_id": "after-unrelated",
+                "section_id": "s1_risk_factors",
+                "char_start": 0,
+                "char_end": 1,
+            }
+        ],
+    )
+
+    report = build_pair_report(before, after)
+
+    assert report.chunk_status == "partial"
+    changed = [
+        paragraph
+        for section in report.sections
+        for group in section.groups
+        for paragraph in group.paragraphs
+        if paragraph.change_type == ChangeType.MODIFIED
+    ][0]
+    assert changed.old_anchor is not None
+    assert changed.old_anchor.chunk_id is None
+    assert changed.new_anchor is not None
+    assert changed.new_anchor.chunk_id is None
+
+
+def test_build_pair_report_ignores_malformed_optional_chunk_rows(tmp_path) -> None:
+    before = _write_pack(tmp_path, "S1-001", "Old customer disclosure.")
+    after = _write_pack(tmp_path, "S1A-002", "New customer disclosure.")
+    chunks_path = before / "optional" / "chunks.ndjson"
+    chunks_path.parent.mkdir(parents=True, exist_ok=True)
+    chunks_path.write_text(
+        "\n".join(
+            [
+                "{not json",
+                json.dumps(["not", "object"]),
+                json.dumps({"chunk_id": "missing-section"}),
+                json.dumps(
+                    {
+                        "chunk_id": "bad-offset",
+                        "section_id": "s1_risk_factors",
+                        "char_start": "x",
+                        "char_end": 10,
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = build_pair_report(before, after)
+
+    assert report.chunk_status == "missing"
+
+
 def test_build_pair_report_collapses_long_unchanged_context_runs(tmp_path) -> None:
     before_paragraphs = [
         "Stable paragraph one.",
