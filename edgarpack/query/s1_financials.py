@@ -16,7 +16,9 @@ import json
 import re
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
+from typing import Any
 
 # Canonical slug set. Must stay in sync with METRIC_MAP in
 # edgarpack/query/metric_map.py so CitedValue conversions resolve
@@ -56,7 +58,7 @@ class SnapshotFact:
     is_pro_forma: bool
     pro_forma_note: str | None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -122,7 +124,7 @@ _FINANCIAL_DATA_HEADINGS = [
 ]
 
 _FINDATA_RE = re.compile(
-    r"^\#{1,3}\s+(?:" + "|".join(_FINANCIAL_DATA_HEADINGS) + r")\b",
+    r"^\s*(?:\#{1,3}\s+)?(?:" + "|".join(_FINANCIAL_DATA_HEADINGS) + r")\b\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -151,6 +153,142 @@ def find_financial_data_section(markdown: str) -> str | None:
         end = 1 + next_heading.start()
         rest = rest[:end]
     return rest[:_SECTION_CAP_CHARS]
+
+
+_DETERMINISTIC_TABLE_MODEL = "deterministic-summary-table"
+_YEAR_PAIR_RE = re.compile(r"^((?:19|20)\d{2})\s*/\s*((?:19|20)\d{2})$")
+_SUMMARY_VALUE_TOKEN_RE = (
+    r"(?:\$?\(?\$?\d[\d,]*(?:\.\d+)?\)?|[\u2014-])"
+)
+_SUMMARY_ROW_VALUE_RE = re.compile(
+    rf"(?P<left>{_SUMMARY_VALUE_TOKEN_RE})\s*/\s*(?P<right>{_SUMMARY_VALUE_TOKEN_RE})\s*$"
+)
+
+
+def _strip_summary_line(line: str) -> str:
+    stripped = line.strip()
+    if stripped.startswith(">"):
+        stripped = stripped[1:].strip()
+    return stripped.replace("\xa0", " ").strip()
+
+
+def _summary_scale_multiplier(section_text: str) -> int:
+    lowered = section_text.lower()
+    if "in millions" in lowered:
+        return 100_000_000
+    if "in thousands" in lowered:
+        return 100_000
+    return 100
+
+
+def _parse_summary_number(raw: str) -> Decimal | None:
+    token = raw.strip()
+    if token in {"", "-", "\u2014", "--"}:
+        return None
+    is_negative = "(" in token and ")" in token
+    token = token.replace("$", "").replace(",", "").replace("(", "").replace(")", "")
+    try:
+        value = Decimal(token)
+    except InvalidOperation:
+        return None
+    return -value if is_negative else value
+
+
+def _scaled_summary_cents(value: Decimal, *, metric: str, money_multiplier: int) -> int:
+    multiplier = 100 if metric == "eps_basic" else money_multiplier
+    return int((value * Decimal(multiplier)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def _summary_metric_for_label(label: str, *, context: str | None) -> str | None:
+    normalized = re.sub(r"\s+", " ", label).strip().lower()
+    if normalized in {"revenue", "total revenue"}:
+        return "revenue"
+    if normalized == "gross profit":
+        return "gross_profit"
+    if normalized in {
+        "operating loss",
+        "loss from operations",
+        "income (loss) from operations",
+        "operating income (loss)",
+    }:
+        return "operating_income_loss"
+    if normalized in {"net loss", "net income", "net income (loss)"}:
+        return "net_income_loss"
+    if context == "eps" and normalized == "basic":
+        return "eps_basic"
+    return None
+
+
+def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[SnapshotFact]:
+    """Parse common S-1 summary financial tables without an LLM.
+
+    The parser is intentionally narrow: it only emits facts from rows with an
+    explicit two-year header such as `2025 / 2024` and an explicit pair of
+    values at the end of the row. Ambiguous rows are skipped.
+    """
+    lines = [_strip_summary_line(line) for line in section_text.splitlines()]
+    years: tuple[int, int] | None = None
+    start_index = 0
+    for index, line in enumerate(lines):
+        match = _YEAR_PAIR_RE.fullmatch(line)
+        if match is not None:
+            years = (int(match.group(1)), int(match.group(2)))
+            start_index = index + 1
+            break
+    if years is None:
+        return []
+
+    money_multiplier = _summary_scale_multiplier(section_text)
+    context: str | None = None
+    facts_by_key: dict[tuple[str, int], SnapshotFact] = {}
+    for line in lines[start_index:]:
+        if not line:
+            continue
+        normalized_line = re.sub(r"\s+", " ", line).strip().lower()
+        if "net income" in normalized_line and "per share" in normalized_line:
+            context = "eps"
+            continue
+        if "net loss" in normalized_line and "per share" in normalized_line:
+            context = "eps"
+            continue
+        if "weighted average shares" in normalized_line:
+            context = "shares"
+            continue
+        if normalized_line.startswith("other financial information"):
+            context = None
+
+        row_match = _SUMMARY_ROW_VALUE_RE.search(line)
+        if row_match is None:
+            continue
+        raw_label = line[: row_match.start()].strip()
+        label = re.sub(r"\.{3,}.*$", "", raw_label).strip()
+        metric = _summary_metric_for_label(label, context=context)
+        if metric is None:
+            continue
+
+        values = (
+            _parse_summary_number(row_match.group("left")),
+            _parse_summary_number(row_match.group("right")),
+        )
+        for fiscal_year, value in zip(years, values, strict=True):
+            if value is None:
+                continue
+            facts_by_key[(metric, fiscal_year)] = SnapshotFact(
+                accession=accession,
+                fiscal_year=fiscal_year,
+                period_end=f"{fiscal_year}-12-31",
+                metric=metric,
+                value_cents=_scaled_summary_cents(
+                    value,
+                    metric=metric,
+                    money_multiplier=money_multiplier,
+                ),
+                currency="USD",
+                is_audited=True,
+                is_pro_forma=False,
+                pro_forma_note=None,
+            )
+    return list(facts_by_key.values())
 
 
 PROMPT_SYSTEM = (
@@ -229,7 +367,7 @@ _MAX_OUTPUT_TOKENS = 4000
 
 async def _call_haiku_extract(section_text: str) -> str:
     try:
-        from anthropic import AsyncAnthropic
+        from anthropic import AsyncAnthropic  # type: ignore[import-not-found]
     except ImportError as exc:
         raise RuntimeError(
             "S-1 financial extraction requires the `anthropic` package. "
@@ -355,6 +493,20 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         cache_path.write_text(result.to_json(), encoding="utf-8")
         return result
 
+    deterministic_facts = _extract_summary_table_facts(section, accession=accession)
+    if deterministic_facts:
+        result = SnapshotResult(
+            schema_version=SCHEMA_VERSION,
+            accession=accession,
+            extracted_at=_utc_iso_now(),
+            extraction_status="ok",
+            source_sha256=source_hash,
+            model=_DETERMINISTIC_TABLE_MODEL,
+            facts=deterministic_facts,
+        )
+        cache_path.write_text(result.to_json(), encoding="utf-8")
+        return result
+
     try:
         raw = await _call_haiku_extract(section)
     except RuntimeError:
@@ -392,6 +544,21 @@ from datetime import date as _date_cls  # noqa: E402
 
 from edgarpack.query.models import CitedValue  # noqa: E402
 from edgarpack.sec.submissions import is_registration_form  # noqa: E402
+
+
+@dataclass(frozen=True)
+class _RegistrationPack:
+    pack_dir: Path
+    accession: str
+    filing_date: _date_cls
+    form_type: str
+
+
+@dataclass(frozen=True)
+class _SnapshotCandidate:
+    fact: SnapshotFact
+    filing_date: _date_cls
+    form_type: str
 
 # Maps a snapshot metric slug to (unit, divisor) for CitedValue conversion.
 # For monetary and per-share metrics the divisor is 100 (cents -> USD).
@@ -498,6 +665,124 @@ def pick_snapshot_fact(
     return None
 
 
+def _parse_manifest_date(raw: object) -> _date_cls:
+    try:
+        return _date_cls.fromisoformat(str(raw))
+    except (TypeError, ValueError):
+        return _date_cls.min
+
+
+def _read_registration_pack(manifest: Path, *, cik: str) -> _RegistrationPack | None:
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    filing = data.get("filing") or {}
+    if str(filing.get("cik", "")) != cik:
+        return None
+    form_type = str(filing.get("form_type", ""))
+    if not is_registration_form(form_type):
+        return None
+    accession = str(filing.get("accession") or manifest.parent.name)
+    return _RegistrationPack(
+        pack_dir=manifest.parent,
+        accession=accession,
+        filing_date=_parse_manifest_date(filing.get("filing_date", "")),
+        form_type=form_type or "S-1",
+    )
+
+
+def _registration_packs_for_cik(cik: str, pack_root: Path) -> list[_RegistrationPack]:
+    packs: list[_RegistrationPack] = []
+    for manifest in Path(pack_root).rglob("manifest.json"):
+        pack = _read_registration_pack(manifest, cik=cik)
+        if pack is not None:
+            packs.append(pack)
+    packs.sort(key=lambda p: (p.filing_date, p.accession), reverse=True)
+    return packs
+
+
+def _current_cached_snapshot(pack: _RegistrationPack) -> SnapshotResult | None:
+    cache = pack.pack_dir / _CACHE_FILENAME
+    if not cache.exists():
+        return None
+    try:
+        result = SnapshotResult.from_json(cache.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return None
+    if result.schema_version != SCHEMA_VERSION:
+        return None
+    if result.source_sha256 != source_sha256_for_pack(pack.pack_dir):
+        return None
+    return result
+
+
+def _snapshot_candidates(
+    result: SnapshotResult,
+    pack: _RegistrationPack,
+) -> list[_SnapshotCandidate]:
+    return [
+        _SnapshotCandidate(
+            fact=fact,
+            filing_date=pack.filing_date,
+            form_type=pack.form_type,
+        )
+        for fact in result.facts
+    ]
+
+
+def _pick_snapshot_candidate(
+    candidates: list[_SnapshotCandidate],
+    *,
+    metric: str,
+    period: str,
+) -> _SnapshotCandidate | None:
+    metric_candidates = [c for c in candidates if c.fact.metric == metric]
+    if not metric_candidates:
+        return None
+
+    if period == "pro-forma":
+        pro_forma = [c for c in metric_candidates if c.fact.is_pro_forma]
+        if not pro_forma:
+            return None
+        pro_forma.sort(
+            key=lambda c: (c.fact.fiscal_year, c.fact.period_end, c.filing_date),
+            reverse=True,
+        )
+        return pro_forma[0]
+
+    audited = [
+        c for c in metric_candidates if c.fact.is_audited and not c.fact.is_pro_forma
+    ]
+    if not audited:
+        return None
+
+    newest_per_period: dict[tuple[int, str], _SnapshotCandidate] = {}
+    for candidate in sorted(
+        audited,
+        key=lambda c: (c.filing_date, c.fact.accession),
+        reverse=True,
+    ):
+        key = (candidate.fact.fiscal_year, candidate.fact.period_end)
+        newest_per_period.setdefault(key, candidate)
+
+    ordered = sorted(
+        newest_per_period.values(),
+        key=lambda c: (c.fact.fiscal_year, c.fact.period_end),
+        reverse=True,
+    )
+
+    if period in ("lfy", "mrp"):
+        return ordered[0] if ordered else None
+
+    match_lfy_n = re.match(r"^lfy-(\d+)$", period)
+    if match_lfy_n:
+        offset = int(match_lfy_n.group(1))
+        return ordered[offset] if offset < len(ordered) else None
+
+    return None
+
+
 def _resolve_concept_for_metric(metric: str) -> str:
     return _DEFAULT_CONCEPTS.get(metric, metric)
 
@@ -528,27 +813,15 @@ def snapshots_for_cik(cik: str, pack_root: Path) -> list[SnapshotFact]:
 
 def _find_latest_registration_pack(cik: str, pack_root: Path) -> Path | None:
     """Return the newest-filing_date registration-class pack directory for a CIK."""
-    candidates: list[tuple[str, Path]] = []
-    for manifest in Path(pack_root).rglob("manifest.json"):
-        try:
-            data = json.loads(manifest.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        filing = data.get("filing") or {}
-        if str(filing.get("cik", "")) != cik:
-            continue
-        if not is_registration_form(str(filing.get("form_type", ""))):
-            continue
-        candidates.append((str(filing.get("filing_date", "")), manifest.parent))
-    if not candidates:
+    packs = _registration_packs_for_cik(cik, pack_root)
+    if not packs:
         return None
-    candidates.sort(reverse=True)
-    return candidates[0][1]
+    return packs[0].pack_dir
 
 
 async def augment_with_s1_snapshot(
     *,
-    result,  # QueryResult; kept as Any to avoid circular import pressure
+    result: Any,  # QueryResult; kept as Any to avoid circular import pressure
     cik: str,
     metrics: list[str],
     period: str,
@@ -556,7 +829,7 @@ async def augment_with_s1_snapshot(
     company: str = "",
     form_type: str = "S-1",
     filed: _date_cls | None = None,
-):
+) -> Any:
     """Fill result.metrics cells that are still None with S-1 snapshot rows.
 
     When no cached snapshots exist, lazily extract from the most recent
@@ -564,52 +837,68 @@ async def augment_with_s1_snapshot(
     missing ANTHROPIC_API_KEY, inject placeholder CitedValue rows with
     source="no_api_key" so the CLI can surface a helpful hint.
     """
-    facts = snapshots_for_cik(cik, pack_root=pack_root)
-
-    if not facts:
-        latest_pack = _find_latest_registration_pack(cik, pack_root)
-        if latest_pack is not None:
-            extract_result = await extract_or_load_snapshot(latest_pack)
-            if extract_result.extraction_status == "no_api_key":
-                for metric in metrics:
-                    if result.metrics.get(metric) is None:
-                        result.metrics[metric] = CitedValue(
-                            value=None,
-                            unit="USD",
-                            metric=metric,
-                            concept=_resolve_concept_for_metric(metric),
-                            period_end=_date_cls.today(),
-                            fiscal_year=0,
-                            fiscal_period="FY",
-                            form_type=form_type,
-                            filed=_date_cls.today(),
-                            accession="",
-                            cik=cik,
-                            company=company,
-                            source="no_api_key",
-                        )
-                return result
-            facts = extract_result.facts
-
-    if not facts:
+    packs = _registration_packs_for_cik(cik, pack_root)
+    if not packs:
         return result
 
-    if filed is None:
-        filed = _date_cls.today()
+    latest_pack = packs[0]
+    latest_result = await extract_or_load_snapshot(latest_pack.pack_dir)
+    if latest_result.extraction_status == "no_api_key":
+        if latest_pack.filing_date != _date_cls.min:
+            placeholder_date = latest_pack.filing_date
+        else:
+            placeholder_date = _date_cls.today()
+        for metric in metrics:
+            if result.metrics.get(metric) is None:
+                result.metrics[metric] = CitedValue(
+                    value=None,
+                    unit="USD",
+                    metric=metric,
+                    concept=_resolve_concept_for_metric(metric),
+                    period_end=placeholder_date,
+                    fiscal_year=0,
+                    fiscal_period="FY",
+                    form_type=latest_pack.form_type or form_type,
+                    filed=placeholder_date,
+                    accession="",
+                    cik=cik,
+                    company=company,
+                    source="no_api_key",
+                )
+        return result
+
+    if not latest_result.facts:
+        return result
+
+    candidates = _snapshot_candidates(latest_result, latest_pack)
+    for pack in packs[1:]:
+        cached = _current_cached_snapshot(pack)
+        if cached is not None:
+            candidates.extend(_snapshot_candidates(cached, pack))
 
     for metric in metrics:
         current = result.metrics.get(metric)
         if current is not None:
             continue
-        fact = pick_snapshot_fact(facts, metric=metric, period=period)
-        if fact is None:
+        candidate = _pick_snapshot_candidate(candidates, metric=metric, period=period)
+        if candidate is None:
             continue
+        fact = candidate.fact
+        filed_date = candidate.filing_date
+        if filed_date == _date_cls.min:
+            if filed is not None:
+                filed_date = filed
+            else:
+                try:
+                    filed_date = _date_cls.fromisoformat(fact.period_end)
+                except ValueError:
+                    filed_date = _date_cls.today()
         cv = snapshot_fact_to_cited_value(
             fact,
             cik=cik,
             company=company,
-            form_type=form_type,
-            filed=filed,
+            form_type=candidate.form_type or form_type,
+            filed=filed_date,
             concept=_resolve_concept_for_metric(metric),
         )
         result.metrics[metric] = cv

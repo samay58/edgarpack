@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib
 import json
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,6 +13,7 @@ import pytest
 
 from edgarpack.query.financials import financials
 from edgarpack.query.models import QueryResult
+from edgarpack.query.s1_financials import source_sha256_for_pack
 
 # Ensure the real module object is cached before any test runs
 importlib.import_module("edgarpack.query.financials")
@@ -23,6 +25,9 @@ def _seed_s1_pack(
     accession: str = "0001628280-24-041596",
     *,
     revenue_cents: int = 7828700000,
+    filing_date: str = "2024-09-30",
+    fiscal_year: int = 2024,
+    period_end: str = "2024-12-31",
     is_pro_forma: bool = False,
     extra_metric: str | None = None,
     extra_cents: int = 0,
@@ -35,7 +40,7 @@ def _seed_s1_pack(
                 "filing": {
                     "accession": accession,
                     "form_type": "S-1",
-                    "filing_date": "2024-09-30",
+                    "filing_date": filing_date,
                     "cik": cik,
                     "company_name": "Cerebras Systems Inc",
                 }
@@ -48,8 +53,8 @@ def _seed_s1_pack(
     facts = [
         {
             "accession": accession,
-            "fiscal_year": 2024,
-            "period_end": "2024-12-31",
+            "fiscal_year": fiscal_year,
+            "period_end": period_end,
             "metric": "revenue",
             "value_cents": revenue_cents,
             "currency": "USD",
@@ -79,12 +84,39 @@ def _seed_s1_pack(
                 "accession": accession,
                 "extracted_at": "2026-04-22T00:00:00Z",
                 "extraction_status": "ok",
-                "source_sha256": "x",
+                "source_sha256": source_sha256_for_pack(pack),
                 "model": "claude-haiku-4-5-20251001",
                 "facts": facts,
             }
         )
     )
+
+
+def _write_s1_pack_without_snapshot(
+    packs_root: Path,
+    *,
+    cik: str = "0002021728",
+    accession: str,
+    filing_date: str,
+    markdown: str,
+) -> Path:
+    pack = packs_root / cik / accession
+    pack.mkdir(parents=True, exist_ok=True)
+    (pack / "manifest.json").write_text(
+        json.dumps(
+            {
+                "filing": {
+                    "accession": accession,
+                    "form_type": "S-1",
+                    "filing_date": filing_date,
+                    "cik": cik,
+                    "company_name": "Cerebras Systems Inc",
+                }
+            }
+        )
+    )
+    (pack / "filing.full.md").write_text(markdown, encoding="utf-8")
+    return pack
 
 
 @pytest.mark.asyncio
@@ -125,6 +157,7 @@ async def test_financials_returns_s1_snapshot_when_periodic_empty(tmp_path):
     assert row.source == "s1_snapshot"
     assert row.form_type == "S-1"
     assert row.accession == "0001628280-24-041596"
+    assert row.filed == date(2024, 9, 30)
     assert row.value == 78287000.0
 
 
@@ -222,3 +255,99 @@ async def test_financials_pro_forma_period_returns_pro_forma_row_only(tmp_path):
     assert row.is_pro_forma is True
     assert row.pro_forma_note == "assumes IPO price $32.50, midpoint"
     assert row.source == "s1_pro_forma"
+
+
+@pytest.mark.asyncio
+async def test_financials_extracts_newest_s1_before_using_old_cached_snapshot(
+    tmp_path, monkeypatch
+):
+    _seed_s1_pack(
+        tmp_path,
+        accession="0001628280-24-041596",
+        revenue_cents=7874400000,
+        filing_date="2024-09-30",
+        fiscal_year=2023,
+        period_end="2023-12-31",
+    )
+    _write_s1_pack_without_snapshot(
+        tmp_path,
+        accession="0001628280-26-025762",
+        filing_date="2026-04-17",
+        markdown=(
+            "Summary Consolidated Financial Data\n\n"
+            "> 2025 / 2024\n"
+            "> (in thousands, except per share amounts) / "
+            "(in thousands, except per share amounts)\n"
+            "> Total revenue ... $509,991 / $290,252\n"
+        ),
+    )
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("latest Cerebras summary table should parse deterministically")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {"facts": {}}
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        return "0002021728", "Cerebras Systems Inc."
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            result = await financials(
+                company="CRBS",
+                metrics=["revenue"],
+                period="lfy",
+                pack_root=tmp_path,
+            )
+
+    row = result.metrics.get("revenue")
+    assert row is not None
+    assert row.accession == "0001628280-26-025762"
+    assert row.fiscal_year == 2025
+    assert row.filed == date(2026, 4, 17)
+    assert row.value == 509991000.0
+
+
+@pytest.mark.asyncio
+async def test_financials_does_not_fallback_to_old_s1_when_newest_snapshot_empty(tmp_path):
+    _seed_s1_pack(
+        tmp_path,
+        accession="0001628280-24-041596",
+        revenue_cents=7874400000,
+        filing_date="2024-09-30",
+        fiscal_year=2023,
+        period_end="2023-12-31",
+    )
+    _write_s1_pack_without_snapshot(
+        tmp_path,
+        accession="0001628280-26-025762",
+        filing_date="2026-04-17",
+        markdown="# Risk Factors\n\nNo financial table here.",
+    )
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {"facts": {}}
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        return "0002021728", "Cerebras Systems Inc."
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            result = await financials(
+                company="CRBS",
+                metrics=["revenue"],
+                period="lfy",
+                pack_root=tmp_path,
+            )
+
+    assert result.metrics.get("revenue") is None

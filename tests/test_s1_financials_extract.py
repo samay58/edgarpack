@@ -23,6 +23,7 @@ from edgarpack.query.s1_financials import (
     SnapshotFact,
     SnapshotResult,
     _call_haiku_extract,
+    _extract_summary_table_facts,
     build_extraction_prompt,
     extract_or_load_snapshot,
     find_financial_data_section,
@@ -163,6 +164,30 @@ def test_find_financial_data_section_matches_summary_alternate():
     assert "Foo" not in section  # Stops at next heading
 
 
+def test_find_financial_data_section_matches_bare_summary_heading_after_toc():
+    md = """
+Table of Contents
+
+> Summary Consolidated Financial Data ..... 18
+
+    Table of Contents
+
+ Summary Consolidated Financial Data
+ The following tables set forth our summary consolidated financial data.
+
+> 2025 / 2024
+> Total revenue ... $509,991 / $290,252
+
+## Risk Factors
+
+Investing involves risk.
+"""
+    section = find_financial_data_section(md)
+    assert section is not None
+    assert "Total revenue" in section
+    assert "Risk Factors" not in section
+
+
 def test_find_financial_data_section_returns_none_when_absent():
     md = "# Risk Factors\n\nInvesting involves risk.\n\n# Business\n\nWe design systems."
     assert find_financial_data_section(md) is None
@@ -270,6 +295,67 @@ def test_parse_llm_response_drops_rows_missing_required_fields():
 
 def test_prompt_system_forbids_fabrication():
     assert "not fabricate" in PROMPT_SYSTEM.lower() or "only" in PROMPT_SYSTEM.lower()
+
+
+_CEREBRAS_2026_SUMMARY_TABLE = """
+ Summary Consolidated Financial Data
+ The following tables set forth our summary consolidated financial data. The summary
+ consolidated statements of operations data for the years ended December 31, 2025
+ and 2024 have been derived from our audited consolidated financial statements.
+
+> **Year Ended December 31, / Year Ended December 31, / Year Ended December 31,**
+>
+> 2025 / 2024
+> (in thousands, except per share amounts) / (in thousands, except per share amounts)
+> Consolidated Statement of Operations:
+> Revenue
+> Hardware ... $358,440 / $211,965
+> Cloud and other services ... 151,551 / 78,287
+> Total revenue ... 509,991 / 290,252
+> Gross profit ... 199,071 / 122,738
+> Loss from operations ... (145,862) / (101,438)
+> Net income (loss) ... $237,827 / $(481,602)
+> Net income (loss) per share attributable to common shareholders:    ...........................
+> Basic ... $1.64 / $(9.90)
+"""
+
+
+def test_extract_summary_table_facts_parses_cerebras_2026_statement_table():
+    facts = _extract_summary_table_facts(
+        _CEREBRAS_2026_SUMMARY_TABLE,
+        accession="0001628280-26-025762",
+    )
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+
+    assert by_key[("revenue", 2025)].value_cents == 50_999_100_000
+    assert by_key[("revenue", 2024)].value_cents == 29_025_200_000
+    assert by_key[("gross_profit", 2025)].value_cents == 19_907_100_000
+    assert by_key[("operating_income_loss", 2025)].value_cents == -14_586_200_000
+    assert by_key[("net_income_loss", 2024)].value_cents == -48_160_200_000
+    assert by_key[("eps_basic", 2025)].value_cents == 164
+    assert by_key[("eps_basic", 2024)].value_cents == -990
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_uses_deterministic_summary_table(tmp_path, monkeypatch):
+    pack = _write_pack(
+        tmp_path,
+        accession="0001628280-26-025762",
+        markdown=_CEREBRAS_2026_SUMMARY_TABLE,
+    )
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("deterministic Cerebras table should not require LLM")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    result = await extract_or_load_snapshot(pack)
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in result.facts}
+
+    assert result.extraction_status == "ok"
+    assert result.model == "deterministic-summary-table"
+    assert by_key[("revenue", 2025)].value_cents == 50_999_100_000
+    assert (pack / "s1_financials.json").exists()
 
 
 @pytest.mark.asyncio
