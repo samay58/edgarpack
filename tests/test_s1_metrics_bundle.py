@@ -74,6 +74,33 @@ def test_bundle_aggregates_all_five_extractors(tmp_path):
     )
 
 
+def test_bundle_scopes_use_of_proceeds_to_section_files_when_available(tmp_path):
+    markdown = """\
+# Summary Consolidated Financial Data
+
+Revenue was $510.0 million for the year ended December 31, 2025.
+
+# Use of Proceeds
+
+We intend to use approximately $150.0 million for research and development.
+"""
+    pack = _write_pack(tmp_path, "test-accn-sections", "S-1", markdown=markdown)
+    sections = pack / "sections"
+    sections.mkdir()
+    (sections / "s1_itemother_use_of_proceeds.md").write_text(
+        "# Use of Proceeds\n\n"
+        "We intend to use approximately $150.0 million for research and development.\n",
+        encoding="utf-8",
+    )
+
+    bundle = extract_s1_metrics_from_pack(pack)
+
+    assert bundle is not None
+    assert [hit.claim for hit in bundle.use_of_proceeds] == [
+        "approximately $150.0 million for research and development"
+    ]
+
+
 def test_bundle_returns_none_for_non_registration_form(tmp_path):
     pack = _write_pack(tmp_path, "test-accn-10k", "10-K")
     assert extract_s1_metrics_from_pack(pack) is None

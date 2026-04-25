@@ -29,6 +29,8 @@ METRIC_ALIASES: dict[str, str] = {
     "gp": "gross_profit",
     "ocf": "operating_cash_flow",
     "capex": "capex",
+    "capital_expenditure": "capex",
+    "capital_expenditures": "capex",
     "eps": "eps_diluted",
     "shares": "shares_diluted",
     "subscription_customers": "customer_count",

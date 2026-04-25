@@ -1914,7 +1914,7 @@ def _cmd_query(args: Any) -> int:
 
     async def _run() -> int:
         from .query.financials import financials
-        from .query.layer_zero import MetricNotFound
+        from .query.layer_zero import MetricNotFound, resolve_alias
         from .query.periods import parse_period_spec
         from .query.presets import expand_metrics
 
@@ -1931,11 +1931,13 @@ def _cmd_query(args: Any) -> int:
             return 2
         metric_input: str | list[str] | None
         metric_list_for_render: list[str] | None = None
+        metric_list_for_error: list[str] | None = None
         if expanded is None:
             metric_input = None
         else:
             metric_input = expanded
-            metric_list_for_render = expanded
+            metric_list_for_error = expanded
+            metric_list_for_render = [resolve_alias(metric) for metric in expanded]
 
         async def _fetch(period: str):
             return await financials(
@@ -1955,7 +1957,7 @@ def _cmd_query(args: Any) -> int:
                 result = gathered[0]
         except MetricNotFound as e:
             print(f"Error: {e}", file=sys.stderr)
-            metric_names = metric_list_for_render or []
+            metric_names = metric_list_for_error or []
             if len(metric_names) == 1:
                 missing = metric_names[0]
                 if missing == "subscription_customers":
@@ -2793,6 +2795,7 @@ def _render_which_empty_state(
     command_label: str,
     cik: str,
     diagnostics: Any,
+    has_s1_context: bool = False,
 ) -> str:
     """Return an actionable empty-state message for `edgarpack which`."""
     if diagnostics.total_registered_packs == 0:
@@ -2814,6 +2817,14 @@ def _render_which_empty_state(
             f"`edgarpack which {command_label} --no-cache`."
         )
     if diagnostics.empty_packs > 0:
+        if has_s1_context:
+            name = display_name.rstrip(".")
+            return (
+                f"No recurring operating KPI table was found for {name}.\n"
+                "Cached registration disclosures and S-1 financial metrics are shown below.\n"
+                f"Try `edgarpack query {command_label} revenue,net_income,operating_cash_flow,"
+                "capex,free_cash_flow --period lfy,lfy-1` for the financial view."
+            )
         return (
             f"Discovery completed for {display_name}, but none of the scanned filings "
             "contained qualifying qualitative KPIs.\n"
@@ -3034,6 +3045,8 @@ def _cmd_which(args: Any) -> int:
     if summary:
         print(summary, file=sys.stderr)
 
+    s1_block = _render_which_s1_metrics(packs)
+
     if args.which_format == "json":
         payload = {
             "cik": cik,
@@ -3056,14 +3069,79 @@ def _cmd_which(args: Any) -> int:
                 command_label=company_label,
                 cik=cik,
                 diagnostics=diagnostics,
+                has_s1_context=bool(s1_block),
             )
         )
 
-    s1_block = _render_which_s1_metrics(packs)
     if s1_block:
         print()
         print(s1_block)
     return 0
+
+
+def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
+    """Return user-facing financial metrics available in a current S-1 cache."""
+    from .query.s1_financials import SCHEMA_VERSION, SnapshotResult, source_sha256_for_pack
+
+    cache = pack_dir / "s1_financials.json"
+    if not cache.exists():
+        return []
+    try:
+        snapshot = SnapshotResult.from_json(cache.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return []
+    if snapshot.schema_version != SCHEMA_VERSION:
+        return []
+    if snapshot.source_sha256 != source_sha256_for_pack(pack_dir):
+        return []
+
+    raw_metrics = {
+        fact.metric for fact in snapshot.facts if fact.is_audited and not fact.is_pro_forma
+    }
+    display_metrics: set[str] = set()
+    for metric in raw_metrics:
+        if metric == "operating_income_loss":
+            display_metrics.add("operating_income")
+        elif metric == "net_income_loss":
+            display_metrics.add("net_income")
+        else:
+            display_metrics.add(metric)
+
+    if {"operating_cash_flow", "capex"}.issubset(raw_metrics):
+        display_metrics.add("free_cash_flow")
+    if {"gross_profit", "revenue"}.issubset(raw_metrics):
+        display_metrics.add("gross_margin")
+    if {"operating_income_loss", "revenue"}.issubset(raw_metrics):
+        display_metrics.add("operating_margin")
+    if {"net_income_loss", "revenue"}.issubset(raw_metrics):
+        display_metrics.add("net_margin")
+    if {"operating_cash_flow", "capex", "revenue"}.issubset(raw_metrics):
+        display_metrics.add("fcf_margin")
+    if {"capex", "revenue"}.issubset(raw_metrics):
+        display_metrics.add("capex_intensity")
+
+    preferred_order = [
+        "revenue",
+        "gross_profit",
+        "gross_margin",
+        "operating_income",
+        "operating_margin",
+        "net_income",
+        "net_margin",
+        "operating_cash_flow",
+        "capex",
+        "free_cash_flow",
+        "fcf_margin",
+        "capex_intensity",
+        "cash_and_equivalents",
+        "total_assets",
+        "stockholders_equity",
+        "shares_outstanding_basic",
+        "eps_basic",
+    ]
+    ordered = [metric for metric in preferred_order if metric in display_metrics]
+    ordered.extend(sorted(display_metrics - set(ordered)))
+    return ordered
 
 
 def _render_which_s1_metrics(packs: list) -> str:
@@ -3081,11 +3159,25 @@ def _render_which_s1_metrics(packs: list) -> str:
 
     for pack in reg_packs:
         bundle = extract_s1_metrics_from_pack(Path(pack.pack_dir))
-        if not bundle or not bundle.total_hits:
+        financial_metrics = _cached_s1_queryable_metrics(Path(pack.pack_dir))
+        if (not bundle or not bundle.total_hits) and not financial_metrics:
             continue
 
-        header = f"S-1 disclosures ({bundle.form_type}, {pack.filing_date}, {bundle.accession}):"
+        if bundle:
+            header = (
+                f"S-1 disclosures ({bundle.form_type}, {pack.filing_date}, {bundle.accession}):"
+            )
+        else:
+            header = f"S-1 disclosures ({pack.form_type}, {pack.filing_date}, {pack.accession}):"
         lines.append(header)
+
+        if financial_metrics:
+            lines.append("  Queryable S-1 financial metrics (cached):")
+            lines.append(f"    {', '.join(financial_metrics)}")
+
+        if not bundle:
+            lines.append("")
+            continue
 
         for label, hits in (
             ("framing claims", bundle.framing),

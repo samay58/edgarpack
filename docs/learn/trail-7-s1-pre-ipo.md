@@ -161,7 +161,7 @@ The "first 50KB" cap matters for cost. The Selected Financial Data section is al
 
 ## 5. Finding and prompting the right section
 
-When the cache misses, `extract_or_load_snapshot` reads `filing.full.md`, locates the Selected Financial Data section, and prompts Haiku 4.5.
+When the cache misses, `extract_or_load_snapshot` reads `filing.full.md`, locates the Selected or Summary Financial Data section, and tries the deterministic table parser first. If the section is present but the table shape is not recognized, it prompts Haiku 4.5.
 
 ```python
 # edgarpack/query/s1_financials.py:135
@@ -302,17 +302,17 @@ This works correctly across multi-period queries (`--period lfy,pro-forma`) beca
 You need `ANTHROPIC_API_KEY` exported and a built S-1 pack. The repo's universe ships with Cerebras (`CRBRS`).
 
 1. Build a registration-class pack: `edgarpack build CRBRS --form S-1 --out ./packs` (one-time; the snapshot is cached after the first query).
-2. Query a metric: `edgarpack query CRBRS revenue`. The first run does a Haiku call and writes `s1_financials.json` next to the pack's `manifest.json`. The second run reads from that cache.
+2. Query a few metrics: `edgarpack query CRBRS revenue,net_income,operating_cash_flow,capex,free_cash_flow --period lfy,lfy-1`. The first run writes `s1_financials.json` next to the pack's `manifest.json`; common S-1 summary tables parse deterministically, and unsupported table shapes use Haiku when `ANTHROPIC_API_KEY` is set. The second run reads from the cache.
 3. Ask for the pro-forma figure explicitly: `edgarpack query CRBRS revenue --period=pro-forma`. Same data file, different `pick_snapshot_fact` branch.
 4. Walk the redline: `edgarpack timeline --series registration --cik 0002021728 --packs ./packs`. Needs at least one S-1 amendment in `./packs` to print pair diffs.
 5. Open the cache: `cat packs/CRBRS/<accession>/s1_financials.json`. Look at the `extraction_status` and the `facts` array. Compare against the filing's Selected Financial Data table.
-6. Force a re-extraction: delete the cache file and re-run the query. The second pass re-prompts Haiku.
+6. Force a re-extraction: delete the cache file and re-run the query. The next pass reruns the deterministic parser, then falls back to Haiku only if needed.
 
 ---
 
 ## Recap
 
-The pre-IPO path is a tightly scoped fork. Build time runs `inject_s1_headings` so `sectionize` can find sections, gated by `is_registration_form`. Query time falls through the periodic path until every requested cell is None, then `augment_with_s1_snapshot` either reads cached `s1_financials.json` files or does one Haiku call against the most recent registration pack, caches the result with a SHA256 invalidation key, and writes `CitedValue` rows tagged `s1_snapshot` or `s1_pro_forma`. The `is_registration_form` guard in `periods.py` keeps S-1 facts out of LTM math the rest of the time. The redline timeline is a separate user-facing command that diffs consecutive S-1 / S-1/A / 424B packs and surfaces the latest filing's S-1 metrics bundle from `kpi_discover`. One predicate (`is_registration_form`), one extractor (`s1_financials.py`), one source tag (`source="s1_*"` on CitedValue), and the rest of the system stays unchanged.
+The pre-IPO path is a tightly scoped fork. Build time runs `inject_s1_headings` so `sectionize` can find sections, gated by `is_registration_form`. Query time falls through the periodic path until every requested cell is None, then `augment_with_s1_snapshot` either reads cached `s1_financials.json` files or extracts the latest registration pack, caches the result with a SHA256 invalidation key, and writes `CitedValue` rows tagged `s1_snapshot` or `s1_pro_forma`. Public query names stay human: `net_income` maps to S-1 `net_income_loss`, `capital_expenditures` maps to `capex`, and `free_cash_flow` is derived from operating cash flow minus capex when both components exist. The `is_registration_form` guard in `periods.py` keeps S-1 facts out of LTM math the rest of the time. The redline timeline is a separate user-facing command that diffs consecutive S-1 / S-1/A / 424B packs and surfaces the latest filing's S-1 metrics bundle from `kpi_discover`. One predicate (`is_registration_form`), one extractor (`s1_financials.py`), one source tag (`source="s1_*"` on CitedValue), and the rest of the system stays unchanged.
 
 ---
 

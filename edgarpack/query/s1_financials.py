@@ -29,6 +29,8 @@ METRIC_SLUGS: frozenset[str] = frozenset(
         "gross_profit",
         "operating_income_loss",
         "net_income_loss",
+        "operating_cash_flow",
+        "capex",
         "cash_and_equivalents",
         "total_assets",
         "stockholders_equity",
@@ -157,9 +159,7 @@ def find_financial_data_section(markdown: str) -> str | None:
 
 _DETERMINISTIC_TABLE_MODEL = "deterministic-summary-table"
 _YEAR_PAIR_RE = re.compile(r"^((?:19|20)\d{2})\s*/\s*((?:19|20)\d{2})$")
-_SUMMARY_VALUE_TOKEN_RE = (
-    r"(?:\$?\(?\$?\d[\d,]*(?:\.\d+)?\)?|[\u2014-])"
-)
+_SUMMARY_VALUE_TOKEN_RE = r"(?:\$?\(?\$?\d[\d,]*(?:\.\d+)?\)?|[\u2014-])"
 _SUMMARY_ROW_VALUE_RE = re.compile(
     rf"(?P<left>{_SUMMARY_VALUE_TOKEN_RE})\s*/\s*(?P<right>{_SUMMARY_VALUE_TOKEN_RE})\s*$"
 )
@@ -201,6 +201,7 @@ def _scaled_summary_cents(value: Decimal, *, metric: str, money_multiplier: int)
 
 def _summary_metric_for_label(label: str, *, context: str | None) -> str | None:
     normalized = re.sub(r"\s+", " ", label).strip().lower()
+    normalized = normalized.replace("\u2019", "'").replace("\u2013", "-")
     if normalized in {"revenue", "total revenue"}:
         return "revenue"
     if normalized == "gross profit":
@@ -214,6 +215,22 @@ def _summary_metric_for_label(label: str, *, context: str | None) -> str | None:
         return "operating_income_loss"
     if normalized in {"net loss", "net income", "net income (loss)"}:
         return "net_income_loss"
+    if (
+        "net cash" in normalized
+        and ("provided by" in normalized or "used in" in normalized)
+        and "operating activities" in normalized
+    ):
+        return "operating_cash_flow"
+    if "included in" in normalized or "accounts payable" in normalized:
+        return None
+    if normalized in {
+        "purchases of property and equipment",
+        "purchase of property and equipment",
+        "capital expenditures",
+    }:
+        return "capex"
+    if normalized.startswith("purchases of property") and "equipment" in normalized:
+        return "capex"
     if context == "eps" and normalized == "basic":
         return "eps_basic"
     return None
@@ -273,22 +290,48 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
         for fiscal_year, value in zip(years, values, strict=True):
             if value is None:
                 continue
+            value_cents = _scaled_summary_cents(
+                value,
+                metric=metric,
+                money_multiplier=money_multiplier,
+            )
+            if metric == "capex":
+                value_cents = abs(value_cents)
             facts_by_key[(metric, fiscal_year)] = SnapshotFact(
                 accession=accession,
                 fiscal_year=fiscal_year,
                 period_end=f"{fiscal_year}-12-31",
                 metric=metric,
-                value_cents=_scaled_summary_cents(
-                    value,
-                    metric=metric,
-                    money_multiplier=money_multiplier,
-                ),
+                value_cents=value_cents,
                 currency="USD",
                 is_audited=True,
                 is_pro_forma=False,
                 pro_forma_note=None,
             )
     return list(facts_by_key.values())
+
+
+def _supplement_cash_flow_facts_from_full_filing(
+    facts: list[SnapshotFact],
+    *,
+    full_text: str,
+    accession: str,
+) -> list[SnapshotFact]:
+    """Add cash-flow rows that often sit outside the S-1 summary table."""
+    if not facts or not full_text:
+        return facts
+
+    supplemented = list(facts)
+    seen = {(fact.metric, fact.fiscal_year, fact.period_end) for fact in supplemented}
+    for fact in _extract_summary_table_facts(full_text, accession=accession):
+        if fact.metric not in {"operating_cash_flow", "capex"}:
+            continue
+        key = (fact.metric, fact.fiscal_year, fact.period_end)
+        if key in seen:
+            continue
+        supplemented.append(fact)
+        seen.add(key)
+    return supplemented
 
 
 PROMPT_SYSTEM = (
@@ -304,7 +347,8 @@ _PROMPT_USER_TEMPLATE = """Return a JSON array. Each element is one fact:
   "fiscal_year": 2024,
   "period_end": "2024-12-31",
   "metric": "revenue" | "gross_profit" | "operating_income_loss" | "net_income_loss"
-          | "cash_and_equivalents" | "total_assets" | "stockholders_equity"
+          | "operating_cash_flow" | "capex" | "cash_and_equivalents"
+          | "total_assets" | "stockholders_equity"
           | "shares_outstanding_basic" | "eps_basic",
   "value_cents": 78287000000,
   "currency": "USD",
@@ -320,6 +364,9 @@ RULES:
 - Losses are negative integers (e.g. "Net loss (259,251)" with "in thousands"
   becomes value_cents = -25,925,100,000).
 - Per-share figures: value_cents is cents per share. "$(1.08)" becomes -108.
+- Capital expenditures should be stored as a positive cash outflow. If the filing
+  prints purchases of property and equipment in parentheses, return the absolute
+  value.
 - Share counts: shares_outstanding_basic uses value_cents for the count itself
   (scaled by 100). "240,123,456" shares becomes value_cents = 24,012,345,600.
 - Pro-forma rows MUST set is_pro_forma=true and record the assumption verbatim
@@ -432,7 +479,7 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
     return facts
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 4
 _CACHE_FILENAME = "s1_financials.json"
 _SOURCE_SCAN_CHARS = 50_000
 
@@ -494,6 +541,11 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         return result
 
     deterministic_facts = _extract_summary_table_facts(section, accession=accession)
+    deterministic_facts = _supplement_cash_flow_facts_from_full_filing(
+        deterministic_facts,
+        full_text=markdown,
+        accession=accession,
+    )
     if deterministic_facts:
         result = SnapshotResult(
             schema_version=SCHEMA_VERSION,
@@ -542,7 +594,7 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
 
 from datetime import date as _date_cls  # noqa: E402
 
-from edgarpack.query.models import CitedValue  # noqa: E402
+from edgarpack.query.models import CitedValue, DerivedValue  # noqa: E402
 from edgarpack.sec.submissions import is_registration_form  # noqa: E402
 
 
@@ -560,6 +612,7 @@ class _SnapshotCandidate:
     filing_date: _date_cls
     form_type: str
 
+
 # Maps a snapshot metric slug to (unit, divisor) for CitedValue conversion.
 # For monetary and per-share metrics the divisor is 100 (cents -> USD).
 # For share counts the divisor is 100 (we stored count * 100 in cents).
@@ -568,6 +621,8 @@ _UNIT_FOR_METRIC: dict[str, tuple[str, int]] = {
     "gross_profit": ("USD", 100),
     "operating_income_loss": ("USD", 100),
     "net_income_loss": ("USD", 100),
+    "operating_cash_flow": ("USD", 100),
+    "capex": ("USD", 100),
     "cash_and_equivalents": ("USD", 100),
     "total_assets": ("USD", 100),
     "stockholders_equity": ("USD", 100),
@@ -583,11 +638,28 @@ _DEFAULT_CONCEPTS: dict[str, str] = {
     "gross_profit": "GrossProfit",
     "operating_income_loss": "OperatingIncomeLoss",
     "net_income_loss": "NetIncomeLoss",
+    "operating_cash_flow": "NetCashProvidedByUsedInOperatingActivities",
+    "capex": "PaymentsToAcquirePropertyPlantAndEquipment",
     "cash_and_equivalents": "CashAndCashEquivalentsAtCarryingValue",
     "total_assets": "Assets",
     "stockholders_equity": "StockholdersEquity",
     "shares_outstanding_basic": "WeightedAverageNumberOfSharesOutstandingBasic",
     "eps_basic": "EarningsPerShareBasic",
+}
+
+_PUBLIC_TO_SNAPSHOT_METRIC: dict[str, str] = {
+    "operating_income": "operating_income_loss",
+    "net_income": "net_income_loss",
+    "cash": "cash_and_equivalents",
+}
+
+_S1_DERIVED_FORMULAS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "free_cash_flow": ("operating_cash_flow - capex", ("operating_cash_flow", "capex")),
+    "gross_margin": ("gross_profit / revenue", ("gross_profit", "revenue")),
+    "operating_margin": ("operating_income / revenue", ("operating_income", "revenue")),
+    "net_margin": ("net_income / revenue", ("net_income", "revenue")),
+    "fcf_margin": ("free_cash_flow / revenue", ("free_cash_flow", "revenue")),
+    "capex_intensity": ("capex / revenue", ("capex", "revenue")),
 }
 
 
@@ -599,6 +671,7 @@ def snapshot_fact_to_cited_value(
     form_type: str,
     filed: _date_cls,
     concept: str,
+    public_metric: str | None = None,
 ) -> CitedValue:
     unit, divisor = _UNIT_FOR_METRIC[fact.metric]
     if fact.currency != "USD":
@@ -614,7 +687,7 @@ def snapshot_fact_to_cited_value(
     return CitedValue(
         value=value,
         unit=unit,
-        metric=fact.metric,
+        metric=public_metric or fact.metric,
         concept=concept,
         period_start=None,
         period_end=period_end,
@@ -751,9 +824,7 @@ def _pick_snapshot_candidate(
         )
         return pro_forma[0]
 
-    audited = [
-        c for c in metric_candidates if c.fact.is_audited and not c.fact.is_pro_forma
-    ]
+    audited = [c for c in metric_candidates if c.fact.is_audited and not c.fact.is_pro_forma]
     if not audited:
         return None
 
@@ -784,7 +855,178 @@ def _pick_snapshot_candidate(
 
 
 def _resolve_concept_for_metric(metric: str) -> str:
+    snapshot_metric = _snapshot_metric_for_query_metric(metric)
+    if snapshot_metric in _DEFAULT_CONCEPTS:
+        return _DEFAULT_CONCEPTS[snapshot_metric]
+    formula = _S1_DERIVED_FORMULAS.get(metric)
+    if formula is not None:
+        return formula[0]
     return _DEFAULT_CONCEPTS.get(metric, metric)
+
+
+def _snapshot_metric_for_query_metric(metric: str) -> str:
+    return _PUBLIC_TO_SNAPSHOT_METRIC.get(metric, metric)
+
+
+def _filed_date_for_candidate(
+    candidate: _SnapshotCandidate,
+    *,
+    filed: _date_cls | None,
+) -> _date_cls:
+    if candidate.filing_date != _date_cls.min:
+        return candidate.filing_date
+    if filed is not None:
+        return filed
+    try:
+        return _date_cls.fromisoformat(candidate.fact.period_end)
+    except ValueError:
+        return _date_cls.today()
+
+
+def _candidate_to_cited_value(
+    candidate: _SnapshotCandidate,
+    *,
+    public_metric: str,
+    cik: str,
+    company: str,
+    form_type: str,
+    filed: _date_cls | None,
+) -> CitedValue:
+    fact = candidate.fact
+    return snapshot_fact_to_cited_value(
+        fact,
+        cik=cik,
+        company=company,
+        form_type=candidate.form_type or form_type,
+        filed=_filed_date_for_candidate(candidate, filed=filed),
+        concept=_resolve_concept_for_metric(public_metric),
+        public_metric=public_metric,
+    )
+
+
+def _eval_s1_formula(
+    formula: str,
+    components: dict[str, CitedValue],
+) -> float | None:
+    values = {
+        name: float(value.value) for name, value in components.items() if value.value is not None
+    }
+    parts = formula.split()
+    if len(parts) != 3:
+        return None
+    left_name, operator, right_name = parts
+    left = values.get(left_name)
+    right = values.get(right_name)
+    if left is None or right is None:
+        return None
+    if operator == "+":
+        return left + right
+    if operator == "-":
+        return left - right
+    if operator == "*":
+        return left * right
+    if operator == "/":
+        if right == 0:
+            return None
+        return left / right
+    return None
+
+
+def _s1_derived_unit(metric: str) -> str:
+    if metric == "free_cash_flow":
+        return "USD"
+    return "pure"
+
+
+def _s1_value_from_candidates(
+    candidates: list[_SnapshotCandidate],
+    *,
+    metric: str,
+    period: str,
+    cik: str,
+    company: str,
+    form_type: str,
+    filed: _date_cls | None,
+    resolving: set[str] | None = None,
+) -> CitedValue | DerivedValue | None:
+    resolving = set() if resolving is None else resolving
+    if metric in resolving:
+        return None
+
+    formula = _S1_DERIVED_FORMULAS.get(metric)
+    if formula is not None:
+        resolving.add(metric)
+        expression, component_names = formula
+        components: dict[str, CitedValue] = {}
+        for component_name in component_names:
+            component = _s1_value_from_candidates(
+                candidates,
+                metric=component_name,
+                period=period,
+                cik=cik,
+                company=company,
+                form_type=form_type,
+                filed=filed,
+                resolving=resolving,
+            )
+            if component is None or component.value is None:
+                resolving.discard(metric)
+                return None
+            components[component_name] = component
+
+        fiscal_years = {component.fiscal_year for component in components.values()}
+        period_ends = {component.period_end for component in components.values()}
+        if len(fiscal_years) != 1 or len(period_ends) != 1:
+            resolving.discard(metric)
+            return None
+
+        value = _eval_s1_formula(expression, components)
+        if value is None:
+            resolving.discard(metric)
+            return None
+
+        first_component = next(iter(components.values()))
+        resolving.discard(metric)
+        return DerivedValue(
+            value=value,
+            unit=_s1_derived_unit(metric),
+            metric=metric,
+            concept=expression,
+            period_start=first_component.period_start,
+            period_end=first_component.period_end,
+            fiscal_year=first_component.fiscal_year,
+            fiscal_period=first_component.fiscal_period,
+            form_type=first_component.form_type,
+            filed=first_component.filed,
+            accession=first_component.accession,
+            cik=cik,
+            company=company,
+            taxonomy=first_component.taxonomy,
+            primary_document=first_component.primary_document,
+            source=first_component.source,
+            reporting_currency=first_component.reporting_currency,
+            derived=True,
+            components=components,
+        )
+
+    snapshot_metric = _snapshot_metric_for_query_metric(metric)
+    if snapshot_metric not in METRIC_SLUGS:
+        return None
+    candidate = _pick_snapshot_candidate(
+        candidates,
+        metric=snapshot_metric,
+        period=period,
+    )
+    if candidate is None:
+        return None
+    return _candidate_to_cited_value(
+        candidate,
+        public_metric=metric,
+        cik=cik,
+        company=company,
+        form_type=form_type,
+        filed=filed,
+    )
 
 
 def snapshots_for_cik(cik: str, pack_root: Path) -> list[SnapshotFact]:
@@ -850,9 +1092,11 @@ async def augment_with_s1_snapshot(
             placeholder_date = _date_cls.today()
         for metric in metrics:
             if result.metrics.get(metric) is None:
+                snapshot_metric = _snapshot_metric_for_query_metric(metric)
+                unit, _ = _UNIT_FOR_METRIC.get(snapshot_metric, ("USD", 100))
                 result.metrics[metric] = CitedValue(
                     value=None,
-                    unit="USD",
+                    unit=unit,
                     metric=metric,
                     concept=_resolve_concept_for_metric(metric),
                     period_end=placeholder_date,
@@ -880,26 +1124,15 @@ async def augment_with_s1_snapshot(
         current = result.metrics.get(metric)
         if current is not None:
             continue
-        candidate = _pick_snapshot_candidate(candidates, metric=metric, period=period)
-        if candidate is None:
-            continue
-        fact = candidate.fact
-        filed_date = candidate.filing_date
-        if filed_date == _date_cls.min:
-            if filed is not None:
-                filed_date = filed
-            else:
-                try:
-                    filed_date = _date_cls.fromisoformat(fact.period_end)
-                except ValueError:
-                    filed_date = _date_cls.today()
-        cv = snapshot_fact_to_cited_value(
-            fact,
+        value = _s1_value_from_candidates(
+            candidates,
+            metric=metric,
+            period=period,
             cik=cik,
             company=company,
-            form_type=candidate.form_type or form_type,
-            filed=filed_date,
-            concept=_resolve_concept_for_metric(metric),
+            form_type=form_type,
+            filed=filed,
         )
-        result.metrics[metric] = cv
+        if value is not None:
+            result.metrics[metric] = value
     return result

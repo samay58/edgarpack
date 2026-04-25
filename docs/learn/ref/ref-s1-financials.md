@@ -1,9 +1,9 @@
 # Reference: query/s1_financials.py
 
-`edgarpack/query/s1_financials.py` (616 lines)
+`edgarpack/query/s1_financials.py` (1,138 lines)
 `edgarpack/parse/s1_headings.py` (111 lines, covered in the [Build-time companion](#build-time-companion-parses1_headingspy) section below)
 
-The pre-IPO snapshot extractor. Companyfacts is empty for filers that have not filed a 10-K / 10-Q / 20-F yet, and Cerebras-era S-1 primary documents carry no embedded iXBRL. The real numbers live in the filing's prose. This module pulls them out with one Haiku 4.5 call per filing, caches the result next to the pack, and feeds them into the existing `financials()` output as `CitedValue` rows tagged `s1_snapshot` or `s1_pro_forma`. See [Trail 7](../trail-7-s1-pre-ipo.md) for the end-to-end story.
+The pre-IPO snapshot extractor. Companyfacts is empty for filers that have not filed a 10-K / 10-Q / 20-F yet, and Cerebras-era S-1 primary documents carry no embedded iXBRL. The real numbers live in the filing's prose. This module first tries deterministic parsing for common selected/summary financial tables, falls back to one Haiku 4.5 call only when needed, caches the result next to the pack, and feeds it into the existing `financials()` output as `CitedValue` rows tagged `s1_snapshot` or `s1_pro_forma`. See [Trail 7](../trail-7-s1-pre-ipo.md) for the end-to-end story.
 
 Added in commit `b1bad08` (2026-04-25). The contract surface is `augment_with_s1_snapshot` (entry point) and the metric slug set in `METRIC_SLUGS`. Everything else is the cache, the prompt, the parser, and the registration-pack walker that supports those two.
 
@@ -62,14 +62,14 @@ class SnapshotResult:
 ```python
 METRIC_SLUGS: frozenset[str] = frozenset({
     "revenue", "gross_profit", "operating_income_loss", "net_income_loss",
-    "cash_and_equivalents", "total_assets", "stockholders_equity",
-    "shares_outstanding_basic", "eps_basic",
+    "operating_cash_flow", "capex", "cash_and_equivalents", "total_assets",
+    "stockholders_equity", "shares_outstanding_basic", "eps_basic",
 })
 ```
 
-`edgarpack/query/s1_financials.py:24`. The closed set of metrics the S-1 path can fill. Anything outside this set falls through unchanged.
+`edgarpack/query/s1_financials.py:24`. The closed set of raw metrics the S-1 path can fill. User-facing query names map onto this set where needed: `net_income` reads `net_income_loss`, `operating_income` reads `operating_income_loss`, and `capital_expenditures` resolves to `capex`.
 
-The set must stay in sync with `METRIC_MAP` in `edgarpack/query/metric_map.py`. A slug present here but missing in `metric_map` would extract successfully and then fail to render. The prompt template embeds a sorted list of these slugs at the bottom (`build_extraction_prompt` line 197) so the model can only emit valid metrics.
+The set must stay in sync with the query layer's public metrics and aliases. A slug present here but unreachable from `financials()` would extract successfully and then be invisible to users. The prompt template embeds a sorted list of these slugs at the bottom (`build_extraction_prompt` line 197) so the model can only emit valid metrics.
 
 ---
 

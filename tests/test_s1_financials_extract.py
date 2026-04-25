@@ -69,12 +69,14 @@ def test_snapshot_fact_pro_forma_with_assumption():
     assert "$32.50" in fact.pro_forma_note
 
 
-def test_metric_slugs_contains_all_nine_v1_metrics():
+def test_metric_slugs_contains_all_v2_metrics():
     assert {
         "revenue",
         "gross_profit",
         "operating_income_loss",
         "net_income_loss",
+        "operating_cash_flow",
+        "capex",
         "cash_and_equivalents",
         "total_assets",
         "stockholders_equity",
@@ -85,7 +87,7 @@ def test_metric_slugs_contains_all_nine_v1_metrics():
 
 def test_snapshot_result_serializes_to_json():
     result = SnapshotResult(
-        schema_version=1,
+        schema_version=SCHEMA_VERSION,
         accession="0001628280-24-041596",
         extracted_at="2026-04-22T18:14:00Z",
         extraction_status="ok",
@@ -106,7 +108,7 @@ def test_snapshot_result_serializes_to_json():
         ],
     )
     payload = json.loads(result.to_json())
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == SCHEMA_VERSION
     assert payload["accession"] == "0001628280-24-041596"
     assert payload["extraction_status"] == "ok"
     assert len(payload["facts"]) == 1
@@ -117,7 +119,7 @@ def test_snapshot_result_serializes_to_json():
 def test_snapshot_result_deserializes_from_json():
     raw = json.dumps(
         {
-            "schema_version": 1,
+            "schema_version": SCHEMA_VERSION,
             "accession": "0001628280-24-041596",
             "extracted_at": "2026-04-22T18:14:00Z",
             "extraction_status": "ok",
@@ -206,13 +208,15 @@ def test_build_extraction_prompt_includes_section_text():
     assert "Revenue 100" in prompt
 
 
-def test_build_extraction_prompt_enumerates_all_nine_metrics():
+def test_build_extraction_prompt_enumerates_all_metrics():
     prompt = build_extraction_prompt("# stub")
     for slug in (
         "revenue",
         "gross_profit",
         "operating_income_loss",
         "net_income_loss",
+        "operating_cash_flow",
+        "capex",
         "cash_and_equivalents",
         "total_assets",
         "stockholders_equity",
@@ -317,6 +321,9 @@ _CEREBRAS_2026_SUMMARY_TABLE = """
 > Net income (loss) ... $237,827 / $(481,602)
 > Net income (loss) per share attributable to common shareholders:    ...........................
 > Basic ... $1.64 / $(9.90)
+> Other Financial Information:
+> Net cash provided by (used in) operating activities ... $(10,050) / $451,978
+> Purchases of property and equipment ... $(382,739) / $(23,435)
 """
 
 
@@ -332,8 +339,50 @@ def test_extract_summary_table_facts_parses_cerebras_2026_statement_table():
     assert by_key[("gross_profit", 2025)].value_cents == 19_907_100_000
     assert by_key[("operating_income_loss", 2025)].value_cents == -14_586_200_000
     assert by_key[("net_income_loss", 2024)].value_cents == -48_160_200_000
+    assert by_key[("operating_cash_flow", 2025)].value_cents == -1_005_000_000
+    assert by_key[("operating_cash_flow", 2024)].value_cents == 45_197_800_000
+    assert by_key[("capex", 2025)].value_cents == 38_273_900_000
+    assert by_key[("capex", 2024)].value_cents == 2_343_500_000
     assert by_key[("eps_basic", 2025)].value_cents == 164
     assert by_key[("eps_basic", 2024)].value_cents == -990
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_supplements_cash_flow_rows_outside_summary(
+    tmp_path, monkeypatch
+):
+    markdown = """
+ Summary Consolidated Financial Data
+ The following tables set forth our summary consolidated financial data.
+
+> 2025 / 2024
+> (in thousands, except per share amounts) / (in thousands, except per share amounts)
+> Consolidated Statement of Operations:
+> Total revenue ... $509,991 / $290,252
+> Net cash provided by (used in) operating activities ... $(10,050) / $451,978
+
+# Consolidated Statements of Cash Flows
+
+> Purchases of property and equipment ... (382,739) / (23,435)
+> Purchases of property and equipment included in accounts payable ... 9,453 / $4,286
+"""
+    pack = _write_pack(
+        tmp_path,
+        accession="0001628280-26-025762",
+        markdown=markdown,
+    )
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("cash-flow supplement should stay deterministic")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    result = await extract_or_load_snapshot(pack)
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in result.facts}
+
+    assert by_key[("operating_cash_flow", 2025)].value_cents == -1_005_000_000
+    assert by_key[("capex", 2025)].value_cents == 38_273_900_000
+    assert by_key[("capex", 2024)].value_cents == 2_343_500_000
 
 
 @pytest.mark.asyncio

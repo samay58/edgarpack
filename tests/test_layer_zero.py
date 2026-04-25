@@ -30,8 +30,23 @@ class TestResolveAlias(unittest.TestCase):
         self.assertEqual(resolve_alias("some_unknown_metric"), "some_unknown_metric")
 
     def test_common_aliases_present(self) -> None:
-        for alias in ("fcf", "opinc", "rev", "ni", "cogs", "gp", "ocf", "eps"):
+        for alias in (
+            "fcf",
+            "opinc",
+            "rev",
+            "ni",
+            "cogs",
+            "gp",
+            "ocf",
+            "eps",
+            "capital_expenditure",
+            "capital_expenditures",
+        ):
             self.assertIn(alias, METRIC_ALIASES)
+
+    def test_capital_expenditures_alias_resolves_to_capex(self) -> None:
+        self.assertEqual(resolve_alias("capital_expenditures"), "capex")
+        self.assertEqual(resolve_alias("capital_expenditure"), "capex")
 
 
 class TestSuggestMetrics(unittest.TestCase):

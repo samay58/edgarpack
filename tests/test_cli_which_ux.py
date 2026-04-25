@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
@@ -17,6 +18,8 @@ from edgarpack.query.kpi_discover import (
     PeriodPoint,
 )
 from edgarpack.query.layer_zero import MetricNotFound
+from edgarpack.query.models import CitedValue, QueryResult
+from edgarpack.query.s1_financials import SCHEMA_VERSION, source_sha256_for_pack
 
 
 def _build_args(*, company=None, cik=None, form="10-K", accession=None, tmp_path=None):
@@ -268,6 +271,138 @@ def test_cmd_which_empty_state_is_actionable(capsys):
     assert "`edgarpack which FIG --no-cache`" in captured.out
 
 
+def test_cmd_which_s1_empty_state_surfaces_registration_context(tmp_path, capsys):
+    pack_dir = tmp_path / "packs" / "0002021728" / "0001628280-26-025762"
+    pack_dir.mkdir(parents=True)
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "filing": {
+                    "accession": "0001628280-26-025762",
+                    "cik": "0002021728",
+                    "company_name": "Cerebras Systems Inc.",
+                    "form_type": "S-1",
+                    "filing_date": "2026-04-17",
+                },
+                "sections": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pack_dir / "filing.full.md").write_text(
+        "# Prospectus Summary\n\nThe addressable market is estimated to be $251 billion.\n",
+        encoding="utf-8",
+    )
+    (pack_dir / "s1_financials.json").write_text(
+        json.dumps(
+            {
+                "schema_version": SCHEMA_VERSION,
+                "accession": "0001628280-26-025762",
+                "extracted_at": "2026-04-22T00:00:00Z",
+                "extraction_status": "ok",
+                "source_sha256": source_sha256_for_pack(pack_dir),
+                "model": "deterministic-summary-table",
+                "facts": [
+                    {
+                        "accession": "0001628280-26-025762",
+                        "fiscal_year": 2025,
+                        "period_end": "2025-12-31",
+                        "metric": "revenue",
+                        "value_cents": 50_999_100_000,
+                        "currency": "USD",
+                        "is_audited": True,
+                        "is_pro_forma": False,
+                        "pro_forma_note": None,
+                    },
+                    {
+                        "accession": "0001628280-26-025762",
+                        "fiscal_year": 2025,
+                        "period_end": "2025-12-31",
+                        "metric": "net_income_loss",
+                        "value_cents": 23_782_700_000,
+                        "currency": "USD",
+                        "is_audited": True,
+                        "is_pro_forma": False,
+                        "pro_forma_note": None,
+                    },
+                    {
+                        "accession": "0001628280-26-025762",
+                        "fiscal_year": 2025,
+                        "period_end": "2025-12-31",
+                        "metric": "operating_cash_flow",
+                        "value_cents": -1_005_000_000,
+                        "currency": "USD",
+                        "is_audited": True,
+                        "is_pro_forma": False,
+                        "pro_forma_note": None,
+                    },
+                    {
+                        "accession": "0001628280-26-025762",
+                        "fiscal_year": 2025,
+                        "period_end": "2025-12-31",
+                        "metric": "capex",
+                        "value_cents": 38_273_900_000,
+                        "currency": "USD",
+                        "is_audited": True,
+                        "is_pro_forma": False,
+                        "pro_forma_note": None,
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    pack = PackRecord(
+        accession="0001628280-26-025762",
+        cik="0002021728",
+        ticker="CBRS",
+        company_name="Cerebras Systems Inc.",
+        form_type="S-1",
+        filing_date="2026-04-17",
+        sections_count=1,
+        tokens_total=100,
+        pack_dir=str(pack_dir),
+        built_at="2026-04-17T00:00:00+00:00",
+    )
+
+    def _fake_discover(*, diagnostics=None, **kwargs):  # noqa: ARG001
+        assert diagnostics is not None
+        diagnostics.total_registered_packs = 1
+        diagnostics.eligible_packs = 1
+        diagnostics.empty_packs = 1
+        return []
+
+    mock_registry = Mock()
+    mock_registry.list_packs.return_value = [pack]
+    mock_registry.close.return_value = None
+
+    with (
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(
+                return_value=_resolved_company(
+                    ticker="CBRS",
+                    cik="0002021728",
+                    alias="Cerebras Systems Inc.",
+                )
+            ),
+        ),
+        patch("edgarpack.harvest.registry.PackRegistry", return_value=mock_registry),
+        patch("edgarpack.query.kpi_discover.discover_kpis", side_effect=_fake_discover),
+    ):
+        rc = cli._cmd_which(_which_args(company="Cerebras Systems"))
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "No recurring operating KPI table was found" in captured.out
+    assert "registration disclosures" in captured.out
+    assert "10-K or 10-Q" not in captured.out
+    assert "Queryable S-1 financial metrics" in captured.out
+    assert "net_income" in captured.out
+    assert "free_cash_flow" in captured.out
+
+
 def test_cmd_query_metric_not_found_adds_actionable_guidance(capsys):
     with patch(
         "edgarpack.query.financials.financials",
@@ -281,6 +416,47 @@ def test_cmd_query_metric_not_found_adds_actionable_guidance(capsys):
     assert "Tip: `subscription_customers` maps to the catalog metric `customer_count`." in err
     assert "Company-specific KPI slugs come from `edgarpack which CRWD`." in err
     assert "catalog metric like `customer_count`" in err
+
+
+def test_cmd_query_multi_period_renders_alias_normalized_metric(capsys):
+    args = _query_args(company="CBRS", metrics="capital_expenditures")
+    args.period = "lfy,lfy-1"
+
+    async def fake_financials(company, metrics, period, **kwargs):  # noqa: ARG001
+        value = 382_739_000.0 if period == "lfy" else 23_435_000.0
+        fy = 2025 if period == "lfy" else 2024
+        return QueryResult(
+            company="Cerebras Systems Inc.",
+            cik="0002021728",
+            period=period,
+            metrics={
+                "capex": CitedValue(
+                    value=value,
+                    unit="USD",
+                    metric="capex",
+                    concept="PaymentsToAcquirePropertyPlantAndEquipment",
+                    period_end=date(fy, 12, 31),
+                    fiscal_year=fy,
+                    fiscal_period="FY",
+                    form_type="S-1",
+                    filed=date(2026, 4, 17),
+                    accession="0001628280-26-025762",
+                    cik="0002021728",
+                    company="Cerebras Systems Inc.",
+                    source="s1_snapshot",
+                )
+            },
+        )
+
+    with patch("edgarpack.query.financials.financials", new=AsyncMock(side_effect=fake_financials)):
+        rc = cli._cmd_query(args)
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "Capex" in out
+    assert "$382.7M" in out
+    assert "$23.4M" in out
+    assert "Capital Expenditures  N/A" not in out
 
 
 class TestWhichDiagnosticsSplit(unittest.TestCase):

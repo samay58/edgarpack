@@ -107,11 +107,11 @@ The text output is fast triage. The HTML report is the thing to open when you wa
 
 ```bash
 edgarpack build "Cerebras Systems" --form S-1 --last 2
-edgarpack query "Cerebras Systems" revenue --period lfy,lfy-1
+edgarpack query "Cerebras Systems" revenue,gross_profit,net_income,operating_cash_flow,capex,free_cash_flow --period lfy,lfy-1
 edgarpack timeline --series registration --cik 0002021728 --packs ./packs --format html --out ./reports/cerebras-s1
 ```
 
-S-1 filers usually do not have SEC companyfacts yet. EdgarPack reads the built registration packs instead, extracts selected/summary financial data when the table shape is supported, and gives you a registration-timeline redline for the filing chain.
+S-1 filers usually do not have SEC companyfacts yet. EdgarPack reads the built registration packs instead, extracts selected/summary financial data when the table shape is supported, computes simple S-1-derived metrics like free cash flow, and gives you a registration-timeline redline for the filing chain. `capital_expenditures` works as an alias for `capex`.
 
 ## Install
 

@@ -807,6 +807,29 @@ def extract_principal_holders(text: str) -> list[DisclosureHit]:
     ]
 
 
+def _section_scoped_text(
+    pack_dir: Path,
+    *,
+    name_fragments: tuple[str, ...],
+    fallback: str,
+) -> str:
+    """Read matching section markdown when available, else return full filing text."""
+    sections_dir = pack_dir / "sections"
+    if not sections_dir.exists():
+        return fallback
+
+    selected: list[str] = []
+    for section_path in sorted(sections_dir.glob("*.md")):
+        section_name = section_path.name.lower()
+        if not any(fragment in section_name for fragment in name_fragments):
+            continue
+        try:
+            selected.append(section_path.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            continue
+    return "\n\n".join(selected) if selected else fallback
+
+
 @dataclass(frozen=True)
 class S1MetricsBundle:
     """All S-1-specific extractor output for one registration-class pack.
@@ -835,7 +858,7 @@ class S1MetricsBundle:
 
 
 def extract_s1_metrics_from_pack(pack_dir: Path) -> S1MetricsBundle | None:
-    """Run all five S-1 extractors over a pack's full markdown.
+    """Run all five S-1 extractors over the most relevant pack sections.
 
     Returns None when the pack is not registration-class (so callers can
     drop it from an aggregation pass) or when `filing.full.md` is missing.
@@ -859,14 +882,39 @@ def extract_s1_metrics_from_pack(pack_dir: Path) -> S1MetricsBundle | None:
         return None
 
     text = markdown_path.read_text(encoding="utf-8", errors="replace")
+    framing_text = _section_scoped_text(
+        pack_dir,
+        name_fragments=("prospectus_summary", "summary", "business"),
+        fallback=text,
+    )
+    use_of_proceeds_text = _section_scoped_text(
+        pack_dir,
+        name_fragments=("use_of_proceeds",),
+        fallback=text,
+    )
+    dilution_text = _section_scoped_text(
+        pack_dir,
+        name_fragments=("dilution",),
+        fallback=text,
+    )
+    lockup_text = _section_scoped_text(
+        pack_dir,
+        name_fragments=("underwriting", "lockup", "shares_eligible"),
+        fallback=text,
+    )
+    principal_holders_text = _section_scoped_text(
+        pack_dir,
+        name_fragments=("principal_stock", "principal_share", "security_ownership"),
+        fallback=text,
+    )
     return S1MetricsBundle(
         accession=str(filing.get("accession", "")),
         form_type=form_type,
-        framing=extract_framing_claims(text),
-        use_of_proceeds=extract_use_of_proceeds(text),
-        dilution=extract_dilution(text),
-        lockup=extract_lockup(text),
-        principal_holders=extract_principal_holders(text),
+        framing=extract_framing_claims(framing_text),
+        use_of_proceeds=extract_use_of_proceeds(use_of_proceeds_text),
+        dilution=extract_dilution(dilution_text),
+        lockup=extract_lockup(lockup_text),
+        principal_holders=extract_principal_holders(principal_holders_text),
     )
 
 
