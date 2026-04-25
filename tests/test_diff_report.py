@@ -524,6 +524,8 @@ def test_render_pair_report_html_escapes_text_and_emits_static_report(
     assert "<details" in html and "<summary" in html
     assert "--paper" in html and "--serif" in html and "--code" in html
     assert "old source" in html and "new source" in html
+    assert (before / "sections" / "s1_risk_factors.md").resolve().as_uri() in html
+    assert (after / "sections" / "s1_risk_factors.md").resolve().as_uri() in html
     assert "<script" not in html.lower()
 
 

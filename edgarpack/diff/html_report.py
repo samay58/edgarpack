@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import posixpath
 from html import escape
+from pathlib import Path
 from urllib.parse import quote, urlsplit
 
 from .models import ChangeType
@@ -308,6 +309,27 @@ def _safe_relative_href(path: str) -> str | None:
     return escape(quote(normalized, safe="/._-~"), quote=True)
 
 
+def _safe_pack_file_href(pack_dir: str, section_path: str) -> str | None:
+    candidate = section_path.strip().replace("\\", "/")
+    if not candidate or "\x00" in candidate:
+        return None
+    parsed = urlsplit(candidate)
+    if parsed.scheme or parsed.netloc or candidate.startswith(("/", "#")):
+        return None
+
+    normalized = posixpath.normpath(candidate)
+    if normalized in {"", ".", ".."} or normalized.startswith("../") or "/../" in normalized:
+        return None
+
+    try:
+        pack_root = Path(pack_dir).expanduser().resolve(strict=False)
+        target = (pack_root / normalized).resolve(strict=False)
+        target.relative_to(pack_root)
+    except (OSError, ValueError):
+        return None
+    return escape(target.as_uri(), quote=True)
+
+
 def _prose_html(para: ReportParagraphDelta, side: str, css_class: str) -> str:
     if side == "old":
         spans = para.old_spans
@@ -319,7 +341,12 @@ def _prose_html(para: ReportParagraphDelta, side: str, css_class: str) -> str:
     return f'<div class="prose {css_class}">{content}</div>'
 
 
-def _anchor_bits(anchor: EvidenceAnchor | None, label: str, source_url: str | None) -> list[str]:
+def _anchor_bits(
+    anchor: EvidenceAnchor | None,
+    label: str,
+    source_url: str | None,
+    pack_dir: str,
+) -> list[str]:
     if anchor is None:
         return [f"<span>{label} chunk missing</span>"]
     chunk_id = anchor.chunk_id or "missing"
@@ -335,7 +362,7 @@ def _anchor_bits(anchor: EvidenceAnchor | None, label: str, source_url: str | No
         bits.append(f'<a href="{source_href}">{label} source</a>')
     else:
         bits.append(f"<span>{label} source missing</span>")
-    pack_href = _safe_relative_href(anchor.section_path)
+    pack_href = _safe_pack_file_href(pack_dir, anchor.section_path)
     if pack_href is not None:
         bits.append(f'<a href="{pack_href}">{label} pack</a>')
     else:
@@ -347,12 +374,14 @@ def _evidence_html(
     para: ReportParagraphDelta,
     before_source_url: str | None,
     after_source_url: str | None,
+    before_pack_dir: str,
+    after_pack_dir: str,
 ) -> str:
     bits: list[str] = []
     if para.change_type in {ChangeType.REMOVED, ChangeType.MODIFIED, ChangeType.UNCHANGED}:
-        bits.extend(_anchor_bits(para.old_anchor, "old", before_source_url))
+        bits.extend(_anchor_bits(para.old_anchor, "old", before_source_url, before_pack_dir))
     if para.change_type in {ChangeType.ADDED, ChangeType.MODIFIED}:
-        bits.extend(_anchor_bits(para.new_anchor, "new", after_source_url))
+        bits.extend(_anchor_bits(para.new_anchor, "new", after_source_url, after_pack_dir))
     if not bits:
         bits.append("<span>chunk status missing</span>")
     return f'<div class="evidence-line">{"".join(bits)}</div>'
@@ -362,6 +391,8 @@ def _paragraph_html(
     para: ReportParagraphDelta,
     before_source_url: str | None,
     after_source_url: str | None,
+    before_pack_dir: str,
+    after_pack_dir: str,
 ) -> str:
     marker, marker_class = {
         ChangeType.ADDED: ("+", "marker-added"),
@@ -381,7 +412,15 @@ def _paragraph_html(
     else:
         blocks.append(_prose_html(para, "old", "old"))
         blocks.append(_prose_html(para, "new", "new"))
-    blocks.append(_evidence_html(para, before_source_url, after_source_url))
+    blocks.append(
+        _evidence_html(
+            para,
+            before_source_url,
+            after_source_url,
+            before_pack_dir,
+            after_pack_dir,
+        )
+    )
     return (
         '<div class="paragraph-row">'
         f'<div class="gutter">p{para_index}</div>'
@@ -395,6 +434,8 @@ def _group_html(
     group: ParagraphGroup,
     before_source_url: str | None,
     after_source_url: str | None,
+    before_pack_dir: str,
+    after_pack_dir: str,
 ) -> str:
     if group.kind == "collapsed":
         return (
@@ -404,7 +445,13 @@ def _group_html(
             "</details>"
         )
     return "".join(
-        _paragraph_html(para, before_source_url, after_source_url)
+        _paragraph_html(
+            para,
+            before_source_url,
+            after_source_url,
+            before_pack_dir,
+            after_pack_dir,
+        )
         for para in group.paragraphs
     )
 
@@ -441,6 +488,8 @@ def _section_html(report: DiffReport) -> str:
                 group,
                 report.before_source.source_url,
                 report.after_source.source_url,
+                report.before_source.pack_dir,
+                report.after_source.pack_dir,
             )
             for group in section.groups
         )
