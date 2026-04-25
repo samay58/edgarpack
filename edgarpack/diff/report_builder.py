@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import difflib
+import json
 import re
 from collections import Counter, defaultdict, deque
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..pack.manifest import load_manifest_dict
@@ -66,6 +68,72 @@ class _ParagraphLocation:
         self.text = text
         self.char_start = char_start
         self.char_end = char_end
+
+
+@dataclass(frozen=True)
+class _ChunkLocation:
+    chunk_id: str
+    section_id: str
+    char_start: int
+    char_end: int
+
+
+class _ChunkLookup:
+    def __init__(self, chunks: list[_ChunkLocation]) -> None:
+        chunks_by_section: dict[str, list[_ChunkLocation]] = defaultdict(list)
+        for chunk in chunks:
+            chunks_by_section[chunk.section_id].append(chunk)
+        for section_chunks in chunks_by_section.values():
+            section_chunks.sort(
+                key=lambda chunk: (
+                    chunk.char_end - chunk.char_start,
+                    chunk.char_start,
+                    chunk.char_end,
+                    chunk.chunk_id,
+                )
+            )
+        self._chunks_by_section = dict(chunks_by_section)
+
+    @property
+    def has_chunks(self) -> bool:
+        return any(self._chunks_by_section.values())
+
+    def chunk_id_for(self, section_id: str, char_start: int, char_end: int) -> str | None:
+        for chunk in self._chunks_by_section.get(section_id, []):
+            if chunk.char_start <= char_start and char_end <= chunk.char_end:
+                return chunk.chunk_id
+        return None
+
+
+def _load_chunks(pack_dir: Path) -> _ChunkLookup:
+    chunks_path = pack_dir / "optional" / "chunks.ndjson"
+    if not chunks_path.exists():
+        return _ChunkLookup([])
+
+    chunks: list[_ChunkLocation] = []
+    for line in chunks_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        chunks.append(
+            _ChunkLocation(
+                chunk_id=str(record["chunk_id"]),
+                section_id=str(record["section_id"]),
+                char_start=int(record["char_start"]),
+                char_end=int(record["char_end"]),
+            )
+        )
+    return _ChunkLookup(chunks)
+
+
+def _chunk_status(before_chunks: _ChunkLookup, after_chunks: _ChunkLookup) -> str:
+    before_available = before_chunks.has_chunks
+    after_available = after_chunks.has_chunks
+    if before_available and after_available:
+        return "available"
+    if before_available or after_available:
+        return "partial"
+    return "missing"
 
 
 def _filing_ref(pack_dir: Path, manifest: dict) -> FilingSourceRef:
@@ -167,6 +235,7 @@ def _anchor(
     source: FilingSourceRef,
     section_ref: SectionSourceRef | None,
     locations: dict[str, deque[_ParagraphLocation]],
+    chunks: _ChunkLookup,
     text: str | None,
 ) -> EvidenceAnchor | None:
     if section_ref is None or text is None:
@@ -182,7 +251,11 @@ def _anchor(
         paragraph_index=location.index,
         char_start=location.char_start,
         char_end=location.char_end,
-        chunk_id=None,
+        chunk_id=chunks.chunk_id_for(
+            section_ref.section_id,
+            location.char_start,
+            location.char_end,
+        ),
     )
 
 
@@ -194,6 +267,8 @@ def _report_paragraphs(
     new_ref: SectionSourceRef | None,
     old_locations: dict[str, deque[_ParagraphLocation]],
     new_locations: dict[str, deque[_ParagraphLocation]],
+    before_chunks: _ChunkLookup,
+    after_chunks: _ChunkLookup,
 ) -> list[ReportParagraphDelta]:
     paragraphs: list[ReportParagraphDelta] = []
     for delta in deltas:
@@ -205,8 +280,20 @@ def _report_paragraphs(
         paragraphs.append(
             ReportParagraphDelta(
                 change_type=delta.change_type,
-                old_anchor=_anchor(before_source, old_ref, old_locations, delta.old_text),
-                new_anchor=_anchor(after_source, new_ref, new_locations, delta.new_text),
+                old_anchor=_anchor(
+                    before_source,
+                    old_ref,
+                    old_locations,
+                    before_chunks,
+                    delta.old_text,
+                ),
+                new_anchor=_anchor(
+                    after_source,
+                    new_ref,
+                    new_locations,
+                    after_chunks,
+                    delta.new_text,
+                ),
                 old_text=delta.old_text,
                 new_text=delta.new_text,
                 old_spans=old_spans,
@@ -219,15 +306,77 @@ def _report_paragraphs(
     return paragraphs
 
 
-def _simple_groups(paragraphs: list[ReportParagraphDelta]) -> list[ParagraphGroup]:
-    groups: list[ParagraphGroup] = []
+def _collapsed_word_count(paragraphs: list[ReportParagraphDelta]) -> int:
+    total = 0
     for paragraph in paragraphs:
-        kind = "context" if paragraph.change_type == ChangeType.UNCHANGED else "changed"
-        groups.append(ParagraphGroup(kind=kind, paragraphs=[paragraph]))
+        word_count = paragraph.old_word_count or paragraph.new_word_count
+        if word_count == 0:
+            text = paragraph.old_text or paragraph.new_text or ""
+            word_count = len(text.split())
+        total += word_count
+    return total
+
+
+def _append_context_run(
+    groups: list[ParagraphGroup],
+    run: list[ReportParagraphDelta],
+    context_window: int,
+) -> None:
+    if not run:
+        return
+    collapse_threshold = context_window * 2
+    if len(run) <= collapse_threshold:
+        groups.append(ParagraphGroup(kind="context", paragraphs=list(run)))
+        return
+
+    leading = run[:context_window]
+    trailing = run[-context_window:] if context_window else []
+    collapsed = run[context_window : len(run) - context_window]
+    if leading:
+        groups.append(ParagraphGroup(kind="context", paragraphs=leading))
+    if collapsed:
+        groups.append(
+            ParagraphGroup(
+                kind="collapsed",
+                collapsed_count=len(collapsed),
+                collapsed_word_count=_collapsed_word_count(collapsed),
+            )
+        )
+    if trailing:
+        groups.append(ParagraphGroup(kind="context", paragraphs=trailing))
+
+
+def _context_groups(
+    paragraphs: list[ReportParagraphDelta],
+    context_window: int,
+) -> list[ParagraphGroup]:
+    groups: list[ParagraphGroup] = []
+    context_run: list[ReportParagraphDelta] = []
+    changed_run: list[ReportParagraphDelta] = []
+    for paragraph in paragraphs:
+        if paragraph.change_type == ChangeType.UNCHANGED:
+            if changed_run:
+                groups.append(ParagraphGroup(kind="changed", paragraphs=changed_run))
+                changed_run = []
+            context_run.append(paragraph)
+            continue
+
+        _append_context_run(groups, context_run, context_window)
+        context_run = []
+        changed_run.append(paragraph)
+
+    _append_context_run(groups, context_run, context_window)
+    if changed_run:
+        groups.append(ParagraphGroup(kind="changed", paragraphs=changed_run))
     return groups
 
 
-def build_pair_report(before_dir: Path, after_dir: Path) -> DiffReport:
+def build_pair_report(
+    before_dir: Path,
+    after_dir: Path,
+    *,
+    context_window: int = 2,
+) -> DiffReport:
     """Build a static pair report from two filing packs."""
     before_manifest = load_manifest_dict(before_dir, on_missing="raise")
     after_manifest = load_manifest_dict(after_dir, on_missing="raise")
@@ -235,6 +384,8 @@ def build_pair_report(before_dir: Path, after_dir: Path) -> DiffReport:
     after_source = _filing_ref(after_dir, after_manifest)
     before_sections = _sections_by_id(before_manifest)
     after_sections = _sections_by_id(after_manifest)
+    before_chunks = _load_chunks(before_dir)
+    after_chunks = _load_chunks(after_dir)
     diff = diff_filings(before_dir, after_dir)
 
     sections: list[ReportSectionDelta] = []
@@ -259,6 +410,8 @@ def build_pair_report(before_dir: Path, after_dir: Path) -> DiffReport:
             new_ref,
             _paragraph_locations(old_text),
             _paragraph_locations(new_text),
+            before_chunks,
+            after_chunks,
         )
         sections.append(
             ReportSectionDelta(
@@ -273,7 +426,7 @@ def build_pair_report(before_dir: Path, after_dir: Path) -> DiffReport:
                 paragraphs_unchanged=delta.paragraphs_unchanged,
                 change_intensity=delta.change_intensity,
                 interest_score=delta.interest_score,
-                groups=_simple_groups(paragraphs),
+                groups=_context_groups(paragraphs, max(context_window, 0)),
             )
         )
 
@@ -281,7 +434,7 @@ def build_pair_report(before_dir: Path, after_dir: Path) -> DiffReport:
         report_kind="pair",
         before_source=before_source,
         after_source=after_source,
-        chunk_status="missing",
+        chunk_status=_chunk_status(before_chunks, after_chunks),
         sections_unchanged=diff.sections_unchanged,
         sections_modified=diff.sections_modified,
         sections_added=diff.sections_added,

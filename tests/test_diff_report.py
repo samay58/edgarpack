@@ -124,6 +124,15 @@ def _write_pack_sections(
     return pack
 
 
+def _write_chunks(pack: Path, chunks: list[dict[str, object]]) -> None:
+    chunks_path = pack / "optional" / "chunks.ndjson"
+    chunks_path.parent.mkdir(parents=True, exist_ok=True)
+    chunks_path.write_text(
+        "\n".join(json.dumps(chunk) for chunk in chunks) + "\n",
+        encoding="utf-8",
+    )
+
+
 def test_build_pair_report_adds_source_refs_and_paragraph_offsets(tmp_path) -> None:
     before = _write_pack(
         tmp_path,
@@ -166,6 +175,118 @@ def test_build_pair_report_adds_source_refs_and_paragraph_offsets(tmp_path) -> N
     assert changed.new_anchor.chunk_id is None
     assert changed.old_spans
     assert changed.new_spans
+
+
+def test_build_pair_report_maps_available_chunks_to_fully_covered_anchors(
+    tmp_path,
+) -> None:
+    old_intro = "Intro paragraph."
+    old_changed = "We depend on a single customer for a material portion of revenue."
+    new_changed = (
+        "We depend on a single customer for the majority of revenue "
+        "and that customer may reduce orders materially."
+    )
+    before = _write_pack(tmp_path, "S1-001", f"{old_intro}\n\n{old_changed}")
+    after = _write_pack(tmp_path, "S1A-002", f"{old_intro}\n\n{new_changed}")
+    changed_start = len(f"{old_intro}\n\n")
+    _write_chunks(
+        before,
+        [
+            {
+                "chunk_id": "before-risk-2",
+                "section_id": "s1_risk_factors",
+                "char_start": changed_start,
+                "char_end": changed_start + len(old_changed),
+            }
+        ],
+    )
+    _write_chunks(
+        after,
+        [
+            {
+                "chunk_id": "after-risk-2",
+                "section_id": "s1_risk_factors",
+                "char_start": changed_start,
+                "char_end": changed_start + len(new_changed),
+            }
+        ],
+    )
+
+    report = build_pair_report(before, after)
+
+    assert report.chunk_status == "available"
+    changed = [
+        paragraph
+        for section in report.sections
+        for group in section.groups
+        for paragraph in group.paragraphs
+        if paragraph.change_type == ChangeType.MODIFIED
+    ][0]
+    assert changed.old_anchor is not None
+    assert changed.old_anchor.chunk_id == "before-risk-2"
+    assert changed.new_anchor is not None
+    assert changed.new_anchor.chunk_id == "after-risk-2"
+
+
+def test_build_pair_report_marks_chunk_status_partial_when_one_side_has_chunks(
+    tmp_path,
+) -> None:
+    old_body = "We depend on one customer."
+    new_body = "We depend on one customer and continued orders."
+    before = _write_pack(tmp_path, "S1-001", old_body)
+    after = _write_pack(tmp_path, "S1A-002", new_body)
+    _write_chunks(
+        before,
+        [
+            {
+                "chunk_id": "before-risk-1",
+                "section_id": "s1_risk_factors",
+                "char_start": 0,
+                "char_end": len(old_body),
+            }
+        ],
+    )
+
+    report = build_pair_report(before, after)
+
+    assert report.chunk_status == "partial"
+
+
+def test_build_pair_report_collapses_long_unchanged_context_runs(tmp_path) -> None:
+    before_paragraphs = [
+        "Stable paragraph one.",
+        "Stable paragraph two.",
+        "Stable paragraph three.",
+        "Stable paragraph four.",
+        "Stable paragraph five.",
+        "We rely on one customer for revenue.",
+        "Stable paragraph six.",
+        "Stable paragraph seven.",
+        "Stable paragraph eight.",
+    ]
+    after_paragraphs = [
+        "Stable paragraph one.",
+        "Stable paragraph two.",
+        "Stable paragraph three.",
+        "Stable paragraph four.",
+        "Stable paragraph five.",
+        "We rely on one customer for revenue and continued orders.",
+        "Stable paragraph six.",
+        "Stable paragraph seven.",
+        "Stable paragraph eight.",
+    ]
+    before = _write_pack(tmp_path, "S1-001", "\n\n".join(before_paragraphs))
+    after = _write_pack(tmp_path, "S1A-002", "\n\n".join(after_paragraphs))
+
+    report = build_pair_report(before, after, context_window=1)
+
+    groups = report.sections[0].groups
+    assert [group.kind for group in groups] == ["context", "collapsed", "context", "changed"]
+    assert groups[0].paragraphs[0].old_text == "Stable paragraph one."
+    assert groups[1].collapsed_count == 6
+    assert groups[1].collapsed_word_count == 18
+    assert groups[2].paragraphs[0].old_text == "Stable paragraph eight."
+    assert groups[3].paragraphs[0].change_type == ChangeType.MODIFIED
 
 
 def test_build_pair_report_preserves_old_anchors_for_fallback_matched_sections(
