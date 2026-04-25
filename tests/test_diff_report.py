@@ -527,6 +527,30 @@ def test_render_pair_report_html_escapes_text_and_emits_static_report(
     assert "<script" not in html.lower()
 
 
+def test_pair_report_html_uses_approved_visual_structure(tmp_path) -> None:
+    before = _write_pack(tmp_path, "24-044118", "Old customer disclosure.")
+    after = _write_pack(tmp_path, "24-046732", "New customer disclosure.")
+
+    html = render_pair_report_html(build_pair_report(before, after), reproduce_command="cmd")
+
+    for token in (
+        "topbar",
+        "pair-hero",
+        "section-rail",
+        "diff-pane",
+        "section-hunk",
+        "paragraph-row",
+        "evidence-line",
+        "provenance-footer",
+        "--paper",
+        "--serif",
+        "--code",
+    ):
+        assert token in html
+    assert "dashboard" not in html.lower()
+    assert "gradient" not in html.lower()
+
+
 def test_render_pair_report_html_rejects_unsafe_hrefs(tmp_path) -> None:
     before = _write_pack(
         tmp_path,
