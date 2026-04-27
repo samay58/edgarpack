@@ -1576,8 +1576,10 @@ def _normalize_china_fact_provenance(
                     if source_document and not point.get("source_document"):
                         point["source_document"] = source_document
 
-                    if not point.get("source_url") and manifest_source_url and not (
-                        source_url_is_local_file and source_path
+                    if (
+                        not point.get("source_url")
+                        and manifest_source_url
+                        and not (source_url_is_local_file and source_path)
                     ):
                         point["source_url"] = manifest_source_url
 

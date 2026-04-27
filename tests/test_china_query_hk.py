@@ -49,9 +49,7 @@ def test_minimax_full_query_returns_multiple_metrics():
 
 
 def test_minimax_r_and_d_alias_resolves_to_canonical_metric():
-    result = asyncio.run(
-        financials(company="minimax", metrics="r_and_d_expense", period="lfy")
-    )
+    result = asyncio.run(financials(company="minimax", metrics="r_and_d_expense", period="lfy"))
 
     assert list(result.metrics.keys()) == ["rd_expense"]
     rd = result.metrics["rd_expense"]

@@ -522,10 +522,7 @@ def render_pair_report_html(report: DiffReport, reproduce_command: str = "") -> 
     company_name = escape(report.after_source.company_name or report.before_source.company_name)
     sections_nav = _section_nav_html(report)
     section_html = _section_html(report)
-    hero_meta = (
-        f"pair report - {company_name} - "
-        f"chunk status {escape(report.chunk_status)}"
-    )
+    hero_meta = f"pair report - {company_name} - chunk status {escape(report.chunk_status)}"
     hero_stats = (
         f"+{report.sections_added} sections - "
         f"-{report.sections_removed} sections - "
@@ -587,12 +584,10 @@ def render_timeline_index_html(report: TimelineReport) -> str:
         before_accession = escape(transition.before.accession)
         after_accession = escape(transition.after.accession)
         before_meta = (
-            f"{escape(transition.before.form_type)} filed "
-            f"{escape(transition.before.filing_date)}"
+            f"{escape(transition.before.form_type)} filed {escape(transition.before.filing_date)}"
         )
         after_meta = (
-            f"{escape(transition.after.form_type)} filed "
-            f"{escape(transition.after.filing_date)}"
+            f"{escape(transition.after.form_type)} filed {escape(transition.after.filing_date)}"
         )
         title = f"{before_accession} -&gt; {after_accession}"
         title_html = f'<a href="{href}">{title}</a>' if href is not None else title

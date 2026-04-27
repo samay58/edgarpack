@@ -32,9 +32,7 @@ def test_slug_declarations():
 
 
 def test_slug_annual_report_sections():
-    slug, title = _slug_for_title(
-        "公司简介和主要财务指标", 2, document_type="ANNUAL-REPORT"
-    )
+    slug, title = _slug_for_title("公司简介和主要财务指标", 2, document_type="ANNUAL-REPORT")
     assert slug == "annual_s02_company_profile_key_financials"
     assert title == "Company Profile and Key Financials"
 

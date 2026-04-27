@@ -161,9 +161,9 @@ async def test_build_sse_annual_report_extracts_facts(tmp_packs, synthetic_pdf):
     facts = json.loads((pack_dir / "facts.json").read_text())
     revenue = facts["facts"]["cas"]["Revenue"]["units"]["CNY"][0]
     net_income = facts["facts"]["cas"]["ProfitLoss"]["units"]["CNY"][0]
-    operating_cash_flow = facts["facts"]["cas"][
-        "NetCashProvidedByUsedInOperatingActivities"
-    ]["units"]["CNY"][0]
+    operating_cash_flow = facts["facts"]["cas"]["NetCashProvidedByUsedInOperatingActivities"][
+        "units"
+    ]["CNY"][0]
     r_and_d = facts["facts"]["cas"]["ResearchAndDevelopmentIntensity"]["units"]["pure"][0]
 
     assert revenue["fy"] == 2024

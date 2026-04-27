@@ -2,18 +2,18 @@
 
 Status log for the Chinese-filings pipeline.
 
-## Status (2026-04-20): parked
+## Status (2026-04-27): CLI path active; workspace parked
 
-The CLI is the primary product; the Evidence Explorer / FastAPI surface is parked. What is still live: the HKEX query path (`query` / `comps` / `compare` route HKEX filers through `facts.json`) and the SSE prospectus pipeline (`build-sse` / `translate-sse`). What is parked: the FastAPI workspace (`edgarpack api`) and every item in the "Open" list below. The corresponding beads were closed wontfix on 2026-04-20 (`edgarpack-lb1` epic plus `lb1.4`, `lb1.7`, `lb1.11`, `lb1.12`, `lb1.14`, `4o4`, `kax`); see `docs/superpowers/specs/2026-04-20-bead-backlog-trim-design.md`. Reopen the relevant beads if China Lens becomes the product surface again; the sections below are the most recent shipped state, not a roadmap.
+The CLI is the active product. What is live: the HKEX query path (`query` / `comps` / `compare` route HKEX filers through `facts.json`), the SSE/CNINFO annual-report path (`identify` / `build-sse` / `translate-sse`), English translation with fail-closed validation, and USD-normalized query output with native-currency provenance. What is parked: the Evidence Explorer / FastAPI workspace (`edgarpack api`) and every item in the "Open" list below. The corresponding workspace beads were closed wontfix on 2026-04-20 (`edgarpack-lb1` epic plus `lb1.4`, `lb1.7`, `lb1.11`, `lb1.12`, `lb1.14`, `4o4`, `kax`); see `docs/superpowers/specs/2026-04-20-bead-backlog-trim-design.md`. Reopen those beads only if China Lens becomes a web product surface again.
 
 ## Mission
 
-Build a high-trust research workspace that produces investor-grade Packs where each claim has clickable evidence. Three surfaces today: (1) the HKEX extraction path wired into the main `query` / `comps` / `compare` CLI, (2) the SSE STAR Market prospectus pipeline wired into `build-sse` / `translate-sse`, and (3) the FastAPI workspace exposed via `edgarpack api` for the Evidence Explorer UI.
+Build a high-trust research workflow that produces investor-grade Packs where each claim has clickable evidence. The active surface is the CLI: HKEX and SSE/CNINFO filings route through primary-source packs, query output stays citation-backed, and translated Chinese filings remain tied to the original source artifacts. The FastAPI workspace exists in the repo but is not the current product surface.
 
 ## Architecture at a glance
 
 - **Extraction (HKEX)**: prospectus PDF -> pack markdown -> regex extractor -> Claude API fallback for tagged-but-unmatched metrics -> `facts.json` inside the pack. Source modules: `edgarpack/hk/acquire.py`, `adapter.py`, `extract.py`, `llm_extract.py`.
-- **Extraction (SSE STAR Market)**: prospectus PDF -> `pymupdf4llm` markdown conversion -> CSRC section detector (`第X节` with Chinese numerals, canonical slugs like `ipo_s10_risk_factors`) -> standard pack layout. Source modules: `edgarpack/sse/client.py`, `pdf_to_md.py`, `sectionize_cn.py`. CLI: `edgarpack build-sse`.
+- **Extraction (SSE/CNINFO)**: annual-report or prospectus PDF -> `pymupdf4llm` markdown conversion -> Chinese section detector (`第X节` with Chinese numerals, canonical annual-report and IPO slugs) -> standard pack layout. Source modules: `edgarpack/china/acquire/cninfo.py`, `edgarpack/sse/client.py`, `pdf_to_md.py`, `sectionize_cn.py`. CLI: `edgarpack identify`, `edgarpack build-sse`.
 - **Translation (zh->en, optional)**: section-aware router over a DeepInfra provider. Every translation passes a validator stack (literal token preservation, glossary consistency, markdown table structure fidelity, completion ratio, residual-Han check, romanized-artifact check). Deterministic date/number/percentage/age-range converters short-circuit the LLM for structured cells. Results are cached on disk by provider/model namespace, and long sections are validated/cached in progress batches so interrupted runs can resume from completed batches. Source modules: `edgarpack/china/translate/{router,deepinfra,validators,glossary,numbers,preprocess,cache}.py`. CLI: `edgarpack build-sse --translate` or `edgarpack translate-sse --pack <dir>`. Requires `EDGARPACK_DEEPINFRA_KEY`.
 - **Query routing**: `universe.toml` tags HKEX filers; `edgarpack/query/financials.py` routes those CIKs through `facts.json` instead of SEC companyfacts. Same `CitedValue` / `DerivedValue` shapes downstream.
 - **Cross-market compare**: `edgarpack/compare.py` handles SEC + HKEX filers in one table, normalizes currencies through `data/fx_rates.csv` with `--currency usd`, and keeps the native-currency value as a footnote.
@@ -24,11 +24,12 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 
 ## Shipped
 
-### Extraction pipeline (SSE STAR Market)
+### Extraction pipeline (SSE/CNINFO)
 
-- `edgarpack build-sse` end-to-end: download (or point at local PDF via `--pdf`) -> markdown conversion -> CSRC section detection -> standard pack layout. Packs land at `packs/sse/<stock_code>/<stock_code>_<filing_date>/` so SEC packs and SSE packs stay out of each other's namespace.
-- Canonical CSRC section slugs: `ipo_declarations`, `ipo_s01_overview` through `ipo_s12_reference_docs`, with a pinyin fallback for outliers. Chinese numerals (`一` through `二十`) decoded in place.
-- Manifest carries `stock_code`, `exchange=SSE`, `form_type=IPO-PROSPECTUS`. `FilingInfo` is back-compat with SEC manifests (new fields default empty).
+- `edgarpack identify` resolves known China/HK/company-name cases before SEC fallback so users can see whether a company is public, private, SSE/CNINFO, HKEX, or unknown.
+- `edgarpack build-sse` end-to-end: find the latest annual report when available, download it (or point at a local PDF via `--pdf`), convert to markdown, detect Chinese sections, extract annual metrics, and write a standard pack. Packs land at `packs/sse/<stock_code>/<stock_code>_<filing_date>/` so SEC packs and SSE packs stay out of each other's namespace.
+- Canonical Chinese section slugs cover annual-report sections and IPO prospectus sections, with a pinyin fallback for outliers. Chinese numerals (`一` through `二十`) are decoded in place.
+- Manifest carries `stock_code`, `exchange=SSE`, document type, source URL/document, reporting currency, and CNINFO acquisition metadata when available. `FilingInfo` is back-compat with SEC manifests (new fields default empty).
 - `llms.txt` for SSE packs reflects the Chinese section titles, the original and (if translated) English section lists, and any non-fatal warnings surfaced during section detection.
 - Optional `--with-chunks` emits the same `optional/chunks.ndjson` shape used for SEC packs.
 
@@ -37,7 +38,7 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 - Opt-in via `build-sse --translate` or the standalone `translate-sse --pack <dir>` command. Requires `EDGARPACK_DEEPINFRA_KEY`.
 - Router dispatches per section type and per paragraph shape (heading vs. flattened catalog vs. markdown table vs. prose). Table cells take a structured path that short-circuits on dates, plain amounts, percentage lists, reporting-period markers, and multi-line structured values.
 - Validators run on every translated paragraph. On any failure the router retries with a strict prompt before giving up and surfacing a pack-level warning.
-- Cache keyed by model + section-strategy + normalized source; repeat runs are free.
+- Cache keyed by provider/model namespace + section-strategy + normalized source; repeat runs on the same model are free and model comparisons do not silently reuse another model's output.
 - Site builder renders bilingual pages when a translation exists; falls back to Chinese-only when it doesn't.
 
 ### Extraction pipeline (HKEX)
@@ -61,6 +62,7 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 - `tests/test_china_query_hk.py` is a structural smoke suite (ticker-form resolution, metadata flags, multi-metric queries, failure modes).
 - `tests/test_china_query_eval.py` drives numeric regression against `tests/eval/china_golden.yaml`.
 - `tests/test_china_service.py`, `tests/test_china_api.py`, `tests/test_china_identity.py` cover the workspace API, identity routing, and storage adapters.
+- `tests/test_cninfo_latest_annual.py`, `tests/test_china_query_sse.py`, `tests/test_translate_sse_artifacts.py`, `tests/test_table_translation.py`, and `tests/test_deepinfra_translator.py` cover the latest-annual acquisition path, SSE query provenance, translation artifacts, table handling, retry behavior, key validation, and provider/model-scoped caches.
 
 ### Workspace API (Evidence Explorer backend)
 
@@ -107,7 +109,7 @@ Contracts live and tested:
 - `edgarpack-lb1.1` -- Frontend shell: shipped (Next.js workspace under `web/`).
 - `edgarpack-lb1.2` -- Contracts + QA + docs: shipped for contracts + QA; docs refreshed in this pass.
 - `edgarpack-qhn` -- China golden harness: shipped.
-- SSE STAR Market ingestion + translation: shipped (see above).
+- SSE/CNINFO ingestion + translation: shipped (see above).
 
 ## Open (parked, see Status above)
 

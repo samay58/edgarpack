@@ -404,9 +404,9 @@ def test_build_pair_report_preserves_old_anchors_for_fallback_matched_sections(
     assert section.new_ref.section_id == new_section_id
 
     paragraphs = [paragraph for group in section.groups for paragraph in group.paragraphs]
-    changed = [
-        paragraph for paragraph in paragraphs if paragraph.change_type.value == "modified"
-    ][0]
+    changed = [paragraph for paragraph in paragraphs if paragraph.change_type.value == "modified"][
+        0
+    ]
     assert changed.old_anchor is not None
     assert changed.old_anchor.section_id == old_section_id
     assert changed.old_anchor.section_path == f"sections/{old_section_id}.md"
