@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urljoin
 
 from pydantic import BaseModel, Field
@@ -233,7 +234,7 @@ def latest_annual_from_cninfo_payload(
         )
         if filing_date is None or not source_url:
             continue
-        company_name = str(item.get("secName") or item.get("companyName") or "").strip()
+        company_name = _clean_title(item.get("secName") or item.get("companyName"))
         candidates.append(
             CninfoAnnualReportRef(
                 stock_code=stock_code,
@@ -249,6 +250,33 @@ def latest_annual_from_cninfo_payload(
     return sorted(candidates, key=lambda ref: (ref.filing_date, ref.source_url), reverse=True)[0]
 
 
+def _cninfo_market_params(stock_code: str) -> tuple[str, str]:
+    code = stock_code.strip()
+    if code.startswith("6"):
+        return "sse", "sh"
+    return "szse", "sz"
+
+
+def _cninfo_annual_query_data(stock_code: str) -> dict[str, str]:
+    column, plate = _cninfo_market_params(stock_code)
+    return {
+        "pageNum": "1",
+        "pageSize": "30",
+        "column": column,
+        "tabName": "fulltext",
+        "plate": plate,
+        "stock": "",
+        "searchkey": stock_code,
+        "secid": "",
+        "category": "category_ndbg_szsh",
+        "trade": "",
+        "seDate": "",
+        "sortName": "",
+        "sortType": "",
+        "isHLtitle": "true",
+    }
+
+
 def fetch_cninfo_announcements(stock_code: str) -> dict[str, Any]:
     """Fetch CNINFO annual-report search results for a stock code."""
     import httpx
@@ -260,22 +288,7 @@ def fetch_cninfo_announcements(stock_code: str) -> dict[str, Any]:
         "Referer": "https://www.cninfo.com.cn/new/commonUrl/pageOfSearch",
         "User-Agent": "edgarpack/0.1 (+https://github.com)",
     }
-    data = {
-        "pageNum": "1",
-        "pageSize": "30",
-        "column": "szse",
-        "tabName": "fulltext",
-        "plate": "",
-        "stock": stock_code,
-        "searchkey": "",
-        "secid": "",
-        "category": "category_ndbg_szsh;",
-        "trade": "",
-        "seDate": "",
-        "sortName": "",
-        "sortType": "",
-        "isHLtitle": "true",
-    }
+    data = _cninfo_annual_query_data(stock_code)
     with httpx.Client(timeout=20.0, follow_redirects=True) as client:
         response = client.post(
             "https://www.cninfo.com.cn/new/hisAnnouncement/query",
@@ -283,13 +296,13 @@ def fetch_cninfo_announcements(stock_code: str) -> dict[str, Any]:
             data=data,
         )
         response.raise_for_status()
-        return response.json()
+        return cast(dict[str, Any], response.json())
 
 
 def find_latest_annual_report(
     stock_code: str,
     *,
-    fetcher=fetch_cninfo_announcements,
+    fetcher: Callable[[str], dict[str, Any]] = fetch_cninfo_announcements,
 ) -> CninfoAnnualReportRef:
     """Return the latest CNINFO full annual report for an A-share stock code."""
     payload = fetcher(stock_code)

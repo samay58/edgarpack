@@ -163,6 +163,15 @@ def test_live_universe_resolves_all_six_public_targets():
     assert r.stock_code == "688696"
 
 
+def test_live_universe_laifen_routes_to_private():
+    from pathlib import Path
+
+    index = load_identity(Path("universe.toml"))
+    r = resolve(index, ticker=None, company="laifen")
+    assert r.private is True
+    assert r.ticker == "Shenzhen Shuye Innovative Technology Co., Ltd."
+
+
 def test_live_universe_resolves_every_alias():
     from pathlib import Path
 

@@ -1,6 +1,6 @@
 # Query Layer
 
-EdgarPack's query system pulls financial metrics directly from SEC EDGAR's XBRL data, resolves the right GAAP/IFRS concept for each company, and returns values with full citation provenance. Every number traces back to a specific filing, accession number, and SEC URL.
+EdgarPack's query system pulls financial metrics from the right primary-source path for the company: SEC EDGAR XBRL for US/ADR filers, pack-local HKEX facts for Hong Kong listings, and pack-local SSE/CNINFO facts for China A-share filings. Every number traces back to a specific filing, source document, and citation record.
 
 If you are new to the CLI, start with [`GETTING_STARTED.md`](GETTING_STARTED.md). If you already know the basics and want recipes, use [`WORKFLOWS.md`](WORKFLOWS.md). This page is the reference for people who already know they want `query`, `comps`, or `compare` and need the exact period selectors, metric behavior, citation fields, JSON output, guards, and derived metrics.
 

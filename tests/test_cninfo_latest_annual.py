@@ -36,6 +36,47 @@ def test_cninfo_latest_annual_filters_summary_and_builds_static_url():
     assert ref.source_url == "https://static.cninfo.com.cn/finalpage/2025-04-22/1223192484.PDF"
 
 
+def test_cninfo_latest_annual_accepts_full_text_title_and_prefers_newest():
+    from edgarpack.china.acquire import latest_annual_from_cninfo_payload
+
+    payload = {
+        "announcements": [
+            {
+                "secCode": "688696",
+                "secName": "<em>极米科技</em>",
+                "announcementTitle": "2024年年度报告",
+                "adjunctUrl": "finalpage/2025-04-22/1223192484.PDF",
+            },
+            {
+                "secCode": "688696",
+                "secName": "<em>极米科技</em>",
+                "announcementTitle": "2025年年度报告全文",
+                "adjunctUrl": "finalpage/2026-03-31/1225055991.PDF",
+            },
+        ]
+    }
+
+    ref = latest_annual_from_cninfo_payload(payload, stock_code="688696")
+
+    assert ref is not None
+    assert ref.title == "2025年年度报告全文"
+    assert ref.company_name == "极米科技"
+    assert ref.filing_date == date(2026, 3, 31)
+    assert ref.source_url == "https://static.cninfo.com.cn/finalpage/2026-03-31/1225055991.PDF"
+
+
+def test_cninfo_query_uses_searchkey_for_sse_stock_without_org_id():
+    from edgarpack.china.acquire.cninfo import _cninfo_annual_query_data
+
+    data = _cninfo_annual_query_data("688696")
+
+    assert data["column"] == "sse"
+    assert data["plate"] == "sh"
+    assert data["stock"] == ""
+    assert data["searchkey"] == "688696"
+    assert data["category"] == "category_ndbg_szsh"
+
+
 def test_build_sse_latest_annual_uses_cninfo_selection(monkeypatch, tmp_path, capsys):
     from edgarpack import cli
     from edgarpack.china.acquire import CninfoAnnualReportRef

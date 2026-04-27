@@ -13,7 +13,7 @@ import textwrap
 from collections import Counter
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from . import __version__
 from .errors import AmbiguousCompany, UnknownCompany
@@ -390,7 +390,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p_query = sub.add_parser(
         "query",
-        help="Query financial metrics for a company (cited from SEC filings)",
+        help="Query cited financial metrics for a company",
     )
     p_query.add_argument(
         "company",
@@ -456,7 +456,10 @@ def main(argv: list[str] | None = None) -> int:
         "--currency",
         choices=["native", "usd", "both"],
         default="both",
-        help="Currency output: native (reporting currency only), usd (USD only), both.",
+        help=(
+            "Currency output: native reporting currency, USD-normalized with native "
+            "provenance, or both (default)."
+        ),
     )
 
     p_harvest = sub.add_parser(
@@ -740,7 +743,10 @@ def main(argv: list[str] | None = None) -> int:
         "--currency",
         choices=["native", "usd", "both"],
         default="both",
-        help="Currency output: native (reporting currency only), usd (USD only), both.",
+        help=(
+            "Currency output: native reporting currency, USD-normalized with native "
+            "provenance, or both (default)."
+        ),
     )
 
     p_compare = sub.add_parser("compare", help="Side-by-side comparison of two or more companies")
@@ -755,7 +761,7 @@ def main(argv: list[str] | None = None) -> int:
         "--currency",
         choices=["native", "usd", "both"],
         default="both",
-        help="Currency output mode",
+        help="Currency output mode: native, USD-normalized with native provenance, or both",
     )
     p_compare.add_argument(
         "--format",
@@ -1223,7 +1229,7 @@ def _cmd_identify(args: Any) -> int:
     return asyncio.run(_run())
 
 
-def _find_latest_sse_annual_report(stock_code: str):
+def _find_latest_sse_annual_report(stock_code: str) -> Any:
     from .china.acquire import find_latest_annual_report
 
     return find_latest_annual_report(stock_code)
@@ -1282,8 +1288,8 @@ def _cmd_build_sse(args: Any) -> int:
             url = selected.source_url
             company_name = (
                 getattr(args, "company", None)
-                or selected.company_name
                 or company_name
+                or selected.company_name
                 or str(stock_code)
             )
             filing_date = selected.filing_date
@@ -1472,9 +1478,10 @@ def _cmd_translate_sse(args: Any) -> int:
                 return report
 
             for i, decision in enumerate(decisions):
-                if translation_sources[i] != "cache" or para_results[i] is None:
+                cached_text = para_results[i]
+                if translation_sources[i] != "cache" or cached_text is None:
                     continue
-                report = _validate(i, decision.cleaned, para_results[i])
+                report = _validate(i, decision.cleaned, cached_text)
                 if report.has_errors:
                     uncached_indices.append(i)
                     uncached_texts.append(decision.cleaned)
@@ -1819,7 +1826,7 @@ def _source_badge_for(v: Any) -> str:
 
 def _render_query_table(result: Any, args: Any) -> str:
     """Render single-company query output with inline citation/audit ergonomics."""
-    from .query.currency import format_cited_currency
+    from .query.currency import CurrencyMode, format_cited_currency
 
     def _identifier_label() -> str:
         for raw_value in result.metrics.values():
@@ -1840,7 +1847,7 @@ def _render_query_table(result: Any, args: Any) -> str:
 
     width = shutil.get_terminal_size((120, 20)).columns
     lines: list[str] = [f"{result.company} ({_identifier_label()}: {result.cik})", ""]
-    currency_mode = getattr(args, "currency", "both")
+    currency_mode = cast(CurrencyMode, getattr(args, "currency", "both"))
 
     strict = bool(getattr(args, "strict", False))
     # Strict filtering is canonical in query.strict.apply_strict. When
@@ -3234,10 +3241,10 @@ def _cmd_which_china(args: Any, resolved: Any) -> int:
         print(json.dumps(result.to_lean_dict(), indent=2, sort_keys=True))
         return 0
 
-    from .query.currency import format_cited_currency
+    from .query.currency import CurrencyMode, format_cited_currency
 
     rows: list[tuple[str, str, str, str, str]] = []
-    currency_mode = getattr(args, "currency", "both")
+    currency_mode = cast(CurrencyMode, getattr(args, "currency", "both"))
     for metric, value in result.metrics.items():
         if value is None:
             continue

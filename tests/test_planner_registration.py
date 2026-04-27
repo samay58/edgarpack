@@ -109,3 +109,23 @@ async def test_planner_does_not_fetch_periodic_forms_for_pre_ipo(tmp_path):
     assert "10-K" not in calls
     assert "10-Q" not in calls
     assert "8-K" not in calls
+
+
+@pytest.mark.asyncio
+async def test_planner_skips_private_company_before_sec_resolution(tmp_path):
+    spec = CompanySpec(
+        name="Shenzhen Shuye Innovative Technology Co., Ltd.",
+        listing="PRIVATE",
+    )
+    cfg = UniverseConfig(companies=[spec])
+
+    async def fail_resolve(_spec):
+        raise AssertionError("private companies should not hit SEC resolution")
+
+    registry = PackRegistry(tmp_path / "registry.db")
+    with patch("edgarpack.harvest.planner.resolve_filer", new=fail_resolve):
+        plan = await plan_harvest(cfg, registry)
+
+    assert plan.items == []
+    assert plan.skipped == []
+    assert plan.errors == []

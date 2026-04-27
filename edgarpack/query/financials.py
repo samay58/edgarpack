@@ -1479,6 +1479,7 @@ def _parse_china_date(value: object) -> _date | None:
     text = str(value or "").strip()
     if not text or text.upper() in {"N/A", "NA", "NONE", "NULL", "-"}:
         return None
+    text = text.split(" ", 1)[0]
 
     for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%d-%m-%Y"):
         try:
@@ -1596,7 +1597,16 @@ async def _query_china_pack(
     pack_dir = _discover_china_pack_dir(resolved, pack_root=pack_root)
     if pack_dir is None:
         source = str(getattr(resolved, "source", "China") or "China")
-        raise FileNotFoundError(f"No {source} pack found for {getattr(resolved, 'ticker', '')}")
+        stock_code = _china_stock_code(resolved)
+        target = display_token or stock_code or getattr(resolved, "ticker", "")
+        if source == "SSE":
+            raise FileNotFoundError(
+                f"No SSE pack found for {stock_code}. "
+                f"Run `edgarpack build-sse {target} --latest-annual --with-chunks` first."
+            )
+        raise FileNotFoundError(
+            f"No {source} pack found for {stock_code or getattr(resolved, 'ticker', '')}."
+        )
 
     facts_path = pack_dir / "facts.json"
     if not facts_path.exists():

@@ -83,6 +83,8 @@ async def plan_harvest(
     errors: list[PlanError] = []
 
     for spec in universe.companies:
+        if spec.private:
+            continue
         try:
             resolved_cik, _title = await resolve_filer(spec)
         except Exception as e:

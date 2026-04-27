@@ -93,6 +93,22 @@ def test_form_counts_zero_excludes():
     assert counts == {"10-K": 2, "10-Q": 4}
 
 
+def test_form_counts_private_company_has_no_sec_fetch_plan():
+    config = UniverseConfig(
+        defaults_10k=2,
+        defaults_10q=4,
+        defaults_8k=5,
+        companies=[
+            CompanySpec(
+                name="Shenzhen Shuye Innovative Technology Co., Ltd.",
+                listing="PRIVATE",
+            )
+        ],
+    )
+
+    assert config.form_counts(config.companies[0]) == {}
+
+
 def test_company_spec_accepts_hk_listing_fields(tmp_path):
     cfg = tmp_path / "u.toml"
     cfg.write_text(

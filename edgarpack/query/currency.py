@@ -8,11 +8,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from ..fx import RateNotFound, convert, load_rates
+from ..fx import RateNotFound, RateTable, convert, load_rates
 from .formatting import format_number
 from .models import CitedValue
 
 CurrencyMode = Literal["native", "usd", "both"]
+_NON_CURRENCY_UNITS: frozenset[str] = frozenset({"count", "shares", "headcount", "pure"})
 
 _BALANCE_SHEET_METRICS: frozenset[str] = frozenset(
     {
@@ -50,7 +51,7 @@ def fx_rates_path() -> Path:
     return Path(__file__).resolve().parents[2] / "data" / "fx_rates.csv"
 
 
-def load_default_rates():
+def load_default_rates() -> RateTable:
     return load_rates(fx_rates_path())
 
 
@@ -60,19 +61,33 @@ def convention_for_metric(metric: str) -> str:
     return "average"
 
 
-def _display_currency(cited: CitedValue) -> str:
-    currency = (cited.reporting_currency or "").strip()
-    if currency and currency not in {"headcount", "pure"}:
-        return currency
-    unit = (cited.unit or "").strip()
+def _currency_from_unit(unit: str) -> str:
+    if unit in _NON_CURRENCY_UNITS:
+        return ""
+    if "/" in unit:
+        prefix = unit.split("/", 1)[0]
+        if len(prefix) == 3 and prefix.isalpha():
+            return prefix
     if len(unit) == 3 and unit.isalpha():
         return unit
     return ""
 
 
+def _display_currency(cited: CitedValue) -> str:
+    unit = (cited.unit or "").strip()
+    unit_currency = _currency_from_unit(unit)
+    if unit_currency:
+        return unit_currency
+
+    currency = (cited.reporting_currency or "").strip()
+    if currency and currency not in _NON_CURRENCY_UNITS:
+        return currency
+    return ""
+
+
 def _native_unit(cited: CitedValue, native_currency: str) -> str:
     unit = cited.unit or native_currency
-    if unit.startswith(native_currency):
+    if unit == native_currency:
         return native_currency
     return unit
 
@@ -80,7 +95,7 @@ def _native_unit(cited: CitedValue, native_currency: str) -> str:
 def is_currency_value(cited: CitedValue) -> bool:
     if cited.value is None:
         return False
-    if cited.unit == "headcount":
+    if cited.unit in _NON_CURRENCY_UNITS:
         return False
     return bool(_display_currency(cited))
 
@@ -89,7 +104,7 @@ def convert_cited_to_usd(
     cited: CitedValue,
     *,
     metric: str | None = None,
-    rates=None,
+    rates: RateTable | None = None,
 ) -> FxDisplay | None:
     if cited.value is None or not is_currency_value(cited):
         return None
@@ -135,7 +150,7 @@ def format_cited_currency(
     *,
     mode: CurrencyMode = "both",
     metric: str | None = None,
-    rates=None,
+    rates: RateTable | None = None,
 ) -> str:
     """Format a cited value with explicit USD/native/FX provenance controls."""
     if cited.value is None:
@@ -153,4 +168,3 @@ def format_cited_currency(
     if native_currency == "USD":
         return usd_text
     return f"{usd_text} (native: {native_text}; {fx.provenance})"
-

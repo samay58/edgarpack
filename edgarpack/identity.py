@@ -82,6 +82,8 @@ def _source_for(spec: CompanySpec, ticker: str) -> Source:
 
 
 def _resolved_for(spec: CompanySpec, ticker: str) -> ResolvedCompany:
+    display_names = [spec.name] if spec.name else []
+    display_aliases = tuple(dict.fromkeys([*display_names, *spec.aliases]))
     return ResolvedCompany(
         ticker=ticker,
         listing=spec.listing,
@@ -89,7 +91,7 @@ def _resolved_for(spec: CompanySpec, ticker: str) -> ResolvedCompany:
         cik=spec.cik,
         hk_stock_code=spec.hk_stock_code,
         stock_code=spec.stock_code or spec.hk_stock_code,
-        aliases=tuple(spec.aliases),
+        aliases=display_aliases,
         private=spec.private,
     )
 

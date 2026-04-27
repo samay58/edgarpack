@@ -142,3 +142,19 @@ def test_unknown_a_share_like_code_does_not_fall_back_to_sec():
             asyncio.run(financials(company="688999", metrics="revenue", period="lfy"))
 
     mock_resolve.assert_not_called()
+
+
+def test_known_sse_without_pack_gives_build_next_step(tmp_path):
+    with pytest.raises(FileNotFoundError) as excinfo:
+        asyncio.run(
+            financials(
+                company="688696",
+                metrics="revenue",
+                period="lfy",
+                pack_root=tmp_path / "packs",
+            )
+        )
+
+    message = str(excinfo.value)
+    assert "No SSE pack found for 688696" in message
+    assert "edgarpack build-sse 688696 --latest-annual --with-chunks" in message

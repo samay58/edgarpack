@@ -26,6 +26,22 @@ def test_identify_unknown_a_share_code_does_not_try_sec(capsys):
     assert "No SEC fallback attempted" in out
 
 
+def test_identify_laifen_uses_private_universe_entry_without_sec(capsys):
+    with (
+        patch("edgarpack.sec.tickers.resolve_company") as mock_resolve,
+        patch("edgarpack.sec.tickers.resolve_company_by_name") as mock_resolve_name,
+    ):
+        rc = main(["identify", "laifen"])
+
+    assert rc == 0
+    mock_resolve.assert_not_called()
+    mock_resolve_name.assert_not_called()
+    out = capsys.readouterr().out
+    assert "Shenzhen Shuye Innovative Technology Co., Ltd." in out
+    assert "Status: private company" in out
+    assert "No public filing workflow is available" in out
+
+
 def test_identify_private_name_only_company_from_universe(tmp_path, monkeypatch, capsys):
     (tmp_path / "universe.toml").write_text(
         """
@@ -43,4 +59,3 @@ aliases = ["laifen", "shenzhen shuye"]
     out = capsys.readouterr().out
     assert "Status: private company" in out
     assert "No public filing workflow is available" in out
-

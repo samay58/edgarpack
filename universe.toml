@@ -1435,6 +1435,19 @@ aliases = [
 stock_code = "688696"
 alt_tickers = ["XGIMI"]
 
+# Non-public China company verification fixture. Evidence note:
+# docs/research/2026-04-27-xgimi-china-filer-smoke.md records the Sofina
+# annual-report source that identifies Shenzhen Shuye Innovative Technology
+# (Laifen) as a direct investment; no public filing workflow is verified.
+[[companies]]
+name = "Shenzhen Shuye Innovative Technology Co., Ltd."
+listing = "PRIVATE"
+aliases = [
+  "laifen",
+  "shenzhen shuye",
+  "shenzhen shuye innovative technology",
+]
+
 # ============================================================
 #  Pre-IPO filers (registration-class only)
 # ============================================================

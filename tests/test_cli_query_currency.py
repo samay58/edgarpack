@@ -1,6 +1,10 @@
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
+
+from edgarpack.query.currency import format_cited_currency
+from edgarpack.query.models import CitedValue
 
 
 def _run(*args: str) -> subprocess.CompletedProcess:
@@ -61,6 +65,26 @@ def test_query_china_currency_usd_keeps_native_provenance():
     assert "Revenue: $42.9M" in result.stdout
     assert "native: ¥312.4M" in result.stdout
     assert "FX: data/fx_rates.csv CNY/USD 2024-12-31 average" in result.stdout
+
+
+def test_currency_formatter_does_not_treat_share_counts_as_dollars():
+    cited = CitedValue(
+        value=24_500_000_000,
+        unit="shares",
+        metric="shares_diluted",
+        concept="WeightedAverageNumberOfDilutedSharesOutstanding",
+        period_end=date(2026, 1, 25),
+        fiscal_year=2026,
+        fiscal_period="FY",
+        form_type="10-K",
+        filed=date(2026, 2, 25),
+        accession="0001045810-26-000021",
+        cik="0001045810",
+        company="NVIDIA CORP",
+        reporting_currency="USD",
+    )
+
+    assert format_cited_currency(cited, mode="both", metric="shares_diluted") == "24.5B"
 
 
 def test_which_help_advertises_currency_flag():

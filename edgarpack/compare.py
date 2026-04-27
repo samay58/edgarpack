@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .fx import RateTable
 from .query.formatting import format_number
 from .query.models import CitedValue
 
@@ -28,7 +29,7 @@ _RATIO_METRICS: frozenset[str] = frozenset(
 _PER_EMPLOYEE_METRICS: frozenset[str] = frozenset({"revenue_per_employee"})
 
 
-def _load_rates():
+def _load_rates() -> RateTable:
     from .query.currency import load_default_rates
 
     return load_default_rates()
@@ -107,10 +108,14 @@ async def _fetch_one(
             "currency": cv.reporting_currency or "",
             "extraction_method": cv.source or "",
         }
+        raw_value = cv.value
+        if raw_value is None:
+            metrics_dict[m] = entry
+            continue
         if m in _GROWTH_METRICS:
-            entry["growth"] = float(cv.value)
+            entry["growth"] = float(raw_value)
         elif m in _RATIO_METRICS:
-            entry["ratio"] = float(cv.value)
+            entry["ratio"] = float(raw_value)
         elif m in _PER_EMPLOYEE_METRICS:
             # revenue / headcount in the native reporting currency. Convert
             # to USD using the revenue convention (average over the year).
@@ -127,10 +132,10 @@ async def _fetch_one(
                     entry["fx_as_of"] = conv.as_of.isoformat()
                     entry["fx_provenance"] = conv.provenance
             else:
-                entry["per_employee_usd"] = float(cv.value)
+                entry["per_employee_usd"] = float(raw_value)
                 entry["fx_rate"] = 1.0
         elif cv.unit == "headcount":
-            entry["headcount"] = int(cv.value)
+            entry["headcount"] = int(raw_value)
         elif cv.reporting_currency and cv.reporting_currency != "USD":
             from .query.currency import convert_cited_to_usd
 
@@ -144,7 +149,7 @@ async def _fetch_one(
                 entry["fx_as_of"] = conv.as_of.isoformat()
                 entry["fx_provenance"] = conv.provenance
         else:
-            entry["usd_value"] = float(cv.value)
+            entry["usd_value"] = float(raw_value)
             entry["fx_rate"] = 1.0
         metrics_dict[m] = entry
     diagnostics_out: list[dict[str, str]] = [

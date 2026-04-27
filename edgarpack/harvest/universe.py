@@ -67,6 +67,9 @@ class UniverseConfig(BaseModel):
         global default) to avoid spurious harvest_errors for filings that do
         not yet exist.
         """
+        if spec.private:
+            return {}
+
         counts: dict[str, int] = {}
 
         is_pre_ipo = bool(spec.forms_s1 and spec.forms_s1 > 0)

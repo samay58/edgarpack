@@ -127,6 +127,7 @@ These are the tracked-but-not-being-worked items. Each maps to a wontfix-closed 
 ```bash
 # HKEX query via the main CLI
 edgarpack identify tencent
+edgarpack identify laifen
 edgarpack query BIDU revenue --period lfy
 edgarpack query "tencent" operating_cash_flow --period lfy --currency both
 

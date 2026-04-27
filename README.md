@@ -201,6 +201,7 @@ edgarpack which FIG                                           # MD&A KPIs a comp
 
 # Query & compare
 edgarpack identify xgimi                                      # SEC, HKEX, SSE/A-share, private, or unknown
+edgarpack identify laifen                                     # private/unknown checks do not fall into SEC
 edgarpack query NVDA revenue,net_income --period ltm          # single company, cited values
 edgarpack comps NVDA AMD INTC -m revenue,ebitda --period ltm  # SEC-to-SEC comps table
 edgarpack compare NVDA BIDU BABA -m revenue --currency usd    # cross-market (SEC + HKEX), USD-normalized
