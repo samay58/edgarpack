@@ -57,6 +57,13 @@ uv run --extra china --extra sse edgarpack identify xgimi
 uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
 ```
 
+If you already know the 6-digit A-share code, you can use it directly:
+
+```bash
+uv run --extra china --extra sse edgarpack identify 688775
+uv run --extra china --extra sse edgarpack build-sse 688775 --latest-annual --with-chunks
+```
+
 For English translation of a Chinese annual report, add a DeepInfra key and keep
 the model/progress flags visible:
 

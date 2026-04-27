@@ -67,6 +67,13 @@ uv run --extra china --extra sse edgarpack identify xgimi
 uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
 ```
 
+You can also start from the 6-digit stock code directly:
+
+```bash
+uv run --extra china --extra sse edgarpack identify 688775
+uv run --extra china --extra sse edgarpack build-sse 688775 --latest-annual --with-chunks
+```
+
 For English translation of a Chinese filing, set a DeepInfra key and use the
 translation flags explicitly:
 

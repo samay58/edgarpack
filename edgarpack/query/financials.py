@@ -289,15 +289,12 @@ async def financials(
     """
     from pathlib import Path as _Path
 
-    from ..identity import UnknownCompany as _UnknownCompany
-    from ..identity import load_identity as _load_identity
-    from ..identity import looks_like_china_a_share_code as _looks_like_china_a_share_code
-    from ..identity import resolve as _resolve_identity
+    from .. import identity as _identity
 
     _universe_path = _Path("universe.toml")
     if _universe_path.exists():
         try:
-            _idx = _load_identity(_universe_path)
+            _idx = _identity.load_identity(_universe_path)
         except Exception as _e:
             # A malformed universe should not silently disable HKEX routing;
             # log and continue so the SEC path still works.
@@ -305,11 +302,11 @@ async def financials(
         else:
             _resolved_id = None
             try:
-                _resolved_id = _resolve_identity(_idx, ticker=company, company=None)
-            except _UnknownCompany:
+                _resolved_id = _identity.resolve(_idx, ticker=company, company=None)
+            except _identity.UnknownCompany:
                 try:
-                    _resolved_id = _resolve_identity(_idx, ticker=None, company=company)
-                except _UnknownCompany:
+                    _resolved_id = _identity.resolve(_idx, ticker=None, company=company)
+                except _identity.UnknownCompany:
                     pass
             if _resolved_id is not None and _resolved_id.source in {"HKEX", "SSE"}:
                 return await _query_china_pack(
@@ -320,15 +317,28 @@ async def financials(
                     pack_root=pack_root,
                 )
 
-    if _looks_like_china_a_share_code(company):
-        raise ValueError(
-            f"Unknown ticker {company!r} looks like a China A-share code. "
-            "Add it to universe.toml and build an SSE pack before querying."
+    if _identity.looks_like_china_a_share_code(company):
+        resolved_code = _identity.ResolvedCompany(
+            ticker=company.strip(),
+            listing="SSE",
+            source="SSE",
+            cik=None,
+            hk_stock_code=None,
+            stock_code=company.strip(),
+            aliases=(),
+            private=False,
+        )
+        return await _query_china_pack(
+            resolved_code,
+            metrics,
+            period,
+            display_token=display_token,
+            pack_root=pack_root,
         )
 
     try:
         cik, company_name = await resolve_ticker(company, force=force)
-    except _UnknownCompany:
+    except _identity.UnknownCompany:
         # Fallback for pre-IPO filers: not in company_tickers.json.
         from ..sec.tickers import resolve_company_by_name as _resolve_by_name
 

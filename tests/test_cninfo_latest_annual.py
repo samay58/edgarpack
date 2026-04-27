@@ -134,3 +134,60 @@ def test_build_sse_latest_annual_uses_cninfo_selection(monkeypatch, tmp_path, ca
     out = capsys.readouterr().out
     assert "Selected annual report" in out
     assert "1223192484.PDF" in out
+
+
+def test_build_sse_latest_annual_accepts_raw_stock_code(monkeypatch, tmp_path, capsys):
+    from edgarpack import cli
+    from edgarpack.china.acquire import CninfoAnnualReportRef
+
+    selected = CninfoAnnualReportRef(
+        stock_code="688775",
+        company_name="Insta360",
+        title="2024年年度报告",
+        filing_date=date(2025, 4, 22),
+        source_url="https://static.cninfo.com.cn/finalpage/2025-04-22/688775.pdf",
+    )
+    calls = {}
+
+    async def fake_build_sse_pack(**kwargs):
+        calls.update(kwargs)
+        return SimpleNamespace(
+            output_dir=tmp_path / "packs" / "sse" / "688775" / "688775_2025-04-22",
+            filing_meta={
+                "company_name": kwargs["company_name"],
+                "form_type": "ANNUAL-REPORT",
+                "filing_date": str(kwargs["filing_date"]),
+            },
+            sections_count=4,
+            tokens_total=1234,
+            warnings=[],
+        )
+
+    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", lambda *_args, **_kwargs: selected)
+    monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fake_build_sse_pack)
+
+    rc = cli._cmd_build_sse(
+        Namespace(
+            target="688775",
+            latest_annual=True,
+            url=None,
+            stock_code=None,
+            company=None,
+            filing_date=None,
+            out=tmp_path / "packs",
+            pdf=None,
+            with_chunks=False,
+            translate=False,
+            translate_model="deepseek-ai/DeepSeek-V3",
+            form_type="auto",
+            force=False,
+        )
+    )
+
+    assert rc == 0
+    assert calls["stock_code"] == "688775"
+    assert calls["company_name"] == "Insta360"
+    assert calls["url"] == selected.source_url
+    out = capsys.readouterr().out
+    assert "Selected annual report" in out
+    assert "Stock Code: 688775" in out

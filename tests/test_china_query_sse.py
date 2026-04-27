@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from unittest.mock import patch
 
 import pytest
 
@@ -136,12 +135,81 @@ def test_xgimi_alias_query_routes_to_sse_pack(tmp_path):
     assert result.metrics["revenue"].value == 3_404_605_307.88
 
 
-def test_unknown_a_share_like_code_does_not_fall_back_to_sec():
-    with patch("edgarpack.query.financials.resolve_ticker") as mock_resolve:
-        with pytest.raises(ValueError, match="China A-share code"):
-            asyncio.run(financials(company="688999", metrics="revenue", period="lfy"))
+def test_raw_a_share_code_query_uses_china_pack_path(tmp_path):
+    pack_root = tmp_path / "packs"
+    pack_dir = pack_root / "sse" / "688775" / "688775_2025-04-22"
+    pack_dir.mkdir(parents=True)
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "filing": {
+                    "company_name": "Insta360",
+                    "filing_date": "2025-04-22",
+                    "form_type": "ANNUAL-REPORT",
+                    "stock_code": "688775",
+                    "exchange": "SSE",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pack_dir / "facts.json").write_text(
+        json.dumps(
+            {
+                "source": "SSE",
+                "exchange": "SSE",
+                "stock_code": "688775",
+                "company": "Insta360",
+                "facts": {
+                    "cas": {
+                        "Revenue": {
+                            "label": "Revenue",
+                            "units": {
+                                "CNY": [
+                                    {
+                                        "start": "2024-01-01",
+                                        "end": "2024-12-31",
+                                        "fy": 2024,
+                                        "fp": "FY",
+                                        "form": "ANNUAL-REPORT",
+                                        "accn": "688775_2025-04-22",
+                                        "filed": "2025-04-22",
+                                        "source_url": "https://static.cninfo.com.cn/finalpage/2025-04-22/688775.PDF",
+                                        "source_document": "optional/source.pdf",
+                                        "section_id": "annual_s02_company_profile_key_financials",
+                                        "matched_label": "营业收入",
+                                        "extraction_method": "regex:annual_table",
+                                        "val": 123_456_789.0,
+                                    }
+                                ]
+                            },
+                        }
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
 
-    mock_resolve.assert_not_called()
+    result = asyncio.run(
+        financials(company="688775", metrics="revenue", period="lfy", pack_root=pack_root)
+    )
+
+    assert result.metrics["revenue"].value == 123_456_789.0
+    assert result.metrics["revenue"].reporting_currency == "CNY"
+    assert result.metrics["revenue"].primary_link.startswith("https://static.cninfo.com.cn/")
+
+
+def test_unknown_a_share_like_code_reports_missing_china_pack(tmp_path):
+    with pytest.raises(FileNotFoundError, match="No SSE pack found for 688999"):
+        asyncio.run(
+            financials(
+                company="688999",
+                metrics="revenue",
+                period="lfy",
+                pack_root=tmp_path / "packs",
+            )
+        )
 
 
 def test_known_sse_without_pack_gives_build_next_step(tmp_path):

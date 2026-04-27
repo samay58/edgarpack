@@ -1201,10 +1201,21 @@ def _cmd_identify(args: Any) -> int:
             resolved = await _resolve_cli_company(args.company)
         except UnknownCompany as e:
             if looks_like_china_a_share_code(args.company):
-                print(f"{args.company}")
-                print("Status: unknown China A-share code")
-                print("No SEC fallback attempted.")
-                print("Next: add the company to universe.toml, then run build-sse --latest-annual.")
+                try:
+                    selected = _find_latest_sse_annual_report(args.company)
+                except Exception:
+                    print(f"{args.company}")
+                    print("Status: unknown China A-share code")
+                    print("No SEC fallback attempted.")
+                    print(
+                        "Next: add the company to universe.toml, then run "
+                        "build-sse --latest-annual."
+                    )
+                    return 0
+                print(selected.company_name or args.company)
+                print("Status: public A-share / SSE")
+                print(f"Stock Code: {args.company.strip()}")
+                print(f"Next: edgarpack build-sse {args.company} --latest-annual --with-chunks")
                 return 0
             print(args.company)
             print("Status: unknown")
@@ -1257,10 +1268,27 @@ def _find_latest_sse_annual_report(stock_code: str) -> Any:
     return find_latest_annual_report(stock_code)
 
 
+def _synthetic_sse_company(stock_code: str) -> Any:
+    from .identity import ResolvedCompany
+
+    code = stock_code.strip()
+    return ResolvedCompany(
+        ticker=code,
+        listing="SSE",
+        source="SSE",
+        cik=None,
+        hk_stock_code=None,
+        stock_code=code,
+        aliases=(),
+        private=False,
+    )
+
+
 def _cmd_build_sse(args: Any) -> int:
     from datetime import date
 
     async def _run() -> int:
+        from .identity import looks_like_china_a_share_code
         from .pack.build import build_sse_pack
 
         url = getattr(args, "url", None)
@@ -1278,29 +1306,32 @@ def _cmd_build_sse(args: Any) -> int:
                         file=sys.stderr,
                     )
                     return 2
-                try:
-                    resolved = await _resolve_cli_company(target)
-                except (UnknownCompany, AmbiguousCompany) as e:
-                    print(f"Error: {e}", file=sys.stderr)
-                    return 2
-                if getattr(resolved, "private", False):
-                    print(
-                        f"Error: {target} is private; no SSE annual report is available.",
-                        file=sys.stderr,
+                if looks_like_china_a_share_code(target):
+                    stock_code = target.strip()
+                else:
+                    try:
+                        resolved = await _resolve_cli_company(target)
+                    except (UnknownCompany, AmbiguousCompany) as e:
+                        print(f"Error: {e}", file=sys.stderr)
+                        return 2
+                    if getattr(resolved, "private", False):
+                        print(
+                            f"Error: {target} is private; no SSE annual report is available.",
+                            file=sys.stderr,
+                        )
+                        return 2
+                    if getattr(resolved, "source", None) != "SSE":
+                        print(
+                            f"Error: {target} is not registered as an SSE/A-share company.",
+                            file=sys.stderr,
+                        )
+                        return 2
+                    stock_code = getattr(resolved, "stock_code", None) or getattr(
+                        resolved,
+                        "ticker",
+                        None,
                     )
-                    return 2
-                if getattr(resolved, "source", None) != "SSE":
-                    print(
-                        f"Error: {target} is not registered as an SSE/A-share company.",
-                        file=sys.stderr,
-                    )
-                    return 2
-                stock_code = getattr(resolved, "stock_code", None) or getattr(
-                    resolved,
-                    "ticker",
-                    None,
-                )
-                company_name = company_name or _canonical_company_label(resolved, target)
+                    company_name = company_name or _canonical_company_label(resolved, target)
 
             try:
                 selected = _find_latest_sse_annual_report(str(stock_code))
@@ -2186,7 +2217,7 @@ def _render_query_table(result: Any, args: Any) -> str:
 
 
 def _cmd_query(args: Any) -> int:
-    from .identity import load_identity, resolve
+    from .identity import load_identity, looks_like_china_a_share_code, resolve
 
     # Universe-local pre-pass: catch private companies and ambiguous aliases
     # before hitting the SEC resolver. Unknown-to-universe inputs fall through
@@ -2224,6 +2255,9 @@ def _cmd_query(args: Any) -> int:
             file=sys.stderr,
         )
         return 2
+
+    if resolved is None and looks_like_china_a_share_code(args.company):
+        resolved = _synthetic_sse_company(args.company)
 
     async def _run() -> int:
         from .query.financials import financials
@@ -3375,7 +3409,14 @@ def _cmd_which(args: Any) -> int:
         try:
             resolved = await _resolve_cli_company(args.company)
             return 0, resolved
-        except (UnknownCompany, AmbiguousCompany, ValueError) as e:
+        except UnknownCompany as e:
+            from .identity import looks_like_china_a_share_code
+
+            if looks_like_china_a_share_code(args.company):
+                return 0, _synthetic_sse_company(args.company)
+            print(f"Error: {e}", file=sys.stderr)
+            return 2, None
+        except (AmbiguousCompany, ValueError) as e:
             print(f"Error: {e}", file=sys.stderr)
             return 2, None
         except Exception as e:

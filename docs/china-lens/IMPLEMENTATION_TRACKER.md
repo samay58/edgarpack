@@ -27,6 +27,7 @@ Build a high-trust research workflow that produces investor-grade Packs where ea
 ### Extraction pipeline (SSE/CNINFO)
 
 - `edgarpack identify` resolves known China/HK/company-name cases before SEC fallback so users can see whether a company is public, private, SSE/CNINFO, HKEX, or unknown.
+- Raw 6-digit A-share codes can also go straight through `identify`, `build-sse --latest-annual`, `query`, and `which` without a `universe.toml` entry when the stock code is valid.
 - `edgarpack build-sse` end-to-end: find the latest annual report when available, download it (or point at a local PDF via `--pdf`), convert to markdown, detect Chinese sections, extract annual metrics, and write a standard pack. Packs land at `packs/sse/<stock_code>/<stock_code>_<filing_date>/` so SEC packs and SSE packs stay out of each other's namespace.
 - Canonical Chinese section slugs cover annual-report sections and IPO prospectus sections, with a pinyin fallback for outliers. Chinese numerals (`一` through `二十`) are decoded in place.
 - Manifest carries `stock_code`, `exchange=SSE`, document type, source URL/document, reporting currency, and CNINFO acquisition metadata when available. `FilingInfo` is back-compat with SEC manifests (new fields default empty).
