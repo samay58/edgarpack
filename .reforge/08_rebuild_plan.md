@@ -154,3 +154,105 @@ Use this:
 ```text
 Use Superpowers writing-plans for the approved Reforge clean rewrite. Write the implementation plan for docs/superpowers/specs/2026-04-24-edgarpack-vnext-clean-rewrite-design.md. The plan must be TDD-first, create edgarpack_next and edgarpack-next in an isolated worktree, preserve the old implementation as evidence only, and implement the first vertical slice: SEC 10-K/10-Q/S-1 fixtures, deterministic pack artifacts, cited analyst performance metrics, simple derived metrics with component citations, S-1 selected-financial-data extraction, CLI commands filings/pack/cite/audit, and a minimal API wrapper. Include exact files, test commands, expected failures, validation gates, and stop points.
 ```
+
+## China/HK Gold-Standard Track - 2026-04-27
+
+This track should be treated as a separate hardening lane from the clean SEC-first vNext slice above. China/HK should not be bolted onto SEC CompanyFacts as an afterthought. It needs a shared citation/provenance contract that can represent SEC, HKEX, SSE, and CNINFO documents without fake source identifiers.
+
+## China/HK Path Decision
+
+Recommended path: harden the current CLI-first China/HK vertical slice before reviving China Lens API/web.
+
+Why:
+
+- The MiniMax/Zhipu HKEX fixture path already proves valuable analyst output.
+- The critical gap is trust presentation: source provenance and citation rendering, not UI.
+- SSE sectionization/translation is useful, but it must be connected to the same cited facts/query contract before it becomes analyst-grade.
+- API/web still contains seeded mock/demo evidence and should not be the next trust surface.
+
+## Target China Pack Contract
+
+Every China/HK extracted fact should carry:
+
+- `exchange`: `HKEX`, `SSE`, `SZSE`, `CNINFO`, or similar source family.
+- `issuer_id`: stock code or filing-system identifier.
+- `filing_type`: prospectus, annual report, interim report, circular, or equivalent.
+- `source_url` or local source file pointer.
+- `source_document_title`.
+- `reporting_currency` and `accounting_standard`.
+- `section_id`.
+- `chunk_id`.
+- `page_start` and `page_end` when available.
+- matched source label or short text span.
+- extracted numeric value and normalized numeric value.
+- extraction method: regex, table parser, OCR, LLM fallback, or manual fixture.
+- confidence/status and validation warnings.
+
+CLI citation output should render these fields directly. It should not manufacture SEC archive URLs, fake CIK-style IDs, or placeholder filing dates for HKEX/SSE documents.
+
+## China/HK Fixture Ladder
+
+Use a small but representative ladder:
+
+1. MiniMax HKEX IPO prospectus, already committed.
+2. Zhipu HKEX IPO prospectus, already committed.
+3. Tencent HKEX annual report.
+4. Meituan HKEX annual report.
+5. One SSE/STAR prospectus.
+6. Optional later: one CNINFO annual or interim report.
+
+Each fixture should have goldens for:
+
+- section boundaries.
+- extracted financial facts.
+- reporting currency/accounting standard.
+- page/chunk-backed citations.
+- derived metric component citations.
+- CLI query output.
+- compare output when cross-company comparison is expected.
+- translation numeric/table preservation when translation is involved.
+
+## First China/HK Milestone
+
+Milestone 1: HKEX citation/provenance repair for MiniMax and Zhipu.
+
+Deliverables:
+
+- Add or extend China citation/fact models without changing unrelated SEC behavior.
+- Enrich existing HKEX `facts.json` generation or fixture metadata with source document, page/section/chunk provenance.
+- Update HKEX query output so MiniMax/Zhipu citations are HKEX-native and auditable.
+- Keep existing numeric outputs stable for MiniMax/Zhipu.
+- Add tests that fail on SEC-style HKEX citation URLs and placeholder filing dates.
+- Fix the `r_and_d_expense` alias gap or explicitly mark it out of scope with a bead.
+
+Validation:
+
+- `uv run pytest tests/test_china_query_hk.py tests/test_china_query_eval.py tests/test_hk_extract.py tests/test_hk_multi_year.py -q`
+- Manual `uv run edgarpack query minimax ... --citations footer`
+- Manual `uv run edgarpack query zhipu ... --citations footer`
+- Manual `uv run edgarpack compare minimax zhipu ... --currency both`
+
+Milestone 2: mature HKEX annual report shape.
+
+Deliverables:
+
+- Add Tencent and Meituan annual-report fixtures.
+- Support annual-report sectioning and financial table extraction separately from prospectus assumptions.
+- Query core analyst metrics with HKEX-native citations.
+
+Milestone 3: SSE facts/query parity.
+
+Deliverables:
+
+- Add one real SSE/STAR fixture pack.
+- Extract the same core analyst metric bundle where disclosed.
+- Render citations through the same China Pack contract.
+- Keep translation validators in the publishing gate.
+
+## Exact Next Prompt For China/HK Planning
+
+Use this:
+
+```text
+Use Reforge assessment context and write the implementation plan for China/HK gold-standard hardening in EdgarPack. Do not revive the web/API first. Plan milestone 1 only: repair HKEX MiniMax/Zhipu citation/provenance so query output is HKEX-native, page/section/chunk-backed, and no longer renders fake SEC archive URLs or placeholder filing dates. Preserve existing numeric outputs. Include exact files, failing tests first, fixture updates, CLI checks, validation gates, and any bead follow-ups for out-of-scope work.
+```

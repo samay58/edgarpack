@@ -105,3 +105,61 @@ Commands run in this assessment:
 - `edgarpack/china/service.py` seeds mock CNINFO URLs and hardcoded evidence chunks by default (`edgarpack/china/service.py:86-189`). Useful for local demos, not a source-of-truth production path.
 - `docs/BACKLOG.md` says the SSE prospectus pipeline is parked on a branch (`docs/BACKLOG.md:7-15`), but README, CLI help, implementation tracker, and code show `build-sse` / `translate-sse` are now on main (`README.md:178-181`, `docs/china-lens/IMPLEMENTATION_TRACKER.md:27-41`, `edgarpack/pack/build.py:329-460`). Treat `docs/BACKLOG.md` as stale.
 - `edgarpack/cli.py` is 3005 lines; `query/financials.py`, `query/kpi_extract.py`, and `query/periods.py` are also large. Prior `docs/learn/manifest.yml:141-147` calls `periods.py` and `financials.py` load-bearing, which supports targeted extraction only where a user story needs it.
+
+## China/HK Assessment Addendum - 2026-04-27
+
+Scope: reassess China/Hong Kong filings as the "gold standard" complexity target, with the specific question of whether China/HK analysis is approaching the same evidence quality as SEC filing analysis.
+
+Current git state during this addendum:
+
+- Branch: `main`.
+- Dirty state: only pre-existing untracked `reports/`; no implementation files were edited for this assessment.
+
+Live China/HK surfaces on main:
+
+- HKEX query/compare path: `edgarpack query`, `edgarpack compare`, and `edgarpack comps` can route HKEX tickers through committed pack fixtures and `facts.json`.
+- HKEX fixture coverage: `tests/fixtures/china_packs/minimax_2024/` and `tests/fixtures/china_packs/zhipu_2024/`.
+- SSE prospectus path: `build-sse` and `translate-sse` can build sectionized Chinese prospectus packs and run section-aware translation.
+- China Lens API/workspace: code and tests exist, but docs mark API/web as parked and CLI as the primary product surface.
+
+Verification run for this addendum:
+
+| Command | Result |
+| --- | --- |
+| `uv run pytest tests/test_china_query_hk.py tests/test_china_query_eval.py tests/test_hk_extract.py tests/test_hk_multi_year.py -q` | Passed: `78 passed, 12 xfailed in 0.94s` |
+| `uv run pytest tests/test_sse_pack.py tests/test_sectionize_cn.py tests/test_translation_validators.py tests/test_china_validators.py tests/test_china_api.py tests/test_china_service.py tests/test_china_storage.py tests/test_china_identity.py -q` | Passed: `72 passed in 0.39s` |
+| `uv run edgarpack query minimax revenue,gross_profit,net_income,cash_and_equivalents,headcount,revenue_growth_yoy,r_and_d_intensity,revenue_per_employee --period lfy --citations footer` | Produced cited HKEX-derived MiniMax metrics and derived metrics |
+| `uv run edgarpack query zhipu revenue,gross_profit,net_income,operating_cash_flow,cash_and_equivalents,headcount,revenue_growth_yoy,r_and_d_intensity,revenue_per_employee --period lfy --citations footer` | Produced cited HKEX-derived Zhipu metrics and derived metrics |
+| `uv run edgarpack compare minimax zhipu --metrics revenue,gross_profit,net_income,operating_cash_flow,cash_and_equivalents,headcount,revenue_growth_yoy,r_and_d_intensity,revenue_per_employee --currency both` | Produced native and USD-normalized cross-company comparison |
+| `uv run edgarpack query minimax operating_cash_flow,rd_expense,r_and_d_expense --period lfy --format json-full` | Confirmed `operating_cash_flow` and `rd_expense` extract; `r_and_d_expense` alias remains missing |
+| `uv run edgarpack query tencent revenue --period lfy` | Failed as expected: `No HK pack found for 0700.HK` |
+| `uv run edgarpack query BIDU revenue --period lfy` | Passed via SEC ADR/20-F path, not HKEX-native support |
+
+What is genuinely working:
+
+- The HKEX vertical slice is real for MiniMax and Zhipu. It can extract facts, query values, compute derived metrics, and compare native/normalized currency.
+- The China golden harness is meaningful: fixture values are hand-verified against source PDFs and tests enforce expected values rather than regenerating from current output.
+- HKEX extraction handles multi-year table shapes, wrapped labels, interleaved columns, sign conventions, and several prospectus financial metrics.
+- SSE sectionization and translation have good deterministic scaffolding: section IDs, Chinese prospectus heading awareness, markdown table preservation checks, numeric preservation checks, glossary checks, and residual Chinese/pinyin validators.
+- China QA validators express the right product invariant: unsupported findings are rejected when they lack citations, cite nonexistent chunks, or make numeric claims not supported by cited evidence.
+
+Where it is not yet SEC-quality:
+
+- Coverage is narrow. Only two HKEX IPO prospectus fixtures are queryable today; mature HKEX annual reports such as Tencent and Meituan are registered but have no pack/facts path.
+- The HKEX query path is fixture-bound and hardcodes FY2024 under `tests/fixtures/china_packs/`; it is not yet a general build/query pipeline.
+- CLI citation rendering is not HKEX-native. MiniMax/Zhipu outputs currently render SEC-style archive URLs, fake CIK-like identifiers, and `0001-01-01` filing dates instead of real HKEX/PDF/page/section/chunk citations.
+- `facts.json` preserves section IDs and extraction method, but not enough source provenance for an external reviewer: source PDF URL, page numbers, chunk IDs, matched labels, text spans, and confidence need to be first-class.
+- SSE can build and translate packs, but it does not yet feed the same financial query/citation contract as SEC/HKEX.
+- China Lens API/service tests pass, but the default seeded Tencent data is mock/demo evidence. That surface should stay parked until backed by real fixture documents.
+- LLM fallback is not the reason the HKEX path works today. The verified path is mostly deterministic regex/table extraction over cleaner pack artifacts; the fallback is optional and currently has unit/currency risk if used naively.
+
+Assessment verdict:
+
+China/HK is a promising and unusually strong prototype, especially for IPO prospectus fixtures, but it is not yet at SEC parity. The highest-value next step is not more UI or more LLM prompting. It is a China Pack citation/provenance contract that makes HKEX/SSE citations as inspectable as SEC citations.
+
+Follow-up beads filed or reopened from this assessment:
+
+- `edgarpack-fr7` P1 bug: repair HKEX citation provenance in query output.
+- `edgarpack-sfi` P2 task: support HKEX annual-report shape, reopened because China/HK is now a concrete gold-standard path.
+- `edgarpack-elu` P2 task: wire SSE packs into cited facts and query output.
+- `edgarpack-ym2` P3 bug: resolve `r_and_d_expense` alias to `rd_expense`.
