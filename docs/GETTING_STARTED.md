@@ -26,13 +26,41 @@ pip install edgarpack
 If you are inside this repo and developing locally:
 
 ```bash
-uv pip install -e ".[dev,china,vlm]"
+uv pip install -e ".[dev,china,sse,vlm]"
 ```
 
 The rest of this guide shows commands as `edgarpack ...`. If your shell says `command not found: edgarpack` and you are inside this repo, run the same command with `uv run` in front:
 
 ```bash
 uv run edgarpack query NVDA revenue --period ltm
+```
+
+Some commands need optional feature groups when you run from the repo with `uv run`:
+
+| Extra | Use it for |
+| --- | --- |
+| `china` | China Lens routing, HKEX/CNINFO support, China API helpers |
+| `sse` | SSE / China A-share PDF building, Chinese section detection, PDF-to-markdown |
+| `dev` | Tests and linting |
+| `vlm` | Anthropic/VLM fallback extraction |
+
+For SEC-only commands, this is enough:
+
+```bash
+uv run edgarpack query NVDA revenue --period ltm
+```
+
+For XGIMI / China A-share commands, use both China extras:
+
+```bash
+uv run --extra china --extra sse edgarpack identify xgimi
+uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
+```
+
+For tests, add `dev`:
+
+```bash
+uv run --extra dev --extra china --extra sse python -m pytest -q
 ```
 
 ## 2. Set the SEC user agent
@@ -68,7 +96,7 @@ Some workflows do benefit from an Anthropic key:
 Install the VLM extra if you have not already:
 
 ```bash
-uv pip install -e ".[dev,china,vlm]"
+uv pip install -e ".[dev,china,sse,vlm]"
 ```
 
 Set the key:

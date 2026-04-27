@@ -124,6 +124,15 @@ These are the tracked-but-not-being-worked items. Each maps to a wontfix-closed 
 
 ## Commands you actually run
 
+These examples use installed-command form (`edgarpack ...`). When running from this repo with `uv run`, prefix XGIMI / China A-share commands with both optional feature groups:
+
+```bash
+uv run --extra china --extra sse edgarpack identify xgimi
+uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
+```
+
+`china` enables China Lens/HKEX/CNINFO support. `sse` enables the SSE PDF build and Chinese section tooling. Add `--extra dev` only for tests.
+
 ```bash
 # HKEX query via the main CLI
 edgarpack identify tencent

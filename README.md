@@ -45,6 +45,34 @@ If this is your first time using EdgarPack, read these in order:
 
 If you installed EdgarPack from PyPI, run commands as `edgarpack ...`. If you are working from this repo, run the same commands as `uv run edgarpack ...`. The docs use `edgarpack` for readability, but the repo-local form is often what you want during development.
 
+Some features need optional dependency groups. These only matter when you are running from the repo with `uv run` or installing from source:
+
+| Extra | Use it for |
+| --- | --- |
+| `china` | China Lens routing, HKEX/CNINFO support, China API helpers |
+| `sse` | SSE / China A-share PDF building, Chinese section detection, PDF-to-markdown |
+| `dev` | Tests and linting (`pytest`, `ruff`, `mypy`) |
+| `vlm` | Anthropic/VLM fallbacks for harder extraction paths |
+
+For normal SEC/NVDA commands, no extra is needed:
+
+```bash
+uv run edgarpack query NVDA revenue --period ltm
+```
+
+For XGIMI / China A-share commands, use both China extras:
+
+```bash
+uv run --extra china --extra sse edgarpack identify xgimi
+uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
+```
+
+For tests, add the dev extra:
+
+```bash
+uv run --extra dev --extra china --extra sse python -m pytest -q
+```
+
 ## What you get
 
 A handful of commands cover most of the research loop. The commands below are the ones I reach for daily; the full user workflows are in [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md).
@@ -132,7 +160,7 @@ export EDGARPACK_USER_AGENT="Your Name your.email@example.com"
 If you want LLM-assisted extraction for table shapes EdgarPack cannot parse deterministically, install the VLM extra and export an Anthropic key:
 
 ```bash
-uv pip install -e ".[dev,china,vlm]"
+uv pip install -e ".[dev,china,sse,vlm]"
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
@@ -220,7 +248,8 @@ edgarpack timeline --ticker "NVIDIA" \
 edgarpack timeline --series registration --cik 0002021728 \
   --packs ./packs --format html --out ./reports/cerebras-s1    # S-1 amendment chain
 
-# SSE / China A-share primary filings. Requires the [sse] extra.
+# SSE / China A-share primary filings. Repo-local form:
+# uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
 edgarpack build-sse xgimi --latest-annual --with-chunks       # look up CNINFO URL/date
 edgarpack build-sse --url <pdf-url> --stock-code 301536 \
   --company "Unitree Robotics" --filing-date 2026-03-20           # Chinese pack
@@ -265,6 +294,8 @@ See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full diff workflow, HTM
 ## China Lens
 
 A parallel pipeline for HKEX, CNINFO, and SSE filings. Same citation shape as the SEC path, different source formats.
+
+When running from this repo with `uv run`, use `--extra china --extra sse` for XGIMI / China A-share commands. `china` supplies the China Lens support libraries; `sse` supplies the SSE PDF build and Chinese section tooling.
 
 **HKEX** tickers (`0700.HK`, `BIDU`, `BABA`, `9988.HK`) are first-class in `query`, `which`, and `compare`: when the resolver routes a company to HKEX, queries read from the pack's `facts.json` instead of SEC companyfacts. Query/which/compare accept `--currency native|usd|both`; USD-normalized output keeps the native value, FX rate, convention, and source citation visible. The extractor supports prospectus and annual-report section shapes, with regex pattern matching against financial sections and a Claude API fallback for tagged-but-unmatched metrics.
 

@@ -4,7 +4,13 @@ EdgarPack's query system pulls financial metrics from the right primary-source p
 
 If you are new to the CLI, start with [`GETTING_STARTED.md`](GETTING_STARTED.md). If you already know the basics and want recipes, use [`WORKFLOWS.md`](WORKFLOWS.md). This page is the reference for people who already know they want `query`, `comps`, or `compare` and need the exact period selectors, metric behavior, citation fields, JSON output, guards, and derived metrics.
 
-If you are working from this repo and `edgarpack` is not on your PATH, prefix any command here with `uv run`.
+If you are working from this repo and `edgarpack` is not on your PATH, prefix SEC-only commands with `uv run`. For China/HK/SSE commands, include the optional feature groups:
+
+```bash
+uv run --extra china --extra sse edgarpack query 688696 revenue --period lfy
+```
+
+`china` enables China Lens/HKEX/CNINFO support. `sse` enables China A-share PDF building and Chinese section tooling. Add `--extra dev` only when running tests.
 
 ## Architecture
 
