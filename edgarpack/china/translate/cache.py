@@ -15,7 +15,7 @@ from pathlib import Path
 from .provider import TranslationResult
 
 DEFAULT_CACHE_PATH = Path.home() / ".edgarpack" / "translation_cache.db"
-DEFAULT_NAMESPACE = "sse-translate-v9"
+DEFAULT_NAMESPACE = "sse-translate-v10"
 
 _SCHEMA = """\
 CREATE TABLE IF NOT EXISTS translation_cache (
@@ -38,6 +38,11 @@ def _normalize(text: str) -> str:
 def _hash_text(text: str, namespace: str = DEFAULT_NAMESPACE) -> str:
     payload = f"{namespace}\0{_normalize(text)}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def provider_namespace(provider: str, namespace: str = DEFAULT_NAMESPACE) -> str:
+    """Scope cached translations to the provider/model that produced them."""
+    return f"{namespace}:{provider}"
 
 
 class TranslationCache:

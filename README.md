@@ -67,6 +67,27 @@ uv run --extra china --extra sse edgarpack identify xgimi
 uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
 ```
 
+For English translation of a Chinese filing, set a DeepInfra key and use the
+translation flags explicitly:
+
+```bash
+export EDGARPACK_DEEPINFRA_KEY="di-..."
+uv run --extra china --extra sse edgarpack translate-sse \
+  --pack packs/sse/688696/688696_2026-03-31 \
+  --model deepseek-ai/DeepSeek-V4-Flash \
+  --concurrency 5 \
+  --batch-size 25 \
+  --force
+```
+
+`--model` is the DeepInfra model id. `deepseek-ai/DeepSeek-V4-Flash` is the
+recommended default for full annual reports because it is faster and less
+rate-limit-prone than Pro-tier models in long translation runs. `--concurrency`
+sets how many DeepInfra requests can be in flight at once; lower it if the
+provider rate-limits you. `--batch-size` controls how many translation units are
+validated and cached before progress is printed. Smaller batches are easier to
+resume; larger batches reduce overhead.
+
 For tests, add the dev extra:
 
 ```bash
@@ -299,7 +320,7 @@ When running from this repo with `uv run`, use `--extra china --extra sse` for X
 
 **HKEX** tickers (`0700.HK`, `BIDU`, `BABA`, `9988.HK`) are first-class in `query`, `which`, and `compare`: when the resolver routes a company to HKEX, queries read from the pack's `facts.json` instead of SEC companyfacts. Query/which/compare accept `--currency native|usd|both`; USD-normalized output keeps the native value, FX rate, convention, and source citation visible. The extractor supports prospectus and annual-report section shapes, with regex pattern matching against financial sections and a Claude API fallback for tagged-but-unmatched metrics.
 
-**SSE / China A-share** filings are built via `edgarpack build-sse`. Use `edgarpack identify <company>` first if you are not sure how the company routes, then `edgarpack build-sse <company-or-code> --latest-annual` to select the latest CNINFO annual report without manually hunting for the PDF URL. The builder converts the PDF via `pymupdf4llm`, detects CSRC annual/prospectus sections using Chinese numerals (`第一节`, `第二节`, ...), and produces the same `manifest.json` + `sections/*.md` + `llms.txt` pack layout as SEC filings. Add `--translate` (requires `EDGARPACK_DEEPINFRA_KEY`) to run the zh->en translation pipeline; successful runs write `sections/*.en.md`, `filing.full.en.md`, and manifest translation metadata with provider/model, failed sections, full-filing status, and validation warning/error counts.
+**SSE / China A-share** filings are built via `edgarpack build-sse`. Use `edgarpack identify <company>` first if you are not sure how the company routes, then `edgarpack build-sse <company-or-code> --latest-annual` to select the latest CNINFO annual report without manually hunting for the PDF URL. The builder converts the PDF via `pymupdf4llm`, detects CSRC annual/prospectus sections using Chinese numerals (`第一节`, `第二节`, ...), and produces the same `manifest.json` + `sections/*.md` + `llms.txt` pack layout as SEC filings. Add `--translate` (requires `EDGARPACK_DEEPINFRA_KEY`) to run the zh->en translation pipeline; successful runs write `sections/*.en.md`, `filing.full.en.md`, and manifest translation metadata with provider/model, failed sections, full-filing status, and validation warning/error counts. Translation uses a provider/model-scoped cache, validates each batch before saving it, and fails closed if a model drops protected literals, table structure, or Chinese-to-English completeness.
 
 A FastAPI workspace (`edgarpack api`) exposes the Evidence Explorer on top of the same data. See [`docs/china-lens/IMPLEMENTATION_TRACKER.md`](docs/china-lens/IMPLEMENTATION_TRACKER.md) for the current status and the [HKEX section of docs/QUERY.md](docs/QUERY.md#hkex-path) for query-layer details.
 

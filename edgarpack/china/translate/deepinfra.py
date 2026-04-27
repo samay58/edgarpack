@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import email.utils
 import os
 import re
+from datetime import UTC, datetime
 
 import httpx
 
@@ -97,6 +99,46 @@ _TRANSIENT_HTTP_EXCEPTIONS = (
     httpx.RemoteProtocolError,
 )
 _MAX_API_RETRIES = 3
+_RATE_LIMIT_MAX_API_RETRIES = 6
+
+
+class DeepInfraConfigurationError(RuntimeError):
+    """Raised when the DeepInfra translator is missing required configuration."""
+
+
+def _resolve_api_key(api_key: str | None = None) -> str:
+    if api_key is not None:
+        resolved = api_key.strip()
+    else:
+        resolved = (
+            os.environ.get("EDGARPACK_DEEPINFRA_KEY") or os.environ.get("DEEPINFRA_API_KEY") or ""
+        ).strip()
+
+    if not resolved:
+        raise DeepInfraConfigurationError(
+            "DeepInfra API key missing. Set EDGARPACK_DEEPINFRA_KEY "
+            "(preferred) or DEEPINFRA_API_KEY before running translation."
+        )
+    return resolved
+
+
+def _retry_delay_seconds(response: httpx.Response | None, attempt: int) -> float:
+    if response is not None:
+        retry_after = response.headers.get("Retry-After")
+        if retry_after:
+            try:
+                return min(60.0, max(0.0, float(retry_after)))
+            except ValueError:
+                try:
+                    parsed = email.utils.parsedate_to_datetime(retry_after)
+                except (TypeError, ValueError):
+                    pass
+                else:
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=UTC)
+                    delay = max(0.0, (parsed - datetime.now(UTC)).total_seconds())
+                    return min(60.0, delay)
+    return min(60.0, 2.0 * (2**attempt))
 
 
 def _build_system_prompt(glossary: FinancialGlossary, extra: str = "") -> str:
@@ -118,8 +160,8 @@ class DeepInfraTranslator:
     ) -> None:
         self.glossary = glossary
         self.model = model
-        self.api_key = api_key or os.environ.get("DEEPINFRA_API_KEY", "")
-        self._semaphore = asyncio.Semaphore(max_concurrency)
+        self.api_key = _resolve_api_key(api_key)
+        self._semaphore = asyncio.Semaphore(max(1, max_concurrency))
         self._system_prompt = _build_system_prompt(glossary)
         self._client: httpx.AsyncClient | None = None
 
@@ -231,7 +273,8 @@ class DeepInfraTranslator:
 
         client = await self._get_client()
         last_error: Exception | None = None
-        for attempt in range(_MAX_API_RETRIES):
+        max_attempts = _RATE_LIMIT_MAX_API_RETRIES
+        for attempt in range(max_attempts):
             try:
                 resp = await client.post(DEEPINFRA_ENDPOINT, json=payload, headers=headers)
                 resp.raise_for_status()
@@ -243,13 +286,16 @@ class DeepInfraTranslator:
             except httpx.HTTPStatusError as exc:
                 last_error = exc
                 status = exc.response.status_code
-                if status not in {408, 429, 500, 502, 503, 504} or attempt == _MAX_API_RETRIES - 1:
+                retryable = status in {408, 429, 500, 502, 503, 504}
+                if not retryable or attempt == max_attempts - 1:
                     raise
+                await asyncio.sleep(_retry_delay_seconds(exc.response, attempt))
+                continue
             except _TRANSIENT_HTTP_EXCEPTIONS as exc:
                 last_error = exc
                 if attempt == _MAX_API_RETRIES - 1:
                     raise
-            await asyncio.sleep(0.5 * (2**attempt))
+                await asyncio.sleep(0.5 * (2**attempt))
 
         if last_error is not None:
             raise last_error

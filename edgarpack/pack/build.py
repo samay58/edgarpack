@@ -361,6 +361,8 @@ async def build_sse_pack(
     force: bool = False,
     translate: bool = False,
     translate_model: str = "deepseek-ai/DeepSeek-V3",
+    translate_concurrency: int = 5,
+    translate_batch_size: int = 25,
     form_type: str = "auto",
 ) -> PackResult:
     """Build a pack from an SSE PDF.
@@ -376,6 +378,8 @@ async def build_sse_pack(
         force: Rebuild even if pack exists
         translate: Run zh->en translation pipeline
         translate_model: DeepInfra model ID for translation
+        translate_concurrency: Max concurrent DeepInfra translation requests
+        translate_batch_size: Translation units to validate/cache per progress batch
         form_type: Document type override (auto, annual-report, ipo-prospectus)
 
     Returns:
@@ -472,6 +476,8 @@ async def build_sse_pack(
                 stock_code=stock_code,
                 out_dir=out_dir,
                 model=translate_model,
+                max_concurrency=translate_concurrency,
+                batch_size=translate_batch_size,
                 warnings=warnings,
                 artifacts=artifacts,
             )
@@ -575,9 +581,11 @@ async def _translate_sections(
     model: str,
     warnings: list[str],
     artifacts: list[str],
+    max_concurrency: int = 5,
+    batch_size: int = 25,
 ) -> dict[str, Any]:
     """Run translation pipeline on all sections. Returns translation metadata dict."""
-    from ..china.translate.cache import DEFAULT_NAMESPACE, TranslationCache
+    from ..china.translate.cache import TranslationCache, provider_namespace
     from ..china.translate.deepinfra import DeepInfraTranslator
     from ..china.translate.glossary import FinancialGlossary
     from ..china.translate.numbers import tag_numbers
@@ -589,9 +597,13 @@ async def _translate_sections(
     )
 
     glossary = FinancialGlossary.with_company_overlay(stock_code, out_dir)
-    translator = DeepInfraTranslator(glossary=glossary, model=model)
+    translator = DeepInfraTranslator(
+        glossary=glossary,
+        model=model,
+        max_concurrency=max(1, max_concurrency),
+    )
     router = SectionRouter(translator)
-    cache = TranslationCache(namespace=DEFAULT_NAMESPACE)
+    cache = TranslationCache(namespace=provider_namespace(translator.provider))
     glossary_validator = GlossaryConsistencyValidator()
 
     cached_paragraphs = 0
@@ -600,6 +612,7 @@ async def _translate_sections(
     failed_sections: list[str] = []
     translated_section_ids: list[str] = []
     en_sections: list[str] = []
+    batch_size = max(1, batch_size)
 
     import sys
 
@@ -630,13 +643,6 @@ async def _translate_sections(
                 uncached_indices.append(i)
                 uncached_texts.append(decision.cleaned)
 
-        print(
-            f"  [{si}/{len(sections)}] {section.id}: "
-            f"{len(paragraphs)} paragraphs "
-            f"({len(uncached_texts)} uncached after preprocessing)",
-            file=sys.stderr,
-        )
-
         section_failed = False
         section_error_messages: list[str] = []
 
@@ -666,14 +672,40 @@ async def _translate_sections(
                 translation_sources[i] = None
                 cached_paragraphs -= 1
 
+        print(
+            f"  [{si}/{len(sections)}] {section.id}: "
+            f"{len(paragraphs)} paragraphs "
+            f"({len(uncached_texts)} uncached after preprocessing/cache)",
+            file=sys.stderr,
+        )
+
         # Translate uncached paragraphs via router
         if uncached_texts:
-            try:
-                results = await router.translate_section(section.id, uncached_texts)
+            total_batches = (len(uncached_texts) + batch_size - 1) // batch_size
+            for batch_number, batch_start in enumerate(
+                range(0, len(uncached_texts), batch_size), 1
+            ):
+                batch_indices = uncached_indices[batch_start : batch_start + batch_size]
+                batch_texts = uncached_texts[batch_start : batch_start + batch_size]
+                print(
+                    f"    batch {batch_number}/{total_batches}: "
+                    f"{len(batch_texts)} translation units",
+                    file=sys.stderr,
+                )
+                try:
+                    results = await router.translate_section(section.id, batch_texts)
+                except Exception as e:
+                    err = f"[{section.id}] {type(e).__name__}: {e}"
+                    print(f"  WARN: {err}", file=sys.stderr)
+                    warnings.append(f"Translation error: {err}")
+                    section_failed = True
+                    section_error_messages.append(err)
+                    break
+
                 retry_indices: list[int] = []
                 retry_texts: list[str] = []
 
-                for idx, result in zip(uncached_indices, results, strict=False):
+                for idx, result in zip(batch_indices, results, strict=False):
                     report = _validate_paragraph(
                         idx, result.text_zh, result.text_en, allow_han=False
                     )
@@ -690,9 +722,17 @@ async def _translate_sections(
                     translated_paragraphs += 1
 
                 if retry_texts:
-                    retry_results = await router.translate_section(
-                        section.id, retry_texts, strict=True
-                    )
+                    try:
+                        retry_results = await router.translate_section(
+                            section.id, retry_texts, strict=True
+                        )
+                    except Exception as e:
+                        err = f"[{section.id}] {type(e).__name__}: {e}"
+                        print(f"  WARN: {err}", file=sys.stderr)
+                        warnings.append(f"Translation error: {err}")
+                        section_failed = True
+                        section_error_messages.append(err)
+                        break
                     for idx, result in zip(retry_indices, retry_results, strict=False):
                         report = _validate_paragraph(
                             idx, result.text_zh, result.text_en, allow_han=False
@@ -711,12 +751,9 @@ async def _translate_sections(
                         translation_sources[idx] = "translated"
                         cache.put(result)
                         translated_paragraphs += 1
-            except Exception as e:
-                err = f"[{section.id}] {type(e).__name__}: {e}"
-                print(f"  WARN: {err}", file=sys.stderr)
-                warnings.append(f"Translation error: {err}")
-                section_failed = True
-                section_error_messages.append(err)
+                if section_failed:
+                    break
+                print(f"    batch {batch_number}/{total_batches}: cached", file=sys.stderr)
 
         if section_failed or any(
             translation_sources[i] is None and decisions[i].action == "translate"

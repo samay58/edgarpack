@@ -57,6 +57,26 @@ uv run --extra china --extra sse edgarpack identify xgimi
 uv run --extra china --extra sse edgarpack build-sse xgimi --latest-annual --with-chunks
 ```
 
+For English translation of a Chinese annual report, add a DeepInfra key and keep
+the model/progress flags visible:
+
+```bash
+export EDGARPACK_DEEPINFRA_KEY="di-..."
+uv run --extra china --extra sse edgarpack translate-sse \
+  --pack packs/sse/688696/688696_2026-03-31 \
+  --model deepseek-ai/DeepSeek-V4-Flash \
+  --concurrency 5 \
+  --batch-size 25 \
+  --force
+```
+
+`--model` chooses the DeepInfra translation model. Use
+`deepseek-ai/DeepSeek-V4-Flash` for full annual reports unless you have a
+specific reason to test another model. `--concurrency` is the number of
+translation requests EdgarPack may run at once. `--batch-size` is how many
+translation units are validated and cached before EdgarPack prints the next
+progress line. If you see rate-limit errors, lower `--concurrency` first.
+
 For tests, add `dev`:
 
 ```bash

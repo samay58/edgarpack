@@ -48,7 +48,10 @@ def test_translate_sse_writes_full_artifact_and_quality_metadata(
             ]
 
     class FakeCache:
+        namespace = None
+
         def __init__(self, **_kwargs):
+            type(self).namespace = _kwargs.get("namespace")
             pass
 
         def get(self, _text):
@@ -98,3 +101,36 @@ def test_translate_sse_writes_full_artifact_and_quality_metadata(
     assert translation["full_filing_written"] is True
     assert translation["validation_warning_count"] > 0
     assert translation["validation_error_count"] == 0
+    assert FakeCache.namespace == "sse-translate-v10:fake"
+
+
+def test_translate_sse_missing_deepinfra_key_is_actionable(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    from edgarpack import cli
+
+    monkeypatch.delenv("EDGARPACK_DEEPINFRA_KEY", raising=False)
+    monkeypatch.delenv("DEEPINFRA_API_KEY", raising=False)
+
+    pack_dir = tmp_path / "packs" / "sse" / "688696" / "688696_2025-04-22"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    (pack_dir / "manifest.json").write_text(
+        json.dumps({"filing": {"stock_code": "688696"}}),
+        encoding="utf-8",
+    )
+    (sections_dir / "annual_s02_company_profile_key_financials.md").write_text(
+        "营业收入 123\n",
+        encoding="utf-8",
+    )
+
+    rc = cli._cmd_translate_sse(
+        Namespace(pack=pack_dir, model="fixture-model", force=True),
+    )
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "EDGARPACK_DEEPINFRA_KEY" in captured.err
+    assert "Bearer" not in captured.err

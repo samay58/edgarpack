@@ -14,7 +14,7 @@ Build a high-trust research workspace that produces investor-grade Packs where e
 
 - **Extraction (HKEX)**: prospectus PDF -> pack markdown -> regex extractor -> Claude API fallback for tagged-but-unmatched metrics -> `facts.json` inside the pack. Source modules: `edgarpack/hk/acquire.py`, `adapter.py`, `extract.py`, `llm_extract.py`.
 - **Extraction (SSE STAR Market)**: prospectus PDF -> `pymupdf4llm` markdown conversion -> CSRC section detector (`第X节` with Chinese numerals, canonical slugs like `ipo_s10_risk_factors`) -> standard pack layout. Source modules: `edgarpack/sse/client.py`, `pdf_to_md.py`, `sectionize_cn.py`. CLI: `edgarpack build-sse`.
-- **Translation (zh->en, optional)**: section-aware router over a DeepInfra provider. Every translation passes a validator stack (literal token preservation, glossary consistency, markdown table structure fidelity, completion ratio, residual-Han check, romanized-artifact check). Deterministic date/number/percentage converters short-circuit the LLM for structured cells. Results are cached on disk by model + prompt. Source modules: `edgarpack/china/translate/{router,deepinfra,validators,glossary,numbers,preprocess,cache}.py`. CLI: `edgarpack build-sse --translate` or `edgarpack translate-sse --pack <dir>`. Requires `EDGARPACK_DEEPINFRA_KEY`.
+- **Translation (zh->en, optional)**: section-aware router over a DeepInfra provider. Every translation passes a validator stack (literal token preservation, glossary consistency, markdown table structure fidelity, completion ratio, residual-Han check, romanized-artifact check). Deterministic date/number/percentage/age-range converters short-circuit the LLM for structured cells. Results are cached on disk by provider/model namespace, and long sections are validated/cached in progress batches so interrupted runs can resume from completed batches. Source modules: `edgarpack/china/translate/{router,deepinfra,validators,glossary,numbers,preprocess,cache}.py`. CLI: `edgarpack build-sse --translate` or `edgarpack translate-sse --pack <dir>`. Requires `EDGARPACK_DEEPINFRA_KEY`.
 - **Query routing**: `universe.toml` tags HKEX filers; `edgarpack/query/financials.py` routes those CIKs through `facts.json` instead of SEC companyfacts. Same `CitedValue` / `DerivedValue` shapes downstream.
 - **Cross-market compare**: `edgarpack/compare.py` handles SEC + HKEX filers in one table, normalizes currencies through `data/fx_rates.csv` with `--currency usd`, and keeps the native-currency value as a footnote.
 - **Workspace API**: FastAPI routes under `edgarpack/api/` over Python domain services. Storage adapters pluggable via `EDGARPACK_CHINA_STORAGE_BACKEND` (`memory`, `json`, `postgres`).
@@ -153,10 +153,16 @@ edgarpack build-sse --url https://static.sse.com.cn/disclosure/listedinfo/.../pr
 
 # Same filing with zh->en translation
 export EDGARPACK_DEEPINFRA_KEY="di-..."
-edgarpack build-sse xgimi --latest-annual --with-chunks --translate
+edgarpack build-sse xgimi --latest-annual --with-chunks --translate \
+  --translate-model deepseek-ai/DeepSeek-V4-Flash \
+  --translate-concurrency 5 \
+  --translate-batch-size 25
 
 # Translate an already-built pack
-edgarpack translate-sse --pack packs/sse/301536/301536_2026-03-20
+edgarpack translate-sse --pack packs/sse/301536/301536_2026-03-20 \
+  --model deepseek-ai/DeepSeek-V4-Flash \
+  --concurrency 5 \
+  --batch-size 25
 
 # Workspace API for the Evidence Explorer
 export EDGARPACK_CHINA_STORAGE_BACKEND=json

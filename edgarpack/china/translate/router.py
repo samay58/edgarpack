@@ -6,6 +6,7 @@ section IDs from sectionize_cn.py.
 
 from __future__ import annotations
 
+import asyncio
 import re
 
 from ..translate.deepinfra import DeepInfraTranslator
@@ -78,6 +79,11 @@ _KEY_VALUE_LINE_RE = re.compile(r"^[^:：]{1,80}[：:].+$")
 _SPLIT_DATE_PREFIX_RE = re.compile(r"^(?P<prefix>.*?\d{4}\s*年)\s*(?P<month_tens>\d)\s*$")
 _SPLIT_DATE_SUFFIX_RE = re.compile(r"^(?P<month_ones>\d)\s*月\s*(?P<day>\d{1,2})\s*日(?P<rest>.*)$")
 _SOURCE_YEAR_RE = re.compile(r"(?P<year>\d{4})\s*年")
+_AGE_RANGE_LABEL_RE = re.compile(
+    r"^(?P<start>\d+)-(?P<end>\d+)岁[（(]含(?P=start)岁，不含(?P=end)岁[）)]$"
+)
+_AGE_UNDER_LABEL_RE = re.compile(r"^(?P<age>\d+)岁以下[（(]不含(?P=age)岁[）)]$")
+_AGE_AND_ABOVE_LABEL_RE = re.compile(r"^(?P<age>\d+)岁及以上$")
 ROUTER_VERSION = "v14"
 _PLACEHOLDER_CELL_TRANSLATIONS: dict[str, str] = {
     "【】年【】月【】日": "[]-[]-[]",
@@ -261,11 +267,12 @@ class SectionRouter:
         paragraph: str,
         strict: bool = False,
     ) -> TranslationResult:
-        translated_lines: list[str] = []
+        rendered_lines: list[str | None] = []
+        row_specs: list[tuple[int, list[str]]] = []
         for line in paragraph.splitlines():
             stripped = line.strip()
             if not (stripped.startswith("|") and stripped.endswith("|")):
-                translated_lines.append(line)
+                rendered_lines.append(line)
                 continue
 
             cells = stripped.split("|")[1:-1]
@@ -273,18 +280,34 @@ class SectionRouter:
             if all(
                 not cell.strip() or _TABLE_SEPARATOR_RE.fullmatch(cell.strip()) for cell in cells
             ):
-                translated_lines.append(stripped)
+                rendered_lines.append(stripped)
                 continue
 
-            translated_cells = [
-                await self._translate_table_cell(cell, strict=strict, is_first_column=index == 0)
-                for index, cell in enumerate(cells)
-            ]
-            translated_lines.append("|" + "|".join(translated_cells) + "|")
+            rendered_lines.append(None)
+            row_specs.append((len(rendered_lines) - 1, cells))
+
+        translated_rows = await asyncio.gather(
+            *(
+                asyncio.gather(
+                    *(
+                        self._translate_table_cell(
+                            cell,
+                            strict=strict,
+                            is_first_column=cell_index == 0,
+                        )
+                        for cell_index, cell in enumerate(cells)
+                    )
+                )
+                for _, cells in row_specs
+            )
+        )
+
+        for (line_index, _), translated_cells in zip(row_specs, translated_rows, strict=False):
+            rendered_lines[line_index] = "|" + "|".join(translated_cells) + "|"
 
         return TranslationResult(
             text_zh=paragraph,
-            text_en="\n".join(translated_lines),
+            text_en="\n".join(line for line in rendered_lines if line is not None),
             provider=self.provider,
         )
 
@@ -561,6 +584,19 @@ class SectionRouter:
         return translated
 
     def _lookup_table_label(self, label: str) -> str | None:
+        if age_range := _AGE_RANGE_LABEL_RE.fullmatch(label):
+            start = age_range.group("start")
+            end = age_range.group("end")
+            return f"{start}-{end} years old (including {start}, excluding {end})"
+
+        if age_under := _AGE_UNDER_LABEL_RE.fullmatch(label):
+            age = age_under.group("age")
+            return f"Under {age} years old (excluding {age})"
+
+        if age_above := _AGE_AND_ABOVE_LABEL_RE.fullmatch(label):
+            age = age_above.group("age")
+            return f"{age} years old and above"
+
         if label in _SPECIAL_TABLE_LABELS:
             return _SPECIAL_TABLE_LABELS[label]
 

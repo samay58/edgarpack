@@ -126,6 +126,40 @@ async def test_year_only_date_cells_are_normalized(router):
 
 
 @pytest.mark.asyncio
+async def test_age_range_table_labels_preserve_literal_ranges(router):
+    paragraph = "\n".join(
+        [
+            "|年龄结构类别|年龄结构人数|",
+            "|---|---|",
+            "|30 岁以下（不含30 岁）|212|",
+            "|30-40 岁（含30 岁，不含40 岁）|327|",
+            "|40-50 岁（含40 岁，不含50 岁）|69|",
+            "|50-60 岁（含50 岁，不含60 岁）|2|",
+            "|60 岁及以上|0|",
+        ]
+    )
+
+    with patch.object(router._translator, "translate_async", new_callable=AsyncMock) as mock_async:
+        mapping = {
+            "年龄结构类别": "Age Structure Category",
+            "年龄结构人数": "Age Structure Headcount",
+        }
+
+        async def _fake_translate(text_zh, system_prompt=None):
+            return TranslationResult(text_zh=text_zh, text_en=mapping[text_zh], provider="test")
+
+        mock_async.side_effect = _fake_translate
+        [result] = await router.translate_section("annual_s03_mda", [paragraph])
+
+    assert "30-40 years old (including 30, excluding 40)" in result.text_en
+    assert "40-50 years old (including 40, excluding 50)" in result.text_en
+    assert "50-60 years old (including 50, excluding 60)" in result.text_en
+    assert "Under 30 years old (excluding 30)" in result.text_en
+    assert "60 years old and above" in result.text_en
+    assert mock_async.await_count == 2
+
+
+@pytest.mark.asyncio
 async def test_multiline_reporting_period_cells_are_normalized(router):
     paragraph = "\n".join(
         [

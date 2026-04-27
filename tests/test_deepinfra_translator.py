@@ -7,7 +7,11 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 
-from edgarpack.china.translate.deepinfra import DeepInfraTranslator, _build_system_prompt
+from edgarpack.china.translate.deepinfra import (
+    DeepInfraConfigurationError,
+    DeepInfraTranslator,
+    _build_system_prompt,
+)
 from edgarpack.china.translate.glossary import FinancialGlossary
 from edgarpack.china.translate.provider import TranslationResult
 from edgarpack.china.translate.router import SectionRouter
@@ -42,6 +46,37 @@ class TestSystemPrompt:
 class TestDeepInfraTranslator:
     def test_provider_name(self, translator):
         assert translator.provider == "deepinfra/deepseek-ai/DeepSeek-V3"
+
+    def test_uses_documented_edgarpack_key_env_var(self, glossary, monkeypatch):
+        monkeypatch.delenv("DEEPINFRA_API_KEY", raising=False)
+        monkeypatch.setenv("EDGARPACK_DEEPINFRA_KEY", " documented-key ")
+
+        translator = DeepInfraTranslator(glossary=glossary)
+
+        assert translator.api_key == "documented-key"
+
+    def test_deepinfra_api_key_env_var_is_supported_as_fallback(self, glossary, monkeypatch):
+        monkeypatch.delenv("EDGARPACK_DEEPINFRA_KEY", raising=False)
+        monkeypatch.setenv("DEEPINFRA_API_KEY", " fallback-key ")
+
+        translator = DeepInfraTranslator(glossary=glossary)
+
+        assert translator.api_key == "fallback-key"
+
+    def test_documented_env_var_wins_over_fallback(self, glossary, monkeypatch):
+        monkeypatch.setenv("EDGARPACK_DEEPINFRA_KEY", "documented-key")
+        monkeypatch.setenv("DEEPINFRA_API_KEY", "fallback-key")
+
+        translator = DeepInfraTranslator(glossary=glossary)
+
+        assert translator.api_key == "documented-key"
+
+    def test_missing_api_key_fails_before_http_header_construction(self, glossary, monkeypatch):
+        monkeypatch.delenv("EDGARPACK_DEEPINFRA_KEY", raising=False)
+        monkeypatch.delenv("DEEPINFRA_API_KEY", raising=False)
+
+        with pytest.raises(DeepInfraConfigurationError, match="EDGARPACK_DEEPINFRA_KEY"):
+            DeepInfraTranslator(glossary=glossary)
 
     @pytest.mark.asyncio
     async def test_empty_text_passthrough(self, translator):
@@ -153,6 +188,65 @@ class TestDeepInfraTranslator:
 
         assert text == "Translated text."
         assert client.post.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_call_api_retries_rate_limit_with_retry_after(self, translator):
+        request = httpx.Request("POST", "https://api.deepinfra.com")
+        rate_limited = httpx.Response(
+            429,
+            request=request,
+            headers={"Retry-After": "0.01"},
+            json={"error": "rate limited"},
+        )
+        response = httpx.Response(
+            200,
+            request=request,
+            json={"choices": [{"message": {"content": "Translated text."}}]},
+        )
+        client = AsyncMock()
+        client.post.side_effect = [rate_limited, response]
+
+        with (
+            patch.object(translator, "_get_client", new_callable=AsyncMock) as mock_get_client,
+            patch(
+                "edgarpack.china.translate.deepinfra.asyncio.sleep", new_callable=AsyncMock
+            ) as mock_sleep,
+        ):
+            mock_get_client.return_value = client
+            text = await translator._call_api("测试", translator.build_system_prompt())
+
+        assert text == "Translated text."
+        assert client.post.await_count == 2
+        mock_sleep.assert_awaited_once_with(0.01)
+
+    @pytest.mark.asyncio
+    async def test_call_api_caps_retry_after_delay(self, translator):
+        request = httpx.Request("POST", "https://api.deepinfra.com")
+        rate_limited = httpx.Response(
+            429,
+            request=request,
+            headers={"Retry-After": "3600"},
+            json={"error": "rate limited"},
+        )
+        response = httpx.Response(
+            200,
+            request=request,
+            json={"choices": [{"message": {"content": "Translated text."}}]},
+        )
+        client = AsyncMock()
+        client.post.side_effect = [rate_limited, response]
+
+        with (
+            patch.object(translator, "_get_client", new_callable=AsyncMock) as mock_get_client,
+            patch(
+                "edgarpack.china.translate.deepinfra.asyncio.sleep", new_callable=AsyncMock
+            ) as mock_sleep,
+        ):
+            mock_get_client.return_value = client
+            text = await translator._call_api("测试", translator.build_system_prompt())
+
+        assert text == "Translated text."
+        mock_sleep.assert_awaited_once_with(60.0)
 
     @pytest.mark.asyncio
     async def test_meta_commentary_is_stripped(self, translator):

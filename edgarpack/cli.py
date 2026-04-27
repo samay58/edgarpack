@@ -791,9 +791,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Find the latest CNINFO annual report for the A-share before building",
     )
-    p_build_sse.add_argument(
-        "--url", help="URL of the PDF on the SSE/CNINFO disclosure platform"
-    )
+    p_build_sse.add_argument("--url", help="URL of the PDF on the SSE/CNINFO disclosure platform")
     p_build_sse.add_argument("--stock-code", help="SSE stock code (e.g. 688696)")
     p_build_sse.add_argument("--company", help="Company name")
     p_build_sse.add_argument("--filing-date", help="Filing date (YYYY-MM-DD)")
@@ -815,6 +813,18 @@ def main(argv: list[str] | None = None) -> int:
         help="DeepInfra model ID for translation",
     )
     p_build_sse.add_argument(
+        "--translate-concurrency",
+        type=int,
+        default=5,
+        help="Max concurrent DeepInfra translation requests when --translate is used (default: 5)",
+    )
+    p_build_sse.add_argument(
+        "--translate-batch-size",
+        type=int,
+        default=25,
+        help="Translation units to validate/cache per progress batch (default: 25)",
+    )
+    p_build_sse.add_argument(
         "--form-type",
         choices=["auto", "annual-report", "ipo-prospectus"],
         default="auto",
@@ -831,6 +841,18 @@ def main(argv: list[str] | None = None) -> int:
         "--model",
         default="deepseek-ai/DeepSeek-V3",
         help="DeepInfra model ID",
+    )
+    p_translate.add_argument(
+        "--concurrency",
+        type=int,
+        default=5,
+        help="Max concurrent DeepInfra translation requests (default: 5; lower if rate limited)",
+    )
+    p_translate.add_argument(
+        "--batch-size",
+        type=int,
+        default=25,
+        help="Translation units to validate/cache per progress batch (default: 25)",
     )
     p_translate.add_argument("--force", action="store_true", help="Re-translate even if exists")
 
@@ -1343,6 +1365,8 @@ def _cmd_build_sse(args: Any) -> int:
                 force=bool(args.force),
                 translate=bool(args.translate),
                 translate_model=args.translate_model,
+                translate_concurrency=int(getattr(args, "translate_concurrency", 5)),
+                translate_batch_size=int(getattr(args, "translate_batch_size", 25)),
                 form_type=form_type,
             )
         except Exception as e:
@@ -1390,8 +1414,11 @@ def _cmd_translate_sse(args: Any) -> int:
         return 0
 
     async def _run() -> int:
-        from .china.translate.cache import DEFAULT_NAMESPACE, TranslationCache
-        from .china.translate.deepinfra import DeepInfraTranslator
+        from .china.translate.cache import TranslationCache, provider_namespace
+        from .china.translate.deepinfra import (
+            DeepInfraConfigurationError,
+            DeepInfraTranslator,
+        )
         from .china.translate.glossary import FinancialGlossary
         from .china.translate.numbers import tag_numbers
         from .china.translate.preprocess import preprocess_paragraphs
@@ -1415,11 +1442,27 @@ def _cmd_translate_sse(args: Any) -> int:
         # Derive stock_code from pack path (packs/sse/{stock_code}/...)
         stock_code = manifest_data.get("filing", {}).get("stock_code", "")
         packs_dir = pack_dir.parent.parent.parent  # sse/{code}/{filing_id} -> packs
+        max_concurrency = int(getattr(args, "concurrency", 5) or 5)
+        if max_concurrency < 1:
+            print("Error: --concurrency must be at least 1", file=sys.stderr)
+            return 2
+        batch_size = int(getattr(args, "batch_size", 25) or 25)
+        if batch_size < 1:
+            print("Error: --batch-size must be at least 1", file=sys.stderr)
+            return 2
 
         glossary = FinancialGlossary.with_company_overlay(stock_code, packs_dir)
-        translator = DeepInfraTranslator(glossary=glossary, model=args.model)
+        try:
+            translator = DeepInfraTranslator(
+                glossary=glossary,
+                model=args.model,
+                max_concurrency=max_concurrency,
+            )
+        except DeepInfraConfigurationError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 2
         router = SectionRouter(translator)
-        cache = TranslationCache(namespace=DEFAULT_NAMESPACE)
+        cache = TranslationCache(namespace=provider_namespace(translator.provider))
         glossary_validator = GlossaryConsistencyValidator()
 
         cached_count = 0
@@ -1489,43 +1532,86 @@ def _cmd_translate_sse(args: Any) -> int:
                     translation_sources[i] = None
                     cached_count -= 1
 
+            print(
+                f"  {section_id}: {len(paragraphs)} paragraphs "
+                f"({len(uncached_texts)} uncached after preprocessing/cache)",
+                flush=True,
+            )
+
             section_failed = False
             section_error_messages: list[str] = []
             if uncached_texts:
-                results = await router.translate_section(section_id, uncached_texts)
-                retry_indices: list[int] = []
-                retry_texts: list[str] = []
-                for idx, result in zip(uncached_indices, results, strict=False):
-                    report = _validate(idx, result.text_zh, result.text_en)
-                    if report.has_errors:
-                        retry_indices.append(idx)
-                        retry_texts.append(result.text_zh)
-                        continue
-                    para_results[idx] = result.text_en
-                    translation_sources[idx] = "translated"
-                    cache.put(result)
-                    translated_count += 1
-
-                if retry_texts:
-                    retry_results = await router.translate_section(
-                        section_id,
-                        retry_texts,
-                        strict=True,
+                total_batches = (len(uncached_texts) + batch_size - 1) // batch_size
+                for batch_number, batch_start in enumerate(
+                    range(0, len(uncached_texts), batch_size),
+                    1,
+                ):
+                    batch_indices = uncached_indices[batch_start : batch_start + batch_size]
+                    batch_texts = uncached_texts[batch_start : batch_start + batch_size]
+                    print(
+                        f"    batch {batch_number}/{total_batches}: "
+                        f"{len(batch_texts)} translation units",
+                        flush=True,
                     )
-                    for idx, result in zip(retry_indices, retry_results, strict=False):
+                    try:
+                        results = await router.translate_section(section_id, batch_texts)
+                    except Exception as exc:
+                        section_failed = True
+                        section_error_messages.append(f"{type(exc).__name__}: {exc}")
+                        print(
+                            f"  {section_id}: failed closed ({type(exc).__name__}: {exc})",
+                            file=sys.stderr,
+                        )
+                        break
+
+                    retry_indices: list[int] = []
+                    retry_texts: list[str] = []
+                    for idx, result in zip(batch_indices, results, strict=False):
                         report = _validate(idx, result.text_zh, result.text_en)
                         if report.has_errors:
-                            section_failed = True
-                            section_error_messages.extend(
-                                f"p{idx}: {issue.message}"
-                                for issue in report.issues
-                                if issue.severity == "error"
-                            )
-                            break
+                            retry_indices.append(idx)
+                            retry_texts.append(result.text_zh)
+                            continue
                         para_results[idx] = result.text_en
                         translation_sources[idx] = "translated"
                         cache.put(result)
                         translated_count += 1
+
+                    if retry_texts:
+                        try:
+                            retry_results = await router.translate_section(
+                                section_id,
+                                retry_texts,
+                                strict=True,
+                            )
+                        except Exception as exc:
+                            section_failed = True
+                            section_error_messages.append(f"{type(exc).__name__}: {exc}")
+                            print(
+                                f"  {section_id}: failed closed ({type(exc).__name__}: {exc})",
+                                file=sys.stderr,
+                            )
+                            break
+                        for idx, result in zip(retry_indices, retry_results, strict=False):
+                            report = _validate(idx, result.text_zh, result.text_en)
+                            if report.has_errors:
+                                section_failed = True
+                                section_error_messages.extend(
+                                    f"p{idx}: {issue.message}"
+                                    for issue in report.issues
+                                    if issue.severity == "error"
+                                )
+                                break
+                            para_results[idx] = result.text_en
+                            translation_sources[idx] = "translated"
+                            cache.put(result)
+                            translated_count += 1
+                    if section_failed:
+                        break
+                    print(
+                        f"    batch {batch_number}/{total_batches}: cached",
+                        flush=True,
+                    )
 
             if section_failed or any(
                 translation_sources[i] is None and decisions[i].action == "translate"
@@ -1545,7 +1631,7 @@ def _cmd_translate_sse(args: Any) -> int:
             en_path = sections_dir / f"{section_id}.en.md"
             en_path.write_text(en_content, encoding="utf-8")
             translated_sections.append(section_id)
-            print(f"  {section_id}: {len(paragraphs)} paragraphs")
+            print(f"  {section_id}: wrote {en_path.name}", flush=True)
 
         # Write full English filing
         wrote_full_en = False
@@ -3227,7 +3313,7 @@ def _cmd_which_china(args: Any, resolved: Any) -> int:
             )
             print(
                 "  edgarpack build-sse --stock-code 688696 "
-                "--company \"Chengdu XGIMI Technology Co., Ltd.\" "
+                '--company "Chengdu XGIMI Technology Co., Ltd." '
                 "--filing-date 2025-04-22 "
                 "--url https://static.cninfo.com.cn/finalpage/2025-04-22/1223192484.PDF "
                 "--out packs --with-chunks",
