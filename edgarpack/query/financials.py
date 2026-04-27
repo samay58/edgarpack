@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from datetime import date as _date
@@ -289,6 +290,7 @@ async def financials(
 
     from ..identity import UnknownCompany as _UnknownCompany
     from ..identity import load_identity as _load_identity
+    from ..identity import looks_like_china_a_share_code as _looks_like_china_a_share_code
     from ..identity import resolve as _resolve_identity
 
     _universe_path = _Path("universe.toml")
@@ -308,10 +310,20 @@ async def financials(
                     _resolved_id = _resolve_identity(_idx, ticker=None, company=company)
                 except _UnknownCompany:
                     pass
-            if _resolved_id is not None and _resolved_id.source == "HKEX":
-                return await _query_hkex_pack(
-                    _resolved_id, metrics, period, display_token=display_token
+            if _resolved_id is not None and _resolved_id.source in {"HKEX", "SSE"}:
+                return await _query_china_pack(
+                    _resolved_id,
+                    metrics,
+                    period,
+                    display_token=display_token,
+                    pack_root=pack_root,
                 )
+
+    if _looks_like_china_a_share_code(company):
+        raise ValueError(
+            f"Unknown ticker {company!r} looks like a China A-share code. "
+            "Add it to universe.toml and build an SSE pack before querying."
+        )
 
     try:
         cik, company_name = await resolve_ticker(company, force=force)
@@ -1320,6 +1332,7 @@ _HKEX_CONCEPT_CANONICAL: dict[str, str] = {
     "TotalEquity": "total_equity",
     "CashAndCashEquivalents": "cash_and_equivalents",
     "ResearchAndDevelopmentExpense": "rd_expense",
+    "ResearchAndDevelopmentIntensity": "r_and_d_intensity",
     "NetCashProvidedByUsedInOperatingActivities": "operating_cash_flow",
     "EntityNumberOfEmployees": "headcount",
     "NumberOfEmployees": "headcount",
@@ -1383,34 +1396,89 @@ async def _query_hkex_pack(
     *,
     display_token: str | None = None,
 ) -> QueryResult:
+    return await _query_china_pack(
+        resolved, metrics, period, display_token=display_token, pack_root=None
+    )
+
+
+def _china_stock_code(resolved: object) -> str:
+    stock_code = getattr(resolved, "stock_code", None) or getattr(resolved, "hk_stock_code", None)
+    return str(stock_code or "").strip()
+
+
+def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) -> Path | None:
+    """Find a local China pack for HKEX/SSE query paths."""
+    source = str(getattr(resolved, "source", "") or "").upper()
+    stock_code = _china_stock_code(resolved)
+    ticker = str(getattr(resolved, "ticker", "") or "")
+
+    roots: list[Path] = []
+    if pack_root is not None:
+        roots.append(Path(pack_root))
+    else:
+        roots.extend([Path("packs"), Path(".")])
+
+    exchange_dirs = ["sse"] if source == "SSE" else ["hk", "hkex"]
+    variants = [v for v in (stock_code, stock_code.lstrip("0"), ticker, ticker.upper()) if v]
+    candidates: list[Path] = []
+    for root in roots:
+        for exchange_dir in exchange_dirs:
+            for variant in variants:
+                base = root / exchange_dir / variant
+                if base.exists():
+                    candidates.extend(path.parent for path in base.glob("*/facts.json"))
+        if source == "SSE" and stock_code:
+            base = root / "sse" / stock_code
+            if base.exists():
+                candidates.extend(path.parent for path in base.glob("*/facts.json"))
+
+    # Preserve existing HKEX fixture lookup used by tests and demos.
+    if source == "HKEX":
+        fy = 2024
+        for alias in getattr(resolved, "aliases", ()):
+            alias_text = str(alias).lower()
+            for name in (alias_text.replace(" ", "_"), alias_text):
+                candidate = Path(f"tests/fixtures/china_packs/{name}_{fy}")
+                if candidate.exists():
+                    candidates.append(candidate)
+        for variant in variants:
+            candidate = Path(f"tests/fixtures/china_packs/{variant}_{fy}")
+            if candidate.exists():
+                candidates.append(candidate)
+
+    if not candidates:
+        return None
+
+    def _sort_key(path: Path) -> tuple[str, str]:
+        manifest_path = path / "manifest.json"
+        if manifest_path.exists():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                filing = manifest.get("filing", {}) if isinstance(manifest, dict) else {}
+                return (str(filing.get("filing_date") or ""), str(path))
+            except Exception:
+                pass
+        return (path.name, str(path))
+
+    return sorted(set(candidates), key=_sort_key, reverse=True)[0]
+
+
+async def _query_china_pack(
+    resolved: object,
+    metrics: str | list[str] | None,
+    period: str,
+    *,
+    display_token: str | None = None,
+    pack_root: Path | None = None,
+) -> QueryResult:
     import json
-    from pathlib import Path as _Path
 
     from .models import QueryResult
 
-    fy = 2024
-
-    pack_dir: _Path | None = None
-    for alias in resolved.aliases:  # type: ignore[attr-defined]
-        candidate = _Path(f"tests/fixtures/china_packs/{alias.lower().replace(' ', '_')}_{fy}")
-        if not candidate.exists():
-            candidate = _Path(f"tests/fixtures/china_packs/{alias.lower()}_{fy}")
-        if candidate.exists():
-            pack_dir = candidate
-            break
-
+    pack_dir = _discover_china_pack_dir(resolved, pack_root=pack_root)
     if pack_dir is None:
-        stock_code = resolved.hk_stock_code or ""  # type: ignore[attr-defined]
-        for variant in (stock_code, stock_code.lstrip("0")):
-            candidate = _Path(f"tests/fixtures/china_packs/{variant}_{fy}")
-            if candidate.exists():
-                pack_dir = candidate
-                break
-
-    if pack_dir is None:
-        raise FileNotFoundError(
-            f"No HK pack found for {resolved.ticker}"  # type: ignore[attr-defined]
-        )
+        source = str(getattr(resolved, "source", "China") or "China")
+        raise FileNotFoundError(f"No {source} pack found for {getattr(resolved, 'ticker', '')}")
 
     facts_path = pack_dir / "facts.json"
     if not facts_path.exists():
@@ -1425,8 +1493,8 @@ async def _query_hkex_pack(
     else:
         requested = set(metrics) or None
 
-    company_name = data.get("company", resolved.ticker)  # type: ignore[attr-defined]
-    cik_str = resolved.hk_stock_code or ""  # type: ignore[attr-defined]
+    company_name = data.get("company", getattr(resolved, "ticker", ""))
+    cik_str = _china_stock_code(resolved)
 
     # Build facts dict in {taxonomy: {concept: {units: {...}}}} shape that
     # select_period understands, and map each HKEX concept back to its
@@ -1463,6 +1531,7 @@ async def _query_hkex_pack(
         "operating_income": True,
         "net_income": True,
         "rd_expense": True,
+        "r_and_d_intensity": True,
         "operating_cash_flow": True,
         "total_assets": False,
         "total_liabilities": False,
@@ -1603,15 +1672,28 @@ def _apply_extraction_source(
     routing so downstream consumers (compare, goldens) see "regex"/"llm" tags.
     """
     units = concept_info.get("units", {})
-    by_fy: dict[int, str] = {}
+    by_fy: dict[int, dict[str, str]] = {}
     for _unit, pts in units.items():
         for p in pts:
             fy_val = int(p.get("fy") or 0)
             if fy_val:
-                by_fy[fy_val] = p.get("extraction_method", "regex")
+                by_fy[fy_val] = {
+                    "source": str(p.get("extraction_method") or "regex"),
+                    "source_url": str(p.get("source_url") or ""),
+                    "source_document": str(p.get("source_document") or ""),
+                    "source_path": str(p.get("source_path") or ""),
+                    "section_id": str(p.get("section_id") or ""),
+                    "matched_label": str(p.get("matched_label") or ""),
+                }
     for cv in cited_list:
         if cv is None:
             continue
-        src = by_fy.get(cv.fiscal_year)
-        if src:
-            cv.source = src
+        meta = by_fy.get(cv.fiscal_year)
+        if not meta:
+            continue
+        cv.source = meta["source"]
+        cv.source_url = meta["source_url"]
+        cv.source_document = meta["source_document"]
+        cv.source_path = meta["source_path"]
+        cv.section_id = meta["section_id"]
+        cv.matched_label = meta["matched_label"]

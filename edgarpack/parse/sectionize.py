@@ -800,15 +800,15 @@ def sectionize(markdown: str, form_type: str) -> list[Section]:
 
     Args:
         markdown: Full markdown content
-        form_type: Form type (10-K, 10-Q, 8-K, IPO-PROSPECTUS)
+        form_type: Form type (10-K, 10-Q, 8-K, IPO-PROSPECTUS, ANNUAL-REPORT)
 
     Returns:
         List of Section objects
     """
-    if form_type.upper() == "IPO-PROSPECTUS":
+    if form_type.upper() in {"IPO-PROSPECTUS", "ANNUAL-REPORT"}:
         from ..sse.sectionize_cn import find_sections_cn
 
-        return find_sections_cn(markdown)
+        return find_sections_cn(markdown, document_type=form_type)
 
     matches = find_sections(markdown, form_type)
 

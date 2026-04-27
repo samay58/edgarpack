@@ -46,6 +46,30 @@ class PackResult(BaseModel):
     artifacts: list[str]
 
 
+def _detect_sse_form_type(markdown: str, requested: str = "auto") -> str:
+    """Resolve the SSE document type used for section IDs and metadata."""
+    normalized = requested.strip().upper().replace("_", "-") if requested else "AUTO"
+    if normalized not in {"", "AUTO"}:
+        if normalized in {"ANNUAL", "ANNUAL-REPORT"}:
+            return "ANNUAL-REPORT"
+        if normalized in {"IPO", "IPO-PROSPECTUS", "PROSPECTUS"}:
+            return "IPO-PROSPECTUS"
+        return normalized
+
+    head = markdown[:20_000]
+    annual_markers = (
+        "年度报告",
+        "公司简介和主要财务指标",
+        "管理层讨论与分析",
+    )
+    prospectus_markers = ("招股说明书", "本次发行概况", "发行人基本情况")
+    if any(marker in head for marker in annual_markers):
+        return "ANNUAL-REPORT"
+    if any(marker in head for marker in prospectus_markers):
+        return "IPO-PROSPECTUS"
+    return "IPO-PROSPECTUS"
+
+
 def _decode_html_blob(content: bytes) -> str:
     """Decode SEC filing bytes with utf-8 fallback to latin-1."""
     try:
@@ -337,8 +361,9 @@ async def build_sse_pack(
     force: bool = False,
     translate: bool = False,
     translate_model: str = "deepseek-ai/DeepSeek-V3",
+    form_type: str = "auto",
 ) -> PackResult:
-    """Build a pack from an SSE prospectus PDF.
+    """Build a pack from an SSE PDF.
 
     Args:
         url: URL of the PDF on SSE disclosure platform
@@ -351,6 +376,7 @@ async def build_sse_pack(
         force: Rebuild even if pack exists
         translate: Run zh->en translation pipeline
         translate_model: DeepInfra model ID for translation
+        form_type: Document type override (auto, annual-report, ipo-prospectus)
 
     Returns:
         PackResult with build info
@@ -399,7 +425,8 @@ async def build_sse_pack(
     markdown = pdf_to_markdown(local_pdf)
 
     # Step 3: Sectionize
-    sections = find_sections_cn(markdown)
+    detected_form_type = _detect_sse_form_type(markdown, form_type)
+    sections = find_sections_cn(markdown, document_type=detected_form_type)
     for section in sections:
         warnings.extend(section.warnings)
 
@@ -413,6 +440,26 @@ async def build_sse_pack(
         section_path = sections_dir / f"{section.id}.md"
         section_path.write_text(section.content, encoding="utf-8")
         artifacts.append(f"sections/{section.id}.md")
+
+    # Step 5b: Deterministic annual-report fact extraction
+    if detected_form_type == "ANNUAL-REPORT":
+        try:
+            from ..sse.annual_facts import write_annual_facts
+
+            facts_path = write_annual_facts(
+                pack_dir,
+                sections,
+                stock_code=stock_code,
+                company_name=company_name,
+                filing_date=filing_date,
+                source_url=url,
+            )
+            if facts_path is not None:
+                artifacts.append("facts.json")
+            else:
+                warnings.append("No annual-report fact rows detected")
+        except Exception as e:
+            warnings.append(f"Annual fact extraction failed: {type(e).__name__}: {e}")
 
     # Step 6: Optional translation
     translation_meta: dict[str, Any] | None = None
@@ -450,7 +497,7 @@ async def build_sse_pack(
         stock_code=stock_code,
         company_name=company_name,
         filing_date=filing_date,
-        form_type="IPO-PROSPECTUS",
+        form_type=detected_form_type,
         exchange="SSE",
     )
     has_chunks_artifact = "optional/chunks.ndjson" in artifacts
@@ -508,7 +555,7 @@ async def build_sse_pack(
         filing_meta={
             "stock_code": stock_code,
             "company_name": company_name,
-            "form_type": "IPO-PROSPECTUS",
+            "form_type": detected_form_type,
             "filing_date": filing_date.isoformat(),
             "exchange": "SSE",
         },

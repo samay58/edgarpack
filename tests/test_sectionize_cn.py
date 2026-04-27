@@ -31,6 +31,14 @@ def test_slug_declarations():
     assert title == "Important Declarations"
 
 
+def test_slug_annual_report_sections():
+    slug, title = _slug_for_title(
+        "公司简介和主要财务指标", 2, document_type="ANNUAL-REPORT"
+    )
+    assert slug == "annual_s02_company_profile_key_financials"
+    assert title == "Company Profile and Key Financials"
+
+
 def test_find_sections_basic():
     md = """# 招股说明书
 
@@ -110,6 +118,28 @@ def test_duplicate_ids_get_suffixed():
     assert "ipo_s01_overview_1" in ids
 
 
+def test_find_sections_annual_report():
+    md = """# 2024年年度报告
+
+## 第一节 释义
+
+定义内容。
+
+## 第二节 公司简介和主要财务指标
+
+主要财务指标内容。
+
+## 第三节 管理层讨论与分析
+
+管理层讨论。
+"""
+    sections = find_sections_cn(md, document_type="ANNUAL-REPORT")
+    ids = [s.id for s in sections]
+    assert "annual_s01_shi_yi" in ids
+    assert "annual_s02_company_profile_key_financials" in ids
+    assert "annual_s03_mda" in ids
+
+
 def test_sectionize_dispatch_via_main():
     """Verify that sectionize() dispatches to CN sectionizer for IPO-PROSPECTUS."""
     from edgarpack.parse.sectionize import sectionize
@@ -126,3 +156,14 @@ More content.
     ids = [s.id for s in sections]
     assert "ipo_s01_overview" in ids
     assert "ipo_s02_offering_summary" in ids
+
+
+def test_sectionize_dispatches_annual_report():
+    from edgarpack.parse.sectionize import sectionize
+
+    md = """## 第二节 公司简介和主要财务指标
+
+Content here.
+"""
+    sections = sectionize(md, "ANNUAL-REPORT")
+    assert sections[0].id == "annual_s02_company_profile_key_financials"

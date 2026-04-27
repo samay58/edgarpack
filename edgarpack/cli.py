@@ -37,7 +37,7 @@ async def _resolve_cli_company(query: str) -> Any:
         AmbiguousCompany: the name matches multiple SEC titles; user must
             disambiguate with a ticker.
     """
-    from .identity import ResolvedCompany, load_identity, resolve
+    from .identity import ResolvedCompany, load_identity, looks_like_china_a_share_code, resolve
     from .sec.tickers import resolve_company as resolve_sec_company
     from .sec.tickers import resolve_company_by_name
 
@@ -62,8 +62,14 @@ async def _resolve_cli_company(query: str) -> Any:
                 continue
             # universe.toml entries often omit CIK for US issuers. Fall
             # through to SEC in that case so callers always get a CIK.
-            if res.cik or res.private or res.source == "HKEX":
+            if res.cik or res.private or res.source in {"HKEX", "SSE"}:
                 return res
+
+    if looks_like_china_a_share_code(query):
+        raise UnknownCompany(
+            f"Unknown ticker {query!r} looks like a China A-share code. "
+            "Add it to universe.toml and build an SSE pack before querying."
+        )
 
     # Try the public ticker/name map first. Falls back to EDGAR issuer-name
     # search for pre-IPO filers (no ticker yet, not in company_tickers.json).
@@ -84,6 +90,7 @@ async def _resolve_cli_company(query: str) -> Any:
             source="SEC",
             cik=pre_ipo_cik,
             hk_stock_code=None,
+            stock_code=None,
             aliases=(pre_ipo_title,) if pre_ipo_title else (),
             private=False,
         )
@@ -94,6 +101,7 @@ async def _resolve_cli_company(query: str) -> Any:
         source="SEC",
         cik=cik,
         hk_stock_code=None,
+        stock_code=None,
         aliases=(title,) if title else (),
         private=False,
     )
@@ -778,6 +786,12 @@ def main(argv: list[str] | None = None) -> int:
         default="deepseek-ai/DeepSeek-V3",
         help="DeepInfra model ID for translation",
     )
+    p_build_sse.add_argument(
+        "--form-type",
+        choices=["auto", "annual-report", "ipo-prospectus"],
+        default="auto",
+        help="SSE document type override (default: auto)",
+    )
     p_build_sse.add_argument("--force", action="store_true", help="Rebuild even if exists")
 
     p_translate = sub.add_parser(
@@ -1151,6 +1165,7 @@ def _cmd_build_sse(args: Any) -> int:
                 force=bool(args.force),
                 translate=bool(args.translate),
                 translate_model=args.translate_model,
+                form_type=args.form_type,
             )
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
@@ -1623,6 +1638,17 @@ def _render_query_table(result: Any, args: Any) -> str:
     """Render single-company query output with inline citation/audit ergonomics."""
     from .query.comps import _format_value
 
+    def _identifier_label() -> str:
+        for raw_value in result.metrics.values():
+            if raw_value is None:
+                continue
+            values = raw_value if isinstance(raw_value, list) else [raw_value]
+            for value in values:
+                standard = getattr(value, "accounting_standard", "")
+                if standard in {"CAS", "HKFRS"}:
+                    return "Stock Code"
+        return "CIK"
+
     lean = result.to_lean_dict()
     metrics_lean = lean.get("metrics", {})
     citations = lean.get("citations", {})
@@ -1630,7 +1656,7 @@ def _render_query_table(result: Any, args: Any) -> str:
     permalink = lean.get("permalink")
 
     width = shutil.get_terminal_size((120, 20)).columns
-    lines: list[str] = [f"{result.company} (CIK: {result.cik})", ""]
+    lines: list[str] = [f"{result.company} ({_identifier_label()}: {result.cik})", ""]
 
     strict = bool(getattr(args, "strict", False))
     # Strict filtering is canonical in query.strict.apply_strict. When
@@ -2961,6 +2987,95 @@ def _render_which_table(aggregates: list, max_periods: int) -> str:
     return "\n".join(lines)
 
 
+def _cmd_which_china(args: Any, resolved: Any) -> int:
+    """List deterministic metrics available from a local China pack."""
+
+    async def _run() -> tuple[int, Any | None, str | None]:
+        from .query.financials import financials
+
+        try:
+            result = await financials(
+                company=args.company,
+                metrics=None,
+                period="lfy",
+                display_token=args.company,
+            )
+        except FileNotFoundError as e:
+            return 1, None, str(e)
+        except Exception as e:
+            return 1, None, str(e)
+        return 0, result, None
+
+    rc, result, error = asyncio.run(_run())
+    source = str(getattr(resolved, "source", "China") or "China")
+    stock_code = (
+        getattr(resolved, "stock_code", None)
+        or getattr(resolved, "hk_stock_code", None)
+        or getattr(resolved, "ticker", "")
+    )
+    display_name = _canonical_company_label(resolved, args.company)
+    if rc != 0 or result is None:
+        if source == "SSE":
+            print(
+                f"No local China pack found for {display_name} ({source} {stock_code}).",
+                file=sys.stderr,
+            )
+            print(
+                "Build the annual-report pack first, for example:",
+                file=sys.stderr,
+            )
+            print(
+                "  edgarpack build-sse --stock-code 688696 "
+                "--company \"Chengdu XGIMI Technology Co., Ltd.\" "
+                "--filing-date 2025-04-22 "
+                "--url https://static.cninfo.com.cn/finalpage/2025-04-22/1223192484.PDF "
+                "--out packs --with-chunks",
+                file=sys.stderr,
+            )
+        else:
+            print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+    if args.which_format == "json":
+        print(json.dumps(result.to_lean_dict(), indent=2, sort_keys=True))
+        return 0
+
+    from .query.formatting import format_number
+
+    rows: list[tuple[str, str, str, str, str]] = []
+    for metric, value in result.metrics.items():
+        if value is None:
+            continue
+        cited = value[0] if isinstance(value, list) and value else value
+        if cited is None or isinstance(cited, list):
+            continue
+        rows.append(
+            (
+                metric,
+                cited.concept,
+                format_number(cited.value, cited.unit),
+                cited.fiscal_label,
+                cited.source or "pack",
+            )
+        )
+
+    print(f"Disclosed metrics for {display_name} ({source} {stock_code}):")
+    if not rows:
+        print("No deterministic metrics found in the local China pack.")
+        return 1
+
+    widths = [
+        max(len(row[i]) for row in rows + [("metric", "concept", "latest", "period", "src")])
+        for i in range(5)
+    ]
+    header = ("metric", "concept", "latest", "period", "src")
+    print("  ".join(header[i].ljust(widths[i]) for i in range(5)))
+    print("  ".join("─" * widths[i] for i in range(5)))
+    for row in rows:
+        print("  ".join(row[i].ljust(widths[i]) for i in range(5)))
+    return 0
+
+
 def _cmd_which(args: Any) -> int:
     """List the qualitative / MD&A KPIs a company discloses across filings."""
     import json as _json
@@ -2982,6 +3097,8 @@ def _cmd_which(args: Any) -> int:
     rc, resolved = asyncio.run(_resolve())
     if rc != 0 or resolved is None:
         return rc
+    if getattr(resolved, "source", None) in {"SSE", "HKEX"}:
+        return _cmd_which_china(args, resolved)
     cik = getattr(resolved, "cik", None)
     if not isinstance(cik, str) or not cik.strip():
         print(

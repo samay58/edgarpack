@@ -58,6 +58,11 @@ class CitedValue(BaseModel):
     #   'no_api_key'                 placeholder row when ANTHROPIC_API_KEY is
     #                                missing; value is None, accession is empty.
     source: str = "hardcoded"
+    source_url: str = ""
+    source_document: str = ""
+    source_path: str = ""
+    section_id: str = ""
+    matched_label: str = ""
 
     accounting_standard: Literal["US-GAAP", "IFRS", "HKFRS", "CAS"] = "US-GAAP"
     reporting_currency: str = "USD"
@@ -76,6 +81,12 @@ class CitedValue(BaseModel):
 
     @property
     def filing_url(self) -> str:
+        if self.source_url:
+            return self.source_url
+        if self.source_path:
+            return self.source_path
+        if self.accounting_standard in {"CAS", "HKFRS"}:
+            return ""
         # S-1 snapshot placeholders (source="no_api_key") carry empty
         # accession / cik; emitting a URL built from empty strings produces
         # a broken link. Return empty string so downstream renderers drop it.
@@ -90,6 +101,8 @@ class CitedValue(BaseModel):
 
         Returns None for derived metrics (concept contains spaces or formula operators).
         """
+        if self.source_url or self.accounting_standard in {"CAS", "HKFRS"}:
+            return None
         if " " in self.concept or "/" in self.concept:
             return None
         cik_padded = self.cik.lstrip("0").zfill(10)
@@ -104,6 +117,8 @@ class CitedValue(BaseModel):
 
         Returns None if no primary_document is available.
         """
+        if self.source_url or self.accounting_standard in {"CAS", "HKFRS"}:
+            return None
         if not self.primary_document:
             return None
         acc_nodash = self.accession.replace("-", "")
@@ -122,6 +137,8 @@ class CitedValue(BaseModel):
 
         Returns None if no primary_document is available.
         """
+        if self.source_url or self.accounting_standard in {"CAS", "HKFRS"}:
+            return None
         if not self.primary_document:
             return None
         acc_nodash = self.accession.replace("-", "")
@@ -142,6 +159,8 @@ class CitedValue(BaseModel):
         browsers (unlike text fragments). Falls back to ``document_url`` when
         ``fact_id`` is not populated.
         """
+        if self.source_url or self.accounting_standard in {"CAS", "HKFRS"}:
+            return None
         if not self.fact_id or not self.primary_document:
             return self.document_url
         acc_nodash = self.accession.replace("-", "")
@@ -165,6 +184,10 @@ class CitedValue(BaseModel):
     @property
     def primary_link_type(self) -> str:
         """Preferred deep link type for terminal UX."""
+        if self.source_url:
+            return "source_url"
+        if self.source_path:
+            return "source_path"
         if self.fact_id and self.anchor_url:
             return "anchor_url"
         if self.viewer_url:
@@ -174,6 +197,10 @@ class CitedValue(BaseModel):
     @property
     def primary_link(self) -> str:
         """Preferred deep link for terminal UX."""
+        if self.source_url:
+            return self.source_url
+        if self.source_path:
+            return self.source_path
         if self.fact_id and self.anchor_url:
             return self.anchor_url
         if self.viewer_url:
@@ -192,6 +219,10 @@ class CitedValue(BaseModel):
             links["document_url"] = self.document_url
         if self.anchor_url and self.fact_id:
             links["anchor_url"] = self.anchor_url
+        if self.source_document:
+            links["source_document"] = self.source_document
+        if self.source_path:
+            links["source_path"] = self.source_path
         return links
 
     @property
@@ -200,7 +231,8 @@ class CitedValue(BaseModel):
         period_start = str(self.period_start) if self.period_start else ""
         return (
             f"{self.cik}|{self.accession}|{self.taxonomy}|{self.concept}|"
-            f"{period_start}|{self.period_end}|{self.value}|{self.fact_id}"
+            f"{period_start}|{self.period_end}|{self.value}|{self.fact_id}|"
+            f"{self.source_url}|{self.section_id}"
         )
 
     def to_citation_record(self, citation_id: str) -> dict[str, object]:
@@ -228,6 +260,14 @@ class CitedValue(BaseModel):
             "primary_link_type": self.primary_link_type,
             "links": self.links,
         }
+        if self.source_url:
+            record["source_url"] = self.source_url
+        if self.source_document:
+            record["source_document"] = self.source_document
+        if self.section_id:
+            record["section_id"] = self.section_id
+        if self.matched_label:
+            record["matched_label"] = self.matched_label
         if self.warnings:
             record["warnings"] = list(self.warnings)
         return record
@@ -255,6 +295,15 @@ class CitedValue(BaseModel):
             d.pop("source", None)
         if not self.excerpt_text:
             d.pop("excerpt_text", None)
+        for empty_field in (
+            "source_url",
+            "source_document",
+            "source_path",
+            "section_id",
+            "matched_label",
+        ):
+            if not d.get(empty_field):
+                d.pop(empty_field, None)
         return d
 
     def _period_str(self) -> str:
@@ -283,6 +332,14 @@ class CitedValue(BaseModel):
             d["warnings"] = list(self.warnings)
         if self.source != "hardcoded":
             d["source"] = self.source
+        if self.source_url:
+            d["source_url"] = self.source_url
+        if self.source_document:
+            d["source_document"] = self.source_document
+        if self.section_id:
+            d["section_id"] = self.section_id
+        if self.matched_label:
+            d["matched_label"] = self.matched_label
         return d
 
 

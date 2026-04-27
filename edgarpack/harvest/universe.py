@@ -30,6 +30,7 @@ class CompanySpec(BaseModel):
     aliases: list[str] = []
     alt_tickers: list[str] = []
     hk_stock_code: str | None = None
+    stock_code: str | None = None
     private: bool = False
 
     @model_validator(mode="after")

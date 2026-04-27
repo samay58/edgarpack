@@ -1421,6 +1421,20 @@ aliases = ["zhipu", "zhipu ai", "z.ai", "glm", "chatglm"]
 hk_stock_code = "02513"
 alt_tickers = ["02513.HK"]
 
+[[companies]]
+ticker = "688696"
+name = "Chengdu XGIMI Technology Co., Ltd."
+listing = "SSE"
+aliases = [
+  "xgimi",
+  "chengdu xgimi technology",
+  "chengdu xgimi technology co., ltd.",
+  "极米科技",
+  "成都极米科技股份有限公司",
+]
+stock_code = "688696"
+alt_tickers = ["XGIMI"]
+
 # ============================================================
 #  Pre-IPO filers (registration-class only)
 # ============================================================

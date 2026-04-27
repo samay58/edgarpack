@@ -57,6 +57,30 @@ SYNTHETIC_MARKDOWN = """# 招股说明书
 """
 
 
+SYNTHETIC_ANNUAL_MARKDOWN = """# 成都极米科技股份有限公司2024年年度报告
+
+## 第一节 释义
+
+报告期内，公司主要业务未发生重大变化。
+
+## 第二节 公司简介和主要财务指标
+
+|主要会计数据|2024年|2023年|本期比上年同期增减(%)|2022年|
+|---|---:|---:|---:|---:|
+|营业收入|3,404,605,307.88|3,556,563,980.75|-4.27|4,222,341,286.99|
+|归属于上市公司<br>股东的净利润|120,142,895.56|120,503,477.67|-0.30|501,467,954.28|
+|经营活动产生的<br>现金流量净额|230,241,355.89|378,268,875.23|-39.13|-58,960,536.97|
+
+|主要财务指标|2024年|2023年|本期比上年同期增减(%)|2022年|
+|---|---:|---:|---:|---:|
+|研发投入占营业收入的比例<br>（%）|10.80|10.72|增加0.08个百分点|8.93|
+
+## 第三节 管理层讨论与分析
+
+公司持续投入研发。
+"""
+
+
 @pytest.mark.asyncio
 async def test_build_sse_pack_synthetic(tmp_packs, synthetic_pdf):
     """Test SSE pack builder with mocked PDF conversion."""
@@ -103,6 +127,52 @@ async def test_build_sse_pack_synthetic(tmp_packs, synthetic_pdf):
     llms = (pack_dir / "llms.txt").read_text()
     assert "Unitree Robotics" in llms
     assert "Stock Code: 301536" in llms
+
+
+@pytest.mark.asyncio
+async def test_build_sse_annual_report_extracts_facts(tmp_packs, synthetic_pdf):
+    """Annual reports should build as annual packs with citation-backed CAS facts."""
+    from edgarpack.pack.build import build_sse_pack
+
+    with patch(
+        "edgarpack.sse.pdf_to_md.pdf_to_markdown",
+        return_value=SYNTHETIC_ANNUAL_MARKDOWN,
+    ):
+        result = await build_sse_pack(
+            url="https://static.cninfo.com.cn/finalpage/2025-04-22/1223192484.PDF",
+            stock_code="688696",
+            company_name="Chengdu XGIMI Technology Co., Ltd.",
+            filing_date=date(2025, 4, 22),
+            out_dir=tmp_packs,
+            pdf_path=synthetic_pdf,
+            with_chunks=False,
+            force=False,
+        )
+
+    pack_dir = result.output_dir
+    manifest = json.loads((pack_dir / "manifest.json").read_text())
+    assert result.filing_meta["form_type"] == "ANNUAL-REPORT"
+    assert manifest["filing"]["form_type"] == "ANNUAL-REPORT"
+    assert "facts.json" in manifest["artifacts"]
+
+    section_ids = {f.stem for f in (pack_dir / "sections").glob("*.md")}
+    assert "annual_s02_company_profile_key_financials" in section_ids
+
+    facts = json.loads((pack_dir / "facts.json").read_text())
+    revenue = facts["facts"]["cas"]["Revenue"]["units"]["CNY"][0]
+    net_income = facts["facts"]["cas"]["ProfitLoss"]["units"]["CNY"][0]
+    operating_cash_flow = facts["facts"]["cas"][
+        "NetCashProvidedByUsedInOperatingActivities"
+    ]["units"]["CNY"][0]
+    r_and_d = facts["facts"]["cas"]["ResearchAndDevelopmentIntensity"]["units"]["pure"][0]
+
+    assert revenue["fy"] == 2024
+    assert revenue["val"] == 3_404_605_307.88
+    assert net_income["val"] == 120_142_895.56
+    assert operating_cash_flow["val"] == 230_241_355.89
+    assert r_and_d["val"] == pytest.approx(0.108)
+    assert revenue["section_id"] == "annual_s02_company_profile_key_financials"
+    assert revenue["source_url"].startswith("https://static.cninfo.com.cn/")
 
 
 @pytest.mark.asyncio

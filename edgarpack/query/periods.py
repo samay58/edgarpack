@@ -269,7 +269,14 @@ def _is_annual(v: dict[str, Any]) -> bool:
     form = str(v.get("form", "")).upper()
     if is_registration_form(form):
         return False
-    return str(v.get("fp", "")).upper() == "FY" or form in ("10-K", "10-K/A", "20-F", "20-F/A")
+    return str(v.get("fp", "")).upper() == "FY" or form in (
+        "10-K",
+        "10-K/A",
+        "20-F",
+        "20-F/A",
+        "ANNUAL-REPORT",
+        "ANNUAL REPORT",
+    )
 
 
 def _is_quarterly(v: dict[str, Any]) -> bool:
@@ -283,7 +290,14 @@ def _is_quarter_form_type(form: str) -> bool:
     if is_registration_form(form):
         return False
     form_upper = form.strip().upper()
-    return form_upper.startswith("10-Q") or form_upper in ("10-K", "10-K/A", "20-F", "20-F/A")
+    return form_upper.startswith("10-Q") or form_upper in (
+        "10-K",
+        "10-K/A",
+        "20-F",
+        "20-F/A",
+        "ANNUAL-REPORT",
+        "ANNUAL REPORT",
+    )
 
 
 def _duration_days(v: dict[str, Any]) -> int | None:

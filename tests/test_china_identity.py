@@ -36,6 +36,14 @@ cik = "0001577552"
 forms_20f = 3
 aliases = ["alibaba", "alibaba group"]
 alt_tickers = ["9988.HK"]
+
+[[companies]]
+ticker = "688696"
+name = "Chengdu XGIMI Technology Co., Ltd."
+listing = "SSE"
+aliases = ["xgimi", "chengdu xgimi technology co., ltd."]
+stock_code = "688696"
+alt_tickers = ["XGIMI"]
 """
     )
     return load_identity(cfg)
@@ -70,10 +78,27 @@ def test_resolve_company_alias_picks_primary_listing(identity):
     assert r.source == "HKEX"
 
 
+def test_resolve_sse_stock_code_routes_to_sse(identity):
+    r = resolve(identity, ticker="688696", company=None)
+    assert r.listing == "SSE"
+    assert r.source == "SSE"
+    assert r.stock_code == "688696"
+    assert r.hk_stock_code is None
+
+
+def test_resolve_sse_aliases_route_to_sse(identity):
+    by_alias = resolve(identity, ticker=None, company="xgimi")
+    by_name = resolve(identity, ticker=None, company="Chengdu XGIMI Technology Co., Ltd.")
+    by_alt = resolve(identity, ticker="XGIMI", company=None)
+    for r in (by_alias, by_name, by_alt):
+        assert r.source == "SSE"
+        assert r.stock_code == "688696"
+
+
 def test_resolve_unknown_ticker_raises_with_suggestions(identity):
     with pytest.raises(UnknownCompany) as excinfo:
         resolve(identity, ticker="ZZZZ", company=None)
-    assert "BIDU" in str(excinfo.value) or "BABA" in str(excinfo.value)
+    assert "Did you mean:" in str(excinfo.value)
 
 
 def test_resolve_requires_one_of_ticker_or_company(identity):
@@ -114,6 +139,10 @@ def test_live_universe_resolves_all_six_public_targets():
         assert r.source == "HKEX", f"{ticker} should route to HKEX"
         assert r.private is False
 
+    r = resolve(index, ticker="688696", company=None)
+    assert r.source == "SSE"
+    assert r.stock_code == "688696"
+
 
 def test_live_universe_resolves_every_alias():
     from pathlib import Path
@@ -126,6 +155,7 @@ def test_live_universe_resolves_every_alias():
         ("jd.com", "JD"),
         ("tencent", "0700.HK"),
         ("meituan", "3690.HK"),
+        ("xgimi", "688696"),
     ]:
         r = resolve(index, ticker=None, company=alias)
         assert r.ticker == expected

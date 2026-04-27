@@ -1,4 +1,4 @@
-"""Identity resolution across SEC and HKEX listings.
+"""Identity resolution across SEC, HKEX, and mainland China listings.
 
 The CLI calls `resolve()` with whatever the user typed as the positional
 `company` argument, passed once as `ticker=` and once as `company=` to
@@ -23,10 +23,25 @@ __all__ = [
     "Source",
     "UnknownCompany",
     "load_identity",
+    "looks_like_china_a_share_code",
     "resolve",
 ]
 
-Source = Literal["SEC", "HKEX"]
+Source = Literal["SEC", "HKEX", "SSE"]
+
+_A_SHARE_PREFIXES = (
+    "000",
+    "001",
+    "002",
+    "003",
+    "300",
+    "301",
+    "600",
+    "601",
+    "603",
+    "605",
+    "688",
+)
 
 
 @dataclass(frozen=True)
@@ -36,6 +51,7 @@ class ResolvedCompany:
     source: Source
     cik: str | None
     hk_stock_code: str | None
+    stock_code: str | None
     aliases: tuple[str, ...]
     private: bool
 
@@ -47,11 +63,21 @@ class IdentityIndex:
     all_tickers: tuple[str, ...]
 
 
+def looks_like_china_a_share_code(value: str) -> bool:
+    code = value.strip()
+    return code.isdigit() and len(code) == 6 and code.startswith(_A_SHARE_PREFIXES)
+
+
 def _source_for(spec: CompanySpec, ticker: str) -> Source:
-    if ticker.endswith(".HK"):
+    listing = (spec.listing or "").upper()
+    if ticker.upper().endswith(".HK"):
         return "HKEX"
-    if spec.listing == "HKEX":
+    if listing == "HKEX":
         return "HKEX"
+    if listing in {"SSE", "STAR", "STAR MARKET"}:
+        return "SSE"
+    if ticker.isdigit() and len(ticker) == 6 and spec.stock_code:
+        return "SSE"
     return "SEC"
 
 
@@ -62,6 +88,7 @@ def _resolved_for(spec: CompanySpec, ticker: str) -> ResolvedCompany:
         source=_source_for(spec, ticker),
         cik=spec.cik,
         hk_stock_code=spec.hk_stock_code,
+        stock_code=spec.stock_code or spec.hk_stock_code,
         aliases=tuple(spec.aliases),
         private=spec.private,
     )
@@ -84,15 +111,7 @@ def load_identity(path: Path) -> IdentityIndex:
         primary = _resolved_for(spec, spec.ticker)
         by_ticker[spec.ticker.upper()] = primary
         for alt in spec.alt_tickers:
-            alt_resolved = ResolvedCompany(
-                ticker=alt,
-                listing="HKEX" if alt.endswith(".HK") else spec.listing,
-                source="HKEX" if alt.endswith(".HK") else "SEC",
-                cik=spec.cik,
-                hk_stock_code=spec.hk_stock_code,
-                aliases=tuple(spec.aliases),
-                private=spec.private,
-            )
+            alt_resolved = _resolved_for(spec, alt)
             by_ticker[alt.upper()] = alt_resolved
 
         for alias in spec.aliases:
