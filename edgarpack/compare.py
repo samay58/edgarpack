@@ -1,28 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import json
 import sys
 from dataclasses import dataclass
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 from .query.formatting import format_number
 from .query.models import CitedValue
-
-_BALANCE_SHEET_METRICS: frozenset[str] = frozenset(
-    {
-        "total_assets",
-        "total_liabilities",
-        "total_equity",
-        "cash_and_equivalents",
-        "total_debt",
-        "shares_outstanding_basic",
-        "shares_outstanding_diluted",
-    }
-)
 
 # Signed percent (e.g. "+12%", "-3%"): YoY growth and period-over-period deltas.
 _GROWTH_METRICS: frozenset[str] = frozenset({"revenue_growth_yoy", "gross_margin_trend"})
@@ -42,40 +28,10 @@ _RATIO_METRICS: frozenset[str] = frozenset(
 _PER_EMPLOYEE_METRICS: frozenset[str] = frozenset({"revenue_per_employee"})
 
 
-def _convention_for(metric: str) -> str:
-    if metric in _BALANCE_SHEET_METRICS:
-        return "spot"
-    return "average"
-
-
 def _load_rates():
-    from .fx import load_rates
+    from .query.currency import load_default_rates
 
-    return load_rates(Path("data/fx_rates.csv"))
-
-
-def _convert_to_usd(
-    value: float, from_ccy: str, metric: str, fy: int, rates
-) -> tuple[float, float] | None:
-    from .fx import RateNotFound, convert
-
-    if from_ccy == "USD":
-        return float(value), 1.0
-    convention = _convention_for(metric)
-    as_of = dt.date(fy, 12, 31)
-    try:
-        result = convert(
-            value=Decimal(str(value)),
-            from_ccy=from_ccy,
-            to_ccy="USD",
-            as_of=as_of,
-            convention=convention,
-            rates=rates,
-            period_end=as_of if convention == "average" else None,
-        )
-    except (RateNotFound, NotImplementedError):
-        return None
-    return result.converted_value, result.rate_used
+    return load_default_rates()
 
 
 @dataclass(frozen=True)
@@ -159,26 +115,34 @@ async def _fetch_one(
             # revenue / headcount in the native reporting currency. Convert
             # to USD using the revenue convention (average over the year).
             if cv.reporting_currency and cv.reporting_currency != "USD":
+                from .query.currency import convert_cited_to_usd
+
                 if rates is None:
                     rates = _load_rates()
-                conv = _convert_to_usd(
-                    cv.value, cv.reporting_currency, "revenue", cv.fiscal_year, rates
-                )
+                conv = convert_cited_to_usd(cv, metric="revenue", rates=rates)
                 if conv is not None:
-                    entry["per_employee_usd"] = conv[0]
-                    entry["fx_rate"] = conv[1]
+                    entry["per_employee_usd"] = conv.usd_value
+                    entry["fx_rate"] = conv.rate_used
+                    entry["fx_convention"] = conv.convention
+                    entry["fx_as_of"] = conv.as_of.isoformat()
+                    entry["fx_provenance"] = conv.provenance
             else:
                 entry["per_employee_usd"] = float(cv.value)
                 entry["fx_rate"] = 1.0
         elif cv.unit == "headcount":
             entry["headcount"] = int(cv.value)
         elif cv.reporting_currency and cv.reporting_currency != "USD":
+            from .query.currency import convert_cited_to_usd
+
             if rates is None:
                 rates = _load_rates()
-            conv = _convert_to_usd(cv.value, cv.reporting_currency, m, cv.fiscal_year, rates)
+            conv = convert_cited_to_usd(cv, metric=m, rates=rates)
             if conv is not None:
-                entry["usd_value"] = conv[0]
-                entry["fx_rate"] = conv[1]
+                entry["usd_value"] = conv.usd_value
+                entry["fx_rate"] = conv.rate_used
+                entry["fx_convention"] = conv.convention
+                entry["fx_as_of"] = conv.as_of.isoformat()
+                entry["fx_provenance"] = conv.provenance
         else:
             entry["usd_value"] = float(cv.value)
             entry["fx_rate"] = 1.0
@@ -220,7 +184,7 @@ async def _gather(
     return cols, rejected_by_company
 
 
-def _format_value(v: dict[str, Any] | None) -> str:
+def _format_value(v: dict[str, Any] | None, *, currency_mode: str = "both") -> str:
     if v is None or v.get("value") is None:
         return "n/a"
     # Growth is a signed delta (e.g., "+5%", "-3%"), not a finance-negative.
@@ -232,6 +196,13 @@ def _format_value(v: dict[str, Any] | None) -> str:
     if "ratio" in (v or {}):
         return format_number(v["ratio"], "pure")
     if "per_employee_usd" in (v or {}):
+        if currency_mode == "native":
+            return format_number(float(v["value"]), v.get("currency", ""))
+        native = format_number(float(v["value"]), v.get("currency", ""))
+        suffix = f"; {v['fx_provenance']}" if v.get("fx_provenance") else ""
+        if v.get("currency") and v.get("currency") != "USD":
+            usd_text = format_number(float(v["per_employee_usd"]), "USD")
+            return f"{usd_text} (native: {native}{suffix})"
         return format_number(float(v["per_employee_usd"]), "USD")
     if "headcount" in (v or {}):
         return format_number(float(v["headcount"]), "headcount")
@@ -239,7 +210,11 @@ def _format_value(v: dict[str, Any] | None) -> str:
     cur = v.get("currency", "")
     usd = v.get("usd_value")
     if usd is not None and cur != "USD":
-        return f"{format_number(float(usd), 'USD')} (native: {format_number(float(val), cur)})"
+        native = format_number(float(val), cur)
+        if currency_mode == "native":
+            return native
+        suffix = f"; {v['fx_provenance']}" if v.get("fx_provenance") else ""
+        return f"{format_number(float(usd), 'USD')} (native: {native}{suffix})"
     if usd is not None:
         return format_number(float(usd), "USD")
     if cur:
@@ -273,13 +248,19 @@ def _diagnostics_lines(columns: list[CompanyColumn]) -> list[str]:
     return lines
 
 
-def _format_table(columns: list[CompanyColumn], metric_keys: list[str], period_request: str) -> str:
+def _format_table(
+    columns: list[CompanyColumn],
+    metric_keys: list[str],
+    period_request: str,
+    *,
+    currency_mode: str = "both",
+) -> str:
     headers = ["metric"] + [c.ticker for c in columns]
     rows: list[list[str]] = []
     for m in metric_keys:
         row = [m]
         for c in columns:
-            row.append(_format_value(c.metrics.get(m)))
+            row.append(_format_value(c.metrics.get(m), currency_mode=currency_mode))
         rows.append(row)
 
     widths = [max(len(str(r[i])) for r in [headers] + rows) for i in range(len(headers))]
@@ -299,14 +280,21 @@ def _format_table(columns: list[CompanyColumn], metric_keys: list[str], period_r
 
 
 def _format_markdown(
-    columns: list[CompanyColumn], metric_keys: list[str], period_request: str
+    columns: list[CompanyColumn],
+    metric_keys: list[str],
+    period_request: str,
+    *,
+    currency_mode: str = "both",
 ) -> str:
     headers = ["metric"] + [c.ticker for c in columns]
     lines: list[str] = [f"**{_period_header(period_request, columns)}**", ""]
     lines.append("| " + " | ".join(headers) + " |")
     lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
     for m in metric_keys:
-        row = [m] + [_format_value(c.metrics.get(m)) for c in columns]
+        row = [
+            m,
+            *[_format_value(c.metrics.get(m), currency_mode=currency_mode) for c in columns],
+        ]
         lines.append("| " + " | ".join(row) + " |")
     lines.append("")
     for c in columns:
@@ -397,6 +385,7 @@ def cmd_compare(args: Any) -> int:
     metric_keys = [m.strip() for m in metrics.split(",")]
 
     fmt = getattr(args, "compare_format", None) or "table"
+    currency_mode = getattr(args, "currency", "both")
     if fmt == "json":
         import json as _json
 
@@ -405,13 +394,13 @@ def cmd_compare(args: Any) -> int:
             payload["strict_rejected"] = strict_rejected
         print(_json.dumps(payload, indent=2, default=str))
     elif fmt == "markdown":
-        print(_format_markdown(columns, metric_keys, period))
+        print(_format_markdown(columns, metric_keys, period, currency_mode=currency_mode))
         if strict_flag and strict_rejected:
             flat = sorted({m for v in strict_rejected.values() for m in v})
             print("")
             print(f"_Strict mode: rejected learned values for: {', '.join(flat)}_")
     else:
-        print(_format_table(columns, metric_keys, period))
+        print(_format_table(columns, metric_keys, period, currency_mode=currency_mode))
         if strict_flag and strict_rejected:
             flat = sorted({m for v in strict_rejected.values() for m in v})
             print("")

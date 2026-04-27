@@ -386,20 +386,23 @@ The `document_url` uses Chrome/Edge text fragment scrolling (`#:~:text=Net%20Inc
 
 ## HKEX Path
 
-HKEX-listed filers (Tencent, Baidu, Alibaba, Meituan, MiniMax, Zhipu, etc.) do not file XBRL with SEC, so the XBRL path above does not apply. When the resolver routes a company to the HKEX source via `universe.toml`, `financials()` switches to a pack-local fact store built from the filing's prospectus PDF.
+HKEX-listed filers (Tencent, Baidu, Alibaba, Meituan, MiniMax, Zhipu, etc.) do not file XBRL with SEC, so the XBRL path above does not apply. When the resolver routes a company to the HKEX source via `universe.toml`, `financials()` switches to a pack-local fact store built from the filing's HKEX primary PDF.
 
 Pipeline:
 
-1. `edgarpack/hk/acquire.py` fetches the prospectus PDF from HKEX.
+1. `edgarpack/hk/acquire.py` fetches the prospectus or annual-report PDF from HKEX.
 2. `edgarpack/hk/adapter.py` runs the PDF through the pack builder to produce section markdown.
 3. `edgarpack/hk/extract.py` runs regex extraction over the financial sections against a per-metric label list. Anything still missing gets a second pass through `edgarpack/hk/llm_extract.py` (Claude API with an on-disk cache keyed by accession).
 4. Final facts are assembled into `facts.json` inside the pack directory, using the filing's `reporting_currency` (HKD, CNY, USD) from the pack manifest.
 
-The query layer reads `facts.json` with the same `CitedValue` / `DerivedValue` shapes it uses for SEC data. For cross-market output, use `compare` and pass `--currency usd`; it normalizes non-USD values through `data/fx_rates.csv` and annotates the footer with the original reporting currency.
+The query layer reads `facts.json` with the same `CitedValue` / `DerivedValue` shapes it uses for SEC data. Query, which, and compare accept `--currency native|usd|both`; USD-normalized output keeps the native value, FX rate/convention, and the original source citation.
 
 ```bash
 # Raw HKEX data (native currency)
-edgarpack query BIDU revenue --period lfy
+edgarpack query BIDU revenue --period lfy --currency native
+
+# USD value with native-currency and FX provenance
+edgarpack query zhipu revenue --period lfy --currency usd
 
 # Cross-market comparison, USD-normalized
 edgarpack compare NVDA BIDU BABA --metrics revenue,gross_margin --currency usd

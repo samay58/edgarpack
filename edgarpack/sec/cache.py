@@ -7,9 +7,9 @@ import os
 try:
     from datetime import UTC, datetime
 except ImportError:  # Python 3.9 fallback
-    from datetime import datetime
+    from datetime import datetime, timezone
 
-    UTC = UTC
+    UTC = timezone.utc  # noqa: UP017 - fallback for runtimes without datetime.UTC
 from pathlib import Path
 from threading import Lock, get_ident
 from typing import Any

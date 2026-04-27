@@ -106,6 +106,25 @@ def test_resolve_requires_one_of_ticker_or_company(identity):
         resolve(identity, ticker=None, company=None)
 
 
+def test_private_name_only_company_resolves_by_alias(tmp_path):
+    cfg = tmp_path / "u.toml"
+    cfg.write_text(
+        """
+[[companies]]
+name = "Shenzhen Shuye Innovative Technology Co., Ltd."
+listing = "PRIVATE"
+aliases = ["laifen", "shenzhen shuye"]
+"""
+    )
+    index = load_identity(cfg)
+
+    r = resolve(index, ticker=None, company="laifen")
+
+    assert r.private is True
+    assert r.ticker == "Shenzhen Shuye Innovative Technology Co., Ltd."
+    assert r.listing == "PRIVATE"
+
+
 def test_ambiguous_alias_raises_at_load_time(tmp_path):
     cfg = tmp_path / "u.toml"
     cfg.write_text(

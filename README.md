@@ -200,6 +200,7 @@ edgarpack site --packs ./packs --out ./site                   # static site gene
 edgarpack which FIG                                           # MD&A KPIs a company discloses
 
 # Query & compare
+edgarpack identify xgimi                                      # SEC, HKEX, SSE/A-share, private, or unknown
 edgarpack query NVDA revenue,net_income --period ltm          # single company, cited values
 edgarpack comps NVDA AMD INTC -m revenue,ebitda --period ltm  # SEC-to-SEC comps table
 edgarpack compare NVDA BIDU BABA -m revenue --currency usd    # cross-market (SEC + HKEX), USD-normalized
@@ -218,10 +219,11 @@ edgarpack timeline --ticker "NVIDIA" \
 edgarpack timeline --series registration --cik 0002021728 \
   --packs ./packs --format html --out ./reports/cerebras-s1    # S-1 amendment chain
 
-# SSE (Shanghai Stock Exchange) prospectuses. Requires the [sse] extra.
+# SSE / China A-share primary filings. Requires the [sse] extra.
+edgarpack build-sse xgimi --latest-annual --with-chunks       # look up CNINFO URL/date
 edgarpack build-sse --url <pdf-url> --stock-code 301536 \
   --company "Unitree Robotics" --filing-date 2026-03-20           # Chinese pack
-edgarpack build-sse ... --translate                              # + zh->en; needs EDGARPACK_DEEPINFRA_KEY
+edgarpack build-sse ... --translate                              # writes filing.full.en.md; needs key
 
 # Maintenance
 edgarpack learned list                                        # inspect self-heal concept mappings
@@ -263,9 +265,9 @@ See [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) for the full diff workflow, HTM
 
 A parallel pipeline for HKEX, CNINFO, and SSE filings. Same citation shape as the SEC path, different source formats.
 
-**HKEX** tickers (`0700.HK`, `BIDU`, `BABA`, `9988.HK`) are first-class in `query`, `comps`, and `compare`: when the resolver routes a company to HKEX, queries read from the pack's `facts.json` instead of SEC companyfacts, and currencies normalize through `data/fx_rates.csv` when you pass `--currency usd`. The extractor uses regex pattern matching against prospectus sections and falls back to a Claude API pass for tagged-but-unmatched metrics.
+**HKEX** tickers (`0700.HK`, `BIDU`, `BABA`, `9988.HK`) are first-class in `query`, `which`, and `compare`: when the resolver routes a company to HKEX, queries read from the pack's `facts.json` instead of SEC companyfacts. Query/which/compare accept `--currency native|usd|both`; USD-normalized output keeps the native value, FX rate, convention, and source citation visible. The extractor supports prospectus and annual-report section shapes, with regex pattern matching against financial sections and a Claude API fallback for tagged-but-unmatched metrics.
 
-**SSE (Shanghai Stock Exchange)** prospectuses are built via `edgarpack build-sse`. The builder converts the PDF via `pymupdf4llm`, detects CSRC STAR Market sections using Chinese numerals (`第一节`, `第二节`, ...), and produces the same `manifest.json` + `sections/*.md` + `llms.txt` pack layout as SEC filings. Add `--translate` (requires `EDGARPACK_DEEPINFRA_KEY`) to run the zh->en translation pipeline, which is section-aware and validated against glossary consistency, literal-token preservation, and numeric fidelity.
+**SSE / China A-share** filings are built via `edgarpack build-sse`. Use `edgarpack identify <company>` first if you are not sure how the company routes, then `edgarpack build-sse <company-or-code> --latest-annual` to select the latest CNINFO annual report without manually hunting for the PDF URL. The builder converts the PDF via `pymupdf4llm`, detects CSRC annual/prospectus sections using Chinese numerals (`第一节`, `第二节`, ...), and produces the same `manifest.json` + `sections/*.md` + `llms.txt` pack layout as SEC filings. Add `--translate` (requires `EDGARPACK_DEEPINFRA_KEY`) to run the zh->en translation pipeline; successful runs write `sections/*.en.md`, `filing.full.en.md`, and manifest translation metadata with provider/model, failed sections, full-filing status, and validation warning/error counts.
 
 A FastAPI workspace (`edgarpack api`) exposes the Evidence Explorer on top of the same data. See [`docs/china-lens/IMPLEMENTATION_TRACKER.md`](docs/china-lens/IMPLEMENTATION_TRACKER.md) for the current status and the [HKEX section of docs/QUERY.md](docs/QUERY.md#hkex-path) for query-layer details.
 

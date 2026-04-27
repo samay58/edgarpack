@@ -187,6 +187,42 @@ def test_format_value_native_with_usd_conversion():
     assert _format_value(v) == "$30.0B (native: €28.3B)"
 
 
+def test_compare_currency_native_respects_flag():
+    r = _run(
+        "minimax",
+        "zhipu",
+        "--metrics",
+        "revenue",
+        "--currency",
+        "native",
+        "--format",
+        "table",
+    )
+
+    assert r.returncode == 0, r.stderr
+    assert "¥312.4M" in r.stdout
+    assert "$42.9M" not in r.stdout
+    assert "FX:" not in r.stdout
+
+
+def test_compare_currency_usd_shows_native_fx_provenance():
+    r = _run(
+        "minimax",
+        "zhipu",
+        "--metrics",
+        "revenue",
+        "--currency",
+        "usd",
+        "--format",
+        "table",
+    )
+
+    assert r.returncode == 0, r.stderr
+    assert "$42.9M" in r.stdout
+    assert "native: ¥312.4M" in r.stdout
+    assert "FX: data/fx_rates.csv CNY/USD 2024-12-31 average" in r.stdout
+
+
 def test_format_value_ratio_uses_pure_formatter():
     from edgarpack.compare import _format_value
 

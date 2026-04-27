@@ -382,6 +382,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Port to bind (default: 8000)",
     )
 
+    p_identify = sub.add_parser(
+        "identify",
+        help="Identify whether a company is SEC, HKEX, SSE/A-share, private, or unknown",
+    )
+    p_identify.add_argument("company", help="Company name, ticker, stock code, or alias")
+
     p_query = sub.add_parser(
         "query",
         help="Query financial metrics for a company (cited from SEC filings)",
@@ -730,6 +736,12 @@ def main(argv: list[str] | None = None) -> int:
         default=6,
         help="Max period columns to render in the table view (default: 6)",
     )
+    p_which.add_argument(
+        "--currency",
+        choices=["native", "usd", "both"],
+        default="both",
+        help="Currency output: native (reporting currency only), usd (USD only), both.",
+    )
 
     p_compare = sub.add_parser("compare", help="Side-by-side comparison of two or more companies")
     p_compare.add_argument(
@@ -761,14 +773,24 @@ def main(argv: list[str] | None = None) -> int:
 
     p_build_sse = sub.add_parser(
         "build-sse",
-        help="Build a pack from an SSE (Shanghai Stock Exchange) prospectus PDF",
+        help="Build a pack from an SSE / China A-share primary filing PDF",
     )
     p_build_sse.add_argument(
-        "--url", required=True, help="URL of the PDF on the SSE disclosure platform"
+        "target",
+        nargs="?",
+        help="Company name, alias, or stock code for --latest-annual lookup",
     )
-    p_build_sse.add_argument("--stock-code", required=True, help="SSE stock code (e.g. 301536)")
-    p_build_sse.add_argument("--company", required=True, help="Company name")
-    p_build_sse.add_argument("--filing-date", required=True, help="Filing date (YYYY-MM-DD)")
+    p_build_sse.add_argument(
+        "--latest-annual",
+        action="store_true",
+        help="Find the latest CNINFO annual report for the A-share before building",
+    )
+    p_build_sse.add_argument(
+        "--url", help="URL of the PDF on the SSE/CNINFO disclosure platform"
+    )
+    p_build_sse.add_argument("--stock-code", help="SSE stock code (e.g. 688696)")
+    p_build_sse.add_argument("--company", help="Company name")
+    p_build_sse.add_argument("--filing-date", help="Filing date (YYYY-MM-DD)")
     p_build_sse.add_argument(
         "--out", "-o", type=Path, default=Path("./packs"), help="Output directory"
     )
@@ -813,6 +835,8 @@ def main(argv: list[str] | None = None) -> int:
 
         return cmd_compare(args)
 
+    if args.cmd == "identify":
+        return _cmd_identify(args)
     if args.cmd == "build-sse":
         return _cmd_build_sse(args)
     if args.cmd == "translate-sse":
@@ -1141,23 +1165,171 @@ def _cmd_build(args: Any) -> int:
     return asyncio.run(_run())
 
 
+def _cmd_identify(args: Any) -> int:
+    async def _run() -> int:
+        from .identity import looks_like_china_a_share_code
+
+        try:
+            resolved = await _resolve_cli_company(args.company)
+        except UnknownCompany as e:
+            if looks_like_china_a_share_code(args.company):
+                print(f"{args.company}")
+                print("Status: unknown China A-share code")
+                print("No SEC fallback attempted.")
+                print("Next: add the company to universe.toml, then run build-sse --latest-annual.")
+                return 0
+            print(args.company)
+            print("Status: unknown")
+            print(str(e))
+            print("No SEC/HKEX/SSE/private workflow could be verified from local indexes.")
+            return 0
+        except AmbiguousCompany as e:
+            print(args.company)
+            print("Status: ambiguous")
+            print(str(e))
+            return 0
+
+        display_name = _canonical_company_label(resolved, args.company)
+        source = str(getattr(resolved, "source", "") or "")
+        if getattr(resolved, "private", False):
+            print(display_name)
+            print("Status: private company")
+            print("No public filing workflow is available.")
+            return 0
+
+        if source == "SSE":
+            stock_code = getattr(resolved, "stock_code", None) or getattr(resolved, "ticker", "")
+            print(display_name)
+            print("Status: public A-share / SSE")
+            print(f"Stock Code: {stock_code}")
+            print(f"Next: edgarpack build-sse {args.company} --latest-annual --with-chunks")
+            return 0
+
+        if source == "HKEX":
+            stock_code = getattr(resolved, "hk_stock_code", None) or getattr(resolved, "ticker", "")
+            print(display_name)
+            print("Status: public HKEX listing")
+            print(f"Stock Code: {stock_code}")
+            print("Next: build or import the HKEX pack, then run edgarpack which/query.")
+            return 0
+
+        print(display_name)
+        print("Status: public SEC filer")
+        print(f"Ticker: {getattr(resolved, 'ticker', args.company)}")
+        print(f"CIK: {getattr(resolved, 'cik', '')}")
+        print(f"Next: edgarpack query {args.company} revenue --period lfy")
+        return 0
+
+    return asyncio.run(_run())
+
+
+def _find_latest_sse_annual_report(stock_code: str):
+    from .china.acquire import find_latest_annual_report
+
+    return find_latest_annual_report(stock_code)
+
+
 def _cmd_build_sse(args: Any) -> int:
     from datetime import date
-
-    try:
-        filing_date = date.fromisoformat(args.filing_date)
-    except ValueError:
-        print(f"Error: invalid date format: {args.filing_date} (use YYYY-MM-DD)", file=sys.stderr)
-        return 2
 
     async def _run() -> int:
         from .pack.build import build_sse_pack
 
+        url = getattr(args, "url", None)
+        stock_code = getattr(args, "stock_code", None)
+        company_name = getattr(args, "company", None)
+        form_type = getattr(args, "form_type", "auto")
+
+        if bool(getattr(args, "latest_annual", False)):
+            if not stock_code:
+                target = getattr(args, "target", None)
+                if not target:
+                    print(
+                        "Error: provide a company/stock-code target or --stock-code with "
+                        "--latest-annual",
+                        file=sys.stderr,
+                    )
+                    return 2
+                try:
+                    resolved = await _resolve_cli_company(target)
+                except (UnknownCompany, AmbiguousCompany) as e:
+                    print(f"Error: {e}", file=sys.stderr)
+                    return 2
+                if getattr(resolved, "private", False):
+                    print(
+                        f"Error: {target} is private; no SSE annual report is available.",
+                        file=sys.stderr,
+                    )
+                    return 2
+                if getattr(resolved, "source", None) != "SSE":
+                    print(
+                        f"Error: {target} is not registered as an SSE/A-share company.",
+                        file=sys.stderr,
+                    )
+                    return 2
+                stock_code = getattr(resolved, "stock_code", None) or getattr(
+                    resolved,
+                    "ticker",
+                    None,
+                )
+                company_name = company_name or _canonical_company_label(resolved, target)
+
+            try:
+                selected = _find_latest_sse_annual_report(str(stock_code))
+            except Exception as e:
+                print(f"Error: {e}", file=sys.stderr)
+                return 1
+            url = selected.source_url
+            company_name = (
+                getattr(args, "company", None)
+                or selected.company_name
+                or company_name
+                or str(stock_code)
+            )
+            filing_date = selected.filing_date
+            if form_type == "auto":
+                form_type = "annual-report"
+            print("Selected annual report")
+            print(f"  Stock Code: {stock_code}")
+            print(f"  Company: {company_name}")
+            print(f"  Filing Date: {filing_date.isoformat()}")
+            print(f"  Source: {url}")
+        else:
+            missing = [
+                name
+                for name, value in (
+                    ("--url", url),
+                    ("--stock-code", stock_code),
+                    ("--company", company_name),
+                    ("--filing-date", getattr(args, "filing_date", None)),
+                )
+                if not value
+            ]
+            if missing:
+                print(
+                    "Error: missing required manual build arguments: " + ", ".join(missing),
+                    file=sys.stderr,
+                )
+                print(
+                    "Tip: use `edgarpack build-sse <company-or-code> --latest-annual` "
+                    "to look up the primary annual report automatically.",
+                    file=sys.stderr,
+                )
+                return 2
+            try:
+                filing_date = date.fromisoformat(args.filing_date)
+            except ValueError:
+                print(
+                    f"Error: invalid date format: {args.filing_date} (use YYYY-MM-DD)",
+                    file=sys.stderr,
+                )
+                return 2
+
         try:
             result = await build_sse_pack(
-                url=args.url,
-                stock_code=args.stock_code,
-                company_name=args.company,
+                url=str(url),
+                stock_code=str(stock_code),
+                company_name=str(company_name),
                 filing_date=filing_date,
                 out_dir=args.out,
                 pdf_path=args.pdf,
@@ -1165,7 +1337,7 @@ def _cmd_build_sse(args: Any) -> int:
                 force=bool(args.force),
                 translate=bool(args.translate),
                 translate_model=args.translate_model,
-                form_type=args.form_type,
+                form_type=form_type,
             )
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
@@ -1246,6 +1418,8 @@ def _cmd_translate_sse(args: Any) -> int:
 
         cached_count = 0
         translated_count = 0
+        validation_warning_count = 0
+        validation_error_count = 0
         en_sections: list[str] = []
         failed_sections: list[str] = []
         translated_sections: list[str] = []
@@ -1279,8 +1453,9 @@ def _cmd_translate_sse(args: Any) -> int:
                     uncached_texts.append(decision.cleaned)
 
             def _validate(index: int, text_zh: str, text_en: str) -> Any:
+                nonlocal validation_warning_count, validation_error_count
                 _, number_tags = tag_numbers(text_zh)
-                return validate_translation(
+                report = validate_translation(
                     text_zh=text_zh,
                     text_en=text_en,
                     number_tags=number_tags,
@@ -1289,6 +1464,12 @@ def _cmd_translate_sse(args: Any) -> int:
                     allow_han=False,
                     paragraph_index=index,
                 )
+                for issue in report.issues:
+                    if issue.severity == "warning":
+                        validation_warning_count += 1
+                    elif issue.severity == "error":
+                        validation_error_count += 1
+                return report
 
             for i, decision in enumerate(decisions):
                 if translation_sources[i] != "cache" or para_results[i] is None:
@@ -1381,6 +1562,8 @@ def _cmd_translate_sse(args: Any) -> int:
             "failed_sections": failed_sections,
             "translated_sections": translated_sections,
             "full_filing_written": wrote_full_en,
+            "validation_warning_count": validation_warning_count,
+            "validation_error_count": validation_error_count,
         }
         manifest_path.write_text(
             json.dumps(manifest_data, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
@@ -1636,7 +1819,7 @@ def _source_badge_for(v: Any) -> str:
 
 def _render_query_table(result: Any, args: Any) -> str:
     """Render single-company query output with inline citation/audit ergonomics."""
-    from .query.comps import _format_value
+    from .query.currency import format_cited_currency
 
     def _identifier_label() -> str:
         for raw_value in result.metrics.values():
@@ -1657,6 +1840,7 @@ def _render_query_table(result: Any, args: Any) -> str:
 
     width = shutil.get_terminal_size((120, 20)).columns
     lines: list[str] = [f"{result.company} ({_identifier_label()}: {result.cik})", ""]
+    currency_mode = getattr(args, "currency", "both")
 
     strict = bool(getattr(args, "strict", False))
     # Strict filtering is canonical in query.strict.apply_strict. When
@@ -1707,7 +1891,12 @@ def _render_query_table(result: Any, args: Any) -> str:
                         show_links=getattr(args, "show_links", "primary"),
                     )
 
-                lines.append(f"  {item.fiscal_label}: {_format_value(item)}{marker}")
+                formatted_value = format_cited_currency(
+                    item,
+                    mode=currency_mode,
+                    metric=metric_name,
+                )
+                lines.append(f"  {item.fiscal_label}: {formatted_value}{marker}")
                 if isinstance(payload, dict):
                     warnings = payload.get("warnings", [])
                     if isinstance(warnings, list):
@@ -1739,7 +1928,12 @@ def _render_query_table(result: Any, args: Any) -> str:
             )
 
         source_badge = _source_badge_for(raw_value)
-        lines.append(f"{label}: {_format_value(raw_value)}{marker}{source_badge}")
+        formatted_value = format_cited_currency(
+            raw_value,
+            mode=currency_mode,
+            metric=metric_name,
+        )
+        lines.append(f"{label}: {formatted_value}{marker}{source_badge}")
 
         warnings = payload.get("warnings", []) if isinstance(payload, dict) else []
         if isinstance(warnings, list):
@@ -3040,9 +3234,10 @@ def _cmd_which_china(args: Any, resolved: Any) -> int:
         print(json.dumps(result.to_lean_dict(), indent=2, sort_keys=True))
         return 0
 
-    from .query.formatting import format_number
+    from .query.currency import format_cited_currency
 
     rows: list[tuple[str, str, str, str, str]] = []
+    currency_mode = getattr(args, "currency", "both")
     for metric, value in result.metrics.items():
         if value is None:
             continue
@@ -3053,7 +3248,7 @@ def _cmd_which_china(args: Any, resolved: Any) -> int:
             (
                 metric,
                 cited.concept,
-                format_number(cited.value, cited.unit),
+                format_cited_currency(cited, mode=currency_mode, metric=metric),
                 cited.fiscal_label,
                 cited.source or "pack",
             )

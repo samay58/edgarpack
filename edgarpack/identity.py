@@ -104,17 +104,21 @@ def load_identity(path: Path) -> IdentityIndex:
     by_alias: dict[str, ResolvedCompany] = {}
 
     for spec in universe.companies:
-        # Pre-IPO filers (name-only, no ticker) cannot be indexed by ticker.
-        # They are still harvestable via the planner's resolve_filer path.
-        if not spec.ticker:
+        primary_key = spec.ticker or spec.name or spec.cik
+        if not primary_key:
             continue
-        primary = _resolved_for(spec, spec.ticker)
-        by_ticker[spec.ticker.upper()] = primary
+
+        primary = _resolved_for(spec, primary_key)
+        if spec.ticker:
+            by_ticker[spec.ticker.upper()] = primary
         for alt in spec.alt_tickers:
             alt_resolved = _resolved_for(spec, alt)
             by_ticker[alt.upper()] = alt_resolved
 
-        for alias in spec.aliases:
+        aliases = [*(spec.aliases or [])]
+        if spec.name:
+            aliases.append(spec.name)
+        for alias in aliases:
             key = alias.lower().strip()
             if key in by_alias and by_alias[key].ticker != primary.ticker:
                 raise AmbiguousCompany(

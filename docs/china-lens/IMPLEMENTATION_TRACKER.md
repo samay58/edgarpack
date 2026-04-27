@@ -126,20 +126,24 @@ These are the tracked-but-not-being-worked items. Each maps to a wontfix-closed 
 
 ```bash
 # HKEX query via the main CLI
+edgarpack identify tencent
 edgarpack query BIDU revenue --period lfy
-edgarpack query "tencent" operating_cash_flow --period lfy
+edgarpack query "tencent" operating_cash_flow --period lfy --currency both
 
 # Cross-market compare with USD normalization
 edgarpack compare NVDA BIDU BABA --metrics revenue,gross_margin --currency usd
 
-# SSE STAR Market prospectus -> pack (Chinese only)
+# SSE / China A-share annual report -> pack (Chinese only)
+edgarpack identify xgimi
+edgarpack build-sse xgimi --latest-annual --with-chunks
+
+# Manual SSE PDF path still works
 edgarpack build-sse --url https://static.sse.com.cn/disclosure/listedinfo/.../prospectus.pdf \
   --stock-code 301536 --company "Unitree Robotics" --filing-date 2026-03-20
 
-# Same prospectus with zh->en translation
+# Same filing with zh->en translation
 export EDGARPACK_DEEPINFRA_KEY="di-..."
-edgarpack build-sse --url ... --stock-code 301536 --company "Unitree Robotics" \
-  --filing-date 2026-03-20 --translate
+edgarpack build-sse xgimi --latest-annual --with-chunks --translate
 
 # Translate an already-built pack
 edgarpack translate-sse --pack packs/sse/301536/301536_2026-03-20

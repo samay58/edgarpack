@@ -7,6 +7,7 @@ import json
 import logging
 import re
 from datetime import date as _date
+from datetime import datetime as _datetime
 from pathlib import Path
 from typing import Any
 
@@ -1463,6 +1464,123 @@ def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) ->
     return sorted(set(candidates), key=_sort_key, reverse=True)[0]
 
 
+def _load_china_manifest(pack_dir: Path) -> dict[str, Any]:
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return manifest if isinstance(manifest, dict) else {}
+
+
+def _parse_china_date(value: object) -> _date | None:
+    text = str(value or "").strip()
+    if not text or text.upper() in {"N/A", "NA", "NONE", "NULL", "-"}:
+        return None
+
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            return _datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _local_china_source(pack_dir: Path) -> tuple[str, str]:
+    for rel in ("source.pdf", "optional/source.pdf"):
+        candidate = pack_dir / rel
+        if candidate.exists():
+            return rel, str(candidate.resolve())
+    pdfs = sorted(pack_dir.glob("*.pdf"))
+    if len(pdfs) == 1:
+        return pdfs[0].name, str(pdfs[0].resolve())
+    return "", ""
+
+
+def _china_manifest_source_url(manifest: dict[str, Any], data: dict[str, Any]) -> str:
+    filing = manifest.get("filing", {}) if isinstance(manifest.get("filing"), dict) else {}
+    for candidate in (
+        manifest.get("pdf_url"),
+        manifest.get("source_url"),
+        filing.get("source_url"),
+        filing.get("url"),
+        data.get("source_url"),
+    ):
+        text = str(candidate or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _china_manifest_filed_date(
+    manifest: dict[str, Any],
+    point: dict[str, Any],
+) -> _date | None:
+    filing = manifest.get("filing", {}) if isinstance(manifest.get("filing"), dict) else {}
+    for candidate in (
+        point.get("filed"),
+        filing.get("filing_date"),
+        manifest.get("announcement_date"),
+        manifest.get("filing_date"),
+        point.get("end"),
+    ):
+        parsed = _parse_china_date(candidate)
+        if parsed is not None:
+            return parsed
+    fiscal_year = point.get("fy") or manifest.get("fiscal_year")
+    try:
+        return _date(int(fiscal_year), 12, 31)
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_china_fact_provenance(
+    data: dict[str, Any],
+    pack_dir: Path,
+    manifest: dict[str, Any],
+) -> None:
+    """Fill missing source/date fields on China pack facts before citation routing."""
+    source_document, source_path = _local_china_source(pack_dir)
+    manifest_source_url = _china_manifest_source_url(manifest, data)
+    source_url_is_local_file = manifest_source_url.lower().startswith("file://")
+
+    facts = data.get("facts", {})
+    if not isinstance(facts, dict):
+        return
+
+    for concepts in facts.values():
+        if not isinstance(concepts, dict):
+            continue
+        for concept_info in concepts.values():
+            if not isinstance(concept_info, dict):
+                continue
+            units = concept_info.get("units", {})
+            if not isinstance(units, dict):
+                continue
+            for points in units.values():
+                if not isinstance(points, list):
+                    continue
+                for point in points:
+                    if not isinstance(point, dict):
+                        continue
+
+                    filed = _china_manifest_filed_date(manifest, point)
+                    if filed is not None and not point.get("filed"):
+                        point["filed"] = filed.isoformat()
+
+                    if source_path and not point.get("source_path"):
+                        point["source_path"] = source_path
+                    if source_document and not point.get("source_document"):
+                        point["source_document"] = source_document
+
+                    if not point.get("source_url") and manifest_source_url and not (
+                        source_url_is_local_file and source_path
+                    ):
+                        point["source_url"] = manifest_source_url
+
+
 async def _query_china_pack(
     resolved: object,
     metrics: str | list[str] | None,
@@ -1485,13 +1603,15 @@ async def _query_china_pack(
         raise FileNotFoundError(f"No facts.json at {facts_path}")
 
     data = json.loads(facts_path.read_text())
+    manifest = _load_china_manifest(pack_dir)
+    _normalize_china_fact_provenance(data, pack_dir, manifest)
 
     if metrics is None:
         requested: set[str] | None = None
     elif isinstance(metrics, str):
-        requested = {m.strip() for m in metrics.split(",") if m.strip()} or None
+        requested = {resolve_alias(m.strip()) for m in metrics.split(",") if m.strip()} or None
     else:
-        requested = set(metrics) or None
+        requested = {resolve_alias(str(m).strip()) for m in metrics if str(m).strip()} or None
 
     company_name = data.get("company", getattr(resolved, "ticker", ""))
     cik_str = _china_stock_code(resolved)
