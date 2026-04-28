@@ -31,9 +31,9 @@ Use this file only for judgment calls: missing exact-year filings, ambiguous sha
 - Selected filings:
   - 2026: 20-F filed 2026-04-16 accession 0001628280-26-025362
   - 2016: 20-F filed 2016-04-11 accession 0001193125-16-536225
-  - 2006: 20-F filed 2006-04-20 accession 0001145549-06-000500
+  - 2006: 20-F filed 2007-04-20 accession 0001145549-07-000571
 - Reason: TSM is an ADR/FPI case; 20-F is the SEC-backed annual source.
-- Limitation: governance disclosure format differs from U.S. proxy statements.
+- Limitation: governance disclosure format differs from U.S. proxy statements. The exact 2006 20-F accession 0001145549-06-000500 fails in EdgarPack table rendering with `IndexError: list assignment index out of range`, so the 2007 20-F pack is used as the closest comparable filing that EdgarPack can build.
 
 ### AVGO 2016
 
