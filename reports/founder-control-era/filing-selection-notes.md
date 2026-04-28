@@ -13,3 +13,9 @@ Use this file for judgment calls: missing exact-year filings, predecessor mappin
 - Meta Platforms has an EDGAR S-1 from 2012; its public-plus-20 comparison point is after 2026 and should not be filled as evidence.
 - Broadcom resolves to current CIK 0001730168, but life-arc evidence may require Avago Technologies CIK 0001441634.
 - JPMorgan Chase has 1996 proxy coverage under CIK 0000019617, but the 1996 interpretation should preserve predecessor and merger continuity notes.
+
+### Pre-2000 Raw Text Limitation
+
+Several pre-2000 SEC accessions can be retrieved as raw `.txt` filings, but the current EdgarPack build path produced SEC directory-listing packs rather than parsed proxy text. Validation rows for those filings use `raw_sec_txt` evidence anchors and must not be treated as normal sectionized EdgarPack chunks.
+
+Affected validation rows include Microsoft 1996, Walmart 1996, Intel 1996, Exxon 1996, Coca-Cola 1996, GE 1996, and Nvidia's 1998 S-1.

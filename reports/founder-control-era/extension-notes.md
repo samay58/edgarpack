@@ -24,3 +24,12 @@ The founder-control report should earn the broader comparison before this expand
 - Company-specific KPIs discoverable from 10-Ks and annual reports
 - Recurring operating metrics suitable for EdgarPack `which`
 - KPI changes across public-company life arc
+
+## Potential Cross-Era Insights To Test
+
+- Founder control may be less about "tech" and more about company age at dominance.
+- Earlier-era founder influence may appear through ordinary-share ownership and board/operator roles, while current platform-era control may appear through unequal voting rights.
+- Some current dominant companies are founder-origin but institutionally governed today; Microsoft and Apple are the obvious cases to test against Alphabet and Meta.
+- Operating differences may explain governance differences: software/platform economics, R&D intensity, capital intensity, acquisition strategy, buybacks, employee scale, and disclosure of non-financial KPIs.
+
+Keep these as hypotheses until the full evidence table is complete.
