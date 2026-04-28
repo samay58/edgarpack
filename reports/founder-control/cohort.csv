@@ -1,11 +1,11 @@
 rank,company,ticker,country,market_cap,cohort_source_url,cohort_retrieved_at,edgarpack_input,cik,edgarpack_source,identity_notes
-1,NVIDIA,NVDA,USA,$5.119 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,NVDA,,,
-2,Alphabet (Google),GOOG,USA,$4.196 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,GOOG,,,
-3,Apple,AAPL,USA,$3.955 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AAPL,,,
-4,Microsoft,MSFT,USA,$3.182 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,MSFT,,,
-5,Amazon,AMZN,USA,$2.799 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AMZN,,,
-6,TSMC,TSM,Taiwan,$2.022 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,TSM,,,
-7,Broadcom,AVGO,USA,$1.879 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AVGO,,,
-8,Meta Platforms (Facebook),META,USA,$1.698 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,META,,,
-9,Tesla,TSLA,USA,$1.411 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,TSLA,,,
-10,Samsung,005930.KS,S. Korea,$989.00 B,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,Samsung Electronics,,,
+1,NVIDIA,NVDA,USA,$5.119 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,NVDA,0001045810,SEC,
+2,Alphabet (Google),GOOG,USA,$4.196 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,GOOG,0001652044,SEC,2006 anchor uses predecessor Google Inc. CIK 0001288776.
+3,Apple,AAPL,USA,$3.955 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AAPL,0000320193,SEC,
+4,Microsoft,MSFT,USA,$3.182 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,MSFT,0000789019,SEC,
+5,Amazon,AMZN,USA,$2.799 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AMZN,0001018724,SEC,
+6,TSMC,TSM,Taiwan,$2.022 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,TSM,0001046179,SEC 20-F,ADR/FPI case; 20-F is the primary governance source.
+7,Broadcom,AVGO,USA,$1.879 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AVGO,0001730168,SEC,2016 anchor uses predecessor Broadcom Pte. Ltd. CIK 0001649338; 2006 fallback uses Avago Technologies LTD CIK 0001441634.
+8,Meta Platforms (Facebook),META,USA,$1.698 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,META,0001326801,SEC,
+9,Tesla,TSLA,USA,$1.411 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,TSLA,0001318605,SEC,
+10,Samsung,005930.KS,S. Korea,$989.00 B,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,Samsung Electronics,,unknown,EdgarPack did not resolve Samsung Electronics or 005930.KS to SEC/20-F coverage; retained in cohort but excluded from SEC-backed founder-control extraction.
