@@ -1,0 +1,11 @@
+rank,company,ticker,country,market_cap,cohort_source_url,cohort_retrieved_at,edgarpack_input,cik,edgarpack_source,identity_notes
+1,NVIDIA,NVDA,USA,$5.119 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,NVDA,,,
+2,Alphabet (Google),GOOG,USA,$4.196 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,GOOG,,,
+3,Apple,AAPL,USA,$3.955 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AAPL,,,
+4,Microsoft,MSFT,USA,$3.182 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,MSFT,,,
+5,Amazon,AMZN,USA,$2.799 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AMZN,,,
+6,TSMC,TSM,Taiwan,$2.022 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,TSM,,,
+7,Broadcom,AVGO,USA,$1.879 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,AVGO,,,
+8,Meta Platforms (Facebook),META,USA,$1.698 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,META,,,
+9,Tesla,TSLA,USA,$1.411 T,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,TSLA,,,
+10,Samsung,005930.KS,S. Korea,$989.00 B,https://companiesmarketcap.com/tech/largest-tech-companies-by-market-cap/,2026-04-28,Samsung Electronics,,,
