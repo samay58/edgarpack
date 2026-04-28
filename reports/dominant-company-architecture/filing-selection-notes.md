@@ -47,3 +47,12 @@ The founder-control validation pass found that several pre-2000 SEC `.txt` filin
 - DIS: governance uses the same 1997-01-09 DEF 14A predecessor-CIK filing selected for the 1996 control row (`0000898430-97-000058`, CIK `0001001039`), because current Disney CIK `0001744489` does not cover the 1996-era proxy.
 - JPM: governance uses the same 1996-04-17 Chase Manhattan DEF 14A selected for the control row (`0000950123-96-001749`) as the nearest 1996 predecessor-continuity proxy for JPMorgan Chase.
 - FNMA: no SEC/EdgarPack 1995-1997 governance source was located. The row is marked `unresolved` with `availability_exception` evidence, matching the control-table treatment and avoiding non-SEC issuer material as normal evidence.
+
+### Task 3B: 2026 Current-Cohort Governance Rows
+
+- NVDA, MSFT, TSLA, V, MU, ORCL, and COST: governance uses the same latest available 2025 proxy selected for the control row because no 2026 proxy was filed by 2026-04-28.
+- GOOGL, META, AAPL, AVGO, JPM, AMZN, BRK.B, WMT, LLY, XOM, AMD, JNJ, and MA: governance uses the same 2026 proxy selected for the current-cohort control row.
+- GOOGL is labeled `multi_class_common_with_nonvoting_class` because the proxy discloses Class A/Class B voting shares and non-voting Class C capital stock. META is labeled `dual_class_common` because the proxy discloses Class A one-vote and Class B ten-vote common stock.
+- BRK.B is labeled `multi_class_common` because the proxy discloses Class A and Class B voting common stock with different votes per share. MA is labeled `multi_class_common_with_nonvoting_class` because Class A is voting and Class B is non-voting. V is not labeled single-class because the reviewed proxy evidence focuses on Class A voting rights rather than supporting a single-class conclusion.
+- TSLA is the main current-cohort governance limitation: the row uses the latest available 2025 proxy, records the classified-board structure and supermajority elimination proposal from the cited chunks, and keeps board-independence wording limited because the reviewed chunks did not provide the same compact full-board independence summary found in most other current proxies.
+- AVGO, AMZN, AMD, and COST have one or more governance fields marked `not_disclosed` where the reviewed chunks did not provide a separate committee-independence, full-board-independence, or takeover-defense statement. No search snippets were used as evidence.
