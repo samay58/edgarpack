@@ -18,6 +18,36 @@ from typing import Any, cast
 from . import __version__
 from .errors import AmbiguousCompany, UnknownCompany
 
+_EDGARPACK_HOME = r"""
+        ______________________________
+       /___/___/___/___/___/___/___/|
+      /___/___/___/___/___/___/___/ |
+     |  __________________________  | |
+     | | [C1]---.                  | | |
+     | |        |  =============== | | |
+     | |        '-> _____________  | | |
+     | |__________________________| |/
+     |          [  E P  ]           |
+     '------------------------------'
+
+EdgarPack
+Primary filings. Clean packs. Cited answers.
+"""
+
+
+_EDGARPACK_STARTER_COMMANDS = """\
+Start:
+  edgarpack home
+  edgarpack query NVDA revenue --period ltm
+  edgarpack build AAPL --form 10-K --with-chunks
+  edgarpack which FIG
+  edgarpack build-sse 688696 --latest-annual --with-chunks
+"""
+
+
+def _format_home() -> str:
+    return f"{_EDGARPACK_HOME}\n{_EDGARPACK_STARTER_COMMANDS}"
+
 
 def _parse_iso_date(value: str) -> date:
     try:
@@ -208,7 +238,9 @@ def main(argv: list[str] | None = None) -> int:
     """Parse CLI arguments and dispatch to the selected subcommand."""
     parser = argparse.ArgumentParser(
         prog="edgarpack",
-        description="llms.txt for SEC filings - build deterministic markdown packs.",
+        description=_EDGARPACK_HOME,
+        epilog=_EDGARPACK_STARTER_COMMANDS,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--version",
@@ -218,6 +250,13 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     sub = parser.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser(
+        "home",
+        help="Show the EdgarPack welcome and starter commands",
+        description=_format_home(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     p_build = sub.add_parser(
         "build",
@@ -856,13 +895,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_translate.add_argument("--force", action="store_true", help="Re-translate even if exists")
 
-    args = parser.parse_args(argv)
+    raw_argv = sys.argv[1:] if argv is None else argv
+    if not raw_argv:
+        print(_format_home())
+        return 0
+
+    args = parser.parse_args(raw_argv)
 
     if args.cmd == "compare":
         from .compare import cmd_compare
 
         return cmd_compare(args)
 
+    if args.cmd == "home":
+        print(_format_home())
+        return 0
     if args.cmd == "identify":
         return _cmd_identify(args)
     if args.cmd == "build-sse":

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/edgarpack-cover.png" alt="EdgarPack: a Form 13F rendered as a subway map, one holding circled and threaded to its CUSIP and accession number" width="800">
+  <img src="docs/assets/edgarpack-cover.png" alt="EdgarPack: primary SEC and China filings compressed into clean citation-backed research packs" width="800">
 </p>
 
 # EdgarPack
@@ -44,6 +44,8 @@ If this is your first time using EdgarPack, read these in order:
 5. [`docs/learn/README.md`](docs/learn/README.md): the code walk-through for engineers and agents once you want internals.
 
 If you installed EdgarPack from PyPI, run commands as `edgarpack ...`. If you are working from this repo, run the same commands as `uv run edgarpack ...`. The docs use `edgarpack` for readability, but the repo-local form is often what you want during development.
+
+Run `edgarpack home` or bare `edgarpack` for the short command-line starting point.
 
 Some features need optional dependency groups. These only matter when you are running from the repo with `uv run` or installing from source:
 
