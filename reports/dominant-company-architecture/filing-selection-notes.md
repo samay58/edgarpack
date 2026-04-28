@@ -40,3 +40,10 @@ The founder-control validation pass found that several pre-2000 SEC `.txt` filin
 - Oracle (ORCL): selected 2025-09-26 DEF 14A, accession `0001193125-25-220801`, because no 2026 proxy was filed by 2026-04-28; it includes Ellison founder/role evidence and beneficial ownership.
 - Mastercard (MA): selected 2026-04-27 DEF 14A, accession `0001141391-26-000021`, because it was filed one day before the current date and includes security ownership of 5% Class A holders. It is classified as professional-manager control, not single-class, because the company also has non-voting Class B stock.
 - Costco Wholesale (COST): selected 2025-12-04 DEF 14A, accession `0000909832-25-000159`, because no 2026 proxy was filed by 2026-04-28; it includes principal shareholders above 5%.
+
+### Task 3A: 1996 Primary-Cohort Governance Rows
+
+- MSFT, INTC, WMT, XOM, KO, GE, MRK, IBM, PG, JNJ, BMY, PFE, PEP, CVX, AIG, CSCO, and LLY: governance rows use the same 1996 DEF 14A filings selected for the dominance-year control rows, with `raw_sec_txt` line anchors because the local pre-2000 proxy packs render as directory listings.
+- DIS: governance uses the same 1997-01-09 DEF 14A predecessor-CIK filing selected for the 1996 control row (`0000898430-97-000058`, CIK `0001001039`), because current Disney CIK `0001744489` does not cover the 1996-era proxy.
+- JPM: governance uses the same 1996-04-17 Chase Manhattan DEF 14A selected for the control row (`0000950123-96-001749`) as the nearest 1996 predecessor-continuity proxy for JPMorgan Chase.
+- FNMA: no SEC/EdgarPack 1995-1997 governance source was located. The row is marked `unresolved` with `availability_exception` evidence, matching the control-table treatment and avoiding non-SEC issuer material as normal evidence.
