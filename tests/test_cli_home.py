@@ -12,14 +12,14 @@ def _run_cmd(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_root_help_shows_branded_welcome() -> None:
+def test_root_help_stays_compact_and_points_to_home() -> None:
     result = _run_cmd("--help")
 
     assert result.returncode == 0
-    assert "Primary filings. Clean packs. Cited answers." in result.stdout
-    assert "[C1]" in result.stdout
-    assert "[  E P  ]" in result.stdout
+    assert "Primary filings turned into clean packs and cited answers." in result.stdout
     assert "edgarpack home" in result.stdout
+    assert "[  E D G A R P A C K  ]" not in result.stdout
+    assert "SOURCE FILINGS" not in result.stdout
 
 
 def test_home_command_shows_starter_commands() -> None:
@@ -27,8 +27,12 @@ def test_home_command_shows_starter_commands() -> None:
 
     assert result.returncode == 0
     assert "EdgarPack" in result.stdout
+    assert "SOURCE FILINGS" in result.stdout
+    assert "[  E D G A R P A C K  ]" in result.stdout
+    assert "Begin with primary evidence:" in result.stdout
     assert "edgarpack query NVDA revenue --period ltm" in result.stdout
     assert "edgarpack build-sse 688696 --latest-annual --with-chunks" in result.stdout
+    assert "edgarpack home" not in result.stdout
 
 
 def test_bare_command_shows_first_run_home() -> None:
@@ -36,12 +40,12 @@ def test_bare_command_shows_first_run_home() -> None:
 
     assert result.returncode == 0
     assert "Primary filings. Clean packs. Cited answers." in result.stdout
-    assert "Start:" in result.stdout
+    assert "Begin with primary evidence:" in result.stdout
 
 
 def test_subcommand_help_does_not_show_brand_banner() -> None:
     result = _run_cmd("query", "--help")
 
     assert result.returncode == 0
-    assert "[  E P  ]" not in result.stdout
+    assert "[  E D G A R P A C K  ]" not in result.stdout
     assert "Primary filings. Clean packs. Cited answers." not in result.stdout

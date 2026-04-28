@@ -19,16 +19,24 @@ from . import __version__
 from .errors import AmbiguousCompany, UnknownCompany
 
 _EDGARPACK_HOME = r"""
-        ______________________________
-       /___/___/___/___/___/___/___/|
-      /___/___/___/___/___/___/___/ |
-     |  __________________________  | |
-     | | [C1]---.                  | | |
-     | |        |  =============== | | |
-     | |        '-> _____________  | | |
-     | |__________________________| |/
-     |          [  E P  ]           |
-     '------------------------------'
+              .------------------------------------------.
+             /  SOURCE FILINGS                         /|
+            /  SEC 10-K   HKEX PDF   CNINFO ANNUAL    / |
+           /------------------------------------------/  |
+          /__/__/__/__/__/__/__/__/__/__/__/__/__/__/   |
+          |   .------------------------------------. |   |
+          |   |  ITEM 1A / MD&A              [S4] | |   |
+          |   |  -------------------------------  | |   |
+          |   |  exact text from the filing       | |   |
+          |   |        [C1] o-------.             | |   |
+          |   '----------------------\------------' |  /
+          |    .---------------------\----------.   | /
+          |   /  PACK: notes.md       \         /|  |/
+          |  /   evidence.ndjson       '-> [C1]/ |  /
+          | /    tables/  sources.yml    p.12  /  | /
+          |/-----------------------------------/   |/
+          |             [  E D G A R P A C K  ]   |
+          '----------------------------------------'
 
 EdgarPack
 Primary filings. Clean packs. Cited answers.
@@ -36,11 +44,9 @@ Primary filings. Clean packs. Cited answers.
 
 
 _EDGARPACK_STARTER_COMMANDS = """\
-Start:
-  edgarpack home
+Begin with primary evidence:
   edgarpack query NVDA revenue --period ltm
   edgarpack build AAPL --form 10-K --with-chunks
-  edgarpack which FIG
   edgarpack build-sse 688696 --latest-annual --with-chunks
 """
 
@@ -238,8 +244,8 @@ def main(argv: list[str] | None = None) -> int:
     """Parse CLI arguments and dispatch to the selected subcommand."""
     parser = argparse.ArgumentParser(
         prog="edgarpack",
-        description=_EDGARPACK_HOME,
-        epilog=_EDGARPACK_STARTER_COMMANDS,
+        description="Primary filings turned into clean packs and cited answers.",
+        epilog="Run `edgarpack home` for the visual welcome and starter commands.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -249,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
         version=f"EdgarPack {__version__}",
     )
 
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub = parser.add_subparsers(dest="cmd", required=True, metavar="command")
 
     sub.add_parser(
         "home",
