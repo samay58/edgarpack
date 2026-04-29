@@ -50,24 +50,43 @@ tracker:
 
 If the real Linear URL slug differs, update that value before starting Symphony.
 
-Export ready/open beads for migration:
+Discover Linear IDs without printing secrets:
 
 ```bash
-bd export --status open > /tmp/edgarpack-open-beads.jsonl
-bd ready
+export LINEAR_API_KEY="lin_api_..."
+python scripts/linear_cutover.py status
 ```
 
-Seed Linear manually, with Linear import, or with the one-time `bd linear` push:
+This prints team, project, and workflow-state IDs. Set the IDs needed by the
+cutover:
 
 ```bash
-bd config set linear.api_key "$LINEAR_API_KEY"
-bd config set linear.team_id "<LINEAR_TEAM_ID>"
-bd config set linear.project_id "<LINEAR_PROJECT_ID>"
-bd linear sync --push --dry-run
-bd linear sync --push
+export LINEAR_TEAM_ID="<team uuid>"
+export LINEAR_PROJECT_ID="<project uuid>"        # optional
+export LINEAR_READY_STATE_ID="<Ready state uuid>" # optional but recommended
 ```
 
-Do not leave bidirectional sync running after cutover. Each migrated issue should include:
+Preview the bead-to-Linear payloads:
+
+```bash
+python scripts/linear_cutover.py plan --id edgarpack-5ee
+python scripts/linear_cutover.py push --id edgarpack-5ee
+```
+
+Create the issues only after the dry-run looks right:
+
+```bash
+python scripts/linear_cutover.py push --id edgarpack-5ee --execute
+```
+
+For a wider migration:
+
+```bash
+python scripts/linear_cutover.py plan --status open --limit 10
+python scripts/linear_cutover.py push --status open --limit 10 --execute
+```
+
+Each migrated issue includes:
 
 - old bead ID in the title or first line of the description
 - original description
@@ -76,16 +95,17 @@ Do not leave bidirectional sync running after cutover. Each migrated issue shoul
 - labels
 - links to existing docs or plans
 
-The first pilot issue should be:
+Since `edgarpack-4et` was completed manually as the harness proof, the first real
+Symphony-dispatched issue should now be a small Linear seed issue, for example:
 
 ```text
-[edgarpack-4et] Make default tests hermetic around SEC/network access
+[edgarpack-5ee] Improve 10-K pack section normalization for static diff reports
 ```
 
 Use the existing plan:
 
 ```text
-docs/superpowers/plans/2026-04-25-hermetic-default-tests.md
+docs/superpowers/plans/2026-04-25-10k-section-normalization.md
 ```
 
 After the migrated Linear issues exist, stop using `bd` as active issue state. Keep it
