@@ -6,8 +6,9 @@ Rules used:
 
 - Queried `revenue,gross_profit,operating_income,operating_cash_flow,capex,rd_expense,sm_expense,stock_based_compensation` for `annual:12`.
 - Preserved EdgarPack `company`, `cik`, `fiscal_year`, `form_type`, `filed`, `accession`, `primary_link`, and `citation_ids`.
-- Mapped the latest available annual revenue year to `current`, fiscal 2020 to `midpoint` when available, and the filing-selection baseline target year when available.
+- Mapped the latest available annual revenue year to `current`, fiscal 2020 to `midpoint` only when fiscal 2020 is present, and the filing-selection baseline target year when available.
 - If the baseline target year was unavailable through `query`, used the earliest/closest annual-series query year and marked the row note so it cannot be mistaken for a true 2014/2015 or IPO baseline.
+- Did not create midpoint fallback rows for non-2020 fiscal years; those rows are labeled `baseline` with explicit caveats when they are merely earliest available query-series evidence.
 - Kept missing metric fields blank and documented missing coverage in row notes.
 - Computed margins, intensities, and free cash flow only from EdgarPack-sourced component values in the same fiscal year.
 
