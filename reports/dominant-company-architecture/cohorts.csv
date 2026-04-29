@@ -4,7 +4,7 @@ earlier_sp500_top20_1996,1996,primary,2,Exxon Mobil,XOM,121.72B,,https://www.fin
 earlier_sp500_top20_1996,1996,primary,3,Intel,INTC,107.55B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,INTC,0000050863,SEC,
 earlier_sp500_top20_1996,1996,primary,4,Microsoft,MSFT,99.41B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,MSFT,0000789019,SEC,
 earlier_sp500_top20_1996,1996,primary,5,General Electric,GE,97.40B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,GE,0000040545,SEC,
-earlier_sp500_top20_1996,1996,primary,6,Merck,MRK,86.42B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,MRK,0000310158,SEC,
+earlier_sp500_top20_1996,1996,primary,6,Merck,MRK,86.42B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,MRK,0000064978,SEC,Corrected to historical Merck CIK; current MRK lineage differs after the Schering-Plough transaction.
 earlier_sp500_top20_1996,1996,primary,7,IBM,IBM,73.51B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,IBM,0000051143,SEC,
 earlier_sp500_top20_1996,1996,primary,8,Procter & Gamble,PG,72.53B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,PG,0000080424,SEC,
 earlier_sp500_top20_1996,1996,primary,9,Johnson & Johnson,JNJ,66.29B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,JNJ,0000200406,SEC,
@@ -43,7 +43,7 @@ context_sp500_top20_1989,1989,context,1,Exxon Mobil,XOM,62.59B,,https://www.finh
 context_sp500_top20_1989,1989,context,2,IBM,IBM,52.03B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,IBM,0000051143,SEC,
 context_sp500_top20_1989,1989,context,3,General Electric,GE,35.78B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,GE,0000040545,SEC,
 context_sp500_top20_1989,1989,context,4,Bristol-Myers Squibb,BMY,28.00B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,BMY,0000014272,SEC,
-context_sp500_top20_1989,1989,context,5,Merck,MRK,27.58B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,MRK,0000310158,SEC,
+context_sp500_top20_1989,1989,context,5,Merck,MRK,27.58B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,MRK,0000064978,SEC,Corrected to historical Merck CIK; current MRK lineage differs after the Schering-Plough transaction.
 context_sp500_top20_1989,1989,context,6,Coca-Cola,KO,26.37B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,KO,0000021344,SEC,
 context_sp500_top20_1989,1989,context,7,Walmart,WMT,25.39B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,WMT,0000104169,SEC,
 context_sp500_top20_1989,1989,context,8,Procter & Gamble,PG,22.99B,,https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/,2026-04-28,PG,0000080424,SEC,

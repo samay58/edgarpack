@@ -10,7 +10,7 @@ The founder-control validation pass found that several pre-2000 SEC `.txt` filin
 
 ### Task 2A: 1996 Primary-Cohort Control Rows
 
-- Merck (MRK): selected 1996-03-19 DEF 14A, accession `0000950123-96-001174`, because it is the nearest 1996 proxy and includes the `SECURITY OWNERSHIP` section.
+- Merck (MRK): selected 1996-03-18 DEF 14A, accession `0000950130-96-000868`, because it is the nearest historical-Merck proxy and includes the `BENEFICIAL OWNERSHIP OF SECURITIES AND VOTING RIGHTS` and `SECURITY OWNERSHIP OF DIRECTORS AND EXECUTIVE OFFICERS` sections.
 - IBM (IBM): selected 1996-03-14 DEF 14A, accession `0000950112-96-000792`, because it is the nearest 1996 proxy and includes common-stock voting/investment-power disclosure for directors and officers.
 - Procter & Gamble (PG): selected 1996-08-30 DEF 14A, accession `0000080424-96-000015`, because it is the nearest 1996 proxy and includes both common-stock management ownership and ESOP preferred-stock trust ownership.
 - Johnson & Johnson (JNJ): selected 1996-03-12 DEF 14A, accession `0000950110-96-000240`, because it is the nearest 1996 proxy and includes the `STOCK OWNERSHIP/CONTROL` section.
@@ -63,7 +63,7 @@ The founder-control validation pass found that several pre-2000 SEC `.txt` filin
 - Intel (INTC, 1996): selected 10-K filed 1997-03-28, accession `0000050863-97-000020`; evidence locator `raw:INTC-1996:L4368-L4386; raw:INTC-1996:L520-L524`.
 - Microsoft (MSFT, 1996): selected 10-K filed 1996-09-27, accession `0000891020-96-001130`; evidence locator `raw:MSFT-1996:L2982-L3000; raw:MSFT-1996:L678-L680; raw:MSFT-1996:L1036-L1044`.
 - General Electric (GE, 1996): selected 10-K405 filed 1997-03-21, accession `0000040545-97-000005`; evidence locator `raw:GE-1996:L6347-L6365; raw:GE-1996:L873-L885; raw:GE-1996:L3160-L3160`.
-- Merck (MRK, 1996): selected 10-K filed 1997-03-03, accession `0000310158-97-000003`; evidence locator `raw:MRK-1996:L3886-L3904; raw:MRK-1996:L3262-L3284`.
+- Merck (MRK, 1996): selected 10-K filed 1997-03-19, accession `0000950130-97-001093`; evidence locator `raw:MRK-1996:L139-L141; raw:MRK-1996:L721-L723; raw:MRK-1996:L2848-L2855; raw:MRK-1996:L4156-L4200`.
 - IBM (IBM, 1996): selected 10-K filed 1997-03-27, accession `0000912057-97-010483`; evidence locator `raw:IBM-1996:L5525-L5543; raw:IBM-1996:L2943-L2954`.
 - Procter & Gamble (PG, 1996): selected 10-K filed 1996-09-11, accession `0000080424-96-000017`; evidence locator `raw:PG-1996:L5301-L5319; raw:PG-1996:L234-L234`.
 - Johnson & Johnson (JNJ, 1996): selected 10-K405 filed 1997-03-31, accession `0000950123-97-002843`; evidence locator `raw:JNJ-1996:L5770-L5788`.
@@ -100,3 +100,6 @@ The founder-control validation pass found that several pre-2000 SEC `.txt` filin
 - Costco Wholesale (COST, 2026): selected 10-K filed 2025-10-08, accession `0000909832-25-000101`; evidence locator `a0e37c097fccca33; 498b96b34c471de9; 58d394300bbcfca4; d4e8abe9fab8bb05; b3d1f9d10d6ff5ab; feac4d56b61b42ea; cac19c5e3428150b`.
 
 Lower-confidence/unresolved extraction rows in this pass: Fannie Mae 1996 availability exception; AIG 1996 and JPMorgan Chase 1996 financial-taxonomy limitations; Berkshire Hathaway 2026 and JPMorgan Chase 2026 use lower confidence because conglomerate/banking operating-income and margin fields are not directly comparable to industrial issuers.
+
+## KPI-specific limitations
+- KPI correction (MRK, 1996): the research pass corrected Merck from current-MRK lineage CIK `0000310158` to historical Merck CIK `0000064978`. The corrected annual filing is accession `0000950130-97-001093`; the corrected proxy is accession `0000950130-96-000868`.
