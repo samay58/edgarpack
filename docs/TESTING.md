@@ -31,6 +31,13 @@ uv run ruff check .
 uv run pytest -q
 ```
 
+Symphony and other unattended agents should use the repo-owned wrapper so the default
+cache behavior is explicit:
+
+```bash
+scripts/symphony_quality_gate.sh
+```
+
 What this covers:
 
 - query period selection and LTM math
