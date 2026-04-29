@@ -251,7 +251,7 @@ tables = {
     "metric-definition-table.csv": "company,ticker,metric_name,definition_text,included_items,excluded_items,measurement_window,comparability_warning,source_locator,source_url,confidence,notes\n",
     "ai-packaging-table.csv": "company,ticker,ai_product_or_package,pricing_or_packaging_model,unit_of_value,disclosed_arr_acv_or_usage,margin_or_cost_commentary,source_type,source_url,confidence,notes\n",
     "valuation-context-table.csv": "source_name,source_date,regime,metric,value,context,source_url,confidence,notes\n",
-    "source-ledger.csv": "artifact,row_id,company,ticker,claim_type,claim_text,evidence_type,evidence_locator,source_url,accession,confidence,notes\n",
+    "source-ledger.csv": "artifact,row_id,company,ticker,claim_type,claim_text,evidence_type,evidence_locator,chunk_id,source_url,accession,confidence,notes\n",
 }
 for name, header in tables.items():
     (root / name).write_text(header)
@@ -457,6 +457,7 @@ row_id=CRM-current
 claim_type=standard_financial
 evidence_type=edgarpack_query_json
 evidence_locator=raw/edgarpack/query-CRM-annual-core.json
+chunk_id=
 ```
 
 Expected: every standard-financial row has a ledger row.
@@ -590,6 +591,7 @@ row_id=CRM-current-rpo
 claim_type=kpi_disclosure
 evidence_type=edgarpack_which_json OR filing_section OR company_ir_release
 evidence_locator=raw/edgarpack/which-CRM.json
+chunk_id=<chunk ID when available>
 ```
 
 Expected: no KPI row lacks a source-ledger row.
@@ -1194,6 +1196,8 @@ with ledger.open(newline="") as f:
 assert rows, "source-ledger.csv has no data rows"
 missing = [r for r in rows if not r["source_url"] and not r["evidence_locator"]]
 assert not missing, missing[:3]
+uncited_claims = [r for r in rows if r["evidence_type"].startswith("edgarpack") and not r["chunk_id"] and r["claim_type"] not in {"standard_financial"}]
+assert not uncited_claims, uncited_claims[:3]
 print(Counter(r["artifact"] for r in rows))
 PY
 ```
