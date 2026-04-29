@@ -258,7 +258,7 @@ for name, header in tables.items():
 PY
 ```
 
-Expected: each CSV has one header row and parses.
+Expected: `cohort.csv` has the approved 11-company cohort; each evidence CSV has one header row and parses.
 
 - [ ] **Step 7: Verify CSV headers parse**
 
@@ -269,7 +269,15 @@ python3 -B - <<'PY'
 import csv
 from pathlib import Path
 
-for path in sorted(Path("reports/saas-evolution").glob("*.csv")):
+root = Path("reports/saas-evolution")
+cohort = list(csv.DictReader((root / "cohort.csv").open(newline="")))
+assert len(cohort) == 11, "cohort.csv should contain exactly 11 company rows"
+assert {row["ticker"] for row in cohort} == {"CRM", "NOW", "ADBE", "TEAM", "SHOP", "DDOG", "SNOW", "MDB", "ZM", "HUBS", "WDAY"}
+
+for path in sorted(root.glob("*.csv")):
+    if path.name == "cohort.csv":
+        print(f"ok {path}")
+        continue
     with path.open(newline="") as f:
         rows = list(csv.reader(f))
     assert len(rows) == 1, f"{path} should contain header only"
@@ -278,7 +286,7 @@ for path in sorted(Path("reports/saas-evolution").glob("*.csv")):
 PY
 ```
 
-Expected: every `reports/saas-evolution/*.csv` prints `ok`.
+Expected: every `reports/saas-evolution/*.csv` prints `ok`, with `cohort.csv` validated for the approved populated cohort.
 
 - [ ] **Step 8: Commit setup**
 
