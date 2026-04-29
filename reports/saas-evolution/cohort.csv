@@ -1,0 +1,12 @@
+company,ticker,cik_hint,model_hypothesis,baseline_anchor,midpoint_anchor,current_anchor,notes
+Salesforce,CRM,0001108524,enterprise_subscription_suite,2015,2020,latest_annual,"Use RPO/cRPO, attrition, Data Cloud and AI ARR where disclosed."
+ServiceNow,NOW,0001373715,workflow_platform,2015,2020,latest_annual,"Use subscription revenue, cRPO, RPO, Now Assist or AI Agent disclosures."
+Adobe,ADBE,0000796343,license_to_subscription_transition,2014,2020,latest_annual,"Use Creative Cloud ARR baseline and Digital Media ARR current state."
+Atlassian,TEAM,0001650372,cloud_migration,ipo_or_first_observable,2020,latest_annual,"Use F-1 license/subscription baseline and Cloud/Data Center/Server mix."
+Shopify,SHOP,0001594805,subscription_plus_transactions,ipo_or_first_observable,2020,latest_annual,"Use subscription solutions, merchant solutions, MRR, and GMV."
+Datadog,DDOG,0001561550,usage_based_data_platform,ipo_or_first_observable,2020,latest_annual,"Use NRR, large-customer counts, revenue, FCF, and SBC."
+Snowflake,SNOW,0001640147,usage_based_data_platform,ipo_or_first_observable,2020,latest_annual,"Use product revenue, NRR, RPO caveats, and million-dollar customers."
+MongoDB,MDB,0001441816,usage_based_data_platform,ipo_or_first_observable,2020,latest_annual,"Use Atlas mix, ARR definition, revenue, and customer metrics."
+Zoom,ZM,0001585521,seat_based_collaboration,ipo_or_first_observable,2020,latest_annual,"Use enterprise revenue share, net dollar expansion, and churn."
+HubSpot,HUBS,0001404655,smb_customer_platform,ipo_or_first_observable,2020,latest_annual,"Use customer count, average subscription revenue per customer, and subscription retention."
+Workday,WDAY,0001327811,human_capital_backlog_platform,2015,2020,latest_annual,"Use subscription revenue backlog, total backlog, and FCF."
