@@ -1,0 +1,72 @@
+Resolving company DDOG -> Datadog, Inc. (CIK 0001561550)
+Loading up to 12 registered pack(s)
+Running KPI discovery on filing 1/7 (10-K 2026-02-18)
+Running KPI discovery on filing 2/7 (10-Q 2025-11-07)
+Running KPI discovery on filing 3/7 (10-Q 2025-08-08)
+Running KPI discovery on filing 4/7 (10-Q 2025-05-07)
+Running KPI discovery on filing 5/7 (10-K 2025-02-20)
+Running KPI discovery on filing 6/7 (10-Q 2024-11-08)
+Running KPI discovery on filing 7/7 (10-K 2024-02-23)
+Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`)
+{
+  "cik": "0001561550",
+  "company": "Datadog, Inc.",
+  "ticker": "DDOG",
+  "count": 1,
+  "kpis": [
+    {
+      "slug": "customers",
+      "display_name": "customers",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 32700.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-008819",
+          "value": 32700.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "4e673c920f1e856a",
+          "source_substring": "As of December\u00a031, 2025, we had approximately 32,700 customers in over 160 countries."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-12-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001561550-25-000025",
+          "value": 30000.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "1da29409c9f8c508",
+          "source_substring": "As of December\u00a031, 2024, we had approximately 30,000 customers in over 150 countries."
+        },
+        {
+          "label": "FY2023",
+          "period_end": "2023-12-31",
+          "fiscal_year": 2023,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001561550-24-000009",
+          "value": 27300.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "4796981382bed296",
+          "source_substring": "As of December\u00a031, 2023, we had approximately 27,300 customers in over 150 countries."
+        }
+      ]
+    }
+  ]
+}

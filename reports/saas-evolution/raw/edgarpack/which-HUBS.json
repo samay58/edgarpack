@@ -1,0 +1,17 @@
+Resolving company HUBS -> HUBSPOT INC (CIK 0001404655)
+Loading up to 12 registered pack(s)
+Running KPI discovery on filing 1/7 (10-K 2026-02-11)
+Running KPI discovery on filing 2/7 (10-Q 2025-11-05)
+Running KPI discovery on filing 3/7 (10-Q 2025-08-06)
+Running KPI discovery on filing 4/7 (10-Q 2025-05-08)
+Running KPI discovery on filing 5/7 (10-K 2025-02-12)
+Running KPI discovery on filing 6/7 (10-Q 2024-11-06)
+Running KPI discovery on filing 7/7 (10-K 2024-02-14)
+Discovery summary: 2 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`), 1 with no qualifying KPIs
+{
+  "cik": "0001404655",
+  "company": "HUBSPOT INC",
+  "ticker": "HUBS",
+  "count": 0,
+  "kpis": []
+}

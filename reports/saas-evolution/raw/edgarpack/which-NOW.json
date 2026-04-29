@@ -1,0 +1,84 @@
+Resolving company NOW -> ServiceNow, Inc. (CIK 0001373715)
+Loading up to 13 registered pack(s)
+Running KPI discovery on filing 1/7 (10-K 2026-01-29)
+Running KPI discovery on filing 2/7 (10-Q 2025-10-30)
+Running KPI discovery on filing 3/7 (10-Q 2025-07-24)
+Running KPI discovery on filing 4/7 (10-Q 2025-04-23)
+Running KPI discovery on filing 5/7 (10-K 2025-01-30)
+Running KPI discovery on filing 6/7 (10-Q 2024-10-24)
+Running KPI discovery on filing 7/7 (10-K 2024-01-25)
+Discovery summary: 2 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`), 1 discovery failure(s)
+{
+  "cik": "0001373715",
+  "company": "ServiceNow, Inc.",
+  "ticker": "NOW",
+  "count": 2,
+  "kpis": [
+    {
+      "slug": "customers",
+      "display_name": "customers",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 8700.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001373715-26-000007",
+          "value": 8700.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "820938609dcac9a0",
+          "source_substring": "As of December 31, 2025, we had approximately 8,700 customers across a wide variety of industries."
+        },
+        {
+          "label": "FY2023",
+          "period_end": "2023-12-31",
+          "fiscal_year": 2023,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001373715-24-000030",
+          "value": 8100.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "d3052ef29c1db6ad",
+          "source_substring": "As of December 31, 2023, we had over 8,100 customers."
+        }
+      ]
+    },
+    {
+      "slug": "full_time_employees",
+      "display_name": "employed 22,668 people on a full-time basis",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 22668.0,
+      "latest_period": "FY2023",
+      "periods": [
+        {
+          "label": "FY2023",
+          "period_end": "2023-12-31",
+          "fiscal_year": 2023,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001373715-24-000030",
+          "value": 22668.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "7204ade98cc0e95e",
+          "source_substring": "As of December 31, 2023, we employed 22,668 people on a full-time basis, 11,797 in the United States and 10,871 internationally."
+        }
+      ]
+    }
+  ]
+}

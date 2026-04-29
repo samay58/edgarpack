@@ -1,0 +1,380 @@
+Resolving company MDB -> MongoDB, Inc. (CIK 0001441816)
+Loading up to 12 registered pack(s)
+Running KPI discovery on filing 1/7 (10-K 2026-03-11)
+Running KPI discovery on filing 2/7 (10-Q 2025-12-02)
+Running KPI discovery on filing 3/7 (10-Q 2025-08-27)
+Running KPI discovery on filing 4/7 (10-Q 2025-06-04)
+Running KPI discovery on filing 5/7 (10-K 2025-03-21)
+Running KPI discovery on filing 6/7 (10-Q 2024-12-10)
+Running KPI discovery on filing 7/7 (10-K 2024-03-15)
+Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`)
+{
+  "cik": "0001441816",
+  "company": "MongoDB, Inc.",
+  "ticker": "MDB",
+  "count": 8,
+  "kpis": [
+    {
+      "slug": "community_server_downloads",
+      "display_name": "Community Server has been downloaded",
+      "source": "discovered",
+      "unit": "count",
+      "definition": "Downloads of the Community Server offering from MongoDB's website since February 2009.",
+      "aliases": [],
+      "latest_value": 700.0,
+      "latest_period": "FY2026",
+      "periods": [
+        {
+          "label": "FY2026",
+          "period_end": "2026-01-31",
+          "fiscal_year": 2026,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-016799",
+          "value": 700.0,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "e51f36ffd679543d",
+          "source_substring": "Our Community Server has been downloaded over 700 million times from our website alone since February 2009."
+        },
+        {
+          "label": "FY2025",
+          "period_end": "2025-01-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-25-000057",
+          "value": 500.0,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "fb1a83e6bb768248",
+          "source_substring": "Our Community Server has been downloaded over 500 million times from our website alone since February 2009."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 500.0,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "f38415cfd4a7f49d",
+          "source_substring": "Our Community Server has been downloaded over  500 million  times from our website alone since February 2009."
+        }
+      ]
+    },
+    {
+      "slug": "customers",
+      "display_name": "customers",
+      "source": "discovered",
+      "unit": "count",
+      "definition": "All affiliated entities are counted as a single customer, and users of free offerings are excluded.",
+      "aliases": [],
+      "latest_value": 65200.0,
+      "latest_period": "FY2026",
+      "periods": [
+        {
+          "label": "FY2026",
+          "period_end": "2026-01-31",
+          "fiscal_year": 2026,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-016799",
+          "value": 65200.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "3b49574e0194293e",
+          "source_substring": "As of January\u00a031, 2026, we had over 65,200 customers spanning a wide range of industries in more than 100 countries around the world."
+        },
+        {
+          "label": "FY2025",
+          "period_end": "2025-01-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-25-000057",
+          "value": 54500.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "d4abb65cb2637a27",
+          "source_substring": "As of January\u00a031, 2025, we had over 54,500 customers spanning a wide range of industries in more than 100 countries around the world."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 47800.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "e9e5b66cb36d2c51",
+          "source_substring": "As of January\u00a031, 2024, we had over 47,800 customers spanning a wide range of industries in more than 100 countries around the world."
+        }
+      ]
+    },
+    {
+      "slug": "employees",
+      "display_name": "employees",
+      "source": "discovered",
+      "unit": "count",
+      "definition": "Total number of company employees as of the fiscal year end date.",
+      "aliases": [],
+      "latest_value": 5636.0,
+      "latest_period": "FY2026",
+      "periods": [
+        {
+          "label": "FY2026",
+          "period_end": "2026-01-31",
+          "fiscal_year": 2026,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-016799",
+          "value": 5636.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "015693c7f00fd78b",
+          "source_substring": "As of January\u00a031, 2026, we had a total of 5,636 employees, including 2,927 employees located outside the United States."
+        },
+        {
+          "label": "FY2025",
+          "period_end": "2025-01-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-25-000057",
+          "value": 5558.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "ea6fe5df142c7168",
+          "source_substring": "As of January\u00a031, 2025, we had a total of 5,558 employees, including 2,819 employees located outside the United States."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 5037.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "115db6a5706a3d3f",
+          "source_substring": "As of January\u00a031, 2024, we had a total of 5,037 employees, including 2,456 employees located outside the United States."
+        }
+      ]
+    },
+    {
+      "slug": "employees_outside_united_states",
+      "display_name": "employees located outside the United States",
+      "source": "discovered",
+      "unit": "count",
+      "definition": "Number of company employees located outside the United States as of the fiscal year end date.",
+      "aliases": [],
+      "latest_value": 2927.0,
+      "latest_period": "FY2026",
+      "periods": [
+        {
+          "label": "FY2026",
+          "period_end": "2026-01-31",
+          "fiscal_year": 2026,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-016799",
+          "value": 2927.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "015693c7f00fd78b",
+          "source_substring": "As of January\u00a031, 2026, we had a total of 5,636 employees, including 2,927 employees located outside the United States."
+        },
+        {
+          "label": "FY2025",
+          "period_end": "2025-01-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-25-000057",
+          "value": 2819.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "ea6fe5df142c7168",
+          "source_substring": "As of January\u00a031, 2025, we had a total of 5,558 employees, including 2,819 employees located outside the United States."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 2456.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "115db6a5706a3d3f",
+          "source_substring": "As of January\u00a031, 2024, we had a total of 5,037 employees, including 2,456 employees located outside the United States."
+        }
+      ]
+    },
+    {
+      "slug": "mongodb_university_registrations",
+      "display_name": "MongoDB University registrations",
+      "source": "discovered",
+      "unit": "count",
+      "definition": "Total registrations for MongoDB University as of the fiscal year end date.",
+      "aliases": [],
+      "latest_value": 3.0,
+      "latest_period": "FY2026",
+      "periods": [
+        {
+          "label": "FY2026",
+          "period_end": "2026-01-31",
+          "fiscal_year": 2026,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-016799",
+          "value": 3.0,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "015693c7f00fd78b",
+          "source_substring": "As of January\u00a031, 2026, there were over 3.0\u00a0million MongoDB University registrations."
+        },
+        {
+          "label": "FY2025",
+          "period_end": "2025-01-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-25-000057",
+          "value": 2.5,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "ea6fe5df142c7168",
+          "source_substring": "As of January\u00a031, 2025, there were over 2.5\u00a0million MongoDB University registrations."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 2.0,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "115db6a5706a3d3f",
+          "source_substring": "As of January\u00a031, 2024, there were over 2.0\u00a0million MongoDB University registrations."
+        }
+      ]
+    },
+    {
+      "slug": "net_arr_expansion_rate",
+      "display_name": "net annualized recurring revenue (\u201cARR\u201d) expansion rate",
+      "source": "discovered",
+      "unit": "percent",
+      "definition": "A measure demonstrating MongoDB's ability to expand sales within existing customers.",
+      "aliases": [],
+      "latest_value": 121.0,
+      "latest_period": "FY2026",
+      "periods": [
+        {
+          "label": "FY2026",
+          "period_end": "2026-01-31",
+          "fiscal_year": 2026,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001628280-26-016799",
+          "value": 121.0,
+          "unit": "percent",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "e51f36ffd679543d",
+          "source_substring": "Our ability to expand within existing customers is demonstrated by our net annualized recurring revenue (\u201cARR\u201d) expansion rate, which in the fourth quarter was 121%."
+        },
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 120.0,
+          "unit": "percent",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business",
+          "chunk_id": "f38415cfd4a7f49d",
+          "source_substring": "Our ability to expand within existing customers is demonstrated by our net annualized recurring revenue (\u201cARR\u201d) expansion rate, which has consistently been over 120%."
+        }
+      ]
+    },
+    {
+      "slug": "research_and_development_employees",
+      "display_name": "employees in our research and development organization",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 1226.0,
+      "latest_period": "FY2024",
+      "periods": [
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 1226.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "230e4afa69026101",
+          "source_substring": "As of January\u00a031, 2024, we had 1,226 employees in our research and development organization."
+        }
+      ]
+    },
+    {
+      "slug": "sales_and_marketing_employees",
+      "display_name": "employees in our sales and marketing organization",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 2338.0,
+      "latest_period": "FY2024",
+      "periods": [
+        {
+          "label": "FY2024",
+          "period_end": "2024-01-31",
+          "fiscal_year": 2024,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001441816-24-000049",
+          "value": 2338.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_1",
+          "chunk_id": "230e4afa69026101",
+          "source_substring": "As of January\u00a031, 2024, we had 2,338 employees in our sales and marketing organization."
+        }
+      ]
+    }
+  ]
+}

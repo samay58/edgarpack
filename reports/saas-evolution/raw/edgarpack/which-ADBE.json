@@ -1,0 +1,45 @@
+Resolving company ADBE -> ADOBE INC. (CIK 0000796343)
+Loading up to 14 registered pack(s)
+Running KPI discovery on filing 1/8 (10-Q 2026-03-25)
+Running KPI discovery on filing 2/8 (10-K 2026-01-15)
+Running KPI discovery on filing 3/8 (10-Q 2025-09-24)
+Running KPI discovery on filing 4/8 (10-Q 2025-06-25)
+Running KPI discovery on filing 5/8 (10-Q 2025-03-26)
+Running KPI discovery on filing 6/8 (10-K 2025-01-13)
+Running KPI discovery on filing 7/8 (10-Q 2024-09-25)
+Running KPI discovery on filing 8/8 (10-K 2024-01-17)
+Discovery summary: 1 analyzed, 5 skipped (manifest missing; run `edgarpack build <ticker>`), 2 with no qualifying KPIs
+{
+  "cik": "0000796343",
+  "company": "ADOBE INC.",
+  "ticker": "ADBE",
+  "count": 1,
+  "kpis": [
+    {
+      "slug": "pdf_related_searches_per_month",
+      "display_name": "online searches for PDF-related actions per month",
+      "source": "discovered",
+      "unit": "count",
+      "definition": "Monthly online search demand for PDF-related actions that Adobe intends to attract through Acrobat web.",
+      "aliases": [],
+      "latest_value": 50.0,
+      "latest_period": "FY2023",
+      "periods": [
+        {
+          "label": "FY2023",
+          "period_end": "2023-12-01",
+          "fiscal_year": 2023,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0000796343-24-000006",
+          "value": 50.0,
+          "unit": "count",
+          "magnitude": "millions",
+          "section_id": "10k_partii_item7_titled_managements_discussion",
+          "chunk_id": "1789c66b38087653",
+          "source_substring": "With over 50 million  \n    5\n\n---\n\n    Table of Contents  \n\n  online searches for PDF-related actions per month"
+        }
+      ]
+    }
+  ]
+}

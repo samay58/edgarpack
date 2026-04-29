@@ -1,0 +1,199 @@
+Resolving company SHOP -> SHOP (CIK 0001594805)
+Loading up to 11 registered pack(s)
+Running KPI discovery on filing 1/6 (10-K 2026-02-11)
+Running KPI discovery on filing 2/6 (10-Q 2025-11-04)
+Running KPI discovery on filing 3/6 (10-Q 2025-08-06)
+Running KPI discovery on filing 4/6 (10-Q 2025-05-08)
+Running KPI discovery on filing 5/6 (10-K 2025-02-11)
+Running KPI discovery on filing 6/6 (20-F 2016-02-17)
+Discovery summary: 1 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`), 1 discovery failure(s)
+{
+  "cik": "0001594805",
+  "company": "SHOPIFY INC.",
+  "ticker": "SHOP",
+  "count": 7,
+  "kpis": [
+    {
+      "slug": "apps_in_shopify_app_store",
+      "display_name": "apps were available in the Shopify App Store",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 21000.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 21000.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business_2",
+          "chunk_id": "22c9f0e73e55d270",
+          "source_substring": "As of December\u00a031, 2025, more than 21,000 apps were available in the Shopify App Store."
+        }
+      ]
+    },
+    {
+      "slug": "employees",
+      "display_name": "employees worldwide",
+      "source": "discovered",
+      "unit": "count",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 7600.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 7600.0,
+          "unit": "count",
+          "magnitude": null,
+          "section_id": "10k_parti_item1_business_2",
+          "chunk_id": "1c055545958dba2f",
+          "source_substring": "As of December 31, 2025, Shopify had approximately 7,600 employees worldwide."
+        }
+      ]
+    },
+    {
+      "slug": "shopify_payments_adoption_apac",
+      "display_name": "Shopify Payments adoption among our merchants where Shopify Payments is available: APAC",
+      "source": "discovered",
+      "unit": "percent",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 89.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 89.0,
+          "unit": "percent",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_3",
+          "chunk_id": "2bebb3c265e814b5",
+          "source_substring": "As of December 31, 2025 Shopify Payments adoption among our merchants where Shopify Payments is available was as follows: North America, 88%, APAC, 89% and EMEA, 83%"
+        }
+      ]
+    },
+    {
+      "slug": "shopify_payments_adoption_emea",
+      "display_name": "Shopify Payments adoption among our merchants where Shopify Payments is available: EMEA",
+      "source": "discovered",
+      "unit": "percent",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 83.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 83.0,
+          "unit": "percent",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_3",
+          "chunk_id": "2bebb3c265e814b5",
+          "source_substring": "As of December 31, 2025 Shopify Payments adoption among our merchants where Shopify Payments is available was as follows: North America, 88%, APAC, 89% and EMEA, 83%"
+        }
+      ]
+    },
+    {
+      "slug": "shopify_payments_adoption_north_america",
+      "display_name": "Shopify Payments adoption among our merchants where Shopify Payments is available: North America",
+      "source": "discovered",
+      "unit": "percent",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 88.0,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 88.0,
+          "unit": "percent",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_3",
+          "chunk_id": "2bebb3c265e814b5",
+          "source_substring": "As of December 31, 2025 Shopify Payments adoption among our merchants where Shopify Payments is available was as follows: North America, 88%, APAC, 89% and EMEA, 83%"
+        }
+      ]
+    },
+    {
+      "slug": "shopify_payments_gmv",
+      "display_name": "GMV that was facilitated using Shopify Payments",
+      "source": "discovered",
+      "unit": "USD",
+      "definition": "GMV is the total dollar value of orders facilitated through Shopify's platform including certain apps and channels with revenue-sharing arrangements, net of refunds and inclusive of shipping and handling, duty and value-added taxes.",
+      "aliases": [],
+      "latest_value": 248.1,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 248.1,
+          "unit": "USD",
+          "magnitude": "billions",
+          "section_id": "10k_partii_item7_managements_discussion_3",
+          "chunk_id": "ad9a3326b3b6312b",
+          "source_substring": "For the year ended December 31, 2025, the Shopify Payments penetration rate was 65.6%, resulting in GMV of $248.1 billion that was facilitated using Shopify Payments."
+        }
+      ]
+    },
+    {
+      "slug": "shopify_payments_penetration_rate",
+      "display_name": "Shopify Payments penetration rate",
+      "source": "discovered",
+      "unit": "percent",
+      "definition": null,
+      "aliases": [],
+      "latest_value": 65.6,
+      "latest_period": "FY2025",
+      "periods": [
+        {
+          "label": "FY2025",
+          "period_end": "2025-12-31",
+          "fiscal_year": 2025,
+          "fiscal_period": "FY",
+          "form_type": "10-K",
+          "accession": "0001594805-26-000007",
+          "value": 65.6,
+          "unit": "percent",
+          "magnitude": null,
+          "section_id": "10k_partii_item7_managements_discussion_3",
+          "chunk_id": "ad9a3326b3b6312b",
+          "source_substring": "For the year ended December 31, 2025, the Shopify Payments penetration rate was 65.6%, resulting in GMV of $248.1 billion that was facilitated using Shopify Payments."
+        }
+      ]
+    }
+  ]
+}
