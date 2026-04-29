@@ -2,7 +2,9 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
+from edgarpack.cli import main
 from edgarpack.query.currency import format_cited_currency
 from edgarpack.query.models import CitedValue
 
@@ -106,13 +108,18 @@ def test_which_china_currency_usd_keeps_native_provenance():
     assert "FX: data/fx_rates.csv CNY/USD 2024-12-31 average" in result.stdout
 
 
-def test_query_unknown_company_falls_through_to_sec():
+def test_query_unknown_company_falls_through_to_sec(capsys):
     """Unknown-to-universe tickers must pass through to the SEC ticker
     resolver rather than hard-bailing at the universe gate. The SEC
     resolver returns 'Unknown ticker' for genuinely unknown symbols."""
-    result = _run("ZZZZZ", "revenue")
-    assert result.returncode in (1, 2)
-    stderr = result.stderr.lower()
+    with patch(
+        "edgarpack.query.financials.financials",
+        new=AsyncMock(side_effect=ValueError("Unknown ticker: ZZZZZ")),
+    ):
+        rc = main(["query", "ZZZZZ", "revenue"])
+
+    assert rc == 2
+    stderr = capsys.readouterr().err.lower()
     assert "unknown" in stderr
     # Regression guard: must not suggest Chinese aliases for a SEC-shaped ticker.
     assert "alibaba" not in stderr

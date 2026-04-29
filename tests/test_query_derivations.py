@@ -7,8 +7,39 @@ revenue_per_employee against the regenerated MiniMax and Zhipu fixtures.
 from __future__ import annotations
 
 import asyncio
+import importlib
+from unittest.mock import AsyncMock, patch
 
 from edgarpack.query.financials import financials
+
+financials_module = importlib.import_module("edgarpack.query.financials")
+
+
+SEC_REVENUE_ONLY_FACTS = {
+    "cik": 1045810,
+    "entityName": "NVIDIA CORP",
+    "facts": {
+        "us-gaap": {
+            "Revenues": {
+                "label": "Revenues",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 60_922_000_000,
+                            "start": "2024-01-29",
+                            "end": "2025-01-26",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001045810-25-000001",
+                            "filed": "2025-02-18",
+                        }
+                    ]
+                },
+            }
+        }
+    },
+}
 
 
 def test_minimax_revenue_growth_yoy_present():
@@ -74,9 +105,58 @@ def test_sec_revenue_per_employee_resolves_after_text_scan_fallback():
     that depend on headcount must still compute. Regression: they used to
     be n/a because the derivation ran before the fallback populated the
     value."""
-    res = asyncio.run(
-        financials(company="NVDA", metrics="revenue_per_employee,headcount", period="lfy")
-    )
+    with (
+        patch.object(
+            financials_module,
+            "resolve_ticker",
+            new=AsyncMock(return_value=("0001045810", "NVIDIA CORP")),
+        ),
+        patch.object(
+            financials_module,
+            "fetch_company_facts",
+            new=AsyncMock(return_value=SEC_REVENUE_ONLY_FACTS),
+        ),
+        patch.object(
+            financials_module,
+            "_build_doc_map",
+            new=AsyncMock(return_value={"0001045810-25-000001": "nvda-2025.htm"}),
+        ),
+        patch.object(
+            financials_module,
+            "fetch_submissions",
+            new=AsyncMock(
+                return_value={
+                    "filings": {
+                        "recent": {
+                            "accessionNumber": ["0001045810-25-000001"],
+                            "reportDate": ["2025-01-26"],
+                            "filingDate": ["2025-02-18"],
+                            "form": ["10-K"],
+                        }
+                    }
+                }
+            ),
+        ),
+        patch.object(
+            financials_module,
+            "_scan_headcount_fallback",
+            new=AsyncMock(
+                return_value=(
+                    36_000,
+                    "0001045810-25-000001",
+                    {
+                        "reportDate": "2025-01-26",
+                        "filingDate": "2025-02-18",
+                        "form": "10-K",
+                    },
+                )
+            ),
+        ),
+        patch.object(financials_module, "_fetch_fact_id_maps", new=AsyncMock(return_value={})),
+    ):
+        res = asyncio.run(
+            financials(company="NVDA", metrics="revenue_per_employee,headcount", period="lfy")
+        )
     hc = res.metrics.get("headcount")
     rpe = res.metrics.get("revenue_per_employee")
     assert hc is not None, "headcount must populate via text-scan fallback"

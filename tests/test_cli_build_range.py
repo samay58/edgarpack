@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from edgarpack.cli import main
@@ -72,6 +73,10 @@ class TestBuildRangeDispatch(unittest.TestCase):
                 new=AsyncMock(return_value=(0, "0000320193")),
             ),
             patch(
+                "edgarpack.cli._resolve_cli_company",
+                new=AsyncMock(return_value=SimpleNamespace(ticker="AAPL")),
+            ),
+            patch(
                 "edgarpack.pack.build.build_pack_range",
                 new=AsyncMock(return_value=[_result("a"), _result("b")]),
             ) as mock_range,
@@ -93,6 +98,10 @@ class TestBuildRangeDispatch(unittest.TestCase):
             patch(
                 "edgarpack.cli._cik_from_company_args",
                 new=AsyncMock(return_value=(0, "0000320193")),
+            ),
+            patch(
+                "edgarpack.cli._resolve_cli_company",
+                new=AsyncMock(return_value=SimpleNamespace(ticker="AAPL")),
             ),
             patch(
                 "edgarpack.pack.build.build_pack",
