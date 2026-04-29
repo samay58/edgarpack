@@ -8,6 +8,7 @@ from edgarpack.cli import main
 from edgarpack.diff.html_report import render_pair_report_html
 from edgarpack.diff.report_builder import build_pair_report, build_text_spans
 from edgarpack.diff.report_models import ChangeType, EvidenceAnchor, TextSpan
+from edgarpack.parse.sectionize import sectionize
 
 
 def test_evidence_anchor_carries_section_paragraph_offset_and_optional_chunk() -> None:
@@ -124,6 +125,15 @@ def _write_pack_sections(
     }
     (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return pack
+
+
+def _write_sectionized_10k_pack(root: Path, accession: str, markdown: str) -> Path:
+    sections = [
+        (section.id, section.title, section.content)
+        for section in sectionize(markdown, "10-K")
+        if not section.id.startswith("unknown")
+    ]
+    return _write_pack_sections(root, accession, sections)
 
 
 def _write_chunks(pack: Path, chunks: list[dict[str, object]]) -> None:
@@ -610,6 +620,43 @@ def test_render_pair_report_html_omits_unchanged_empty_hunks(tmp_path) -> None:
 
     assert "Risk Factors" in html
     assert "Business" not in html
+
+
+def test_static_report_rail_uses_clean_10k_sectionized_titles(tmp_path) -> None:
+    before_md = (
+        "Part I\n\n"
+        "Item 1. Business\n"
+        "Stable business disclosure.\n\n"
+        "Item 1A. Risk Factors\n"
+        "Old risk disclosure.\n"
+    )
+    after_md = (
+        "Table of Contents\n\n"
+        "> **Page / Page / Page**\n"
+        ">\n"
+        "> Part I / Part I / Part I\n"
+        "> Item 1. ................................. Item 1. / Item 1. / "
+        "Business / Business / Business / 4 / 4 / 4\n"
+        "> Item 1A. ................................ Item 1A. / Item 1A. / "
+        "Risk Factors / Risk Factors / Risk Factors / 12 / 12 / 12\n\n"
+        "---\n\n"
+        "Part I\n\n"
+        "Item 1. Business\n"
+        "Stable business disclosure.\n\n"
+        "Item 1A. Risk Factors\n"
+        "New risk disclosure with export-control exposure.\n"
+    )
+    before = _write_sectionized_10k_pack(tmp_path, "10K-001", before_md)
+    after = _write_sectionized_10k_pack(tmp_path, "10K-002", after_md)
+
+    html = render_pair_report_html(build_pair_report(before, after))
+
+    assert "10k_parti_item1a_risk_factors" in html
+    assert "Risk Factors" in html
+    assert "10k_parti_item1_item_1_business_business" not in html
+    assert "risk_factors_risk_factors" not in html
+    assert "/ Item 1A." not in html
+    assert (after / "sections" / "10k_parti_item1a_risk_factors.md").resolve().as_uri() in html
 
 
 def test_cli_diff_format_html_writes_static_report(tmp_path, capsys) -> None:

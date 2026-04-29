@@ -114,6 +114,54 @@ class TestFindSections(unittest.TestCase):
         self.assertIn("1", items)
         self.assertIn("1A", items)
 
+    def test_10k_toc_blockquote_rows_do_not_mint_duplicate_sections(self) -> None:
+        md = (
+            "Table of Contents\n\n"
+            "> **Page / Page / Page**\n"
+            ">\n"
+            "> Part I / Part I / Part I\n"
+            "> Item 1. ................................. Item 1. / Item 1. / "
+            "Business / Business / Business / 4 / 4 / 4\n"
+            "> Item 1A. ................................ Item 1A. / Item 1A. / "
+            "Risk Factors / Risk Factors / Risk Factors / 12 / 12 / 12\n"
+            "\n"
+            "---\n\n"
+            "Part I\n\n"
+            "Item 1. Business\n"
+            "Business body.\n\n"
+            "Item 1A. Risk Factors\n"
+            "Risk body.\n"
+        )
+
+        sections = sectionize(md, "10-K")
+        ids = [s.id for s in sections if not s.id.startswith("unknown")]
+
+        self.assertEqual(ids, ["10k_parti_item1_business", "10k_parti_item1a_risk_factors"])
+
+    def test_inline_body_item_references_do_not_mint_sections(self) -> None:
+        md = (
+            "Part II\n\n"
+            "Item 7. Management's Discussion and Analysis\n"
+            "Refer to Note 13 in Part IV, Item 15 of this Annual Report on Form 10-K "
+            "for additional information.\n"
+            "See Item 1A. Risk Factors for additional information regarding our investments.\n"
+            "The information required by Item 408(b) of Regulation S-K is incorporated "
+            "by reference.\n\n"
+            "Item 7A. Quantitative and Qualitative Disclosures About Market Risk\n"
+            "Market risk body.\n"
+        )
+
+        matches = find_sections(md, "10-K")
+        items = [(m.item, m.title) for m in matches if m.item != "other"]
+
+        self.assertEqual(
+            items,
+            [
+                ("7", "Management's Discussion and Analysis"),
+                ("7A", "Quantitative and Qualitative Disclosures About Market Risk"),
+            ],
+        )
+
     def test_amended_8k_uses_8k_pattern(self) -> None:
         md = "ITEM 1.01 Entry into a Material Definitive Agreement\nBody\n"
         matches = find_sections(md, "8-K/A")
@@ -169,47 +217,38 @@ class TestCrossRefFragmentRejection(unittest.TestCase):
     """Covers edgarpack-zfr: cross-reference sentences and exhibit citation
     fragments must not be promoted into real section titles."""
 
-    def test_cross_ref_sentence_falls_back_to_canonical(self) -> None:
+    def test_cross_ref_sentence_does_not_mint_section(self) -> None:
         """'Item 1A. Risk Factors for additional information regarding our
-        investments.' is a cross-reference, not a heading. The title should
-        fall back to the canonical 'Risk Factors'."""
+        investments.' is a cross-reference, not a heading. It should not mint
+        a section."""
         from edgarpack.parse.sectionize import find_sections
 
         md = "Item 1A. Risk Factors for additional information regarding our investments.\n"
         matches = find_sections(md, "10-K")
         item_titles = [(m.item, m.title) for m in matches]
-        self.assertIn(("1A", "Risk Factors"), item_titles)
-        # The cross-ref sentence must not appear verbatim as a title.
-        self.assertFalse(
-            any("additional information regarding" in t.lower() for _, t in item_titles)
-        )
+        self.assertEqual(item_titles, [])
 
-    def test_paren_citation_falls_back_to_canonical(self) -> None:
+    def test_paren_citation_does_not_mint_section(self) -> None:
         """A cell containing a regulation citation like '(b)(32)(ii) of
         Regulation S-K' should not become the title of an adjacent ITEM
-        match; the canonical title wins instead."""
+        match."""
         from edgarpack.parse.sectionize import find_sections
 
         md = "| Item 15 | (b)(32)(ii) of Regulation S-K |\n"
         matches = find_sections(md, "10-K")
         item_titles = [(m.item, m.title) for m in matches]
-        # If Item 15 matched at all, its title should be the canonical one.
         item_15 = [t for item, t in item_titles if item == "15"]
-        for t in item_15:
-            self.assertFalse(t.startswith("("), f"paren-citation leaked into title: {t}")
-            self.assertNotIn("Regulation S-K", t)
+        self.assertEqual(item_15, [])
 
-    def test_phrase_of_this_annual_report_triggers_fallback(self) -> None:
+    def test_phrase_of_this_annual_report_does_not_mint_section(self) -> None:
         """'Item 7. Management's Discussion in this annual report' must
-        fall back rather than ship a cross-ref body as the MD&A title."""
+        be rejected rather than ship a cross-ref body as the MD&A title."""
         from edgarpack.parse.sectionize import find_sections
 
         md = "Item 7. Management's Discussion in this annual report of 2024 results.\n"
         matches = find_sections(md, "10-K")
         item_7 = [m.title for m in matches if m.item == "7"]
-        self.assertTrue(item_7)
-        for t in item_7:
-            self.assertFalse("in this annual report" in t.lower())
+        self.assertEqual(item_7, [])
 
 
 if __name__ == "__main__":

@@ -306,11 +306,34 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         has_leader = "..." in row
         return has_item_or_part and (has_page or has_leader)
 
+    def _is_blockquote_row(s: str) -> bool:
+        return s.startswith(">")
+
+    def _strip_blockquote_marker(s: str) -> str:
+        return re.sub(r"^>\s?", "", s).strip()
+
+    def _looks_like_toc_blockquote_row(row: str) -> bool:
+        text = _normalize_heading_text(_strip_blockquote_marker(row))
+        text = text.strip("* ")
+        if not text:
+            return True
+        if re.fullmatch(r"(?:page\s*/?\s*)+", text, flags=re.IGNORECASE):
+            return True
+        has_part = bool(re.search(r"\bpart\s+[IVX]+\b", text, flags=re.IGNORECASE))
+        has_item = bool(re.search(r"\bitem\s*\d+[A-Z]?\b", text, flags=re.IGNORECASE))
+        has_signature = bool(re.search(r"\bsignatures?\b", text, flags=re.IGNORECASE))
+        if has_part and not has_item:
+            return True
+        has_page = bool(re.search(r"(?:^|[/\s])(?:page\s*)?\d{1,4}\s*(?:/|$)", text, re.I))
+        has_leader = "..." in row
+        has_repeated_cells = text.count("/") >= 2
+        return (has_item or has_signature) and (has_page or has_leader or has_repeated_cells)
+
     def _is_inline_heading_boundary(text: str, start: int) -> bool:
         if start <= 0:
             return False
         prev = text[start - 1]
-        if prev.isspace() or prev.islower() or prev.isdigit():
+        if prev.islower() or prev.isdigit():
             return True
         if prev in ".:;)|]>*_/":
             return True
@@ -422,6 +445,18 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         real section headings."""
         return bool(re.match(r"^\(\s*[a-z0-9]", title, re.IGNORECASE))
 
+    def _should_skip_item_match(item: str, title: str) -> bool:
+        if item == "other":
+            return False
+        clean_title = _truncate_title(_clean_title(title)).strip()
+        if _contains_cross_ref_phrase(clean_title):
+            return True
+        if _starts_with_paren_citation(clean_title):
+            return True
+        if not _canonical_title(item) and re.search(r"\bregulation\s+s-k\b", clean_title, re.I):
+            return True
+        return False
+
     def _normalize_item_title(item: str, title: str) -> str:
         clean_title = _truncate_title(_clean_title(title)).strip()
         if item == "other":
@@ -477,6 +512,8 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
 
     def _add_item_match(item: str, title: str, part: str | None, char_pos: int) -> None:
         nonlocal matches
+        if _should_skip_item_match(item, title):
+            return
         clean_title = _normalize_item_title(item, title)
         matches.append(
             SectionMatch(
@@ -506,6 +543,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             toc_tables_seen = False
 
         is_table = _is_table_row(line_stripped)
+        is_blockquote = _is_blockquote_row(line_stripped)
 
         if toc_armed and is_table:
             if _looks_like_toc_row(line_stripped):
@@ -530,6 +568,13 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                 in_toc_table = False
                 toc_armed = False
             elif toc_tables_seen:
+                toc_armed = False
+        elif toc_armed and is_blockquote:
+            if _looks_like_toc_blockquote_row(line_stripped):
+                toc_tables_seen = True
+                continue
+            if toc_tables_seen:
+                in_toc_table = False
                 toc_armed = False
         elif toc_armed and not is_table and toc_tables_seen:
             in_toc_table = False
