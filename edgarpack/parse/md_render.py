@@ -304,7 +304,9 @@ def _process_tables(html: str) -> str:
 
     def _parse_span_attr(tag: str, attr: str) -> int:
         m = re.search(rf'{attr}\s*=\s*["\']?(\d+)', tag, re.IGNORECASE)
-        return int(m.group(1)) if m else 1
+        if not m:
+            return 1
+        return max(1, int(m.group(1)))
 
     def process_table(match: re.Match) -> str:
         content = match.group(1)

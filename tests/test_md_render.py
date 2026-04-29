@@ -1,8 +1,11 @@
 """Tests for HTML → markdown rendering."""
 
 import unittest
+from pathlib import Path
 
 from edgarpack.parse.md_render import _normalize_output, render_markdown
+
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class TestRenderMarkdown(unittest.TestCase):
@@ -112,6 +115,14 @@ class TestRenderMarkdown(unittest.TestCase):
             self.assertEqual(len(cells), 2)
         # "Assets" should appear in both rows
         self.assertEqual(md.count("Assets"), 2)
+
+    def test_renders_tsm_2006_table_with_zero_colspan(self) -> None:
+        html = (FIXTURES / "tsm_2006_malformed_span_table.html").read_text(encoding="utf-8")
+        md = render_markdown(html)
+        self.assertIn("Within one year", md)
+        self.assertIn("NT$71,820.9", md)
+        self.assertIn("US$", md)
+        self.assertIn("2,149.0", md)
 
     def test_unwraps_empty_href_link(self) -> None:
         html = '<a href="">click here</a>'
