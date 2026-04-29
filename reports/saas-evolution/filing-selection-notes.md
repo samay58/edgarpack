@@ -30,3 +30,13 @@ EdgarPack identity resolution succeeded for all 11 cohort companies on 2026-04-2
 | WDAY | Workday, Inc.; CIK 0001327811 | 10-K filed 2026-03-06; accession 0001327811-26-000014 | 10-K filed 2020-03-03; accession 0001327811-20-000022 | 10-K filed 2015-03-25; accession 0001327811-15-000006, with 2014 also available | Long 10-K history available through EdgarPack. |
 
 Use `ipo_or_first_observable` for baseline rows where the company had no 2014/2015 annual public-company filing in EdgarPack output.
+
+## Metric Definition Fallbacks
+
+Definitions that were not captured cleanly by EdgarPack are sourced directly from the linked SEC or IR pages and recorded in `metric-definition-table.csv` plus `source-ledger.csv`.
+
+- Adobe ARR: filing-section fallback from `packs/0000796343/0000796343-26-000003/optional/chunks.ndjson`.
+- ServiceNow RPO/cRPO: filing-section fallback from `packs/0001373715/0001373715-26-000007/optional/chunks.ndjson`.
+- Snowflake RPO consumption caveat: filing-section fallback from `packs/0001640147/0001640147-26-000008/optional/chunks.ndjson`.
+- MongoDB ARR/Atlas annualization: filing-section fallback from `packs/0001441816/0001628280-26-016799/sections/10k_partii_item8_financial_statements_2.md`.
+- Datadog free cash flow definition: filing full-text fallback from `packs/0001561550/0001628280-26-008819/filing.full.md`.

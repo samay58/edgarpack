@@ -1,13 +1,3 @@
-Resolving company MDB -> MongoDB, Inc. (CIK 0001441816)
-Loading up to 12 registered pack(s)
-Running KPI discovery on filing 1/7 (10-K 2026-03-11)
-Running KPI discovery on filing 2/7 (10-Q 2025-12-02)
-Running KPI discovery on filing 3/7 (10-Q 2025-08-27)
-Running KPI discovery on filing 4/7 (10-Q 2025-06-04)
-Running KPI discovery on filing 5/7 (10-K 2025-03-21)
-Running KPI discovery on filing 6/7 (10-Q 2024-12-10)
-Running KPI discovery on filing 7/7 (10-K 2024-03-15)
-Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`)
 {
   "cik": "0001441816",
   "company": "MongoDB, Inc.",
@@ -90,7 +80,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "3b49574e0194293e",
-          "source_substring": "As of January\u00a031, 2026, we had over 65,200 customers spanning a wide range of industries in more than 100 countries around the world."
+          "source_substring": "As of January 31, 2026, we had over 65,200 customers spanning a wide range of industries in more than 100 countries around the world."
         },
         {
           "label": "FY2025",
@@ -104,7 +94,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "d4abb65cb2637a27",
-          "source_substring": "As of January\u00a031, 2025, we had over 54,500 customers spanning a wide range of industries in more than 100 countries around the world."
+          "source_substring": "As of January 31, 2025, we had over 54,500 customers spanning a wide range of industries in more than 100 countries around the world."
         },
         {
           "label": "FY2024",
@@ -118,7 +108,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "e9e5b66cb36d2c51",
-          "source_substring": "As of January\u00a031, 2024, we had over 47,800 customers spanning a wide range of industries in more than 100 countries around the world."
+          "source_substring": "As of January 31, 2024, we had over 47,800 customers spanning a wide range of industries in more than 100 countries around the world."
         }
       ]
     },
@@ -144,7 +134,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "015693c7f00fd78b",
-          "source_substring": "As of January\u00a031, 2026, we had a total of 5,636 employees, including 2,927 employees located outside the United States."
+          "source_substring": "As of January 31, 2026, we had a total of 5,636 employees, including 2,927 employees located outside the United States."
         },
         {
           "label": "FY2025",
@@ -158,7 +148,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "ea6fe5df142c7168",
-          "source_substring": "As of January\u00a031, 2025, we had a total of 5,558 employees, including 2,819 employees located outside the United States."
+          "source_substring": "As of January 31, 2025, we had a total of 5,558 employees, including 2,819 employees located outside the United States."
         },
         {
           "label": "FY2024",
@@ -172,7 +162,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "115db6a5706a3d3f",
-          "source_substring": "As of January\u00a031, 2024, we had a total of 5,037 employees, including 2,456 employees located outside the United States."
+          "source_substring": "As of January 31, 2024, we had a total of 5,037 employees, including 2,456 employees located outside the United States."
         }
       ]
     },
@@ -198,7 +188,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "015693c7f00fd78b",
-          "source_substring": "As of January\u00a031, 2026, we had a total of 5,636 employees, including 2,927 employees located outside the United States."
+          "source_substring": "As of January 31, 2026, we had a total of 5,636 employees, including 2,927 employees located outside the United States."
         },
         {
           "label": "FY2025",
@@ -212,7 +202,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "ea6fe5df142c7168",
-          "source_substring": "As of January\u00a031, 2025, we had a total of 5,558 employees, including 2,819 employees located outside the United States."
+          "source_substring": "As of January 31, 2025, we had a total of 5,558 employees, including 2,819 employees located outside the United States."
         },
         {
           "label": "FY2024",
@@ -226,7 +216,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "115db6a5706a3d3f",
-          "source_substring": "As of January\u00a031, 2024, we had a total of 5,037 employees, including 2,456 employees located outside the United States."
+          "source_substring": "As of January 31, 2024, we had a total of 5,037 employees, including 2,456 employees located outside the United States."
         }
       ]
     },
@@ -252,7 +242,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": "millions",
           "section_id": "10k_parti_item1_business",
           "chunk_id": "015693c7f00fd78b",
-          "source_substring": "As of January\u00a031, 2026, there were over 3.0\u00a0million MongoDB University registrations."
+          "source_substring": "As of January 31, 2026, there were over 3.0 million MongoDB University registrations."
         },
         {
           "label": "FY2025",
@@ -266,7 +256,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": "millions",
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "ea6fe5df142c7168",
-          "source_substring": "As of January\u00a031, 2025, there were over 2.5\u00a0million MongoDB University registrations."
+          "source_substring": "As of January 31, 2025, there were over 2.5 million MongoDB University registrations."
         },
         {
           "label": "FY2024",
@@ -280,13 +270,13 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": "millions",
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "115db6a5706a3d3f",
-          "source_substring": "As of January\u00a031, 2024, there were over 2.0\u00a0million MongoDB University registrations."
+          "source_substring": "As of January 31, 2024, there were over 2.0 million MongoDB University registrations."
         }
       ]
     },
     {
       "slug": "net_arr_expansion_rate",
-      "display_name": "net annualized recurring revenue (\u201cARR\u201d) expansion rate",
+      "display_name": "net annualized recurring revenue (“ARR”) expansion rate",
       "source": "discovered",
       "unit": "percent",
       "definition": "A measure demonstrating MongoDB's ability to expand sales within existing customers.",
@@ -306,7 +296,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "e51f36ffd679543d",
-          "source_substring": "Our ability to expand within existing customers is demonstrated by our net annualized recurring revenue (\u201cARR\u201d) expansion rate, which in the fourth quarter was 121%."
+          "source_substring": "Our ability to expand within existing customers is demonstrated by our net annualized recurring revenue (“ARR”) expansion rate, which in the fourth quarter was 121%."
         },
         {
           "label": "FY2024",
@@ -320,7 +310,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "f38415cfd4a7f49d",
-          "source_substring": "Our ability to expand within existing customers is demonstrated by our net annualized recurring revenue (\u201cARR\u201d) expansion rate, which has consistently been over 120%."
+          "source_substring": "Our ability to expand within existing customers is demonstrated by our net annualized recurring revenue (“ARR”) expansion rate, which has consistently been over 120%."
         }
       ]
     },
@@ -346,7 +336,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "230e4afa69026101",
-          "source_substring": "As of January\u00a031, 2024, we had 1,226 employees in our research and development organization."
+          "source_substring": "As of January 31, 2024, we had 1,226 employees in our research and development organization."
         }
       ]
     },
@@ -372,7 +362,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "230e4afa69026101",
-          "source_substring": "As of January\u00a031, 2024, we had 2,338 employees in our sales and marketing organization."
+          "source_substring": "As of January 31, 2024, we had 2,338 employees in our sales and marketing organization."
         }
       ]
     }

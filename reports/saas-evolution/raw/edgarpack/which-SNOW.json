@@ -1,13 +1,3 @@
-Resolving company SNOW -> Snowflake Inc. (CIK 0001640147)
-Loading up to 13 registered pack(s)
-Running KPI discovery on filing 1/7 (10-K 2026-03-20)
-Running KPI discovery on filing 2/7 (10-Q 2025-12-05)
-Running KPI discovery on filing 3/7 (10-Q 2025-09-05)
-Running KPI discovery on filing 4/7 (10-Q 2025-05-30)
-Running KPI discovery on filing 5/7 (10-K 2025-03-21)
-Running KPI discovery on filing 6/7 (10-Q 2024-11-27)
-Running KPI discovery on filing 7/7 (10-K 2024-03-26)
-Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`)
 {
   "cik": "0001640147",
   "company": "Snowflake Inc.",
@@ -62,7 +52,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "6fcfcf0f116d491b",
-          "source_substring": "As of January\u00a031, 2025, we had 7,834 employees operating across 34 countries."
+          "source_substring": "As of January 31, 2025, we had 7,834 employees operating across 34 countries."
         },
         {
           "label": "FY2024",
@@ -76,7 +66,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "f58b589d5c718efb",
-          "source_substring": "As of January\u00a031, 2024, we had 7,004 employees operating across 34 countries."
+          "source_substring": "As of January 31, 2024, we had 7,004 employees operating across 34 countries."
         }
       ]
     },
@@ -102,7 +92,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "126e13ba3c69ce61",
-          "source_substring": "The number of customers that contributed more than $1 million in trailing 12-month product revenue increased from 576 to 733 as of January\u00a031, 2025 and 2026, respectively."
+          "source_substring": "The number of customers that contributed more than $1 million in trailing 12-month product revenue increased from 576 to 733 as of January 31, 2025 and 2026, respectively."
         },
         {
           "label": "FY2025",
@@ -116,7 +106,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "f0dc3ea9e757b37f",
-          "source_substring": "The number of customers that contributed more than $1 million in trailing 12-month product revenue increased from 455 to 580 as of January\u00a031, 2024 and 2025, respectively."
+          "source_substring": "The number of customers that contributed more than $1 million in trailing 12-month product revenue increased from 455 to 580 as of January 31, 2024 and 2025, respectively."
         },
         {
           "label": "FY2024",
@@ -130,7 +120,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "1723d9908aab9bb7",
-          "source_substring": "The number of customers that contributed more than $1 million in trailing 12-month product revenue increased from 331 to 461 as of January\u00a031, 2023 and 2024, respectively."
+          "source_substring": "The number of customers that contributed more than $1 million in trailing 12-month product revenue increased from 331 to 461 as of January 31, 2023 and 2024, respectively."
         }
       ]
     },
@@ -156,7 +146,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "c046b07975e8d7c3",
-          "source_substring": "As of January\u00a031, 2026, we had 9,060 employees operating across 36 countries."
+          "source_substring": "As of January 31, 2026, we had 9,060 employees operating across 36 countries."
         },
         {
           "label": "FY2025",
@@ -170,7 +160,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "6fcfcf0f116d491b",
-          "source_substring": "As of January\u00a031, 2025, we had 7,834 employees operating across 34 countries."
+          "source_substring": "As of January 31, 2025, we had 7,834 employees operating across 34 countries."
         },
         {
           "label": "FY2024",
@@ -184,7 +174,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "f58b589d5c718efb",
-          "source_substring": "As of January\u00a031, 2024, we had 7,004 employees operating across 34 countries."
+          "source_substring": "As of January 31, 2024, we had 7,004 employees operating across 34 countries."
         }
       ]
     },
@@ -213,7 +203,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "8848c8f5be2bc134",
-          "source_substring": "As of January\u00a031, 2026, our customers included 790 of the Forbes Global 2000, based on the 2025 Forbes Global 2000 list"
+          "source_substring": "As of January 31, 2026, our customers included 790 of the Forbes Global 2000, based on the 2025 Forbes Global 2000 list"
         },
         {
           "label": "FY2025",
@@ -227,7 +217,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_3",
           "chunk_id": "9d11dd09df5a8da4",
-          "source_substring": "As of January\u00a031, 2025, our customers included 745 of the Forbes Global 2000, based on the 2024 Forbes Global 2000 list"
+          "source_substring": "As of January 31, 2025, our customers included 745 of the Forbes Global 2000, based on the 2024 Forbes Global 2000 list"
         },
         {
           "label": "FY2024",
@@ -241,7 +231,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "1723d9908aab9bb7",
-          "source_substring": "As of January\u00a031, 2024, our customers included 691 of the Forbes Global 2000, based on the 2023 Forbes Global 2000 list"
+          "source_substring": "As of January 31, 2024, our customers included 691 of the Forbes Global 2000, based on the 2023 Forbes Global 2000 list"
         }
       ]
     },
@@ -270,7 +260,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "8848c8f5be2bc134",
-          "source_substring": "those customers contributed approximately 43% of our revenue for the fiscal year ended January\u00a031, 2026."
+          "source_substring": "those customers contributed approximately 43% of our revenue for the fiscal year ended January 31, 2026."
         },
         {
           "label": "FY2025",
@@ -284,7 +274,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_3",
           "chunk_id": "9d11dd09df5a8da4",
-          "source_substring": "those customers contributed approximately 42% of our revenue for the fiscal year ended January\u00a031, 2025."
+          "source_substring": "those customers contributed approximately 42% of our revenue for the fiscal year ended January 31, 2025."
         },
         {
           "label": "FY2024",
@@ -324,7 +314,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "126e13ba3c69ce61",
-          "source_substring": "our net revenue retention rate, which was 125% as of January\u00a031, 2026."
+          "source_substring": "our net revenue retention rate, which was 125% as of January 31, 2026."
         },
         {
           "label": "FY2025",
@@ -338,7 +328,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_3",
           "chunk_id": "9d11dd09df5a8da4",
-          "source_substring": "as evidenced by our net revenue retention rate of 126% and 131% as of January\u00a031, 2025 and 2024, respectively."
+          "source_substring": "as evidenced by our net revenue retention rate of 126% and 131% as of January 31, 2025 and 2024, respectively."
         },
         {
           "label": "FY2024",
@@ -352,7 +342,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "1723d9908aab9bb7",
-          "source_substring": "as evidenced by our net revenue retention rate, which was 131% as of January\u00a031, 2024."
+          "source_substring": "as evidenced by our net revenue retention rate, which was 131% as of January 31, 2024."
         }
       ]
     },
@@ -378,7 +368,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "5ce163e2f68504d2",
-          "source_substring": "As of January\u00a031, 2026, we had 2,424 employees in our research and development organization."
+          "source_substring": "As of January 31, 2026, we had 2,424 employees in our research and development organization."
         },
         {
           "label": "FY2025",
@@ -392,7 +382,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "d46e454491f433c0",
-          "source_substring": "As of January\u00a031, 2025, we had 2,257 employees in our research and development organization."
+          "source_substring": "As of January 31, 2025, we had 2,257 employees in our research and development organization."
         },
         {
           "label": "FY2024",
@@ -406,7 +396,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "ad17105068cbe078",
-          "source_substring": "As of January\u00a031, 2024, we had 2,002 employees in our research and development organization."
+          "source_substring": "As of January 31, 2024, we had 2,002 employees in our research and development organization."
         }
       ]
     },
@@ -432,7 +422,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "8848c8f5be2bc134",
-          "source_substring": "As of January\u00a031, 2026, we had 13,328 total customers, increasing from 10,996 customers as of January\u00a031, 2025."
+          "source_substring": "As of January 31, 2026, we had 13,328 total customers, increasing from 10,996 customers as of January 31, 2025."
         },
         {
           "label": "FY2025",
@@ -446,7 +436,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_3",
           "chunk_id": "9d11dd09df5a8da4",
-          "source_substring": "As of January\u00a031, 2025, we had 11,159 total customers, increasing from 9,384 customers as of January\u00a031, 2024."
+          "source_substring": "As of January 31, 2025, we had 11,159 total customers, increasing from 9,384 customers as of January 31, 2024."
         },
         {
           "label": "FY2024",
@@ -460,7 +450,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business_2",
           "chunk_id": "1723d9908aab9bb7",
-          "source_substring": "As of January\u00a031, 2024, we had 9,437 total customers, increasing from 7,744 customers as of January\u00a031, 2023."
+          "source_substring": "As of January 31, 2024, we had 9,437 total customers, increasing from 7,744 customers as of January 31, 2023."
         }
       ]
     },

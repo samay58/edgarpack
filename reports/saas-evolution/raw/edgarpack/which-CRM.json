@@ -1,20 +1,3 @@
-Resolving company CRM -> Salesforce, Inc. (CIK 0001108524)
-Loading up to 23 registered pack(s)
-Running KPI discovery on filing 1/14 (10-K 2026-03-02)
-Running KPI discovery on filing 2/14 (10-Q 2025-12-04)
-Running KPI discovery on filing 3/14 (10-Q 2025-09-04)
-Running KPI discovery on filing 4/14 (10-Q 2025-05-29)
-Running KPI discovery on filing 5/14 (10-K 2025-03-05)
-Running KPI discovery on filing 6/14 (10-Q 2024-12-04)
-Running KPI discovery on filing 7/14 (10-K 2024-03-06)
-Running KPI discovery on filing 8/14 (10-K 2023-03-08)
-Running KPI discovery on filing 9/14 (10-K 2022-03-11)
-Running KPI discovery on filing 10/14 (10-K 2021-03-17)
-Running KPI discovery on filing 11/14 (10-K 2020-03-05)
-Running KPI discovery on filing 12/14 (10-K 2019-03-08)
-Running KPI discovery on filing 13/14 (10-K 2018-03-09)
-Running KPI discovery on filing 14/14 (10-K 2017-03-06)
-Discovery summary: 10 cached, 4 skipped (manifest missing; run `edgarpack build <ticker>`)
 {
   "cik": "0001108524",
   "company": "Salesforce, Inc.",
@@ -138,7 +121,7 @@ Discovery summary: 10 cached, 4 skipped (manifest missing; run `edgarpack build 
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion",
           "chunk_id": null,
-          "source_substring": "Our current attrition rate, which does not include the Marketing and Commerce Cloud service offerings, was between eight and nine percent as of January\u00a031, 2018."
+          "source_substring": "Our current attrition rate, which does not include the Marketing and Commerce Cloud service offerings, was between eight and nine percent as of January 31, 2018."
         },
         {
           "label": "FY2017",
@@ -152,7 +135,7 @@ Discovery summary: 10 cached, 4 skipped (manifest missing; run `edgarpack build 
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion",
           "chunk_id": null,
-          "source_substring": "Our attrition rate was between eight and nine percent during the fiscal year ended January\u00a031, 2017"
+          "source_substring": "Our attrition rate was between eight and nine percent during the fiscal year ended January 31, 2017"
         }
       ]
     },
@@ -250,7 +233,7 @@ Discovery summary: 10 cached, 4 skipped (manifest missing; run `edgarpack build 
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion",
           "chunk_id": null,
-          "source_substring": "Our attrition rate, including the Marketing Cloud service offering, was less than ten percent as of January\u00a031, 2018."
+          "source_substring": "Our attrition rate, including the Marketing Cloud service offering, was less than ten percent as of January 31, 2018."
         }
       ]
     },
@@ -498,7 +481,7 @@ Discovery summary: 10 cached, 4 skipped (manifest missing; run `edgarpack build 
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": null,
-          "source_substring": "As of January\u00a031, 2017, we had more than 25,000 employees."
+          "source_substring": "As of January 31, 2017, we had more than 25,000 employees."
         }
       ]
     },

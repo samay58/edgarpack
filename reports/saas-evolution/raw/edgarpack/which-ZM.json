@@ -1,13 +1,3 @@
-Resolving company ZM -> Zoom Communications, Inc. (CIK 0001585521)
-Loading up to 13 registered pack(s)
-Running KPI discovery on filing 1/7 (10-K 2026-02-27)
-Running KPI discovery on filing 2/7 (10-Q 2025-11-25)
-Running KPI discovery on filing 3/7 (10-Q 2025-08-22)
-Running KPI discovery on filing 4/7 (10-Q 2025-05-23)
-Running KPI discovery on filing 5/7 (10-K 2025-02-28)
-Running KPI discovery on filing 6/7 (10-Q 2024-11-26)
-Running KPI discovery on filing 7/7 (10-K 2024-03-04)
-Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build <ticker>`)
 {
   "cik": "0001585521",
   "company": "Zoom Communications, Inc.",
@@ -94,7 +84,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_partii_item7_managements_discussion_1",
           "chunk_id": "c97258fa406367db",
-          "source_substring": "Zoom\u2019s platform prioritizes security and privacy, with 32 co-located data centers globally and robust encryption."
+          "source_substring": "Zoom’s platform prioritizes security and privacy, with 32 co-located data centers globally and robust encryption."
         },
         {
           "label": "FY2024",
@@ -134,7 +124,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "f58605834c204a57",
-          "source_substring": "As of January\u00a031, 2026, we had 7,438 full-time employees."
+          "source_substring": "As of January 31, 2026, we had 7,438 full-time employees."
         },
         {
           "label": "FY2025",
@@ -148,7 +138,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "1288b2348ab7909c",
-          "source_substring": "As of January\u00a031, 2025, we had 7,412 full-time employees."
+          "source_substring": "As of January 31, 2025, we had 7,412 full-time employees."
         },
         {
           "label": "FY2024",
@@ -162,7 +152,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "ddfeb42cc721ec83",
-          "source_substring": "As of January\u00a031, 2024, we had 7,420 full-time employees."
+          "source_substring": "As of January 31, 2024, we had 7,420 full-time employees."
         }
       ]
     },
@@ -244,7 +234,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "02708823b02d06d4",
-          "source_substring": "As of January\u00a031, 2025, there are more than 90 countries and territories included in the Provider Exchange program."
+          "source_substring": "As of January 31, 2025, there are more than 90 countries and territories included in the Provider Exchange program."
         },
         {
           "label": "FY2024",
@@ -258,7 +248,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "210ff81b86b06403",
-          "source_substring": "As of January\u00a031, 2024, there are more than 90 countries and territories included in the Provider Exchange program."
+          "source_substring": "As of January 31, 2024, there are more than 90 countries and territories included in the Provider Exchange program."
         }
       ]
     },
@@ -340,7 +330,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "02708823b02d06d4",
-          "source_substring": "As of January\u00a031, 2025, Zoom Phone provided native PSTN connectivity in more than 45 countries and territories."
+          "source_substring": "As of January 31, 2025, Zoom Phone provided native PSTN connectivity in more than 45 countries and territories."
         },
         {
           "label": "FY2024",
@@ -354,7 +344,7 @@ Discovery summary: 3 analyzed, 4 skipped (manifest missing; run `edgarpack build
           "magnitude": null,
           "section_id": "10k_parti_item1_business",
           "chunk_id": "10ee4b61b3373eba",
-          "source_substring": "As of January\u00a031, 2024, Zoom Phone provided native PSTN connectivity in more than 45 countries and territories."
+          "source_substring": "As of January 31, 2024, Zoom Phone provided native PSTN connectivity in more than 45 countries and territories."
         }
       ]
     }
