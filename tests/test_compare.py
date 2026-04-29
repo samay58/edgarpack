@@ -2,6 +2,9 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
+
+from edgarpack.cli import main
 
 
 def _run(*args: str) -> subprocess.CompletedProcess:
@@ -49,10 +52,15 @@ def test_compare_markdown_format_emits_table_syntax():
     assert "---" in r.stdout
 
 
-def test_compare_unknown_company_exits_2():
-    r = _run("minimax", "ZZZZZZ", "--metrics", "revenue")
-    assert r.returncode == 2
-    assert "unknown" in r.stderr.lower() or "no" in r.stderr.lower()
+def test_compare_unknown_company_exits_2(capsys):
+    with patch(
+        "edgarpack.compare._gather",
+        new=AsyncMock(side_effect=ValueError("Unknown ticker: ZZZZZZ")),
+    ):
+        rc = main(["compare", "minimax", "ZZZZZZ", "--metrics", "revenue"])
+
+    assert rc == 2
+    assert "unknown" in capsys.readouterr().err.lower()
 
 
 def test_compare_emits_currency_in_output():
@@ -113,8 +121,28 @@ def test_compare_json_includes_period_request():
 def test_compare_header_flags_mismatched_fiscal_years():
     """When companies resolve lfy/lfy-N to different fiscal years the
     header must surface the divergence, not paper over it."""
-    r = _run("NVDA", "AMD", "--metrics", "revenue", "--period", "lfy-1", "--format", "table")
-    out = r.stdout
+    from edgarpack.compare import CompanyColumn, _format_table
+
+    out = _format_table(
+        [
+            CompanyColumn(
+                ticker="NVDA",
+                company="NVIDIA CORP",
+                period="FY2024",
+                reporting_currency="USD",
+                metrics={"revenue": {"value": 60_922_000_000, "currency": "USD"}},
+            ),
+            CompanyColumn(
+                ticker="AMD",
+                company="ADVANCED MICRO DEVICES INC",
+                period="FY2023",
+                reporting_currency="USD",
+                metrics={"revenue": {"value": 22_680_000_000, "currency": "USD"}},
+            ),
+        ],
+        ["revenue"],
+        "lfy-1",
+    )
     first_line = next(line for line in out.splitlines() if line.strip())
     # NVIDIA's fiscal year ends January; AMD's ends December. lfy-1 resolves
     # to different calendar fiscal years, which the header must call out.
