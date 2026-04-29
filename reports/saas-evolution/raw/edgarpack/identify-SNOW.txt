@@ -1,0 +1,5 @@
+Snowflake Inc.
+Status: public SEC filer
+Ticker: SNOW
+CIK: 0001640147
+Next: edgarpack query SNOW revenue --period lfy

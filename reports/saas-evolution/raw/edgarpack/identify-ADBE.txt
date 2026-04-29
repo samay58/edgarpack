@@ -1,0 +1,5 @@
+ADOBE INC.
+Status: public SEC filer
+Ticker: ADBE
+CIK: 0000796343
+Next: edgarpack query ADBE revenue --period lfy

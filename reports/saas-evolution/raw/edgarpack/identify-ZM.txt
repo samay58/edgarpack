@@ -1,0 +1,5 @@
+Zoom Communications, Inc.
+Status: public SEC filer
+Ticker: ZM
+CIK: 0001585521
+Next: edgarpack query ZM revenue --period lfy

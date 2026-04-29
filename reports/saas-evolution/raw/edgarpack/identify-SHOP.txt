@@ -1,0 +1,5 @@
+SHOP
+Status: public SEC filer
+Ticker: SHOP
+CIK: 0001594805
+Next: edgarpack query SHOP revenue --period lfy

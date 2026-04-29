@@ -1,0 +1,5 @@
+Datadog, Inc.
+Status: public SEC filer
+Ticker: DDOG
+CIK: 0001561550
+Next: edgarpack query DDOG revenue --period lfy

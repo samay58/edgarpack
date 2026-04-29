@@ -1,0 +1,5 @@
+HUBSPOT INC
+Status: public SEC filer
+Ticker: HUBS
+CIK: 0001404655
+Next: edgarpack query HUBS revenue --period lfy

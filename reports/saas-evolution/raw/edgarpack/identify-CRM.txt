@@ -1,0 +1,5 @@
+Salesforce, Inc.
+Status: public SEC filer
+Ticker: CRM
+CIK: 0001108524
+Next: edgarpack query CRM revenue --period lfy

@@ -1,0 +1,5 @@
+ServiceNow, Inc.
+Status: public SEC filer
+Ticker: NOW
+CIK: 0001373715
+Next: edgarpack query NOW revenue --period lfy

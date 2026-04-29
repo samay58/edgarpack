@@ -1,0 +1,5 @@
+Atlassian Corp
+Status: public SEC filer
+Ticker: TEAM
+CIK: 0001650372
+Next: edgarpack query TEAM revenue --period lfy

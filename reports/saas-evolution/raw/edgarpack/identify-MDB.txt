@@ -1,0 +1,5 @@
+MongoDB, Inc.
+Status: public SEC filer
+Ticker: MDB
+CIK: 0001441816
+Next: edgarpack query MDB revenue --period lfy

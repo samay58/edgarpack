@@ -1,0 +1,5 @@
+Workday, Inc.
+Status: public SEC filer
+Ticker: WDAY
+CIK: 0001327811
+Next: edgarpack query WDAY revenue --period lfy
