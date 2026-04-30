@@ -539,6 +539,91 @@ def test_render_pair_report_html_escapes_text_and_emits_static_report(
     assert "<script" not in html.lower()
 
 
+def test_pair_report_html_renders_markdown_table_as_semantic_table(tmp_path) -> None:
+    before = _write_pack(tmp_path, "S1-001", "Old disclosure.")
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        "\n\n".join(
+            [
+                "Debt maturity table:",
+                "| Maturity | Cost | Fair value |",
+                "| --- | ---: | ---: |",
+                "| Series A \\| preferred | $1,000 | $990 |",
+                "| One year or less | $35,108 | $34,952 |",
+                "| Total | $85,589 | $84,259 |",
+            ]
+        ),
+    )
+
+    html = render_pair_report_html(build_pair_report(before, after))
+
+    assert '<div class="financial-table-wrap">' in html
+    assert '<table class="financial-table">' in html
+    assert "<th>Maturity</th>" in html
+    assert "<td>Series A | preferred</td>" in html
+    assert '<td class="num">$85,589</td>' in html
+    assert "| Maturity | Cost | Fair value |" not in html
+
+
+def test_pair_report_html_renders_modified_markdown_table_as_semantic_table(tmp_path) -> None:
+    before = _write_pack(
+        tmp_path,
+        "S1-001",
+        "\n".join(
+            [
+                "| Segment | Revenue |",
+                "| --- | ---: |",
+                "| Product hardware | $10 |",
+                "| Services support | $4 |",
+            ]
+        ),
+    )
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        "\n".join(
+            [
+                "| Segment | Revenue |",
+                "| --- | ---: |",
+                "| Platform subscriptions | $12 |",
+                "| Managed AI consulting | $5 |",
+            ]
+        ),
+    )
+
+    html = render_pair_report_html(build_pair_report(before, after))
+
+    assert html.count('<table class="financial-table">') == 2
+    assert '<td class="num">$10</td>' in html
+    assert '<td class="num">$12</td>' in html
+    assert "<td>Platform subscriptions</td>" in html
+    assert "| Segment | Revenue |" not in html
+
+
+def test_pair_report_html_renders_flattened_financial_block_as_ledger(tmp_path) -> None:
+    before = _write_pack(tmp_path, "S1-001", "Old disclosure.")
+    after = _write_pack(
+        tmp_path,
+        "S1A-002",
+        "\n\n".join(
+            [
+                "Unrealized losses table:",
+                "> **Less than 12 Months**\n>"
+                "\n> Less than 12 Months / 12 Months or Greater / Total\n"
+                "> U.S. government and agency securities ... $ / 37,177 / $ / (1,462 / )\n"
+                "> Total ................................... $ / 42,736 / $ / (1,625 / )",
+            ]
+        ),
+    )
+
+    html = render_pair_report_html(build_pair_report(before, after))
+
+    assert '<pre class="financial-ledger">' in html
+    assert "U.S. government and agency securities" in html
+    assert "&gt; U.S. government" not in html
+
+
 def test_pair_report_html_uses_approved_visual_structure(tmp_path) -> None:
     before = _write_pack(tmp_path, "24-044118", "Old customer disclosure.")
     after = _write_pack(tmp_path, "24-046732", "New customer disclosure.")

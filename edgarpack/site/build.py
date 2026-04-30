@@ -607,14 +607,49 @@ def _looks_like_table_start(lines: list[str], i: int) -> bool:
     return "---" in sep
 
 
+def _looks_numeric_cell(text: str) -> bool:
+    return bool(re.fullmatch(r"[$€£¥]?\(?-?\d[\d,.]*%?\)?", text.strip()))
+
+
+def _is_escaped_table_pipe(line: str, index: int) -> bool:
+    backslashes = 0
+    position = index - 1
+    while position >= 0 and line[position] == "\\":
+        backslashes += 1
+        position -= 1
+    return backslashes % 2 == 1
+
+
+def _strip_outer_table_delimiters(line: str) -> str:
+    trimmed = line.strip()
+    if trimmed.startswith("|"):
+        trimmed = trimmed[1:]
+    if trimmed.endswith("|") and not _is_escaped_table_pipe(trimmed, len(trimmed) - 1):
+        trimmed = trimmed[:-1]
+    return trimmed
+
+
+def _split_table_row(line: str) -> list[str]:
+    cells: list[str] = []
+    cell = ""
+    raw = _strip_outer_table_delimiters(line)
+    for index, char in enumerate(raw):
+        if char == "|" and not _is_escaped_table_pipe(raw, index):
+            cells.append(cell.strip().replace(r"\|", "|"))
+            cell = ""
+            continue
+        cell += char
+    cells.append(cell.strip().replace(r"\|", "|"))
+    return cells
+
+
 def _table_to_html(table_lines: list[str]) -> str:
     # Basic GFM table parsing.
     rows = []
     for line in table_lines:
         if not line.strip().startswith("|"):
             continue
-        parts = [p.strip() for p in line.strip().strip("|").split("|")]
-        rows.append(parts)
+        rows.append(_split_table_row(line))
 
     if len(rows) < 2:
         return "<pre>" + _escape_block("\n".join(table_lines)) + "</pre>"
@@ -622,16 +657,17 @@ def _table_to_html(table_lines: list[str]) -> str:
     header = rows[0]
     body_rows = [r for r in rows[2:]] if len(rows) >= 3 else []
 
-    out = ["<table>", "<thead>", "<tr>"]
+    out = ['<div class="table-scroll">', "<table>", "<thead>", "<tr>"]
     for h in header:
         out.append(f"<th>{_inline(h)}</th>")
     out.extend(["</tr>", "</thead>", "<tbody>"])
     for r in body_rows:
         out.append("<tr>")
         for c in r:
-            out.append(f"<td>{_inline(c)}</td>")
+            cls = ' class="num"' if _looks_numeric_cell(c) else ""
+            out.append(f"<td{cls}>{_inline(c)}</td>")
         out.append("</tr>")
-    out.extend(["</tbody>", "</table>"])
+    out.extend(["</tbody>", "</table>", "</div>"])
     return "\n".join(out)
 
 

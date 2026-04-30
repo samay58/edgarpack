@@ -87,6 +87,24 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("Item 16. Form 10-K Summary", html)
         self.assertNotIn("Form 10-K Summary / Form 10-K Summary", html)
 
+    def test_static_site_wraps_financial_tables_for_scanning(self) -> None:
+        html = _markdown_to_html(
+            "\n".join(
+                [
+                    "| Maturity | Cost | Fair value |",
+                    "| --- | ---: | ---: |",
+                    "| Series A \\| preferred | $1,000 | $990 |",
+                    "| One year or less | $35,108 | $34,952 |",
+                    "| Total | $85,589 | $84,259 |",
+                ]
+            )
+        )
+
+        self.assertIn('<div class="table-scroll">', html)
+        self.assertIn("<table>", html)
+        self.assertIn("<td>Series A | preferred</td>", html)
+        self.assertIn('<td class="num">$85,589</td>', html)
+
     def test_reader_pages_normalize_legacy_repeated_section_titles(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             packs = Path(td) / "packs"

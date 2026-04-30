@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { FilingText } from "@/components/observatory/filing-text";
 import type {
   DiffResult,
   ParagraphDelta,
@@ -222,13 +223,17 @@ function ParagraphDiff({ delta }: { delta: ParagraphDelta }) {
     <div className={`obs-para obs-para-${delta.change_type}`}>
       {delta.change_type === "removed" && delta.old_text && (
         <>
-          <div className="obs-para-old">{delta.old_text}</div>
+          <div className="obs-para-old">
+            <FilingText text={delta.old_text}>{delta.old_text}</FilingText>
+          </div>
           <div className="obs-para-meta muted">{delta.old_word_count} words removed</div>
         </>
       )}
       {delta.change_type === "added" && delta.new_text && (
         <>
-          <div className="obs-para-new">{delta.new_text}</div>
+          <div className="obs-para-new">
+            <FilingText text={delta.new_text}>{delta.new_text}</FilingText>
+          </div>
           <div className="obs-para-meta muted">{delta.new_word_count} words added</div>
         </>
       )}
@@ -236,12 +241,16 @@ function ParagraphDiff({ delta }: { delta: ParagraphDelta }) {
         <>
           {delta.old_text && (
             <div className="obs-para-old">
-              {renderHighlightedText(delta.old_text, oldOnly, "old")}
+              <FilingText text={delta.old_text}>
+                {renderHighlightedText(delta.old_text, oldOnly, "old")}
+              </FilingText>
             </div>
           )}
           {delta.new_text && (
             <div className="obs-para-new">
-              {renderHighlightedText(delta.new_text, newOnly, "new")}
+              <FilingText text={delta.new_text}>
+                {renderHighlightedText(delta.new_text, newOnly, "new")}
+              </FilingText>
             </div>
           )}
           <div className="obs-para-meta">
