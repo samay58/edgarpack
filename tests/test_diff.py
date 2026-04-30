@@ -414,6 +414,14 @@ def test_repeated_toc_title_falls_back_to_canonical_title():
     assert matches[0].title == "Business"
 
 
+def test_diff_display_title_normalizes_legacy_repeated_toc_title():
+    title = "/ Form 10-K Summary / Form 10-K Summary / Form 10-K Summary / 83 / 83 / 83"
+
+    assert section_diff_module._display_title("10k_partiv_item16_form_10k_summary", title) == (
+        "Form 10-K Summary"
+    )
+
+
 # --- TOC link filtering tests ---
 
 

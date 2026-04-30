@@ -13,7 +13,7 @@ from .models import ChangeType, DiffResult, SectionDelta
 from .text_diff import diff_paragraphs
 
 _DIFF_CACHE_DIR = CACHE_DIR.parent / "diff_cache"
-_DIFF_CACHE_VERSION = "v5"
+_DIFF_CACHE_VERSION = "v6"
 _FINANCIAL_SECTION_BASE_DAMPING = 0.4
 _FINANCIAL_TABLE_DAMPING = 0.35
 _INTEREST_SECTION_WEIGHTS = {
@@ -156,12 +156,30 @@ def _canonical_title_from_section_id(section_id: str) -> str | None:
     return _CANONICAL_ITEM_TITLES.get(item_match.group("item").upper())
 
 
+def _looks_like_repeated_toc_title(section_id: str, title: str) -> bool:
+    canonical = _canonical_title_from_section_id(section_id)
+    if not canonical or not title:
+        return False
+    title_key = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")
+    canonical_key = re.sub(r"[^a-z0-9]+", "_", canonical.lower()).strip("_")
+    pageish_parts = [
+        part.strip()
+        for part in re.split(r"\s*/\s*", title)
+        if re.fullmatch(r"(?:page\s*)?\d{1,4}", part.strip(), re.IGNORECASE)
+    ]
+    return title_key.count(canonical_key) >= 2 or (
+        title.count("/") >= 2 and bool(pageish_parts) and canonical.lower() in title.lower()
+    )
+
+
 def _display_title(section_id: str, raw_title: str) -> str:
     title = _clean_display_title(raw_title)
     canonical = _canonical_title_from_section_id(section_id)
     if not title:
         return canonical or section_id
     if _CROSS_REF_PATTERN.match(title):
+        return canonical or title
+    if _looks_like_repeated_toc_title(section_id, title):
         return canonical or title
     words = re.findall(r"[A-Za-z]{2,}", title)
     if canonical and (_SENTENCE_LIKE_PATTERN.match(title) or len(words) > 14 or len(words) < 2):
