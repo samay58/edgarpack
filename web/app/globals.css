@@ -476,8 +476,15 @@ input {
 
 .evidence-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.copy-status {
+  min-width: 72px;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
 }
 
 .tag {

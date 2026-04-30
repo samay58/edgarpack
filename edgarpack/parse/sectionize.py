@@ -445,6 +445,24 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
         real section headings."""
         return bool(re.match(r"^\(\s*[a-z0-9]", title, re.IGNORECASE))
 
+    def _looks_like_repeated_toc_title(item: str, title: str) -> bool:
+        canonical = _canonical_title(item)
+        if not canonical or not title:
+            return False
+        normalized_title = _normalize_heading_text(title)
+        canonical_key = slugify(canonical, max_len=80)
+        title_key = slugify(normalized_title, max_len=160)
+        pageish_parts = [
+            part.strip()
+            for part in re.split(r"\s*/\s*", normalized_title)
+            if re.fullmatch(r"(?:page\s*)?\d{1,4}", part.strip(), re.IGNORECASE)
+        ]
+        repeated_canonical = title_key.count(canonical_key) >= 2
+        repeated_item = (
+            len(re.findall(rf"\bitem\s*{re.escape(item)}\b", normalized_title, re.I)) >= 2
+        )
+        return repeated_canonical or (repeated_item and bool(pageish_parts))
+
     def _should_skip_item_match(item: str, title: str) -> bool:
         if item == "other":
             return False
@@ -468,6 +486,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             or _starts_with_cross_reference(clean_title)
             or _starts_with_paren_citation(clean_title)
             or _contains_cross_ref_phrase(clean_title)
+            or _looks_like_repeated_toc_title(item, clean_title)
             or _content_word_count(clean_title) < 3
         )
         if needs_fallback:

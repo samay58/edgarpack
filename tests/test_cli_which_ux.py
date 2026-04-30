@@ -152,6 +152,45 @@ def test_cmd_which_no_packs_uses_ticker_first_copy(capsys):
     assert "--cik" not in err
 
 
+def test_cmd_which_no_registry_points_at_local_pack_path(tmp_path, monkeypatch, capsys):
+    pack_dir = tmp_path / "packs" / "0001579878" / "0001628280-26-009228"
+    pack_dir.mkdir(parents=True)
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "filing": {
+                    "accession": "0001628280-26-009228",
+                    "cik": "0001579878",
+                    "company_name": "Figma, Inc.",
+                    "form_type": "10-K",
+                    "filing_date": "2026-02-18",
+                },
+                "sections": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    mock_registry = Mock()
+    mock_registry.list_packs.return_value = []
+    mock_registry.close.return_value = None
+
+    with (
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(return_value=_resolved_company()),
+        ),
+        patch("edgarpack.harvest.registry.PackRegistry", return_value=mock_registry),
+    ):
+        rc = cli._cmd_which(_which_args(company="FIG"))
+
+    err = capsys.readouterr().err
+    assert rc == 1
+    assert "Found 1 pack directory on disk but none in the registry" in err
+    assert "`edgarpack doctor packs/0001579878/0001628280-26-009228`" in err
+    assert "`edgarpack build FIG --form 10-K`" in err
+
+
 def test_cmd_which_shows_progress_and_summary(capsys):
     pack = PackRecord(
         accession="0001628280-26-009228",

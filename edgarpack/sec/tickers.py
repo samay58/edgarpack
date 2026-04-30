@@ -57,6 +57,14 @@ def _looks_like_ticker(s: str) -> bool:
     return bool(_TICKER_SHAPE_RE.match(s.strip()))
 
 
+def _ticker_variants(ticker: str) -> tuple[str, ...]:
+    """Return conservative SEC ticker spelling variants for share classes."""
+    variants: list[str] = []
+    if "." in ticker:
+        variants.append(ticker.replace(".", "-"))
+    return tuple(dict.fromkeys(variants))
+
+
 async def _fetch_raw(force: bool = False) -> dict[str, Any]:
     """Fetch SEC's raw company_tickers.json payload (cached 24h)."""
     cache = DiskCache(CACHE_DIR)
@@ -147,6 +155,10 @@ async def resolve_company(query: str, force: bool = False) -> tuple[str, str, st
     if key_upper in ticker_map:
         cik, title = ticker_map[key_upper]
         return cik, key_upper, title
+    for variant in _ticker_variants(key_upper):
+        if variant in ticker_map:
+            cik, title = ticker_map[variant]
+            return cik, variant, title
 
     # 3. Exact normalized-name match.
     key_norm = _normalize(q)

@@ -184,9 +184,27 @@ def test_live_universe_resolves_every_alias():
         ("tencent", "0700.HK"),
         ("meituan", "3690.HK"),
         ("xgimi", "688696"),
+        ("tsmc", "TSM"),
+        ("brk", "BRK-B"),
     ]:
         r = resolve(index, ticker=None, company=alias)
         assert r.ticker == expected
+
+
+def test_live_universe_sec_aliases_route_to_primary_tickers():
+    from pathlib import Path
+
+    index = load_identity(Path("universe.toml"))
+
+    tsm = resolve(index, ticker=None, company="TSMC")
+    assert tsm.source == "SEC"
+    assert tsm.ticker == "TSM"
+    assert tsm.cik == "0001046179"
+
+    brk = resolve(index, ticker=None, company="BRK")
+    assert brk.source == "SEC"
+    assert brk.ticker == "BRK-B"
+    assert brk.cik == "0001067983"
 
 
 def test_minimax_routes_to_hkex():

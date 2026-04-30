@@ -259,6 +259,86 @@ def _enrich_fact_ids(
                     _enrich_one(comp)
 
 
+def _candidate_concepts_for_metric(
+    metric: str,
+    meta: MetricMeta,
+    facts: dict[str, Any],
+) -> list[tuple[str, str]]:
+    """Return hardcoded concepts present in facts, ordered by current resolver priority."""
+    candidates: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+
+    resolved = resolve_concept(metric, facts)
+    if resolved is not None:
+        candidates.append(resolved)
+        seen.add(resolved)
+
+    for taxonomy, concepts in (
+        ("us-gaap", meta.concepts),
+        (
+            "ifrs-full",
+            meta.ifrs_concepts + meta.concepts if meta.ifrs_concepts else meta.concepts,
+        ),
+    ):
+        tax_data = facts.get(taxonomy, {})
+        if not isinstance(tax_data, dict):
+            continue
+        for concept in concepts:
+            key = (concept, taxonomy)
+            if key in seen or concept not in tax_data:
+                continue
+            candidates.append(key)
+            seen.add(key)
+
+    return candidates
+
+
+def _select_metric_period_value(
+    facts: dict[str, Any],
+    metric: str,
+    meta: MetricMeta,
+    company: str,
+    cik: str,
+    period: str,
+    doc_map: dict[str, str] | None,
+    diagnostics: list[Diagnostic],
+) -> tuple[str | None, str | None, CitedValue | DerivedValue | list[CitedValue] | None]:
+    """Resolve a metric only when a candidate concept satisfies the requested period."""
+    candidates = _candidate_concepts_for_metric(metric, meta, facts)
+    first_failure_diagnostics: list[Diagnostic] = []
+
+    for concept, taxonomy in candidates:
+        local_diagnostics: list[Diagnostic] = []
+        value = select_period(
+            facts,
+            concept,
+            metric,
+            meta,
+            company,
+            cik,
+            period,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+            diagnostics=local_diagnostics,
+        )
+        if isinstance(value, list):
+            if value:
+                diagnostics.extend(local_diagnostics)
+                return concept, taxonomy, value
+        elif value is not None:
+            diagnostics.extend(local_diagnostics)
+            return concept, taxonomy, value
+
+        if not first_failure_diagnostics:
+            first_failure_diagnostics = local_diagnostics
+
+    diagnostics.extend(first_failure_diagnostics)
+    if candidates:
+        concept, taxonomy = candidates[0]
+        return concept, taxonomy, None
+    return None, None, None
+
+
 async def financials(
     company: str,
     metrics: str | list[str] | None = None,
@@ -316,6 +396,8 @@ async def financials(
                     display_token=display_token,
                     pack_root=pack_root,
                 )
+            if _resolved_id is not None and _resolved_id.source == "SEC":
+                company = _resolved_id.ticker
 
     if _identity.looks_like_china_a_share_code(company):
         resolved_code = _identity.ResolvedCompany(
@@ -505,9 +587,18 @@ async def financials(
                 cited = None
             result_metrics[metric] = cited
         else:
-            resolved = resolve_concept(metric, facts)
-            if resolved is None:
-                # Concept resolution failed: try self-heal before giving up.
+            concept, taxonomy, value = _select_metric_period_value(
+                facts,
+                metric,
+                meta,
+                company_name,
+                cik,
+                period,
+                doc_map,
+                diagnostics_list,
+            )
+            if concept is None or taxonomy is None:
+                # Hardcoded concept resolution failed: try self-heal before giving up.
                 learned = try_learn(
                     metric=metric,
                     meta=meta,
@@ -516,23 +607,11 @@ async def financials(
                     company=company_name,
                     prior_year_cited=None,
                     doc_map=doc_map,
+                    period=period,
+                    diagnostics=diagnostics_list,
                 )
                 result_metrics[metric] = learned
                 continue
-
-            concept, taxonomy = resolved
-            value = select_period(
-                facts,
-                concept,
-                metric,
-                meta,
-                company_name,
-                cik,
-                period,
-                taxonomy=taxonomy,
-                doc_map=doc_map,
-                diagnostics=diagnostics_list,
-            )
 
             if isinstance(value, list):
                 scope_warn = get_scope_warning(concept)
@@ -551,26 +630,10 @@ async def financials(
                     result_metrics[metric] = value
                     continue
 
-                # Deterministic path returned None. Try self-heal with the
-                # prior-year annual value as verification ground truth.
-                prior = _fetch_prior_year_for_self_heal(
-                    facts=facts,
-                    concept=concept,
-                    metric=metric,
-                    company=company_name,
-                    cik=cik,
-                    doc_map=doc_map,
-                )
-                learned = try_learn(
-                    metric=metric,
-                    meta=meta,
-                    facts=facts,
-                    cik=cik,
-                    company=company_name,
-                    prior_year_cited=prior,
-                    doc_map=doc_map,
-                )
-                result_metrics[metric] = learned
+                # Hardcoded concepts exist but none can satisfy this period.
+                # Fail closed so self-heal cannot replace an LTM/series miss
+                # with an arbitrary latest fact from an unrelated concept.
+                result_metrics[metric] = None
 
     if "headcount" in metric_list and result_metrics.get("headcount") is None:
         subs = await fetch_submissions(cik, force=force)

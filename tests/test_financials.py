@@ -336,6 +336,60 @@ MOCK_QUARTERLY_SERIES_FACTS = {
 }
 
 
+GOOG_BAD_LTM_FACTS = {
+    "cik": 1652044,
+    "entityName": "Alphabet Inc.",
+    "facts": {
+        "us-gaap": {
+            "Revenues": {
+                "label": "Revenues",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 400_000_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001652044-26-000001",
+                            "filed": "2026-02-04",
+                        },
+                        {
+                            "val": 90_000_000_000,
+                            "start": "2026-01-01",
+                            "end": "2026-03-31",
+                            "fy": 2026,
+                            "fp": "Q1",
+                            "form": "10-Q",
+                            "accn": "0001652044-26-000020",
+                            "filed": "2026-04-25",
+                        },
+                    ]
+                },
+            },
+            "ContractWithCustomerLiabilityRevenueRecognized": {
+                "label": "Revenue Recognized From Contract Liability",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 3_500_000_000,
+                            "start": "2026-01-01",
+                            "end": "2026-03-31",
+                            "fy": 2026,
+                            "fp": "Q1",
+                            "form": "10-Q",
+                            "accn": "0001652044-26-000020",
+                            "filed": "2026-04-25",
+                        },
+                    ]
+                },
+            },
+        }
+    },
+}
+
+
 class TestCrossYearValidation(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")
@@ -361,6 +415,62 @@ class TestCrossYearValidation(unittest.IsolatedAsyncioTestCase):
 
         result = await financials("XYZ", "gross_margin", period="lfy")
         self.assertIsNone(result.metrics["gross_margin"])
+
+
+class TestPeriodAwareResolution(unittest.IsolatedAsyncioTestCase):
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_ltm_failure_does_not_self_heal_to_contract_liability(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        mock_resolve.return_value = ("0001652044", "Alphabet Inc.")
+        mock_facts.return_value = GOOG_BAD_LTM_FACTS
+
+        with tempfile.TemporaryDirectory() as tmp:
+            registry_path = Path(tmp) / "registry.db"
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", registry_path):
+                result = await financials("GOOG", "revenue", period="ltm")
+
+        self.assertIsNone(result.metrics["revenue"])
+        self.assertIn(
+            "ltm_incomputable",
+            [d.kind for d in result.diagnostics if d.metric == "revenue"],
+        )
+
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_verified_learned_bad_mapping_still_fails_period_guard(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        mock_resolve.return_value = ("0001652044", "Alphabet Inc.")
+        mock_facts.return_value = GOOG_BAD_LTM_FACTS
+
+        with tempfile.TemporaryDirectory() as tmp:
+            registry_path = Path(tmp) / "registry.db"
+            reg = LearnedRegistry(db_path=registry_path)
+            reg.upsert(
+                cik="0001652044",
+                metric="revenue",
+                concept="ContractWithCustomerLiabilityRevenueRecognized",
+                taxonomy="us-gaap",
+                source="fuzzy",
+                verified=True,
+                verif_method="manual",
+                value_sample=3_500_000_000,
+            )
+            reg.close()
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", registry_path):
+                result = await financials("GOOG", "revenue", period="ltm")
+
+        self.assertIsNone(result.metrics["revenue"])
+        self.assertIn(
+            "ltm_incomputable",
+            [d.kind for d in result.diagnostics if d.metric == "revenue"],
+        )
 
 
 class TestSeriesOutput(unittest.IsolatedAsyncioTestCase):

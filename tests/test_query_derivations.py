@@ -42,6 +42,49 @@ SEC_REVENUE_ONLY_FACTS = {
 }
 
 
+def _annual_fact(fy: int, value: int) -> dict:
+    return {
+        "val": value,
+        "start": f"{fy - 1}-01-01",
+        "end": f"{fy - 1}-12-31",
+        "fy": fy - 1,
+        "fp": "FY",
+        "form": "10-K",
+        "accn": f"0000000001-{fy}-000001",
+        "filed": f"{fy}-03-01",
+    }
+
+
+SEC_MULTI_YEAR_FACTS = {
+    "cik": 1,
+    "entityName": "TEST CO",
+    "facts": {
+        "us-gaap": {
+            "Revenues": {
+                "label": "Revenues",
+                "units": {
+                    "USD": [
+                        _annual_fact(2025, 120),
+                        _annual_fact(2024, 100),
+                        _annual_fact(2023, 80),
+                    ]
+                },
+            },
+            "GrossProfit": {
+                "label": "Gross Profit",
+                "units": {
+                    "USD": [
+                        _annual_fact(2025, 72),
+                        _annual_fact(2024, 50),
+                        _annual_fact(2023, 32),
+                    ]
+                },
+            },
+        }
+    },
+}
+
+
 def test_minimax_revenue_growth_yoy_present():
     res = asyncio.run(financials(company="minimax", metrics="revenue_growth_yoy", period="lfy"))
     val = res.metrics.get("revenue_growth_yoy")
@@ -97,6 +140,43 @@ def test_gross_margin_trend_shifts_across_years():
     assert val is not None
     # Should not be 0 (which would indicate the offset did not propagate).
     assert abs(val.value) > 1e-6
+
+
+def test_offset_period_derived_metrics_do_not_self_compare_same_year():
+    with (
+        patch.object(
+            financials_module,
+            "resolve_ticker",
+            new=AsyncMock(return_value=("0000000001", "TEST CO")),
+        ),
+        patch.object(
+            financials_module,
+            "fetch_company_facts",
+            new=AsyncMock(return_value=SEC_MULTI_YEAR_FACTS),
+        ),
+        patch.object(financials_module, "_build_doc_map", new=AsyncMock(return_value={})),
+        patch.object(financials_module, "_fetch_fact_id_maps", new=AsyncMock(return_value={})),
+    ):
+        res = asyncio.run(
+            financials(
+                company="TEST",
+                metrics="revenue_growth_yoy,gross_margin_trend",
+                period="lfy-1",
+            )
+        )
+
+    growth = res.metrics.get("revenue_growth_yoy")
+    assert growth is not None
+    assert growth.value == 0.25
+    assert growth.components["revenue"].fiscal_year == 2023
+    assert growth.components["revenue_prev1"].fiscal_year == 2022
+    assert growth.components["revenue"].accession != growth.components["revenue_prev1"].accession
+
+    trend = res.metrics.get("gross_margin_trend")
+    assert trend is not None
+    assert abs(trend.value - 0.1) < 1e-9
+    assert trend.components["gross_margin"].fiscal_year == 2023
+    assert trend.components["gross_margin_prev1"].fiscal_year == 2022
 
 
 def test_sec_revenue_per_employee_resolves_after_text_scan_fallback():

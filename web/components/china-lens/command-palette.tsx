@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export type CommandAction = {
   id: string;
@@ -18,12 +18,55 @@ type CommandPaletteProps = {
 
 export function CommandPalette({ actions, open, onClose, onNavigate }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) {
       setQuery("");
+      restoreFocusRef.current?.focus();
+      restoreFocusRef.current = null;
+      return;
     }
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    window.setTimeout(() => inputRef.current?.focus(), 0);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          "button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex='-1'])",
+        ),
+      );
+      if (focusable.length === 0) {
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose, open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -43,13 +86,15 @@ export function CommandPalette({ actions, open, onClose, onNavigate }: CommandPa
   return (
     <div className="palette-backdrop" role="presentation" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="palette"
         role="dialog"
+        aria-modal="true"
         aria-label="Command palette"
         onClick={(event) => event.stopPropagation()}
       >
         <input
-          autoFocus
+          ref={inputRef}
           className="palette-input"
           value={query}
           onChange={(event) => setQuery(event.target.value)}

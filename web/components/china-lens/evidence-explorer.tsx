@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import type { DocumentView, EvidenceTarget } from "@/types/china-lens";
 
 export type ReadingMode = "en" | "bilingual" | "cn";
@@ -19,6 +21,18 @@ export function EvidenceExplorer({
   onReadingModeChange,
   isLoading = false,
 }: EvidenceExplorerProps) {
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
+    window.setTimeout(() => setCopyStatus("idle"), 1600);
+  };
+
   return (
     <div className="evidence-grid panel">
       <aside className="evidence-doc-list">
@@ -33,7 +47,7 @@ export function EvidenceExplorer({
         </ul>
       </aside>
       <div className="evidence-viewer">
-        <h3>PDF View</h3>
+        <h3>Source Preview</h3>
         <div className="pdf-placeholder">
           <span>
             {isLoading
@@ -92,7 +106,7 @@ export function EvidenceExplorer({
             disabled={!evidenceTarget}
             onClick={() => {
               if (evidenceTarget) {
-                navigator.clipboard.writeText(evidenceTarget.citation_label);
+                void copyText(evidenceTarget.citation_label);
               }
             }}
           >
@@ -104,7 +118,7 @@ export function EvidenceExplorer({
             disabled={!evidenceTarget}
             onClick={() => {
               if (evidenceTarget) {
-                navigator.clipboard.writeText(
+                void copyText(
                   readingMode === "cn" ? evidenceTarget.text_zh : evidenceTarget.text_en,
                 );
               }
@@ -112,6 +126,9 @@ export function EvidenceExplorer({
           >
             Copy snippet
           </button>
+          <span aria-live="polite" className="copy-status">
+            {copyStatus === "copied" ? "Copied" : copyStatus === "failed" ? "Copy failed" : ""}
+          </span>
         </div>
       </aside>
     </div>

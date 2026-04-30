@@ -18,6 +18,7 @@ MOCK_TICKERS = {
     "4": {"cik_str": "1652044", "ticker": "GOOGL", "title": "Alphabet Inc. Class A"},
     "5": {"cik_str": "1652044", "ticker": "GOOG", "title": "Alphabet Inc. Class C"},
     "6": {"cik_str": "1800", "ticker": "ABBV", "title": "AbbVie Inc."},
+    "7": {"cik_str": "1067983", "ticker": "BRK-B", "title": "BERKSHIRE HATHAWAY INC"},
 }
 
 
@@ -154,6 +155,17 @@ class TestResolveCompany(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(cik, "0000037996")
         self.assertEqual(ticker, "F")
         self.assertEqual(title, "FORD MOTOR CO")
+
+    @patch("edgarpack.sec.tickers.DiskCache")
+    @patch("edgarpack.sec.tickers.get_client")
+    async def test_dot_share_class_normalizes_to_sec_dash_ticker(
+        self, _mock_client, mock_cache_cls
+    ) -> None:
+        self._cache(mock_cache_cls)
+        cik, ticker, title = await resolve_company("BRK.B")
+        self.assertEqual(cik, "0001067983")
+        self.assertEqual(ticker, "BRK-B")
+        self.assertEqual(title, "BERKSHIRE HATHAWAY INC")
 
     @patch("edgarpack.sec.tickers.DiskCache")
     @patch("edgarpack.sec.tickers.get_client")

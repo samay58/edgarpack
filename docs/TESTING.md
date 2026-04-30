@@ -1,12 +1,13 @@
 # Testing
 
-Five lanes, in order of how often you'll run them:
+Six lanes, in order of how often you'll run them:
 
 - Fast local regression (every commit)
 - Live SEC smoke (before merging query or parse changes)
 - Expanded live SEC coverage (before refactors or releases)
 - China golden harness (when touching the HKEX extraction pipeline)
 - China Lens local loop (when touching ingestion, search, or storage)
+- Web release gate (when touching `web/` or preparing a demo)
 
 ## Prerequisites
 
@@ -38,6 +39,12 @@ cache behavior is explicit:
 scripts/symphony_quality_gate.sh
 ```
 
+For release or web-facing work, opt into the web build from the same wrapper:
+
+```bash
+SYMPHONY_WEB=1 scripts/symphony_quality_gate.sh
+```
+
 What this covers:
 
 - query period selection and LTM math
@@ -46,6 +53,9 @@ What this covers:
 - markdown render structural fixes (nested lists, colspan/rowspan, link cleanup, inline spacing)
 - markdown polish rules (TOC spam, bold noise, bullet-table recovery, heading normalization, complex table simplification, whitespace normalization) and idempotency
 - China Lens service, API, and storage adapters
+
+With `SYMPHONY_WEB=1`, the same gate also runs `npm --prefix web run lint` and
+`npm --prefix web run build`, installing `web` dependencies first when needed.
 
 ## 2. Live SEC Smoke Tests
 
@@ -174,6 +184,26 @@ curl -X POST http://127.0.0.1:8000/api/v1/connectors/cninfo/sync \
   -d '{"company_id":"cmp_tencent_0700","manifest_path":"./cninfo-manifest.json","clear_existing":true}'
 ```
 
+## 8. Web Release Gate
+
+Use this when touching `web/`, the Observatory, or demo-ready UX.
+
+```bash
+npm --prefix web ci
+npm --prefix web run lint
+npm --prefix web run build
+```
+
+For asset smoke tests, run the built or dev server first, then check the routes:
+
+```bash
+npm --prefix web run dev
+BASE_URL=http://localhost:3000 npm --prefix web run smoke:assets
+```
+
+The smoke script intentionally fails fast with a setup message if nothing is
+serving at `BASE_URL`.
+
 ## Choosing The Right Lane
 
 - Use fast local regression for routine commits.
@@ -181,3 +211,4 @@ curl -X POST http://127.0.0.1:8000/api/v1/connectors/cninfo/sync \
 - Use expanded live SEC coverage before larger refactors or releases.
 - Use the China golden harness when touching HKEX extraction, HKEX-path routing in `financials()`, or `compare` currency logic.
 - Use the China Lens loop when touching ingestion, search, citations, pack generation, or storage.
+- Use the web release gate when touching `web/` or preparing screenshot/demo surfaces.
