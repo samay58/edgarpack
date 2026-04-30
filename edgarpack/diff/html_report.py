@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import posixpath
+import re
 from html import escape
 from pathlib import Path
 from urllib.parse import quote, urlsplit
@@ -162,6 +163,45 @@ h1 {
   line-height: 1.65;
   overflow-wrap: anywhere;
 }
+.financial-table-wrap {
+  max-width: 100%;
+  margin: .35rem 0;
+  overflow-x: auto;
+}
+.financial-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sans);
+  font-size: .94rem;
+  line-height: 1.35;
+  table-layout: auto;
+}
+.financial-table th,
+.financial-table td {
+  padding: .45rem .6rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  text-align: left;
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.financial-table th {
+  background: #f0eadc;
+  color: var(--muted);
+  font-weight: 700;
+}
+.financial-table td.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.financial-ledger {
+  margin: .35rem 0;
+  font-size: .88rem;
+  line-height: 1.45;
+}
 .old { background: var(--del-bg); color: var(--del-ink); }
 .new { background: var(--add-bg); color: var(--ink); }
 .context { background: var(--surface); color: var(--ink); }
@@ -285,6 +325,162 @@ def _span_html(span: TextSpan) -> str:
     return f'<span class="{op_class} {side_class}">{escape(span.text)}</span>'
 
 
+def _is_numeric_cell(text: str) -> bool:
+    cleaned = text.strip().replace(",", "")
+    return bool(cleaned) and bool(
+        re.fullmatch(r"[$€£¥]?\(?-?\d+(?:\.\d+)?%?\)?", cleaned)
+    )
+
+
+def _is_escaped_pipe(line: str, index: int) -> bool:
+    backslashes = 0
+    position = index - 1
+    while position >= 0 and line[position] == "\\":
+        backslashes += 1
+        position -= 1
+    return backslashes % 2 == 1
+
+
+def _strip_outer_table_delimiters(line: str) -> str:
+    trimmed = line.strip()
+    if trimmed.startswith("|"):
+        trimmed = trimmed[1:]
+    if trimmed.endswith("|") and not _is_escaped_pipe(trimmed, len(trimmed) - 1):
+        trimmed = trimmed[:-1]
+    return trimmed
+
+
+def _split_table_row(line: str) -> list[str]:
+    cells: list[str] = []
+    cell = ""
+    raw = _strip_outer_table_delimiters(line)
+    for index, char in enumerate(raw):
+        if char == "|" and not _is_escaped_pipe(raw, index):
+            cells.append(cell.strip().replace(r"\|", "|"))
+            cell = ""
+            continue
+        cell += char
+    cells.append(cell.strip().replace(r"\|", "|"))
+    return cells
+
+
+def _is_gfm_separator_cell(text: str) -> bool:
+    return re.fullmatch(r":?-{3,}:?", text.strip()) is not None
+
+
+def _is_gfm_table(text: str) -> bool:
+    lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
+    if len(lines) < 3:
+        return False
+    if "|" not in lines[0] or "|" not in lines[1]:
+        return False
+
+    header = _split_table_row(lines[0])
+    separators = _split_table_row(lines[1])
+    body_rows = [_split_table_row(line) for line in lines[2:]]
+    if not header or len(header) != len(separators):
+        return False
+    return all(_is_gfm_separator_cell(cell) for cell in separators) and all(
+        len(row) == len(header) for row in body_rows
+    )
+
+
+def _table_block_html(text: str) -> str:
+    lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
+    rows = [_split_table_row(line) for line in lines]
+    header = rows[0]
+    body_rows = rows[2:]
+    out = [
+        '<div class="financial-table-wrap"><table class="financial-table">',
+        "<thead>",
+        "<tr>",
+    ]
+    for cell in header:
+        out.append(f"<th>{escape(cell)}</th>")
+    out.extend(["</tr>", "</thead>", "<tbody>"])
+    for row in body_rows:
+        out.append("<tr>")
+        for cell in row:
+            cls = ' class="num"' if _is_numeric_cell(cell) else ""
+            out.append(f"<td{cls}>{escape(cell)}</td>")
+        out.append("</tr>")
+    out.extend(["</tbody>", "</table></div>"])
+    return "".join(out)
+
+
+def _is_flattened_financial_ledger(text: str) -> bool:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if len(lines) < 3:
+        return False
+    slash_lines = sum(1 for line in lines if line.count("/") >= 2)
+    dotted_lines = sum(1 for line in lines if "..." in line)
+    money_or_paren_lines = sum(
+        1 for line in lines if "$" in line or ("(" in line and ")" in line)
+    )
+    return slash_lines >= 2 and (dotted_lines >= 1 or money_or_paren_lines >= 1)
+
+
+def _clean_ledger_text(text: str) -> str:
+    lines = []
+    for line in text.strip().splitlines():
+        stripped = line.strip()
+        if stripped.startswith(">"):
+            stripped = stripped[1:].lstrip()
+        stripped = stripped.replace("**", "")
+        if stripped:
+            lines.append(stripped)
+    return "\n".join(lines)
+
+
+def _paragraph_content_html(text: str) -> str:
+    if _is_gfm_table(text):
+        return _table_block_html(text)
+    if _is_flattened_financial_ledger(text):
+        return f'<pre class="financial-ledger">{escape(_clean_ledger_text(text))}</pre>'
+    return escape(text)
+
+
+def _single_side_for_paragraph(para: ReportParagraphDelta) -> str | None:
+    if para.change_type == ChangeType.ADDED:
+        return "new"
+    if para.change_type in {ChangeType.REMOVED, ChangeType.UNCHANGED}:
+        return "old"
+    return None
+
+
+def _side_text_and_spans(para: ReportParagraphDelta, side: str) -> tuple[str, list[TextSpan]]:
+    if side == "old":
+        return para.old_text or "", para.old_spans
+    return para.new_text or "", para.new_spans
+
+
+def _table_sequence_end(paragraphs: list[ReportParagraphDelta], start: int) -> int:
+    first = paragraphs[start]
+    side = _single_side_for_paragraph(first)
+    if side is None:
+        return start
+
+    first_text, first_spans = _side_text_and_spans(first, side)
+    if first_spans or "|" not in first_text:
+        return start
+
+    lines: list[str] = []
+    index = start
+    while index < len(paragraphs):
+        para = paragraphs[index]
+        if para.change_type != first.change_type:
+            break
+        text, spans = _side_text_and_spans(para, side)
+        if spans or "|" not in text:
+            break
+        lines.append(text.strip())
+        index += 1
+
+    if len(lines) < 3 or not _is_gfm_table("\n".join(lines)):
+        return start
+    return index
+
+
 def _safe_http_href(url: str | None) -> str | None:
     if not url:
         return None
@@ -337,7 +533,14 @@ def _prose_html(para: ReportParagraphDelta, side: str, css_class: str) -> str:
     else:
         spans = para.new_spans
         text = para.new_text
-    content = "".join(_span_html(span) for span in spans) if spans else escape(text or "")
+    raw_text = text or ""
+    content = (
+        _paragraph_content_html(raw_text)
+        if _is_gfm_table(raw_text) or _is_flattened_financial_ledger(raw_text)
+        else "".join(_span_html(span) for span in spans)
+        if spans
+        else escape(raw_text)
+    )
     return f'<div class="prose {css_class}">{content}</div>'
 
 
@@ -430,6 +633,45 @@ def _paragraph_html(
     )
 
 
+def _table_sequence_html(
+    paragraphs: list[ReportParagraphDelta],
+    before_source_url: str | None,
+    after_source_url: str | None,
+    before_pack_dir: str,
+    after_pack_dir: str,
+) -> str:
+    first = paragraphs[0]
+    side = _single_side_for_paragraph(first)
+    if side is None:
+        return ""
+    marker, marker_class, css_class = {
+        ChangeType.ADDED: ("+", "marker-added", "new"),
+        ChangeType.REMOVED: ("-", "marker-removed", "old"),
+        ChangeType.UNCHANGED: (".", "marker-context", "context"),
+    }[first.change_type]
+    anchor = first.new_anchor or first.old_anchor
+    para_index = anchor.paragraph_index if anchor else 0
+    table_text = "\n".join(_side_text_and_spans(para, side)[0].strip() for para in paragraphs)
+    evidence = "".join(
+        _evidence_html(
+            para,
+            before_source_url,
+            after_source_url,
+            before_pack_dir,
+            after_pack_dir,
+        )
+        for para in paragraphs
+    )
+    return (
+        '<div class="paragraph-row">'
+        f'<div class="gutter">p{para_index}</div>'
+        f'<div class="marker {marker_class}">{marker}</div>'
+        f'<div class="body"><div class="prose {css_class}">'
+        f"{_table_block_html(table_text)}</div>{evidence}</div>"
+        "</div>"
+    )
+
+
 def _group_html(
     group: ParagraphGroup,
     before_source_url: str | None,
@@ -444,16 +686,33 @@ def _group_html(
             f"{group.collapsed_word_count} words collapsed</summary>"
             "</details>"
         )
-    return "".join(
-        _paragraph_html(
-            para,
-            before_source_url,
-            after_source_url,
-            before_pack_dir,
-            after_pack_dir,
+    html: list[str] = []
+    index = 0
+    while index < len(group.paragraphs):
+        table_end = _table_sequence_end(group.paragraphs, index)
+        if table_end > index:
+            html.append(
+                _table_sequence_html(
+                    group.paragraphs[index:table_end],
+                    before_source_url,
+                    after_source_url,
+                    before_pack_dir,
+                    after_pack_dir,
+                )
+            )
+            index = table_end
+            continue
+        html.append(
+            _paragraph_html(
+                group.paragraphs[index],
+                before_source_url,
+                after_source_url,
+                before_pack_dir,
+                after_pack_dir,
+            )
         )
-        for para in group.paragraphs
-    )
+        index += 1
+    return "".join(html)
 
 
 def _section_nav_html(report: DiffReport) -> str:

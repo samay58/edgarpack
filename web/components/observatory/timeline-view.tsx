@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { FilingText } from "@/components/observatory/filing-text";
 import type { TimelineEntry, ParagraphDelta } from "@/types/observatory";
 
 const WORD_SPLIT_PATTERN = /([A-Za-z0-9]+|[^A-Za-z0-9]+)/g;
@@ -138,12 +139,16 @@ function EntryCard({
               <div key={i} className={`obs-para obs-para-${p.change_type}`}>
                 {p.old_text && (
                   <div className="obs-para-old">
-                    {renderHighlightedText(p.old_text, oldOnly, "old")}
+                    <FilingText text={p.old_text}>
+                      {renderHighlightedText(p.old_text, oldOnly, "old")}
+                    </FilingText>
                   </div>
                 )}
                 {p.new_text && (
                   <div className="obs-para-new">
-                    {renderHighlightedText(p.new_text, newOnly, "new")}
+                    <FilingText text={p.new_text}>
+                      {renderHighlightedText(p.new_text, newOnly, "new")}
+                    </FilingText>
                   </div>
                 )}
                 {p.change_type === "modified" && (
@@ -166,7 +171,9 @@ function EntryCard({
       {expanded && isFirst && entry.content_preview && (
         <div className="obs-paras">
           <div className="obs-para" style={{ opacity: 0.7 }}>
-            <div className="obs-para-new">{entry.content_preview}</div>
+            <div className="obs-para-new">
+              <FilingText text={entry.content_preview}>{entry.content_preview}</FilingText>
+            </div>
           </div>
         </div>
       )}

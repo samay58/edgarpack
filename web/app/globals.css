@@ -966,6 +966,60 @@ input {
   word-break: break-word;
 }
 
+.obs-financial-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--obs-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.obs-financial-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.obs-financial-table th,
+.obs-financial-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(142, 160, 196, 0.28);
+  border-right: 1px solid rgba(142, 160, 196, 0.2);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  vertical-align: top;
+}
+
+.obs-financial-table th {
+  color: var(--obs-muted);
+  background: rgba(247, 250, 255, 0.9);
+  font-weight: 700;
+}
+
+.obs-financial-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.obs-financial-ledger {
+  margin: 0;
+  overflow-x: auto;
+  border: 1px solid var(--obs-line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--obs-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre;
+}
+
 .obs-para-meta {
   display: flex;
   align-items: center;

@@ -72,10 +72,37 @@ ul.list { list-style: none; padding-left: 0; }
 #filter:focus { border-color: var(--link); }
 #filter::placeholder { color: var(--muted); }
 
-table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
-th, td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; vertical-align: top; }
-th { text-align: left; color: var(--muted); font-weight: 600; }
-thead th { background: #f3f3f3; }
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 100%;
+  table-layout: auto;
+  margin: 0;
+}
+th, td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0.38rem 0.55rem;
+  vertical-align: top;
+}
+th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  background: #f3f3f3;
+}
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 tbody tr:nth-child(even) { background: #fcfcfc; }
 
 pre {
