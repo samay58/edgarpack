@@ -38,8 +38,9 @@ Build a high-trust research workflow that produces investor-grade Packs where ea
 
 - Opt-in via `build-sse --translate` or the standalone `translate-sse --pack <dir>` command. Requires `EDGARPACK_DEEPINFRA_KEY`.
 - Router dispatches per section type and per paragraph shape (heading vs. flattened catalog vs. markdown table vs. prose). Table cells take a structured path that short-circuits on dates, plain amounts, percentage lists, reporting-period markers, and multi-line structured values.
-- Validators run on every translated paragraph. On any failure the router retries with a strict prompt before giving up and surfacing a pack-level warning.
-- Cache keyed by provider/model namespace + section-strategy + normalized source; repeat runs on the same model are free and model comparisons do not silently reuse another model's output.
+- Validators run on every translated paragraph. On residual Chinese output the provider gets one bounded repair attempt after strict retry; invalid repairs still fail closed.
+- Cache keyed by provider/model namespace + prompt/router/validator strategy fingerprint + normalized source; repeat runs on the same strategy are free and model or strategy changes do not silently reuse stale output.
+- Standalone `translate-sse` writes `translation.failures.json` when a section fails closed, with section id, paragraph index, source/target text, excerpts, and validator issues.
 - Site builder renders bilingual pages when a translation exists; falls back to Chinese-only when it doesn't.
 
 ### Extraction pipeline (HKEX)

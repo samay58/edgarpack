@@ -2,7 +2,12 @@
 
 import pytest
 
-from edgarpack.china.translate.cache import TranslationCache, _hash_text, _normalize
+from edgarpack.china.translate.cache import (
+    TranslationCache,
+    _hash_text,
+    _normalize,
+    provider_namespace,
+)
 from edgarpack.china.translate.provider import TranslationResult
 
 
@@ -43,6 +48,17 @@ class TestHashStability:
 
     def test_namespace_changes_hash(self):
         assert _hash_text("净利润", namespace="v1") != _hash_text("净利润", namespace="v2")
+
+    def test_provider_namespace_includes_strategy_fingerprint(self):
+        namespace = provider_namespace(
+            "deepinfra/deepseek-ai/DeepSeek-V4-Flash",
+            strategy_fingerprint="prompt-v5/router-v14/validator-v5",
+        )
+
+        assert namespace == (
+            "sse-translate-v10:deepinfra/deepseek-ai/DeepSeek-V4-Flash:"
+            "prompt-v5/router-v14/validator-v5"
+        )
 
 
 class TestTranslationCache:

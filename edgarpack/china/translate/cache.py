@@ -40,8 +40,14 @@ def _hash_text(text: str, namespace: str = DEFAULT_NAMESPACE) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def provider_namespace(provider: str, namespace: str = DEFAULT_NAMESPACE) -> str:
-    """Scope cached translations to the provider/model that produced them."""
+def provider_namespace(
+    provider: str,
+    namespace: str = DEFAULT_NAMESPACE,
+    strategy_fingerprint: str | None = None,
+) -> str:
+    """Scope cached translations to the provider/model and translation strategy."""
+    if strategy_fingerprint:
+        return f"{namespace}:{provider}:{strategy_fingerprint}"
     return f"{namespace}:{provider}"
 
 
