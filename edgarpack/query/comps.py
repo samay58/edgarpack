@@ -11,6 +11,7 @@ from .citations import CitationRegistry, calculation_summary, citation_summary
 from .financials import financials
 from .formatting import format_number
 from .models import CitedValue, DerivedValue, QueryResult
+from .periods import parse_period_spec
 
 
 async def comps(
@@ -80,6 +81,147 @@ def _register_calculation(
         formula_records=formula_records,
     )
     return registry.register_calculation(metric_name, item)
+
+
+def expand_comps_periods(spec: str) -> list[str]:
+    """Parse a comps period spec into scalar columns.
+
+    ``query`` can ask ``financials()`` for ``annual:N`` directly because it
+    renders a single company. For comps, expanding annual history into
+    relative scalar selectors gives a clean company x metric x period grid and
+    lets derived metrics resolve through the same path as ``lfy,lfy-1``.
+    """
+    periods = parse_period_spec(spec)
+    if len(periods) == 1 and periods[0].startswith("annual:"):
+        count = int(periods[0].split(":", 1)[1])
+        if count <= 0:
+            raise ValueError("annual:N must request at least one period")
+        return ["lfy"] + [f"lfy-{idx}" for idx in range(1, count)]
+    return periods
+
+
+def _fiscal_label_sort_key(label: str) -> tuple[int, int]:
+    """Sort fiscal labels newest first when building series grids."""
+    upper = label.upper()
+    parts = upper.split()
+    if len(parts) == 2 and parts[0].startswith("Q") and parts[1].startswith("FY"):
+        try:
+            return int(parts[1][2:]), int(parts[0][1:])
+        except ValueError:
+            return 0, 0
+    if upper.startswith("FY"):
+        try:
+            return int(upper[2:]), 5
+        except ValueError:
+            return 0, 0
+    return 0, 0
+
+
+def comps_series_to_period_grid(
+    results: dict[str, QueryResult],
+    metrics: list[str],
+    *,
+    max_periods: int | None = None,
+) -> tuple[dict[str, dict[str, QueryResult]], list[str]]:
+    """Explode list-valued comps results into a relative period grid.
+
+    Series selectors like ``quarterly:N`` return list-valued metrics from
+    ``financials()``. Aligning by list position is unsafe for derived metrics:
+    EBITDA may only be computable for Q1 while revenue has Q3/Q2/Q1. Each
+    company first builds a fiscal-label reference order, then sparse metrics
+    are placed into relative columns (``mrq``, ``mrq-1q``...) through that map.
+    """
+    company_label_orders: dict[str, list[str]] = {}
+    longest_order = 0
+
+    for company_key, qr in results.items():
+        best_order: list[str] = []
+        for metric in metrics:
+            raw_value = qr.metrics.get(metric)
+            values = raw_value if isinstance(raw_value, list) else [raw_value]
+            labels: list[str] = []
+            for cited in values:
+                if cited is None:
+                    continue
+                label = cited.fiscal_label
+                if label not in labels:
+                    labels.append(label)
+            labels.sort(key=_fiscal_label_sort_key, reverse=True)
+            if len(labels) > len(best_order):
+                best_order = labels
+
+        company_label_orders[company_key] = best_order
+        longest_order = max(longest_order, len(best_order))
+
+    period_count = max_periods if max_periods is not None else longest_order
+    period_count = max(0, period_count)
+    labels = ["mrq"] + [f"mrq-{idx}q" for idx in range(1, period_count)]
+    results_by_period: dict[str, dict[str, QueryResult]] = {label: {} for label in labels}
+
+    for label_index, relative_label in enumerate(labels):
+        for company_key, qr in results.items():
+            company_order = company_label_orders.get(company_key, [])
+            target_fiscal_label = (
+                company_order[label_index] if label_index < len(company_order) else None
+            )
+            metrics_for_label: dict[str, CitedValue | DerivedValue | None] = {}
+            for metric in metrics:
+                raw_value = qr.metrics.get(metric)
+                values = raw_value if isinstance(raw_value, list) else [raw_value]
+                matched = next(
+                    (
+                        cited
+                        for cited in values
+                        if cited is not None and cited.fiscal_label == target_fiscal_label
+                    ),
+                    None,
+                )
+                metrics_for_label[metric] = matched
+
+            results_by_period[relative_label][company_key] = QueryResult(
+                company=qr.company,
+                cik=qr.cik,
+                period=relative_label,
+                metrics=metrics_for_label,
+                diagnostics=qr.diagnostics if label_index == 0 else [],
+                display_token=qr.display_token,
+            )
+
+    return results_by_period, labels
+
+
+def _compact_citation_summaries(citations: dict[str, dict[str, object]]) -> list[str]:
+    """Group value-level citation IDs by filing/window for compact footers."""
+    grouped: dict[tuple[object, ...], list[str]] = {}
+    records_by_key: dict[tuple[object, ...], dict[str, object]] = {}
+    for cid, record in citations.items():
+        key = (
+            record.get("form_type"),
+            record.get("fiscal_label"),
+            record.get("period"),
+            record.get("accession"),
+            record.get("filed"),
+        )
+        grouped.setdefault(key, []).append(cid)
+        records_by_key.setdefault(key, record)
+
+    lines: list[str] = []
+    for key, ids in grouped.items():
+        record = records_by_key[key]
+        if len(ids) == 1:
+            lines.append(citation_summary(ids[0], record))
+            continue
+        id_list = ", ".join(ids)
+        form_type = record.get("form_type")
+        fiscal = record.get("fiscal_label")
+        period = record.get("period")
+        filing = record.get("accession")
+        filed = record.get("filed")
+        lines.append(
+            f"[{id_list}] {form_type} {fiscal} | period {period} | "
+            f"filing {filing} | filed {filed}"
+        )
+    return lines
 
 
 def format_comps_table(
@@ -176,8 +318,8 @@ def format_comps_table(
             lines.append("")
         if registry.citations:
             lines.append("Sources:")
-            for cid, record in registry.citations.items():
-                lines.extend(_with_width(citation_summary(cid, record)))
+            for summary in _compact_citation_summaries(registry.citations):
+                lines.extend(_with_width(summary))
         if registry.calculations:
             if registry.citations:
                 lines.append("")
@@ -268,6 +410,255 @@ def format_comps_table(
     return "\n".join(lines)
 
 
+def format_comps_multi_period_table(
+    results_by_period: dict[str, dict[str, QueryResult]],
+    metrics: list[str],
+    periods: list[str],
+    *,
+    companies: list[str] | None = None,
+    citations_mode: str = "footer",
+    show_links: str = "primary",
+    audit: bool = False,
+    terminal_width: int | None = None,
+) -> str:
+    """Render a cross-company, multi-period comparison grid.
+
+    Rows are ``Company`` + ``Metric`` and columns are the caller's period
+    selectors. This keeps comps ergonomics aligned with query's metrics x
+    periods view while preserving cross-company scanability.
+    """
+    citations_mode = citations_mode.lower().strip()
+    show_links = show_links.lower().strip()
+    formula_records: dict[tuple[str, str], dict[str, object]] = {}
+    registry = CitationRegistry(formula_records=formula_records)
+    warnings: list[str] = []
+
+    if companies is None:
+        seen_companies: list[str] = []
+        for period in periods:
+            for company in results_by_period.get(period, {}):
+                if company not in seen_companies:
+                    seen_companies.append(company)
+        companies = seen_companies
+
+    header_parts = ["Company", "Metric"] + [_period_label(period) for period in periods]
+    rows: list[list[str]] = []
+
+    for company_key in companies:
+        company_label = company_key
+        for period in periods:
+            qr = results_by_period.get(period, {}).get(company_key)
+            if qr is not None and qr.company:
+                company_label = qr.company
+                break
+
+        for metric_index, metric in enumerate(metrics):
+            row = [company_label if metric_index == 0 else "", _metric_label(metric)]
+            for period in periods:
+                qr = results_by_period.get(period, {}).get(company_key)
+                raw_value = None if qr is None else qr.metrics.get(metric)
+                cited = raw_value[0] if isinstance(raw_value, list) and raw_value else raw_value
+                if cited is None or cited.value is None:
+                    row.append("N/A")
+                    continue
+
+                formatted = _format_value(cited)
+                warn_marker = ""
+                if cited.warnings:
+                    warn_marker = " !"
+                    warnings.extend(
+                        f"{qr.company or company_key} {metric} ({period}): {w}"
+                        for w in cited.warnings
+                    )
+
+                if citations_mode == "off":
+                    row.append(f"{formatted}{warn_marker}")
+                else:
+                    marker = registry.marker_for(metric, cited)
+                    row.append(f"{formatted} {marker}{warn_marker}".rstrip())
+            rows.append(row)
+
+    width = terminal_width or 120
+    all_rows = [header_parts] + rows
+    col_widths = [max(len(row[i]) for row in all_rows) for i in range(len(header_parts))]
+    required_width = sum(col_widths) + 2 * (len(header_parts) - 1)
+    stacked_mode = len(periods) > 1 and required_width > width
+
+    lines: list[str] = []
+    if stacked_mode:
+        current_company = ""
+        for row in rows:
+            if row[0]:
+                if lines:
+                    lines.append("")
+                current_company = row[0]
+                lines.append(current_company)
+            lines.append(f"  {row[1]}")
+            for idx, period in enumerate(periods, start=2):
+                lines.append(f"    {_period_label(period)}: {row[idx]}")
+    else:
+        header_line = "  ".join(
+            header_parts[i].ljust(col_widths[i]) for i in range(len(header_parts))
+        )
+        lines.append(header_line)
+        lines.append("  ".join("-" * width for width in col_widths))
+        for row in rows:
+            line = "  ".join(
+                row[i].rjust(col_widths[i]) if i > 1 else row[i].ljust(col_widths[i])
+                for i in range(len(row))
+            )
+            lines.append(line)
+
+    def _wrap(text: str, indent: str = "  ") -> list[str]:
+        w = terminal_width or 120
+        wrapped = textwrap.fill(
+            text,
+            width=max(40, w),
+            subsequent_indent=indent,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        return wrapped.splitlines()
+
+    def _append_calculations(indent: str = "       ") -> None:
+        if not formula_records:
+            return
+        lines.append("")
+        lines.append("Calculations:")
+        for (metric_name, _kind), rec in formula_records.items():
+            formula = rec.get("formula", "")
+            bound = rec.get("calc_ids", [])
+            bound_list = [str(cid) for cid in bound] if isinstance(bound, list) else []
+            lines.extend(_wrap(f"[{', '.join(bound_list)}] {metric_name} = {formula}", indent))
+            if audit:
+                for cid in bound_list:
+                    calc = registry.calculations.get(cid)
+                    if not isinstance(calc, dict):
+                        continue
+                    components = calc.get("components", [])
+                    if not isinstance(components, list):
+                        continue
+                    for comp in components:
+                        if not isinstance(comp, dict):
+                            continue
+                        role = comp.get("role")
+                        c_cid = comp.get("citation_id")
+                        value = comp.get("value")
+                        unit = comp.get("unit")
+                        fiscal = comp.get("fiscal_label")
+                        lines.extend(
+                            _wrap(
+                                f"  [{cid}] {role}[{c_cid}] value={value} {unit} | {fiscal}",
+                                indent=indent,
+                            )
+                        )
+
+    if citations_mode == "footer":
+        if registry.citations:
+            lines.append("")
+            lines.append("Sources:")
+            for summary in _compact_citation_summaries(registry.citations):
+                lines.extend(_wrap(summary))
+        _append_calculations()
+    elif citations_mode != "off":
+        if registry.citations:
+            lines.append("")
+            lines.append("Citations:")
+            for cid, record in registry.citations.items():
+                summary = citation_summary(cid, record)
+                lines.extend(_wrap(summary, indent="       "))
+                if show_links == "primary":
+                    link = record.get("primary_link")
+                    link_type = record.get("primary_link_type")
+                    if isinstance(link, str) and link:
+                        lines.extend(_wrap(f"     link({link_type}): {link}", indent="       "))
+                elif show_links == "all":
+                    links = record.get("links", {})
+                    if isinstance(links, dict):
+                        for link_key, link_value in links.items():
+                            if isinstance(link_value, str):
+                                lines.extend(
+                                    _wrap(f"     {link_key}: {link_value}", indent="       ")
+                                )
+        _append_calculations()
+
+    if warnings:
+        lines.append("")
+        lines.append("Warnings:")
+        for warning in warnings:
+            lines.extend(_wrap(f"- {warning}", indent="  "))
+
+    return "\n".join(lines)
+
+
+def comps_multi_period_to_lean_json(
+    results_by_period: dict[str, dict[str, QueryResult]],
+    metrics: list[str],
+    periods: list[str],
+    *,
+    companies: list[str] | None = None,
+) -> str:
+    """Serialize multi-period comps to lean JSON without flattening periods."""
+    if companies is None:
+        companies = []
+        for period in periods:
+            for company in results_by_period.get(period, {}):
+                if company not in companies:
+                    companies.append(company)
+
+    company_payloads: dict[str, object] = {}
+    for company in companies:
+        per_period: dict[str, object] = {}
+        for period in periods:
+            qr = results_by_period.get(period, {}).get(company)
+            per_period[period] = qr.to_lean_dict() if qr is not None else None
+        company_payloads[company] = {"periods": per_period}
+
+    return json.dumps(
+        {
+            "periods": periods,
+            "requested_metrics": metrics,
+            "companies": company_payloads,
+        },
+        indent=2,
+        sort_keys=False,
+        default=str,
+    )
+
+
+def comps_multi_period_to_json(
+    results_by_period: dict[str, dict[str, QueryResult]],
+    periods: list[str],
+    *,
+    companies: list[str] | None = None,
+) -> str:
+    """Serialize multi-period comps to verbose JSON without flattening periods."""
+    if companies is None:
+        companies = []
+        for period in periods:
+            for company in results_by_period.get(period, {}):
+                if company not in companies:
+                    companies.append(company)
+
+    company_payloads: dict[str, object] = {}
+    for company in companies:
+        per_period: dict[str, object] = {}
+        for period in periods:
+            qr = results_by_period.get(period, {}).get(company)
+            per_period[period] = qr.to_cited_dict() if qr is not None else None
+        company_payloads[company] = {"periods": per_period}
+
+    return json.dumps(
+        {
+            "periods": periods,
+            "companies": company_payloads,
+        },
+        indent=2,
+        sort_keys=False,
+        default=str,
+    )
+
+
 def comps_to_json(results: dict[str, QueryResult]) -> str:
     """Serialize comparison results to JSON with citations on every value."""
     output: dict[str, Any] = {}
@@ -302,7 +693,7 @@ def _period_label(spec: str) -> str:
     s = spec.strip().lower()
     if "-" in s:
         head, tail = s.split("-", 1)
-        return f"{head.upper()}-{tail}"
+        return f"{head.upper()}-{tail.upper()}"
     return s.upper()
 
 
@@ -490,8 +881,8 @@ def format_financial_perf_table(
         if registry.citations:
             lines.append("")
             lines.append("Sources:")
-            for cid, record in registry.citations.items():
-                lines.extend(_wrap(citation_summary(cid, record)))
+            for summary in _compact_citation_summaries(registry.citations):
+                lines.extend(_wrap(summary))
         _append_dedup_calculations()
     elif citations_mode == "inline":
         if registry.citations:
