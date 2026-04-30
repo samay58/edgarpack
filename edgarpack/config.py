@@ -33,9 +33,10 @@ USER_AGENT = os.getenv("EDGARPACK_USER_AGENT", "")
 # Cache location. User-level so it survives project moves.
 CACHE_DIR = Path(os.getenv("EDGARPACK_CACHE_DIR", Path.home() / ".edgarpack" / "cache"))
 
-# SEC rate limit: 10 requests per second by default. CI can opt into a more
-# conservative lane because hosted runners share outbound IP pools.
-RATE_LIMIT = _env_float("EDGARPACK_SEC_RATE_LIMIT", 10.0)
+# SEC fair-access limit is 10 requests/second. EdgarPack defaults below that
+# ceiling so local builds have headroom for browser/user activity sharing the
+# same outbound IP. Override with care via EDGARPACK_SEC_RATE_LIMIT.
+RATE_LIMIT = _env_float("EDGARPACK_SEC_RATE_LIMIT", 5.0)
 
 # Parser versioning for determinism tracking
 PARSER_VERSION = "0.2.1"

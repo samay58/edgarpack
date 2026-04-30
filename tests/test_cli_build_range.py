@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 from edgarpack.cli import main
 from edgarpack.pack.build import PackResult
+from edgarpack.sec.client import SECRateLimitError
 
 
 def _result(accn: str, warnings: list[str] | None = None) -> PackResult:
@@ -115,3 +116,34 @@ class TestBuildRangeDispatch(unittest.TestCase):
         printed = "".join(call.args[0] for call in mock_stdout.write.call_args_list if call.args)
         self.assertIn("edgarpack list AAPL", printed)
         self.assertIn("--last 5", printed)
+
+    def test_rate_limit_error_gets_cooldown_message(self) -> None:
+        with (
+            patch(
+                "edgarpack.cli._cik_from_company_args",
+                new=AsyncMock(return_value=(0, "0000320193")),
+            ),
+            patch(
+                "edgarpack.cli._resolve_cli_company",
+                new=AsyncMock(return_value=SimpleNamespace(ticker="AAPL")),
+            ),
+            patch(
+                "edgarpack.pack.build.build_pack_range",
+                new=AsyncMock(
+                    side_effect=SECRateLimitError(
+                        url="https://www.sec.gov/Archives/example.htm",
+                        status_code=429,
+                        headers={},
+                        content=b"traffic limit",
+                        cooldown_seconds=600,
+                    )
+                ),
+            ),
+            patch("sys.stderr") as mock_stderr,
+        ):
+            rc = main(["build", "AAPL", "--form", "10-K", "--last", "2"])
+
+        self.assertEqual(rc, 1)
+        printed = "".join(call.args[0] for call in mock_stderr.write.call_args_list if call.args)
+        self.assertIn("SEC rate limit", printed)
+        self.assertIn("10 minutes", printed)

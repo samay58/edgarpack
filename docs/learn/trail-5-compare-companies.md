@@ -55,13 +55,10 @@ The double-try is deliberate: a user who types `GOOG` means the ticker; a user w
 
 ```python
 async def _gather(names: list[str], metrics: str | None, period: str) -> list[CompanyColumn]:
-    cols: list[CompanyColumn] = []
-    for n in names:
-        cols.append(await _fetch_one(n, metrics, period))
-    return cols
+    return await asyncio.gather(*(_fetch_one(n, metrics, period) for n in names))
 ```
 
-One company at a time. The `SECClient` is a per-event-loop singleton with a token bucket sized for one caller's share of the SEC's 10 req/sec budget; hammering it from three concurrent coroutines breaks the rate limiter's promise. Sequential fan-out also makes the progress stream readable: you see resolution and period-selection messages for each ticker in order instead of interleaved.
+Columns are fetched concurrently, while every SEC HTTP call still flows through the per-event-loop `SECClient` and its no-burst request pacer. That keeps fan-out useful without letting startup bursts punch through the SEC fair-access ceiling.
 
 Each iteration calls `financials()` (same function Trail 0 walks) and flattens the `CitedValue | list[CitedValue]` into one representative cite per metric. When a metric returns a list of three citations (the LTM trio), `_flatten()` keeps just the first.
 

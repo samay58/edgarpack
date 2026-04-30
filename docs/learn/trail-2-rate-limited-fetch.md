@@ -73,38 +73,30 @@ Cache misses are silent: any error reading the file or parsing the metadata also
 
 If the cache was missed, control flows to `client.fetch` -> `_fetch_with_retry` at `edgarpack/sec/client.py:114`. The first thing it does every attempt is call `await self._rate_limiter.acquire()`.
 
-`RateLimiter` at `edgarpack/sec/client.py:42` is a token bucket:
+`RateLimiter` at `edgarpack/sec/client.py:42` is a no-burst pacer:
 
 ```python
 async def acquire(self) -> None:
-    while True:
-        async with self._lock:
-            now = time.monotonic()
-            elapsed = now - self.last_update
-            self.tokens = min(self.rate, self.tokens + elapsed * self.rate)
-            self.last_update = now
+    async with self._lock:
+        now = time.monotonic()
+        wait_time = max(0.0, self._next_available_at - now)
+        scheduled_at = max(now, self._next_available_at)
+        self._next_available_at = scheduled_at + self._interval
 
-            if self.tokens >= 1.0:
-                self.tokens -= 1.0
-                return
-
-            wait_time = (1.0 - self.tokens) / self.rate
-
+    if wait_time > 0:
         await asyncio.sleep(wait_time)
 ```
 
-Walk through it at `rate=10`:
+Walk through it at `rate=5`:
 
-- The bucket starts full (10 tokens).
-- Each acquire subtracts 1.
-- Between calls, tokens refill at `rate` per second, capped at `rate` total.
-- If there aren't enough tokens, compute how long to wait for one, release the lock, sleep, retry.
+- The first caller can proceed immediately.
+- Each acquire reserves the next request slot.
+- The next caller waits until that slot, so startup bursts do not happen.
+- Sleeping happens outside the lock, so waiting callers do not block each other from reserving future slots.
 
-The lock-release-then-sleep dance matters. If `acquire` slept while holding `self._lock`, every caller would serialize on that sleep. By releasing before the sleep, multiple coroutines can each calculate their own wait time in parallel and sleep independently. The rate limit is still enforced because the token count is authoritative: whoever wins the race to grab the lock next takes the next token.
+10 requests per second is the SEC's published ceiling. EdgarPack defaults to 5 requests per second to leave headroom for other activity sharing the same outbound IP. If you bump the rate you risk getting a 429, which triggers the cooldown path and probably slows you down anyway.
 
-10 requests per second is the SEC's published limit. EdgarPack deliberately stays under it. If you bump the rate you risk getting a 429, which triggers the retry path and probably slows you down anyway.
-
-**Code**: `edgarpack/sec/client.py:42-68` (`RateLimiter`)
+**Code**: `edgarpack/sec/client.py:42-62` (`RateLimiter`)
 
 ---
 
@@ -137,7 +129,7 @@ Back in `_fetch_with_retry`, the loop sorts failures into three categories and h
 
 Network errors (`TimeoutError`, `OSError`, `URLError`) retry up to `max_retries` times with exponential backoff. Backoff starts at 1s and doubles each failure, capped at 10s. On the final attempt, the function re-raises.
 
-Rate limits and 5xx responses (status 429 or >= 500) get the `Retry-After` header treatment. `_parse_retry_after` at `edgarpack/sec/client.py:183` handles both formats (a plain seconds integer and an HTTP-date) and clamps the result to `[0, 60]` seconds so a misbehaving server can't stall the client forever. The loop waits the larger of the current backoff or `retry_after`, then retries.
+SEC traffic-limit pages (status 429 with the threshold HTML) raise `SECRateLimitError` immediately with a 10-minute cooldown hint, because continuing requests can extend the timeout. Other 429/5xx responses get the `Retry-After` header treatment. `_parse_retry_after` handles both formats (a plain seconds integer and an HTTP-date) and clamps the result to `[0, 60]` seconds so a misbehaving server can't stall the client forever. The loop waits the larger of the current backoff or `retry_after`, then retries.
 
 Other 4xx responses raise `HTTPError` immediately with the url, status, headers, and content. No retry. A 404 or 403 isn't going to get better by waiting.
 

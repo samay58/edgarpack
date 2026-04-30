@@ -19,7 +19,7 @@ from ..parse.md_render import render_markdown
 from ..parse.sectionize import sectionize
 from ..parse.semantic_html import reduce_to_semantic
 from ..parse.tokenize import count_tokens, has_tiktoken
-from ..sec.archives import fetch_filing_html
+from ..sec.archives import fetch_primary_filing_html
 from ..sec.submissions import (
     get_filing_by_accession,
     get_latest_filing,
@@ -44,6 +44,15 @@ class PackResult(BaseModel):
     tokens_total: int
     warnings: list[str]
     artifacts: list[str]
+
+
+def _remove_empty_pack_dir(pack_dir: Path) -> None:
+    """Remove a newly-created pack dir if no files were written."""
+    if not pack_dir.exists():
+        return
+    if any(path.is_file() for path in pack_dir.rglob("*")):
+        return
+    shutil.rmtree(pack_dir, ignore_errors=True)
 
 
 def _detect_sse_form_type(markdown: str, requested: str = "auto") -> str:
@@ -205,14 +214,19 @@ async def build_pack(
     if pack_dir.exists() and force:
         shutil.rmtree(pack_dir)
 
+    pack_dir_existed = pack_dir.exists()
     pack_dir.mkdir(parents=True, exist_ok=True)
     sections_dir.mkdir(exist_ok=True)
 
     # Step 3: Fetch HTML files
-    html_files = await fetch_filing_html(meta, force=force)
-
-    if not html_files:
-        raise ValueError(f"No HTML files found for filing {meta.accession}")
+    try:
+        html_files = await fetch_primary_filing_html(meta, force=force)
+        if not html_files:
+            raise ValueError(f"No HTML files found for filing {meta.accession}")
+    except Exception:
+        if not pack_dir_existed:
+            _remove_empty_pack_dir(pack_dir)
+        raise
 
     # Step 4: Process HTML to markdown
     base_url = f"{SEC_ARCHIVES_BASE}/{meta.cik}/{meta.accession_nodash}/"
@@ -938,5 +952,11 @@ async def build_pack_range(
                 describe_images=describe_images,
             )
 
-    tasks = [_one(m.accession) for m in filtered]
-    return await asyncio.gather(*tasks)
+    tasks = [asyncio.create_task(_one(m.accession)) for m in filtered]
+    try:
+        return await asyncio.gather(*tasks)
+    except Exception:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise

@@ -39,32 +39,40 @@ class HTTPError(Exception):
         return f"HTTP {self.status_code} for {self.url}"
 
 
+@dataclass(frozen=True)
+class SECRateLimitError(HTTPError):
+    """Raised when SEC.gov has put the caller in a fair-access cooldown."""
+
+    cooldown_seconds: int = 600
+
+    def __str__(self) -> str:
+        minutes = max(1, round(self.cooldown_seconds / 60))
+        return (
+            f"SEC rate limit reached for {self.url}. Wait {minutes} minutes "
+            "before retrying; continuing requests can extend the cooldown."
+        )
+
+
 class RateLimiter:
-    """Token bucket rate limiter for SEC compliance (default: 10 req/s)."""
+    """Pace SEC request starts without an initial burst."""
 
     def __init__(self, rate: float = RATE_LIMIT):
         if rate <= 0:
             raise ValueError("rate must be > 0")
         self.rate = float(rate)
-        self.tokens = float(rate)
-        self.last_update = time.monotonic()
+        self._interval = 1.0 / self.rate
+        self._next_available_at = time.monotonic()
         self._lock = asyncio.Lock()
 
     async def acquire(self) -> None:
-        """Wait until a token is available."""
-        while True:
-            async with self._lock:
-                now = time.monotonic()
-                elapsed = now - self.last_update
-                self.tokens = min(self.rate, self.tokens + elapsed * self.rate)
-                self.last_update = now
+        """Wait until the next request slot is available."""
+        async with self._lock:
+            now = time.monotonic()
+            wait_time = max(0.0, self._next_available_at - now)
+            scheduled_at = max(now, self._next_available_at)
+            self._next_available_at = scheduled_at + self._interval
 
-                if self.tokens >= 1.0:
-                    self.tokens -= 1.0
-                    return
-
-                wait_time = (1.0 - self.tokens) / self.rate
-
+        if wait_time > 0:
             await asyncio.sleep(wait_time)
 
 
@@ -127,9 +135,27 @@ class SECClient:
 
             # Retry on rate limit or server errors.
             if status == 429 or status >= 500:
-                if attempt >= self._max_retries:
-                    raise HTTPError(url=url, status_code=status, headers=headers, content=content)
                 retry_after = _parse_retry_after(headers)
+                if status == 429 and _is_sec_traffic_limit_page(content):
+                    cooldown_seconds = int(retry_after) if retry_after is not None else 600
+                    raise SECRateLimitError(
+                        url=url,
+                        status_code=status,
+                        headers=headers,
+                        content=content,
+                        cooldown_seconds=cooldown_seconds,
+                    )
+                if attempt >= self._max_retries:
+                    if status == 429:
+                        cooldown_seconds = int(retry_after) if retry_after is not None else 600
+                        raise SECRateLimitError(
+                            url=url,
+                            status_code=status,
+                            headers=headers,
+                            content=content,
+                            cooldown_seconds=cooldown_seconds,
+                        )
+                    raise HTTPError(url=url, status_code=status, headers=headers, content=content)
                 delay = max(backoff, retry_after if retry_after is not None else 0.0)
                 await asyncio.sleep(delay)
                 backoff = min(backoff * 2.0, 10.0)
@@ -178,6 +204,15 @@ def _maybe_gunzip(content: bytes, headers: dict[str, str]) -> bytes:
         return gzip.decompress(content)
     except Exception:
         return content
+
+
+def _is_sec_traffic_limit_page(content: bytes) -> bool:
+    """Return True for SEC's fair-access timeout HTML page."""
+    head = content[:8192].lower()
+    return (
+        b"request rate threshold exceeded" in head
+        or (b"exceeded" in head and b"sec" in head and b"traffic limit" in head)
+    )
 
 
 def _parse_retry_after(headers: dict[str, str]) -> float | None:

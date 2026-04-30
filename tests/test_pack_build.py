@@ -134,6 +134,86 @@ class TestChunkSection(unittest.TestCase):
 
 
 class TestBuildPackDeterminism(unittest.IsolatedAsyncioTestCase):
+    async def test_build_pack_fetches_primary_document_only_by_default(self) -> None:
+        from edgarpack.pack.build import build_pack
+
+        meta = FilingMeta(
+            cik="0000000001",
+            accession="0000000001-24-000001",
+            form_type="10-K",
+            filing_date=date(2024, 1, 15),
+            primary_document="doc.htm",
+            company_name="Test Co",
+        )
+        html = b"<html><body><h2>ITEM 1. BUSINESS</h2><p>A</p></body></html>"
+
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            with (
+                patch(
+                    "edgarpack.pack.build.get_filing_by_accession",
+                    new=AsyncMock(return_value=meta),
+                ),
+                patch(
+                    "edgarpack.pack.build.fetch_primary_filing_html",
+                    new=AsyncMock(return_value=[("doc.htm", html)]),
+                    create=True,
+                ) as fetch_primary,
+                patch(
+                    "edgarpack.pack.build.fetch_filing_html",
+                    new=AsyncMock(
+                        side_effect=AssertionError("index-backed fetch should not be used")
+                    ),
+                    create=True,
+                ),
+            ):
+                await build_pack(
+                    cik=meta.cik,
+                    accession=meta.accession,
+                    out_dir=tmp,
+                    with_chunks=False,
+                    with_xbrl=False,
+                    force=True,
+                )
+
+        fetch_primary.assert_awaited_once_with(meta, force=True)
+
+    async def test_build_pack_removes_new_empty_pack_dir_after_fetch_failure(self) -> None:
+        from edgarpack.pack.build import build_pack
+
+        meta = FilingMeta(
+            cik="0000000001",
+            accession="0000000001-24-000001",
+            form_type="10-K",
+            filing_date=date(2024, 1, 15),
+            primary_document="doc.htm",
+            company_name="Test Co",
+        )
+
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            with (
+                patch(
+                    "edgarpack.pack.build.get_filing_by_accession",
+                    new=AsyncMock(return_value=meta),
+                ),
+                patch(
+                    "edgarpack.pack.build.fetch_primary_filing_html",
+                    new=AsyncMock(side_effect=RuntimeError("fetch failed")),
+                ),
+            ):
+                with self.assertRaises(RuntimeError):
+                    await build_pack(
+                        cik=meta.cik,
+                        accession=meta.accession,
+                        out_dir=tmp,
+                        with_chunks=False,
+                        with_xbrl=False,
+                        force=True,
+                    )
+
+            self.assertFalse((tmp / meta.cik / meta.accession).exists())
+
     async def test_build_pack_deterministic_files(self) -> None:
         from edgarpack.pack.build import build_pack
 
@@ -180,7 +260,7 @@ class TestBuildPackDeterminism(unittest.IsolatedAsyncioTestCase):
                     new=AsyncMock(return_value=meta),
                 ),
                 patch(
-                    "edgarpack.pack.build.fetch_filing_html",
+                    "edgarpack.pack.build.fetch_primary_filing_html",
                     new=AsyncMock(return_value=[("doc.htm", html)]),
                 ),
             ):

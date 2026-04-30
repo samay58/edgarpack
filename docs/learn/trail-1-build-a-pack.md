@@ -69,21 +69,22 @@ If `--force` was passed, the existing `pack_dir` gets wiped with `shutil.rmtree`
 ## 4. Fetch the filing HTML
 
 ```python
-html_files = await fetch_filing_html(meta, force=force)
+html_files = await fetch_primary_filing_html(meta, force=force)
 ```
 
-`fetch_filing_html` at `edgarpack/sec/archives.py:132` fetches two things:
+`fetch_primary_filing_html` in `edgarpack/sec/archives.py` fetches the filing's primary document directly from:
 
-1. The filing index JSON at `.../{cik}/{accession_nodash}/index.json`, which lists every file in the filing directory.
-2. Every HTML file listed in the index, starting with the primary document.
+```text
+.../{cik}/{accession_nodash}/{primary_document}
+```
 
-`identify_html_files` at `edgarpack/sec/archives.py:77` walks the index and picks just the HTML files, putting the primary document first. The remaining files (exhibits, amendments) come next. Each file is fetched via `asyncio.create_task`, so they run in parallel. The SEC rate limiter in `sec/client.py` still governs the request pacing, but the coroutines don't block on each other.
+The build path deliberately skips `index.json` and related exhibit HTML. A 10-K filing directory often contains consents, certifications, compensation-policy exhibits, and SEC header/index pages; those documents can inflate request count and pollute the markdown if concatenated into the filing body.
 
-Failures on individual files emit a warning and continue. The filing is partially useful even if one exhibit is unreachable.
+The older multi-file helper, `fetch_filing_html`, remains available for explicit callers that want index-driven related documents. It still walks the filing index, puts the primary document first, fetches selected HTML files concurrently, warns on ordinary per-file failures, and hard-stops on SEC rate-limit cooldown responses after draining sibling tasks.
 
-The return is `list[tuple[filename, bytes]]`. For a 10-K this is usually 1-3 files: the primary document and maybe an exhibit or two.
+The return is still `list[tuple[filename, bytes]]`, so the parse pipeline does not need a special case for primary-only builds.
 
-**Code**: `edgarpack/sec/archives.py:132` (`fetch_filing_html`), `edgarpack/sec/archives.py:77` (`identify_html_files`)
+**Code**: `edgarpack/sec/archives.py` (`fetch_primary_filing_html`, `fetch_filing_html`, `identify_html_files`)
 
 ---
 

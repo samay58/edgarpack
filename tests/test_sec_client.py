@@ -9,7 +9,13 @@ from email.utils import format_datetime
 from unittest.mock import AsyncMock, patch
 
 from edgarpack.config import _env_float, _env_int
-from edgarpack.sec.client import SECClient, _parse_retry_after, get_client
+from edgarpack.sec.client import (
+    RateLimiter,
+    SECClient,
+    SECRateLimitError,
+    _parse_retry_after,
+    get_client,
+)
 
 
 class TestConfigEnvParsing(unittest.TestCase):
@@ -73,6 +79,40 @@ class TestRetryBackoff(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(content, b"ok")
         sleep_mock.assert_awaited_once()
         self.assertEqual(sleep_mock.await_args.args[0], 1.0)
+
+    async def test_sec_traffic_limit_page_raises_actionable_error(self) -> None:
+        traffic_limit_page = b"""
+        <html>
+          <title>SEC.gov | Request Rate Threshold Exceeded</title>
+          <h1>You\xe2\x80\x99ve Exceeded the SEC\xe2\x80\x99s Traffic Limit</h1>
+          <p>Your access to SEC.gov will be limited for 10 minutes.</p>
+        </html>
+        """
+        client = SECClient(rate_limit=1000, max_retries=3)
+        client._fetch_sync = lambda _url: (traffic_limit_page, {}, 429)  # type: ignore[assignment]
+        client._rate_limiter.acquire = AsyncMock()  # type: ignore[method-assign]
+
+        with (
+            patch("edgarpack.sec.client.asyncio.sleep", new=AsyncMock()) as sleep_mock,
+            self.assertRaises(SECRateLimitError) as ctx,
+        ):
+            await client.fetch("https://www.sec.gov/Archives/example.htm")
+
+        self.assertIn("10 minutes", str(ctx.exception))
+        self.assertEqual(ctx.exception.cooldown_seconds, 600)
+        sleep_mock.assert_not_awaited()
+
+
+class TestRateLimiter(unittest.IsolatedAsyncioTestCase):
+    async def test_successive_requests_are_paced_without_startup_burst(self) -> None:
+        limiter = RateLimiter(rate=10)
+
+        with patch("edgarpack.sec.client.asyncio.sleep", new=AsyncMock()) as sleep_mock:
+            await limiter.acquire()
+            await limiter.acquire()
+
+        sleep_mock.assert_awaited_once()
+        self.assertAlmostEqual(sleep_mock.await_args.args[0], 0.1, places=3)
 
 
 class TestClientSingleton(unittest.IsolatedAsyncioTestCase):

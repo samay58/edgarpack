@@ -1271,6 +1271,17 @@ def _cmd_build(args: Any) -> int:
                 )
                 results = [result]
         except Exception as e:
+            from .sec.client import SECRateLimitError
+
+            if isinstance(e, SECRateLimitError):
+                print(f"Error: {e}", file=sys.stderr)
+                print(
+                    "SEC rate limit cooldown: wait 10 minutes before retrying. "
+                    "Already fetched filings are cached; retrying immediately can extend "
+                    "the timeout.",
+                    file=sys.stderr,
+                )
+                return 1
             print(f"Error: {e}", file=sys.stderr)
             return 1
 
