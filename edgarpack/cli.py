@@ -231,6 +231,77 @@ def _register_pack_result(result: Any, *, ticker: str | None = None) -> None:
         registry.close()
 
 
+def _local_pack_records(
+    *,
+    cik: str,
+    ticker: str | None = None,
+    form_type: str | None = None,
+    packs_root: Path = Path("packs"),
+    limit: int = 200,
+) -> list[Any]:
+    """Best-effort discovery for packs present on disk but absent from registry."""
+    from .harvest.registry import PackRecord
+
+    cik_norm = cik.strip().zfill(10)
+    cik_dir = packs_root / cik_norm
+    if not cik_dir.is_dir():
+        return []
+
+    records: list[PackRecord] = []
+    for manifest_path in cik_dir.glob("*/manifest.json"):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        filing = manifest.get("filing") if isinstance(manifest, dict) else None
+        if not isinstance(filing, dict):
+            continue
+        found_form = str(filing.get("form_type") or filing.get("form") or "").strip()
+        if form_type and found_form.upper() != form_type.upper():
+            continue
+        accession = str(filing.get("accession") or manifest_path.parent.name)
+        company_name = str(
+            filing.get("company_name") or filing.get("company") or ticker or cik_norm
+        )
+        filing_date = str(filing.get("filing_date") or filing.get("filed") or "")
+        sections = manifest.get("sections") if isinstance(manifest.get("sections"), list) else []
+        stats = manifest.get("stats") if isinstance(manifest.get("stats"), dict) else {}
+        sections_count = int(stats.get("sections_count") or len(sections) or 0)
+        tokens_total = int(stats.get("tokens_total") or manifest.get("tokens_total") or 0)
+        built_at = str(manifest.get("built_at") or filing_date or "")
+        records.append(
+            PackRecord(
+                accession=accession,
+                cik=str(filing.get("cik") or cik_norm).zfill(10),
+                ticker=ticker,
+                company_name=company_name,
+                form_type=found_form,
+                filing_date=filing_date,
+                sections_count=sections_count,
+                tokens_total=tokens_total,
+                pack_dir=str(manifest_path.parent),
+                built_at=built_at,
+                manifest_hash=manifest.get("manifest_hash"),
+            )
+        )
+
+    records.sort(key=lambda rec: (rec.filing_date, rec.accession), reverse=True)
+    return records[:limit]
+
+
+def _local_pack_hint(records: list[Any], *, command_label: str, form_type: str = "10-K") -> str:
+    if not records:
+        return f"Run `edgarpack build {command_label} --form {form_type}` first."
+    first_path = records[0].pack_dir
+    count = len(records)
+    noun = "directory" if count == 1 else "directories"
+    return (
+        f"Found {count} pack {noun} on disk but none in the registry. "
+        f"Inspect one with `edgarpack doctor {first_path}` or rebuild/register with "
+        f"`edgarpack build {command_label} --form {form_type}`."
+    )
+
+
 def app(argv: list[str] | None = None) -> None:
     """Console script entrypoint (kept as `app` for packaging compatibility)."""
     try:
@@ -1065,8 +1136,15 @@ def _cmd_doctor(args: Any) -> int:
             return 2
         records = registry.list_packs(cik=cik)
         if not records:
-            print(f"No packs registered for {target} (CIK: {cik}). Run `edgarpack build {target}`.")
-            return 0
+            records = _local_pack_records(cik=cik, ticker=target)
+            if records:
+                print(_local_pack_hint(records, command_label=target))
+            else:
+                print(
+                    f"No packs registered for {target} (CIK: {cik}). "
+                    f"Run `edgarpack build {target}`."
+                )
+                return 0
         for rec in records:
             diag = diagnose_pack(Path(rec.pack_dir), registry=registry)
             results.append(diag)
@@ -2792,11 +2870,38 @@ def _cmd_diff(args: Any) -> int:
             registry.close()
 
             if len(packs) < 2:
-                print(
-                    f"Error: need at least 2 {args.form} filings for {ticker}, found {len(packs)}",
-                    file=sys.stderr,
-                )
-                return 1
+                disk_packs = []
+                try:
+                    resolved = await _resolve_cli_company(args.ticker)
+                    cik = getattr(resolved, "cik", None)
+                    if isinstance(cik, str) and cik.strip():
+                        disk_packs = _local_pack_records(
+                            cik=cik,
+                            ticker=ticker,
+                            form_type=args.form,
+                            limit=20,
+                        )
+                except (UnknownCompany, AmbiguousCompany, ValueError):
+                    disk_packs = []
+                if len(disk_packs) >= 2:
+                    print(
+                        _local_pack_hint(disk_packs, command_label=args.ticker, form_type=args.form)
+                        + " Using disk packs for this diff run.",
+                        file=sys.stderr,
+                    )
+                    packs = disk_packs
+                else:
+                    print(
+                        f"Error: need at least 2 {args.form} filings for {ticker}, "
+                        f"found {len(packs)}",
+                        file=sys.stderr,
+                    )
+                    if disk_packs:
+                        print(
+                            f"Found only {len(disk_packs)} matching pack(s) on disk under ./packs.",
+                            file=sys.stderr,
+                        )
+                    return 1
 
             after_dir = Path(packs[0].pack_dir)
             before_dir = Path(packs[1].pack_dir)
@@ -3607,12 +3712,20 @@ def _cmd_which(args: Any) -> int:
     try:
         packs = registry.list_packs(cik=cik, limit=200)
         if not packs:
-            print(
-                f"No registered packs found for {display_name} (CIK: {cik}). Run "
-                f"`edgarpack build {company_label} --form 10-K` first.",
-                file=sys.stderr,
-            )
-            return 1
+            packs = _local_pack_records(cik=cik, ticker=company_label, limit=200)
+            if packs:
+                print(
+                    _local_pack_hint(packs, command_label=company_label),
+                    file=sys.stderr,
+                )
+                return 1
+            else:
+                print(
+                    f"No registered packs found for {display_name} (CIK: {cik}). "
+                    f"{_local_pack_hint([], command_label=company_label)}",
+                    file=sys.stderr,
+                )
+                return 1
 
         diagnostics = DiscoveryDiagnostics()
 

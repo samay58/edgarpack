@@ -3,13 +3,14 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .fx import RateTable
+from .query.citations import CitationRegistry, calculation_summary, citation_summary
 from .query.formatting import format_number
-from .query.models import CitedValue
+from .query.models import CitedValue, DerivedValue
 
 # Signed percent (e.g. "+12%", "-3%"): YoY growth and period-over-period deltas.
 _GROWTH_METRICS: frozenset[str] = frozenset({"revenue_growth_yoy", "gross_margin_trend"})
@@ -42,6 +43,7 @@ class CompanyColumn:
     period: str
     reporting_currency: str
     metrics: dict[str, dict[str, Any]]
+    values: dict[str, CitedValue] = field(default_factory=dict)
     diagnostics: list[dict[str, str]] | None = None
 
 
@@ -163,6 +165,7 @@ async def _fetch_one(
             period=period_label,
             reporting_currency=currency,
             metrics=metrics_dict,
+            values=flattened,
             diagnostics=diagnostics_out or None,
         ),
         strict_rejected,
@@ -189,7 +192,12 @@ async def _gather(
     return cols, rejected_by_company
 
 
-def _format_value(v: dict[str, Any] | None, *, currency_mode: str = "both") -> str:
+def _format_value(
+    v: dict[str, Any] | None,
+    *,
+    currency_mode: str = "both",
+    marker: str = "",
+) -> str:
     if v is None or v.get("value") is None:
         return "n/a"
     # Growth is a signed delta (e.g., "+5%", "-3%"), not a finance-negative.
@@ -197,34 +205,79 @@ def _format_value(v: dict[str, Any] | None, *, currency_mode: str = "both") -> s
     # which would wrap negatives in parens.
     if "growth" in (v or {}):
         pct = v["growth"] * 100
-        return f"{pct:+.0f}%" if abs(pct) >= 10 else f"{pct:+.1f}%"
+        text = f"{pct:+.0f}%" if abs(pct) >= 10 else f"{pct:+.1f}%"
+        return f"{text} {marker}".rstrip()
     if "ratio" in (v or {}):
-        return format_number(v["ratio"], "pure")
+        text = format_number(v["ratio"], "pure")
+        return f"{text} {marker}".rstrip()
     if "per_employee_usd" in (v or {}):
         if currency_mode == "native":
-            return format_number(float(v["value"]), v.get("currency", ""))
+            text = format_number(float(v["value"]), v.get("currency", ""))
+            return f"{text} {marker}".rstrip()
         native = format_number(float(v["value"]), v.get("currency", ""))
         suffix = f"; {v['fx_provenance']}" if v.get("fx_provenance") else ""
         if v.get("currency") and v.get("currency") != "USD":
             usd_text = format_number(float(v["per_employee_usd"]), "USD")
-            return f"{usd_text} (native: {native}{suffix})"
-        return format_number(float(v["per_employee_usd"]), "USD")
+            text = f"{usd_text} (native: {native}{suffix})"
+            return f"{text} {marker}".rstrip()
+        text = format_number(float(v["per_employee_usd"]), "USD")
+        return f"{text} {marker}".rstrip()
     if "headcount" in (v or {}):
-        return format_number(float(v["headcount"]), "headcount")
+        text = format_number(float(v["headcount"]), "headcount")
+        return f"{text} {marker}".rstrip()
     val = v["value"]
     cur = v.get("currency", "")
     usd = v.get("usd_value")
     if usd is not None and cur != "USD":
         native = format_number(float(val), cur)
         if currency_mode == "native":
-            return native
+            return f"{native} {marker}".rstrip()
         suffix = f"; {v['fx_provenance']}" if v.get("fx_provenance") else ""
-        return f"{format_number(float(usd), 'USD')} (native: {native}{suffix})"
+        text = f"{format_number(float(usd), 'USD')} (native: {native}{suffix})"
+        return f"{text} {marker}".rstrip()
     if usd is not None:
-        return format_number(float(usd), "USD")
+        text = format_number(float(usd), "USD")
+        return f"{text} {marker}".rstrip()
     if cur:
-        return format_number(float(val), cur)
-    return format_number(float(val), "")
+        text = format_number(float(val), cur)
+        return f"{text} {marker}".rstrip()
+    text = format_number(float(val), "")
+    return f"{text} {marker}".rstrip()
+
+
+def _citation_context(
+    columns: list[CompanyColumn],
+    metric_keys: list[str] | None = None,
+) -> tuple[CitationRegistry, dict[tuple[int, str], str]]:
+    registry = CitationRegistry()
+    markers: dict[tuple[int, str], str] = {}
+    for column_idx, column in enumerate(columns):
+        keys = metric_keys or list(column.metrics)
+        for metric in keys:
+            item = column.values.get(metric)
+            if item is None:
+                continue
+            markers[(column_idx, metric)] = registry.marker_for(metric, item)
+    return registry, markers
+
+
+def _source_lines(registry: CitationRegistry, *, markdown: bool = False) -> list[str]:
+    lines: list[str] = []
+    if not registry.calculations and not registry.citations:
+        return lines
+    if markdown:
+        lines.append("**Sources**")
+        for calc_id, record in registry.calculations.items():
+            lines.append(f"- {calculation_summary(calc_id, record)}")
+        for citation_id, record in registry.citations.items():
+            lines.append(f"- {citation_summary(citation_id, record)}")
+    else:
+        lines.append("sources:")
+        for calc_id, record in registry.calculations.items():
+            lines.append(f"  {calculation_summary(calc_id, record)}")
+        for citation_id, record in registry.citations.items():
+            lines.append(f"  {citation_summary(citation_id, record)}")
+    return lines
 
 
 def _period_header(period_request: str, columns: list[CompanyColumn]) -> str:
@@ -260,12 +313,19 @@ def _format_table(
     *,
     currency_mode: str = "both",
 ) -> str:
+    registry, markers = _citation_context(columns, metric_keys)
     headers = ["metric"] + [c.ticker for c in columns]
     rows: list[list[str]] = []
     for m in metric_keys:
         row = [m]
-        for c in columns:
-            row.append(_format_value(c.metrics.get(m), currency_mode=currency_mode))
+        for idx, c in enumerate(columns):
+            row.append(
+                _format_value(
+                    c.metrics.get(m),
+                    currency_mode=currency_mode,
+                    marker=markers.get((idx, m), ""),
+                )
+            )
         rows.append(row)
 
     widths = [max(len(str(r[i])) for r in [headers] + rows) for i in range(len(headers))]
@@ -281,6 +341,10 @@ def _format_table(
     if diag_lines:
         lines.append("")
         lines.extend(diag_lines)
+    source_lines = _source_lines(registry)
+    if source_lines:
+        lines.append("")
+        lines.extend(source_lines)
     return "\n".join(lines)
 
 
@@ -291,6 +355,7 @@ def _format_markdown(
     *,
     currency_mode: str = "both",
 ) -> str:
+    registry, markers = _citation_context(columns, metric_keys)
     headers = ["metric"] + [c.ticker for c in columns]
     lines: list[str] = [f"**{_period_header(period_request, columns)}**", ""]
     lines.append("| " + " | ".join(headers) + " |")
@@ -298,7 +363,14 @@ def _format_markdown(
     for m in metric_keys:
         row = [
             m,
-            *[_format_value(c.metrics.get(m), currency_mode=currency_mode) for c in columns],
+            *[
+                _format_value(
+                    c.metrics.get(m),
+                    currency_mode=currency_mode,
+                    marker=markers.get((idx, m), ""),
+                )
+                for idx, c in enumerate(columns)
+            ],
         ]
         lines.append("| " + " | ".join(row) + " |")
     lines.append("")
@@ -310,10 +382,37 @@ def _format_markdown(
         lines.append(f"**{diag_lines[0]}**")
         for line in diag_lines[1:]:
             lines.append(f"- {line.strip().lstrip('!').strip()}")
+    source_lines = _source_lines(registry, markdown=True)
+    if source_lines:
+        lines.append("")
+        lines.extend(source_lines)
     return "\n".join(lines)
 
 
 def _format_json(columns: list[CompanyColumn], period_request: str) -> str:
+    registry, markers = _citation_context(columns)
+
+    def _metric_payload(column_idx: int, metric: str, entry: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(entry)
+        item = columns[column_idx].values.get(metric)
+        marker = markers.get((column_idx, metric))
+        if item is None or marker is None:
+            return payload
+        marker_id = marker.strip("[]")
+        payload["marker"] = marker
+        if isinstance(item, DerivedValue):
+            calculation = registry.calculations.get(marker_id, {})
+            payload["calculation_id"] = marker_id
+            result_citation_id = calculation.get("result_citation_id")
+            if result_citation_id:
+                payload["result_citation_id"] = result_citation_id
+            component_citation_ids = calculation.get("component_citation_ids")
+            if component_citation_ids:
+                payload["component_citation_ids"] = component_citation_ids
+        else:
+            payload["citation_ids"] = [marker_id]
+        return payload
+
     return json.dumps(
         {
             "period_request": period_request,
@@ -323,11 +422,16 @@ def _format_json(columns: list[CompanyColumn], period_request: str) -> str:
                     "company": c.company,
                     "period": c.period,
                     "reporting_currency": c.reporting_currency,
-                    "metrics": c.metrics,
+                    "metrics": {
+                        metric: _metric_payload(column_idx, metric, entry)
+                        for metric, entry in c.metrics.items()
+                    },
                     **({"diagnostics": c.diagnostics} if c.diagnostics else {}),
                 }
-                for c in columns
+                for column_idx, c in enumerate(columns)
             ],
+            "citations": registry.citations,
+            "calculations": registry.calculations,
         },
         indent=2,
         default=str,

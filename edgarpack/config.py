@@ -15,7 +15,7 @@ CACHE_DIR = Path(os.getenv("EDGARPACK_CACHE_DIR", Path.home() / ".edgarpack" / "
 RATE_LIMIT = 10
 
 # Parser versioning for determinism tracking
-PARSER_VERSION = "0.2.0"
+PARSER_VERSION = "0.2.1"
 SCHEMA_VERSION = 1
 
 # SEC API endpoints

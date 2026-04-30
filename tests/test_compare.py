@@ -43,6 +43,10 @@ def test_compare_json_format_parses():
     assert len(parsed["companies"]) == 2
     tickers = {c["ticker"] for c in parsed["companies"]}
     assert {"minimax", "zhipu"} == tickers
+    assert parsed["citations"]
+    first_metric = parsed["companies"][0]["metrics"]["revenue"]
+    assert first_metric["marker"].startswith("[C")
+    assert first_metric["citation_ids"]
 
 
 def test_compare_markdown_format_emits_table_syntax():
@@ -50,6 +54,15 @@ def test_compare_markdown_format_emits_table_syntax():
     assert r.returncode == 0, r.stderr
     assert "|" in r.stdout
     assert "---" in r.stdout
+    assert "**Sources**" in r.stdout
+    assert "[C1]" in r.stdout
+
+
+def test_compare_table_emits_inline_citation_markers():
+    r = _run("minimax", "zhipu", "--metrics", "revenue", "--format", "table")
+    assert r.returncode == 0, r.stderr
+    assert "[C1]" in r.stdout
+    assert "sources:" in r.stdout
 
 
 def test_compare_unknown_company_exits_2(capsys):

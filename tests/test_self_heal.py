@@ -46,6 +46,27 @@ _FAKE_FACTS = {
     },
 }
 
+_BAD_REVENUE_FACTS = {
+    "us-gaap": {
+        "ContractWithCustomerLiabilityRevenueRecognized": {
+            "units": {
+                "USD": [
+                    {
+                        "val": 3_500_000_000,
+                        "fy": 2026,
+                        "fp": "Q1",
+                        "form": "10-Q",
+                        "start": "2026-01-01",
+                        "end": "2026-03-31",
+                        "accn": "0001652044-26-000020",
+                        "filed": "2026-04-25",
+                    }
+                ]
+            }
+        }
+    }
+}
+
 
 class TestCompanyConcepts(unittest.TestCase):
     def test_lists_us_gaap_and_ifrs_concepts(self) -> None:
@@ -108,6 +129,15 @@ class TestFuzzyMatch(unittest.TestCase):
         # Sanity check: we want at least the core metrics hinted
         for m in ("revenue", "operating_cash_flow", "capex", "free_cash_flow"):
             self.assertIn(m, METRIC_HINTS)
+
+    def test_revenue_rejects_contract_liability_revenue_recognized(self) -> None:
+        candidates = _company_concepts(_BAD_REVENUE_FACTS)
+        hit = _fuzzy_match(
+            metric="revenue",
+            candidates=candidates,
+            facts=_BAD_REVENUE_FACTS,
+        )
+        self.assertIsNone(hit)
 
 
 class TestLlmPropose(unittest.TestCase):
@@ -350,6 +380,35 @@ class TestTryLearn(unittest.TestCase):
         row = reg.lookup("0001045810", "operating_cash_flow")
         assert row is not None
         self.assertFalse(row.verified)
+
+    def test_verified_cached_revenue_mapping_must_pass_shape_guard(self) -> None:
+        reg = LearnedRegistry(db_path=self.db_path)
+        reg.upsert(
+            cik="0001652044",
+            metric="revenue",
+            concept="ContractWithCustomerLiabilityRevenueRecognized",
+            taxonomy="us-gaap",
+            source="fuzzy",
+            verified=True,
+            verif_method="manual",
+            value_sample=3_500_000_000,
+        )
+        reg.close()
+
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="revenue",
+            meta=meta,
+            facts=_BAD_REVENUE_FACTS,
+            cik="0001652044",
+            company="Alphabet Inc.",
+            prior_year_cited=_prior_year_cited(value=400_000_000_000),
+            doc_map={},
+            registry_path=self.db_path,
+            period="mrq",
+        )
+
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":

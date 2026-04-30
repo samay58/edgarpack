@@ -1205,11 +1205,17 @@ def select_period(
     """
     period = period.strip().lower()
 
+    def _effective_years_back(selector_years_back: int) -> int:
+        # Component offsets are signed in fiscal years: -1 means "one year
+        # before the parent period"; +1 means "one year after". Combine that
+        # with selectors such as lfy-1 so derived metrics do not self-compare.
+        return max(0, selector_years_back - period_offset)
+
     # lfy-N reads as "N fiscal years before the latest FY". Keep the offset
     # negative so downstream select_lfy walks back through the annual history.
     lfy_back_match = re.fullmatch(r"lfy-(\d+)", period)
     if lfy_back_match:
-        years_back = int(lfy_back_match.group(1))
+        years_back = _effective_years_back(int(lfy_back_match.group(1)))
         return select_lfy(
             facts,
             concept,
@@ -1234,7 +1240,7 @@ def select_period(
             cik,
             taxonomy=taxonomy,
             doc_map=doc_map,
-            years_back=int(ltm_back_match.group(1)),
+            years_back=_effective_years_back(int(ltm_back_match.group(1))),
             diagnostics=diagnostics,
         )
 
@@ -1249,7 +1255,7 @@ def select_period(
             cik,
             taxonomy=taxonomy,
             doc_map=doc_map,
-            years_back=int(mrq_back_match.group(1)),
+            years_back=_effective_years_back(int(mrq_back_match.group(1))),
         )
 
     if period == "lfy":
@@ -1262,18 +1268,10 @@ def select_period(
             cik,
             taxonomy=taxonomy,
             doc_map=doc_map,
-            period_offset=period_offset,
+            period_offset=-_effective_years_back(0),
         )
     elif period == "mrq":
-        return select_mrq(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-    elif period == "mrp":
-        return select_mrp(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
-        )
-    elif period == "ltm":
-        return select_ltm(
+        return select_mrq_n(
             facts,
             concept,
             metric,
@@ -1282,6 +1280,23 @@ def select_period(
             cik,
             taxonomy=taxonomy,
             doc_map=doc_map,
+            years_back=_effective_years_back(0),
+        )
+    elif period == "mrp":
+        return select_mrp(
+            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        )
+    elif period == "ltm":
+        return select_ltm_n(
+            facts,
+            concept,
+            metric,
+            meta,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+            years_back=_effective_years_back(0),
             diagnostics=diagnostics,
         )
     elif period.startswith("annual:"):

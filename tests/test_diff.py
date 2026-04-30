@@ -403,6 +403,25 @@ def test_canonical_title_fallback():
     assert matches[0].title == "Risk Factors"
 
 
+def test_repeated_toc_title_falls_back_to_canonical_title():
+    md = (
+        "Item 1. Item 1. / Item 1. / Business / Business / Business / 4 / 4 / 4\n\n"
+        "Body text."
+    )
+    matches = find_sections(md, "10-K")
+    assert matches
+    assert matches[0].item == "1"
+    assert matches[0].title == "Business"
+
+
+def test_diff_display_title_normalizes_legacy_repeated_toc_title():
+    title = "/ Form 10-K Summary / Form 10-K Summary / Form 10-K Summary / 83 / 83 / 83"
+
+    assert section_diff_module._display_title("10k_partiv_item16_form_10k_summary", title) == (
+        "Form 10-K Summary"
+    )
+
+
 # --- TOC link filtering tests ---
 
 

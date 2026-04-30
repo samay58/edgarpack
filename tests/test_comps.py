@@ -7,9 +7,10 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 from edgarpack.query.comps import comps, comps_to_json, format_comps_table
-from edgarpack.query.models import CitedValue, QueryResult
+from edgarpack.query.models import CitedValue, Diagnostic, QueryResult
 
 _P = "edgarpack.query.financials"
+_COMPS_P = "edgarpack.query.comps"
 
 # Minimal mock data for two companies
 NVDA_FACTS = {
@@ -201,6 +202,65 @@ class TestComps(unittest.IsolatedAsyncioTestCase):
         self.assertIn("NVDA", results)
         self.assertIn("AMD", results)
         self.assertIsNone(results["AMD"].metrics["revenue"])
+
+    @patch(f"{_COMPS_P}.financials")
+    async def test_missing_ltm_revenue_does_not_poison_comps_table(
+        self, mock_financials
+    ) -> None:
+        from datetime import date
+
+        async def _fake_financials(company, metrics, period, force=False):
+            if company == "GOOG":
+                return QueryResult(
+                    company="Alphabet Inc.",
+                    cik="0001652044",
+                    period=period,
+                    metrics={m: None for m in metrics},
+                    diagnostics=[
+                        Diagnostic(
+                            metric="revenue",
+                            kind="ltm_incomputable",
+                            message="LTM for revenue not computable.",
+                        )
+                    ],
+                )
+            return QueryResult(
+                company="BERKSHIRE HATHAWAY INC",
+                cik="0001067983",
+                period=period,
+                metrics={
+                    "revenue": CitedValue(
+                        value=371_444_000_000,
+                        unit="USD",
+                        metric="revenue",
+                        concept="Revenues",
+                        period_end=date(2025, 12, 31),
+                        fiscal_year=2025,
+                        fiscal_period="FY",
+                        form_type="10-K",
+                        filed=date(2026, 2, 23),
+                        accession="0001067983-26-000001",
+                        cik="0001067983",
+                        company="BERKSHIRE HATHAWAY INC",
+                    )
+                },
+            )
+
+        mock_financials.side_effect = _fake_financials
+
+        results = await comps(
+            companies=["GOOG", "BRK"],
+            metrics=["revenue"],
+            period="ltm",
+        )
+        table = format_comps_table(results, ["revenue"], citations_mode="off")
+
+        self.assertIsNone(results["GOOG"].metrics["revenue"])
+        self.assertIsNotNone(results["BRK"].metrics["revenue"])
+        self.assertIn("Alphabet Inc.", table)
+        self.assertIn("N/A", table)
+        self.assertIn("BERKSHIRE HATHAWAY INC", table)
+        self.assertIn("$371.4B", table)
 
 
 class TestFormatCompsTable(unittest.TestCase):

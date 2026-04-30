@@ -76,6 +76,75 @@ class TestSiteBuild(unittest.TestCase):
         self.assertNotIn("javascript:", html.lower())
         self.assertIn("https://example.com", html)
 
+    def test_markdown_to_html_normalizes_repeated_form_10k_summary_toc_line(self) -> None:
+        md = (
+            "> Item 16. ................ Item 16. / Item 16. / Form 10-K Summary / "
+            "Form 10-K Summary / Form 10-K Summary / 83 / 83 / 83\n\nBody\n"
+        )
+
+        html = _markdown_to_html(md)
+
+        self.assertIn("Item 16. Form 10-K Summary", html)
+        self.assertNotIn("Form 10-K Summary / Form 10-K Summary", html)
+
+    def test_reader_pages_normalize_legacy_repeated_section_titles(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            packs = Path(td) / "packs"
+            out = Path(td) / "site"
+
+            cik = "0001045810"
+            accession = "0001045810-25-000023"
+            pack_dir = packs / cik / accession
+            (pack_dir / "sections").mkdir(parents=True, exist_ok=True)
+
+            raw_title = (
+                "/ Form 10-K Summary / Form 10-K Summary / "
+                "Form 10-K Summary / 83 / 83 / 83"
+            )
+            section_id = "10k_partiv_item16_form_10k_summary_form_10k"
+            (pack_dir / "filing.full.md").write_text("# Filing\n", encoding="utf-8")
+            (pack_dir / "sections" / f"{section_id}.md").write_text(
+                f"Item 16. {raw_title}\n\nBody\n",
+                encoding="utf-8",
+            )
+
+            manifest = {
+                "schema_version": 1,
+                "source": {},
+                "filing": {
+                    "cik": cik,
+                    "accession": accession,
+                    "form_type": "10-K",
+                    "filing_date": "2025-02-18",
+                    "company_name": "NVIDIA CORP",
+                },
+                "sections": [
+                    {
+                        "id": section_id,
+                        "title": raw_title,
+                        "path": f"sections/{section_id}.md",
+                        "tokens_approx": 2,
+                        "sha256": "0" * 64,
+                    }
+                ],
+                "artifacts": {},
+                "tokens_total": 2,
+            }
+            (pack_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+            build_site(packs, out)
+
+            overview = (out / cik / accession / "index.html").read_text(encoding="utf-8")
+            section_page = (
+                out / cik / accession / "sections" / "item16_form_10k_summary_form_10k.html"
+            ).read_text(encoding="utf-8")
+
+            self.assertIn("Form 10-K Summary", overview)
+            self.assertNotIn(raw_title, overview)
+            self.assertIn("<h1>Form 10-K Summary</h1>", section_page)
+            self.assertNotIn(raw_title, section_page)
+            self.assertNotIn("(Chinese)", overview)
+
 
 if __name__ == "__main__":
     unittest.main()

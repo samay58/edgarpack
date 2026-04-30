@@ -138,6 +138,15 @@ ticker = "TSM"
 cik = "0001046179"
 forms_10q = 0
 forms_20f = 2
+aliases = ["tsmc", "taiwan semiconductor", "taiwan semiconductor manufacturing"]
+
+# Explicit non-tech benchmark aliases used in comps demos.
+
+[[companies]]
+ticker = "BRK-B"
+name = "BERKSHIRE HATHAWAY INC"
+cik = "0001067983"
+aliases = ["brk", "berkshire", "berkshire hathaway"]
 
 # ============================================================
 #  Semiconductor Equipment / EDA

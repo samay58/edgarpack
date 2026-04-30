@@ -12,6 +12,14 @@ type AppShellProps = {
   children: ReactNode;
 };
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  const tag = target.tagName.toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
+}
+
 export function AppShell({ companyId, companyLabel, children }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -52,6 +60,9 @@ export function AppShell({ companyId, companyLabel, children }: AppShellProps) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) {
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setPaletteOpen((open) => !open);

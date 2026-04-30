@@ -47,6 +47,18 @@ If you installed EdgarPack from PyPI, run commands as `edgarpack ...`. If you ar
 
 Run `edgarpack home` or bare `edgarpack` for the short command-line starting point.
 
+The fastest useful first loop is:
+
+```bash
+edgarpack query NVDA revenue --period ltm
+edgarpack build NVDA --form 10-K --with-chunks
+edgarpack which NVDA
+edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm
+edgarpack diff --ticker NVDA --form 10-K --format html --out ./reports/nvda-10k.html
+```
+
+That path shows the product's core promise: every useful number or finding should be traceable back to primary filing evidence.
+
 Some features need optional dependency groups. These only matter when you are running from the repo with `uv run` or installing from source:
 
 | Extra | Use it for |
@@ -133,6 +145,7 @@ edgarpack compare NVDA BIDU BABA --metrics revenue,gross_margin --period lfy
 ```
 
 `compare` handles SEC + HKEX filers in one table, converts non-USD amounts via the bundled FX file, and leaves a footnote with the original reporting currency for each column.
+It also emits citation markers and citation records so cross-market comparisons stay auditable instead of becoming uncited finance tables.
 
 **List the KPIs a company actually discloses:**
 

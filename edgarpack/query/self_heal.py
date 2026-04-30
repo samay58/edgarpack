@@ -23,7 +23,7 @@ from typing import Any
 
 from .concepts import MetricMeta
 from .learned_registry import LearnedRegistry, LearnedRow
-from .models import CitedValue
+from .models import CitedValue, Diagnostic
 
 # Synonym hints for fuzzy-matching metric names against GAAP concept names.
 # Each hint tuple is OR'd into the token pool when scoring candidates.
@@ -72,6 +72,44 @@ def _tokenize_concept(name: str) -> list[str]:
 def _tokenize_metric(metric: str) -> list[str]:
     """Split a metric name like 'operating_cash_flow' into tokens."""
     return [t for t in re.split(r"[_\W]+", metric.lower()) if t]
+
+
+def _concept_shape_matches_metric(
+    metric: str,
+    concept: str,
+    taxonomy: str,
+    facts: dict[str, Any],
+) -> bool:
+    """Reject learned candidates whose concept shape contradicts the metric."""
+    if metric != "revenue":
+        return True
+
+    token_list = _tokenize_concept(concept)
+    tokens = set(token_list)
+    squashed = "".join(token_list)
+
+    if tokens & {"liability", "deferred", "unearned", "obligation"}:
+        return False
+    if tokens & {"segment", "geographic", "region"}:
+        return False
+    if {"per", "share"} <= tokens:
+        return False
+    if "contractwithcustomerliability" in squashed:
+        return False
+    if "contractliability" in squashed:
+        return False
+    if "remainingperformanceobligation" in squashed:
+        return False
+    if "liabilityrevenuerecognized" in squashed:
+        return False
+
+    from .periods import _unit_for_concept
+
+    unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+    if unit in {"USD/shares", "shares"}:
+        return False
+
+    return True
 
 
 def _company_concepts(facts: dict[str, Any]) -> list[tuple[str, str]]:
@@ -125,6 +163,8 @@ def _fuzzy_match(
     best_score = 0.0
     best: tuple[str, str] | None = None
     for concept_name, taxonomy in candidates:
+        if not _concept_shape_matches_metric(metric, concept_name, taxonomy, facts):
+            continue
         concept_tokens = set(_tokenize_concept(concept_name))
         if not concept_tokens:
             continue
@@ -311,6 +351,28 @@ def _llm_propose(
     return (concept, taxonomy)
 
 
+def _iter_cited(value: CitedValue | list[CitedValue]) -> list[CitedValue]:
+    return value if isinstance(value, list) else [value]
+
+
+def _numeric_sample(value: CitedValue | list[CitedValue]) -> float | int | None:
+    items = _iter_cited(value)
+    if not items:
+        return None
+    raw = items[0].value
+    return raw if isinstance(raw, (int, float)) else None
+
+
+def _set_source(value: CitedValue | list[CitedValue], source: str) -> None:
+    for item in _iter_cited(value):
+        item.source = source
+
+
+def _append_warning(value: CitedValue | list[CitedValue], warning: str) -> None:
+    for item in _iter_cited(value):
+        item.warnings.append(warning)
+
+
 def try_learn(
     metric: str,
     meta: MetricMeta,
@@ -320,7 +382,9 @@ def try_learn(
     prior_year_cited: CitedValue | None,
     doc_map: dict[str, str] | None = None,
     registry_path: Path | None = None,
-) -> CitedValue | None:
+    period: str = "lfy",
+    diagnostics: list[Diagnostic] | None = None,
+) -> CitedValue | list[CitedValue] | None:
     """Self-heal entry point. Tries registry, fuzzy, LLM, verify, persist.
 
     Returns a CitedValue with ``source`` set to one of:
@@ -339,20 +403,37 @@ def try_learn(
         # 1. Registry cache hit
         cached = reg.lookup(cik, metric)
         if cached is not None:
-            reg.bump_hit_count(cik, metric)
-            cited = _build_cited_from_learned(cached, facts, metric, company, cik, doc_map)
+            if not _concept_shape_matches_metric(metric, cached.concept, cached.taxonomy, facts):
+                return None
+            cited = _build_cited_from_learned(
+                cached,
+                facts,
+                metric,
+                meta,
+                company,
+                cik,
+                doc_map,
+                period,
+                diagnostics,
+            )
             if cited is not None:
-                cited.source = "learned:cached"
+                reg.bump_hit_count(cik, metric)
+                _set_source(cited, "learned:cached")
                 if not cached.verified:
-                    cited.warnings.append(
+                    _append_warning(
+                        cited,
                         f"Resolved via unverified learned mapping "
                         f"(source={cached.source}). Verify manually: "
-                        f"`edgarpack learned verify {cik} {metric}`"
+                        f"`edgarpack learned verify {cik} {metric}`",
                     )
                 return cited
 
         # 2. Build candidate list
-        candidates = _company_concepts(facts)
+        candidates = [
+            c
+            for c in _company_concepts(facts)
+            if _concept_shape_matches_metric(metric, c[0], c[1], facts)
+        ]
         if not candidates:
             return None
 
@@ -369,15 +450,28 @@ def try_learn(
             return None
 
         concept, taxonomy = proposed
+        if not _concept_shape_matches_metric(metric, concept, taxonomy, facts):
+            return None
 
-        # 5. Build CitedValue from the latest reported value for this concept
-        cited = _build_cited_for_concept(concept, taxonomy, facts, metric, company, cik, doc_map)
+        # 5. Build value for the requested period, not an arbitrary latest fact.
+        cited = _build_cited_for_concept(
+            concept,
+            taxonomy,
+            facts,
+            metric,
+            meta,
+            company,
+            cik,
+            doc_map,
+            period,
+            diagnostics,
+        )
         if cited is None:
             return None
 
         # 6. Verify
         prior_value = prior_year_cited.value if prior_year_cited else None
-        cited_value = cited.value if isinstance(cited.value, (int, float)) else None
+        cited_value = _numeric_sample(cited)
         prior_numeric = prior_value if isinstance(prior_value, (int, float)) else None
         verified = verify_order_of_magnitude(cited_value, prior_numeric)
 
@@ -393,12 +487,13 @@ def try_learn(
             value_sample=float(cited_value) if cited_value is not None else None,
         )
 
-        cited.source = f"learned:{source_tag}"
+        _set_source(cited, f"learned:{source_tag}")
         if not verified:
-            cited.warnings.append(
+            _append_warning(
+                cited,
                 f"Unverified learned mapping ({source_tag}). "
                 f"No prior-year ground truth matched, or value was "
-                f"outside the expected order of magnitude."
+                f"outside the expected order of magnitude.",
             )
         return cited
     finally:
@@ -449,33 +544,26 @@ def _build_cited_for_concept(
     taxonomy: str,
     facts: dict[str, Any],
     metric: str,
+    meta: MetricMeta,
     company: str,
     cik: str,
     doc_map: dict[str, str] | None,
-) -> CitedValue | None:
-    entry, unit = _latest_entry_for_concept(facts, concept, taxonomy)
-    if entry is None:
-        return None
-    accn = str(entry.get("accn", ""))
-    primary_doc = ""
-    if doc_map and accn:
-        primary_doc = doc_map.get(accn, "")
-    return CitedValue(
-        value=entry.get("val"),
-        unit=unit,
-        metric=metric,
-        concept=concept,
-        period_start=_parse_iso_date(entry.get("start", "")),
-        period_end=_parse_iso_date(entry.get("end", "")) or date.min,
-        fiscal_year=int(entry.get("fy") or 0),
-        fiscal_period=str(entry.get("fp", "")),
-        form_type=str(entry.get("form", "")),
-        filed=_parse_iso_date(entry.get("filed", "")) or date.min,
-        accession=accn,
-        cik=cik,
-        company=company,
+    period: str,
+    diagnostics: list[Diagnostic] | None,
+) -> CitedValue | list[CitedValue] | None:
+    from .periods import select_period
+
+    return select_period(
+        facts,
+        concept,
+        metric,
+        meta,
+        company,
+        cik,
+        period,
         taxonomy=taxonomy,
-        primary_document=primary_doc,
+        doc_map=doc_map,
+        diagnostics=diagnostics,
     )
 
 
@@ -483,11 +571,25 @@ def _build_cited_from_learned(
     row: LearnedRow,
     facts: dict[str, Any],
     metric: str,
+    meta: MetricMeta,
     company: str,
     cik: str,
     doc_map: dict[str, str] | None,
-) -> CitedValue | None:
-    return _build_cited_for_concept(row.concept, row.taxonomy, facts, metric, company, cik, doc_map)
+    period: str,
+    diagnostics: list[Diagnostic] | None,
+) -> CitedValue | list[CitedValue] | None:
+    return _build_cited_for_concept(
+        row.concept,
+        row.taxonomy,
+        facts,
+        metric,
+        meta,
+        company,
+        cik,
+        doc_map,
+        period,
+        diagnostics,
+    )
 
 
 def _parse_iso_date(s: str) -> date | None:
