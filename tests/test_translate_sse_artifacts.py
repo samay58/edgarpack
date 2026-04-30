@@ -101,7 +101,7 @@ def test_translate_sse_writes_full_artifact_and_quality_metadata(
     assert translation["full_filing_written"] is True
     assert translation["validation_warning_count"] > 0
     assert translation["validation_error_count"] == 0
-    assert FakeCache.namespace == "sse-translate-v10:fake:prompt-v5/router-v15/validator-v5"
+    assert FakeCache.namespace == "sse-translate-v10:fake:prompt-v5/router-v16/validator-v5"
 
 
 def test_translate_sse_missing_deepinfra_key_is_actionable(

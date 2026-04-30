@@ -285,6 +285,50 @@ async def test_xgimi_annual_governance_table_dates_validate(router):
 
 
 @pytest.mark.asyncio
+async def test_xgimi_mda_private_equity_table_fallback_validates(router):
+    paragraph = "\n".join(
+        [
+            (
+                "|私募基<br>金名称|投资<br>协议<br>签署<br>时点|投<br>资<br>目<br>的|"
+                "拟投资总额|报告期内投资<br>金额|截至报告期末<br>已投资金额|参与<br>身份|"
+                "报告期<br>末出资<br>比例<br>（%）|是否<br>控制<br>该基<br>金或<br>施加<br>重大<br>影响|"
+                "会计<br>核算<br>科目|是<br>否<br>存<br>在<br>关<br>联<br>关<br>系|"
+                "基金底层<br>资产情况|报<br>告<br>期<br>利<br>润<br>影<br>响|累<br>计<br>利<br>润<br>影<br>响|"
+            ),
+            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+            (
+                "|新芒（成<br>都）股权<br>投资基金<br>合伙企业|2021<br>年8<br>月|获<br>得<br>投<br>资<br>回<br>报|"
+                "30,000,000.00|-524,859.30|27,475,961.54|有限<br>合伙<br>人|9.70|否|"
+                "其他<br>非流<br>动金<br>融资<br>产|否|该基金处于<br>投资期，截<br>至报告期<br>末，已投资<br>"
+                "4 个项目，<br>已退出1个<br>项目|/|/|"
+            ),
+            (
+                "|中金新兴<br>私募股权<br>投资基金<br>（青岛）<br>合伙企业<br>（有限合<br>伙）|2025<br>年5<br>月|"
+                "获<br>得<br>投<br>资<br>回<br>报|200,000,000.00|23,116,712.00|23,116,712.00|"
+                "有限<br>合伙<br>人|19.34|否|长期<br>股权<br>投资|是|该基金处于<br>投资期，截<br>至报告期<br>"
+                "末，已投资<br>1个项目|/|/|"
+            ),
+            "|合计|/|/|230,000,000.00|22,591,852.70|50,592,673.54|/|/|/|/|/|/|/|/|",
+        ]
+    )
+
+    with patch.object(router._translator, "translate_async", new_callable=AsyncMock) as mock_async:
+
+        async def _failed_cell_translate(text_zh, system_prompt=None):
+            return TranslationResult(text_zh=text_zh, text_en=text_zh, provider="test")
+
+        mock_async.side_effect = _failed_cell_translate
+        [result] = await router.translate_section("annual_s03_mda", [paragraph], strict=True)
+
+    assert "2021-08" in result.text_en
+    assert "2025-05" in result.text_en
+    assert "Equity Investment Fund Partnership" in result.text_en
+    assert "Private Equity Investment Fund" in result.text_en
+    report = validate_translation(paragraph, result.text_en)
+    assert report.passed, [issue.message for issue in report.issues]
+
+
+@pytest.mark.asyncio
 async def test_markdown_headings_use_structural_label_translation(router):
     paragraph = "## 四、采购情况和主要供应商"
 

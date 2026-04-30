@@ -50,6 +50,7 @@ _TEMPLATE_SECTIONS = frozenset({"ipo_declarations"})
 _TABLE_SEPARATOR_RE = re.compile(r"^\s*:?-{3,}:?\s*$")
 _MARKDOWN_HEADING_RE = re.compile(r"^(?P<prefix>\s{0,3}#{1,6}\s+)(?P<body>.+?)\s*$")
 _CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
+_CHINESE_RUN_RE = re.compile(r"[\u4e00-\u9fff]+")
 _ENUM_PREFIX_RE = re.compile(r"^[（(]?[一二三四五六七八九十]+[)）]?[、.]?")
 _DATE_CELL_RE = re.compile(r"^(?P<year>\d{4})年(?P<month>\d{1,2})月(?P<day>\d{1,2})日$")
 _YEAR_MONTH_DATE_CELL_RE = re.compile(r"^(?P<year>\d{4})年(?P<month>\d{1,2})月$")
@@ -84,7 +85,7 @@ _AGE_RANGE_LABEL_RE = re.compile(
 )
 _AGE_UNDER_LABEL_RE = re.compile(r"^(?P<age>\d+)岁以下[（(]不含(?P=age)岁[）)]$")
 _AGE_AND_ABOVE_LABEL_RE = re.compile(r"^(?P<age>\d+)岁及以上$")
-ROUTER_VERSION = "v15"
+ROUTER_VERSION = "v16"
 _PLACEHOLDER_CELL_TRANSLATIONS: dict[str, str] = {
     "【】年【】月【】日": "[]-[]-[]",
     "【】元": "[] yuan",
@@ -97,6 +98,10 @@ _SPECIAL_TABLE_LABELS: dict[str, str] = {
     "单位:万元": "Unit: RMB 10,000",
     "单位：元": "Unit: RMB",
     "单位:元": "Unit: RMB",
+    "是": "Yes",
+    "否": "No",
+    "不适用": "N/A",
+    "合计": "Total",
     "流动资产：": "Current Assets:",
     "非流动资产：": "Non-current Assets:",
     "流动负债：": "Current Liabilities:",
@@ -104,6 +109,25 @@ _SPECIAL_TABLE_LABELS: dict[str, str] = {
     "所有者权益：": "Shareholders' Equity:",
     "负债和所有者权益总计": "Total Liabilities and Shareholders' Equity",
     "少数股东损益": "Profit/Loss Attributable to Minority Interest",
+    "私募基金名称": "Private Equity Fund Name",
+    "投资协议签署时点": "Investment Agreement Signing Date",
+    "投资目的": "Investment Purpose",
+    "拟投资总额": "Proposed Total Investment",
+    "报告期内投资金额": "Investment Amount During the Reporting Period",
+    "截至报告期末已投资金额": "Invested Amount as of the End of the Reporting Period",
+    "参与身份": "Participation Capacity",
+    "报告期末出资比例（%）": "Capital Contribution Ratio at Period End (%)",
+    "是否控制该基金或施加重大影响": (
+        "Whether the Fund Is Controlled or Subject to Significant Influence"
+    ),
+    "会计核算科目": "Accounting Account",
+    "是否存在关联关系": "Whether a Related-party Relationship Exists",
+    "基金底层资产情况": "Underlying Assets of the Fund",
+    "报告期利润影响": "Impact on Profit for the Reporting Period",
+    "累计利润影响": "Cumulative Impact on Profit",
+    "获得投资回报": "Obtain Investment Returns",
+    "有限合伙人": "Limited Partner",
+    "其他非流动金融资产": "Other Non-current Financial Assets",
 }
 _PREFIX_TRANSLATIONS: dict[str, str] = {
     "其中：": "Of which: ",
@@ -111,6 +135,37 @@ _PREFIX_TRANSLATIONS: dict[str, str] = {
     "加：": "Add: ",
     "减：": "Less: ",
 }
+_ENTITY_NAME_HINT_RE = re.compile(
+    r"(股份有限公司|有限责任公司|有限公司|株式会社|合伙企业|有限合伙|"
+    r"私募股权投资基金|股权投资基金|私募基金|投资基金|基金|集团|公司)"
+)
+_ENTITY_TERM_TRANSLATIONS: tuple[tuple[str, str], ...] = (
+    ("私募股权投资基金", "Private Equity Investment Fund"),
+    ("股权投资基金", "Equity Investment Fund"),
+    ("投资基金", "Investment Fund"),
+    ("私募基金", "Private Fund"),
+    ("股份有限公司", "Co., Ltd."),
+    ("有限责任公司", "Co., Ltd."),
+    ("有限公司", "Co., Ltd."),
+    ("株式会社", "Corporation"),
+    ("合伙企业", "Partnership"),
+    ("有限合伙", "Limited Partnership"),
+    ("中金", "CICC"),
+    ("新兴", "Emerging"),
+    ("青岛", "Qingdao"),
+    ("成都", "Chengdu"),
+    ("投资", "Investment"),
+    ("科技", "Technology"),
+    ("证券", "Securities"),
+    ("银行", "Bank"),
+    ("集团", "Group"),
+    ("基金", "Fund"),
+    ("公司", "Company"),
+)
+_FUND_UNDERLYING_ASSETS_RE = re.compile(
+    r"^该基金处于投资期，截至报告期末，已投资(?P<invested>\d+)个项目"
+    r"(?:，已退出(?P<exited>\d+)个项目)?$"
+)
 
 
 class SectionRouter:
@@ -293,9 +348,8 @@ class SectionRouter:
                         self._translate_table_cell(
                             cell,
                             strict=strict,
-                            is_first_column=cell_index == 0,
                         )
-                        for cell_index, cell in enumerate(cells)
+                        for cell in cells
                     )
                 )
                 for _, cells in row_specs
@@ -348,7 +402,6 @@ class SectionRouter:
         self,
         cell: str,
         strict: bool = False,
-        is_first_column: bool = False,
     ) -> str:
         stripped = cell.strip()
         converted_period = self._convert_reporting_period_cell(stripped)
@@ -385,7 +438,7 @@ class SectionRouter:
             return cell.replace(stripped, multiline_translation, 1)
         if not stripped or self._is_structured_table_value(stripped):
             return cell
-        if not is_first_column and not _CHINESE_RE.search(stripped):
+        if not _CHINESE_RE.search(stripped):
             return cell
 
         inner = stripped
@@ -416,16 +469,17 @@ class SectionRouter:
         return restore_numbers(tagged, number_tags)
 
     def _convert_date_cell(self, value: str) -> str | None:
-        match = _DATE_CELL_RE.fullmatch(value)
+        normalized = value.replace("<br>", "")
+        match = _DATE_CELL_RE.fullmatch(normalized)
         if match is not None:
             return (
                 f"{match.group('year')}-"
                 f"{int(match.group('month')):02d}-"
                 f"{int(match.group('day')):02d}"
             )
-        year_month_match = _YEAR_MONTH_DATE_CELL_RE.fullmatch(value)
+        year_month_match = _YEAR_MONTH_DATE_CELL_RE.fullmatch(normalized)
         if year_month_match is None:
-            year_only_match = _YEAR_ONLY_DATE_CELL_RE.fullmatch(value)
+            year_only_match = _YEAR_ONLY_DATE_CELL_RE.fullmatch(normalized)
             if year_only_match is None:
                 return None
             return year_only_match.group("year")
@@ -552,7 +606,11 @@ class SectionRouter:
             translated_lines.append(translated_line)
         return "<br>".join(translated_lines)
 
-    async def _translate_table_label(self, label: str, strict: bool = False) -> str:
+    async def _translate_table_label(
+        self,
+        label: str,
+        strict: bool = False,
+    ) -> str:
         normalized = self._normalize_table_label(label)
         if not normalized:
             return label
@@ -562,8 +620,23 @@ class SectionRouter:
             translated = await self._translate_table_label_via_llm(normalized, strict=strict)
 
         if translated is None:
+            translated = self._fallback_table_label(normalized)
+
+        if translated is None:
             return label
         return self._restore_line_breaks(label, normalized, translated)
+
+    def _fallback_table_label(
+        self,
+        label: str,
+    ) -> str | None:
+        if not _CHINESE_RE.search(label):
+            return None
+
+        if _ENTITY_NAME_HINT_RE.search(label):
+            return _translate_entity_name_fallback(label)
+
+        return None
 
     async def _translate_table_label_via_llm(self, label: str, strict: bool = False) -> str | None:
         cache_key = (label, strict)
@@ -600,6 +673,22 @@ class SectionRouter:
 
         if label in _SPECIAL_TABLE_LABELS:
             return _SPECIAL_TABLE_LABELS[label]
+
+        if underlying_assets_match := _FUND_UNDERLYING_ASSETS_RE.fullmatch(label):
+            invested = underlying_assets_match.group("invested")
+            exited = underlying_assets_match.group("exited")
+            invested_label = "project" if invested == "1" else "projects"
+            if exited is None:
+                return (
+                    "The fund is in the investment period; as of the end of the "
+                    f"Reporting Period, it had invested in {invested} {invested_label}"
+                )
+            exited_label = "project" if exited == "1" else "projects"
+            return (
+                "The fund is in the investment period; as of the end of the "
+                f"Reporting Period, it had invested in {invested} {invested_label} "
+                f"and exited {exited} {exited_label}"
+            )
 
         if glossary_match := self._translator.glossary.lookup(label):
             return glossary_match
@@ -731,3 +820,42 @@ def _zero_pad_marked_numeric_token(token: str, width: int) -> str:
     mark = match.group("mark")
     padded = f"{int(match.group('digits')):0{width}d}"
     return f"{mark}{padded}{mark}"
+
+
+def _translate_entity_name_fallback(label: str) -> str | None:
+    normalized = label.replace("（", "(").replace("）", ")")
+    normalized = re.sub(r"\s+", "", normalized)
+    if not normalized:
+        return None
+
+    translated = normalized
+    for zh_term, en_term in _ENTITY_TERM_TRANSLATIONS:
+        translated = translated.replace(zh_term, f" {en_term} ")
+
+    translated = _romanize_chinese_runs(translated)
+    if translated is None or _CHINESE_RE.search(translated):
+        return None
+
+    return _normalize_fallback_label_spacing(translated)
+
+
+def _romanize_chinese_runs(text: str) -> str | None:
+    try:
+        from pypinyin import lazy_pinyin
+    except ImportError:
+        return None
+
+    def _replace(match: re.Match[str]) -> str:
+        words = [word.capitalize() for word in lazy_pinyin(match.group(0)) if word]
+        return " ".join(words)
+
+    return _CHINESE_RUN_RE.sub(_replace, text)
+
+
+def _normalize_fallback_label_spacing(label: str) -> str:
+    normalized = re.sub(r"\s+", " ", label)
+    normalized = re.sub(r"\s*\(\s*", " (", normalized)
+    normalized = re.sub(r"\s*\)\s*", ") ", normalized)
+    normalized = re.sub(r"\s+([,.;:%])", r"\1", normalized)
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized.strip()
