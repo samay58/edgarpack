@@ -390,6 +390,110 @@ GOOG_BAD_LTM_FACTS = {
 }
 
 
+MOCK_EBITDA_SERIES_FACTS = {
+    "cik": 1045810,
+    "entityName": "NVIDIA CORP",
+    "facts": {
+        "us-gaap": {
+            "OperatingIncomeLoss": {
+                "label": "Operating Income",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 130_000_000_000,
+                            "start": "2024-01-29",
+                            "end": "2025-01-26",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001045810-25-000001",
+                            "filed": "2025-02-18",
+                        },
+                        {
+                            "val": 90_000_000_000,
+                            "start": "2023-01-30",
+                            "end": "2024-01-28",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001045810-24-000001",
+                            "filed": "2024-02-21",
+                        },
+                        {
+                            "val": 30_000_000_000,
+                            "start": "2024-07-29",
+                            "end": "2024-10-27",
+                            "fy": 2025,
+                            "fp": "Q3",
+                            "form": "10-Q",
+                            "accn": "0001045810-25-000003",
+                            "filed": "2025-11-20",
+                        },
+                        {
+                            "val": 24_000_000_000,
+                            "start": "2024-04-29",
+                            "end": "2024-07-28",
+                            "fy": 2025,
+                            "fp": "Q2",
+                            "form": "10-Q",
+                            "accn": "0001045810-25-000002",
+                            "filed": "2025-08-20",
+                        },
+                        {
+                            "val": 20_000_000_000,
+                            "start": "2024-01-29",
+                            "end": "2024-04-28",
+                            "fy": 2025,
+                            "fp": "Q1",
+                            "form": "10-Q",
+                            "accn": "0001045810-25-000020",
+                            "filed": "2025-06-01",
+                        },
+                    ]
+                },
+            },
+            "DepreciationAndAmortization": {
+                "label": "Depreciation and Amortization",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 10_000_000_000,
+                            "start": "2024-01-29",
+                            "end": "2025-01-26",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001045810-25-000001",
+                            "filed": "2025-02-18",
+                        },
+                        {
+                            "val": 8_000_000_000,
+                            "start": "2023-01-30",
+                            "end": "2024-01-28",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001045810-24-000001",
+                            "filed": "2024-02-21",
+                        },
+                        {
+                            "val": 2_000_000_000,
+                            "start": "2024-01-29",
+                            "end": "2024-04-28",
+                            "fy": 2025,
+                            "fp": "Q1",
+                            "form": "10-Q",
+                            "accn": "0001045810-25-000020",
+                            "filed": "2025-06-01",
+                        },
+                    ]
+                },
+            },
+        }
+    },
+}
+
+
 class TestCrossYearValidation(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")
@@ -516,6 +620,56 @@ class TestSeriesOutput(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(revenue), 2)
         self.assertEqual(revenue[0].value, 60_922_000_000)
         self.assertEqual(revenue[1].value, 26_974_000_000)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_derived_annual_series_returns_aligned_list(
+        self, mock_resolve, mock_facts, mock_subs
+    ) -> None:
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_EBITDA_SERIES_FACTS
+
+        result = await financials("NVDA", "ebitda", period="annual:2")
+
+        ebitda = result.metrics["ebitda"]
+        self.assertIsInstance(ebitda, list)
+        self.assertEqual([v.value for v in ebitda], [140_000_000_000, 98_000_000_000])
+        self.assertEqual([v.fiscal_year for v in ebitda], [2025, 2024])
+        for value in ebitda:
+            self.assertIsInstance(value, DerivedValue)
+            self.assertEqual(
+                {c.fiscal_year for c in value.components.values()},
+                {value.fiscal_year},
+            )
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_derived_quarterly_series_requires_aligned_component_windows(
+        self, mock_resolve, mock_facts, mock_subs
+    ) -> None:
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_EBITDA_SERIES_FACTS
+
+        result = await financials("NVDA", "ebitda", period="quarterly:3")
+
+        ebitda = result.metrics["ebitda"]
+        self.assertIsInstance(ebitda, list)
+        self.assertEqual(len(ebitda), 1)
+        self.assertEqual(ebitda[0].value, 22_000_000_000)
+        self.assertEqual(ebitda[0].fiscal_period, "Q1")
+        self.assertEqual(
+            {
+                (
+                    component.fiscal_period,
+                    component.period_start,
+                    component.period_end,
+                )
+                for component in ebitda[0].components.values()
+            },
+            {("Q1", ebitda[0].period_start, ebitda[0].period_end)},
+        )
 
 
 class TestCitationFormat(unittest.IsolatedAsyncioTestCase):

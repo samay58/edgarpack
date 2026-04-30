@@ -746,7 +746,11 @@ def main(argv: list[str] | None = None) -> int:
         "--period",
         "-p",
         default="lfy",
-        help="Period: lfy, mrq, ltm, ltm-1, mrp (default: lfy)",
+        help=(
+            "Period selector(s). Scalars: lfy, mrq, ltm, lfy-N, ltm-N, mrq-N, mrp. "
+            "Series: annual:N. CSV list for a multi-period grid: lfy,lfy-1,lfy-2. "
+            "Default: lfy."
+        ),
     )
     p_comps.add_argument(
         "--format",
@@ -769,8 +773,11 @@ def main(argv: list[str] | None = None) -> int:
     p_comps.add_argument(
         "--citations",
         choices=["inline", "footer", "off"],
-        default="inline",
-        help="Citation placement in table output (default: inline)",
+        default=None,
+        help=(
+            "Citation placement in table output. Default: 'inline' for single-period, "
+            "'footer' for multi-period grids."
+        ),
     )
     p_comps.add_argument("--force", action="store_true", help="Bypass cache")
     p_comps.add_argument(
@@ -2287,17 +2294,15 @@ def _render_query_table(result: Any, args: Any) -> str:
 
     if args.citations == "footer":
         if citations:
+            from .query.comps import _compact_citation_summaries
+
             lines.append("")
             lines.append("Sources:")
-            for cid in sorted(
-                citations.keys(),
-                key=lambda x: int(x[1:]) if x[1:].isdigit() else 9999,
-            ):
-                record = citations.get(cid)
-                if isinstance(record, dict):
-                    lines.extend(
-                        _render_citation_lines(cid, record, show_links=args.show_links, width=width)
-                    )
+            lines.extend(
+                line
+                for summary in _compact_citation_summaries(citations)
+                for line in _wrap_cli_text(summary, width, indent="  ")
+            )
         if calculations:
             from .query.citations import calculation_summary
 
@@ -2598,17 +2603,64 @@ class _ArgProxy:
 
 def _cmd_comps(args: Any) -> int:
     async def _run() -> int:
-        from .query.comps import comps, comps_to_json, comps_to_lean_json, format_comps_table
+        from .query.comps import (
+            comps,
+            comps_multi_period_to_json,
+            comps_multi_period_to_lean_json,
+            comps_series_to_period_grid,
+            comps_to_json,
+            comps_to_lean_json,
+            expand_comps_periods,
+            format_comps_multi_period_table,
+            format_comps_table,
+        )
 
         metric_list = [m.strip() for m in args.metrics.split(",")]
 
         try:
-            results = await comps(
-                companies=args.companies,
-                metrics=metric_list,
-                period=args.period,
-                force=bool(args.force),
-            )
+            periods = expand_comps_periods(args.period)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+
+        quarterly_series = len(periods) == 1 and periods[0].startswith("quarterly:")
+        render_periods = periods
+
+        try:
+            if quarterly_series:
+                quarterly_count = int(periods[0].split(":", 1)[1])
+                results = await comps(
+                    companies=args.companies,
+                    metrics=metric_list,
+                    period=periods[0],
+                    force=bool(args.force),
+                )
+                results_by_period, render_periods = comps_series_to_period_grid(
+                    results,
+                    metric_list,
+                    max_periods=quarterly_count,
+                )
+            elif len(periods) == 1:
+                results = await comps(
+                    companies=args.companies,
+                    metrics=metric_list,
+                    period=periods[0],
+                    force=bool(args.force),
+                )
+            else:
+                gathered = await asyncio.gather(
+                    *[
+                        comps(
+                            companies=args.companies,
+                            metrics=metric_list,
+                            period=period,
+                            force=bool(args.force),
+                        )
+                        for period in periods
+                    ]
+                )
+                results_by_period = dict(zip(periods, gathered))
+                render_periods = periods
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
@@ -2618,25 +2670,64 @@ def _cmd_comps(args: Any) -> int:
         if strict_flag:
             from .query.strict import apply_strict
 
-            for _company, _result in results.items():
+            if len(periods) > 1 or quarterly_series:
+                scan_results = [
+                    result
+                    for period_results in results_by_period.values()
+                    for result in period_results.values()
+                ]
+            else:
+                scan_results = list(results.values())
+            for _result in scan_results:
                 rejected = apply_strict(_result)
                 if rejected:
-                    strict_rejected[_company] = rejected
+                    key = _result.display_token or _result.company or _result.cik
+                    existing = strict_rejected.setdefault(key, [])
+                    for metric in rejected:
+                        if metric not in existing:
+                            existing.append(metric)
 
         if args.output_format == "json":
             import json
+
+            if len(periods) > 1 or quarterly_series:
+                payload = json.loads(
+                    comps_multi_period_to_lean_json(
+                        results_by_period,
+                        metric_list,
+                        render_periods,
+                        companies=args.companies,
+                    )
+                )
+                if strict_flag and strict_rejected:
+                    payload["strict_rejected"] = strict_rejected
+                print(json.dumps(payload, indent=2, default=str))
+                return 0
 
             # comps_to_lean_json returns a JSON string; we want to re-parse
             # only when we need to attach strict_rejected. For the common
             # non-strict path the output stays byte-identical.
             if strict_flag and strict_rejected:
-                payload = json.loads(comps_to_lean_json(results, metric_list, args.period))
+                payload = json.loads(comps_to_lean_json(results, metric_list, periods[0]))
                 payload["strict_rejected"] = strict_rejected
                 print(json.dumps(payload, indent=2, default=str))
             else:
-                print(comps_to_lean_json(results, metric_list, args.period))
+                print(comps_to_lean_json(results, metric_list, periods[0]))
         elif args.output_format == "json-full":
             import json
+
+            if len(periods) > 1 or quarterly_series:
+                payload = json.loads(
+                    comps_multi_period_to_json(
+                        results_by_period,
+                        render_periods,
+                        companies=args.companies,
+                    )
+                )
+                if strict_flag and strict_rejected:
+                    payload["strict_rejected"] = strict_rejected
+                print(json.dumps(payload, indent=2, default=str))
+                return 0
 
             if strict_flag and strict_rejected:
                 payload = json.loads(comps_to_json(results))
@@ -2646,16 +2737,32 @@ def _cmd_comps(args: Any) -> int:
                 print(comps_to_json(results))
         else:
             width = shutil.get_terminal_size((120, 20)).columns
-            print(
-                format_comps_table(
-                    results,
-                    metric_list,
-                    citations_mode=args.citations,
-                    show_links=args.show_links,
-                    audit=bool(args.audit),
-                    terminal_width=width,
+            if len(periods) > 1 or quarterly_series:
+                citations_mode = args.citations if args.citations is not None else "footer"
+                print(
+                    format_comps_multi_period_table(
+                        results_by_period,
+                        metric_list,
+                        render_periods,
+                        companies=args.companies,
+                        citations_mode=citations_mode,
+                        show_links=args.show_links,
+                        audit=bool(args.audit),
+                        terminal_width=width,
+                    )
                 )
-            )
+            else:
+                citations_mode = args.citations if args.citations is not None else "inline"
+                print(
+                    format_comps_table(
+                        results,
+                        metric_list,
+                        citations_mode=citations_mode,
+                        show_links=args.show_links,
+                        audit=bool(args.audit),
+                        terminal_width=width,
+                    )
+                )
             if strict_flag and strict_rejected:
                 print("")
                 flat = sorted({m for v in strict_rejected.values() for m in v})
