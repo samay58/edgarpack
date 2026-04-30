@@ -8,6 +8,7 @@ from datetime import date
 
 from edgarpack.query.comps import (
     _period_label,
+    comps_series_to_period_grid,
     expand_comps_periods,
     format_comps_multi_period_table,
     format_financial_perf_table,
@@ -25,6 +26,7 @@ def _cv(
     concept: str = "Revenues",
     unit: str = "USD",
     accession: str | None = None,
+    fiscal_period: str = "FY",
 ) -> CitedValue:
     return CitedValue(
         value=value,
@@ -34,8 +36,8 @@ def _cv(
         period_start=date(fy, 1, 1),
         period_end=date(fy, 12, 31),
         fiscal_year=fy,
-        fiscal_period="FY",
-        form_type="10-K",
+        fiscal_period=fiscal_period,
+        form_type="10-Q" if fiscal_period.startswith("Q") else "10-K",
         filed=date(fy + 1, 3, 1),
         accession=accession or f"0000000001-{str(fy + 1)[-2:]}-000001",
         cik="0000000001",
@@ -220,6 +222,7 @@ class TestCompsMultiPeriod(unittest.TestCase):
     def test_expand_comps_periods_supports_csv_and_annual_series(self) -> None:
         self.assertEqual(expand_comps_periods("lfy,lfy-1,lfy-2"), ["lfy", "lfy-1", "lfy-2"])
         self.assertEqual(expand_comps_periods("annual:3"), ["lfy", "lfy-1", "lfy-2"])
+        self.assertEqual(expand_comps_periods("quarterly:3"), ["quarterly:3"])
 
     def test_company_metric_rows_with_period_columns(self) -> None:
         periods = ["lfy", "lfy-1"]
@@ -273,6 +276,48 @@ class TestCompsMultiPeriod(unittest.TestCase):
         self.assertIn("Revenue", out)
         self.assertIn("$60.9B", out)
         self.assertIn("$27.0B", out)
+
+    def test_quarterly_series_grid_aligns_sparse_derived_values_by_fiscal_label(self) -> None:
+        results = {
+            "NVDA": QueryResult(
+                company="NVIDIA CORP",
+                cik="0001045810",
+                period="quarterly:3",
+                metrics={
+                    "revenue": [
+                        _cv(value=30_000_000_000, fy=2026, fiscal_period="Q3"),
+                        _cv(value=26_000_000_000, fy=2026, fiscal_period="Q2"),
+                        _cv(value=20_000_000_000, fy=2026, fiscal_period="Q1"),
+                    ],
+                    "ebitda": [
+                        _cv(
+                            value=22_000_000_000,
+                            fy=2026,
+                            metric="ebitda",
+                            concept="operating_income + depreciation_amortization",
+                            fiscal_period="Q1",
+                        )
+                    ],
+                },
+            )
+        }
+
+        results_by_period, periods = comps_series_to_period_grid(
+            results,
+            ["revenue", "ebitda"],
+            max_periods=3,
+        )
+        out = format_comps_multi_period_table(
+            results_by_period,
+            ["revenue", "ebitda"],
+            periods,
+            companies=["NVDA"],
+            citations_mode="off",
+            terminal_width=200,
+        )
+
+        self.assertEqual(periods, ["mrq", "mrq-1q", "mrq-2q"])
+        self.assertRegex(out, r"Ebitda\s+N/A\s+N/A\s+\$22\.0B")
 
 
 class TestMultiPeriodLeanJson(unittest.TestCase):

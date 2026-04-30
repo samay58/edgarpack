@@ -100,6 +100,96 @@ def expand_comps_periods(spec: str) -> list[str]:
     return periods
 
 
+def _fiscal_label_sort_key(label: str) -> tuple[int, int]:
+    """Sort fiscal labels newest first when building series grids."""
+    upper = label.upper()
+    parts = upper.split()
+    if len(parts) == 2 and parts[0].startswith("Q") and parts[1].startswith("FY"):
+        try:
+            return int(parts[1][2:]), int(parts[0][1:])
+        except ValueError:
+            return 0, 0
+    if upper.startswith("FY"):
+        try:
+            return int(upper[2:]), 5
+        except ValueError:
+            return 0, 0
+    return 0, 0
+
+
+def comps_series_to_period_grid(
+    results: dict[str, QueryResult],
+    metrics: list[str],
+    *,
+    max_periods: int | None = None,
+) -> tuple[dict[str, dict[str, QueryResult]], list[str]]:
+    """Explode list-valued comps results into a relative period grid.
+
+    Series selectors like ``quarterly:N`` return list-valued metrics from
+    ``financials()``. Aligning by list position is unsafe for derived metrics:
+    EBITDA may only be computable for Q1 while revenue has Q3/Q2/Q1. Each
+    company first builds a fiscal-label reference order, then sparse metrics
+    are placed into relative columns (``mrq``, ``mrq-1q``...) through that map.
+    """
+    company_label_orders: dict[str, list[str]] = {}
+    longest_order = 0
+
+    for company_key, qr in results.items():
+        best_order: list[str] = []
+        for metric in metrics:
+            raw_value = qr.metrics.get(metric)
+            values = raw_value if isinstance(raw_value, list) else [raw_value]
+            labels: list[str] = []
+            for cited in values:
+                if cited is None:
+                    continue
+                label = cited.fiscal_label
+                if label not in labels:
+                    labels.append(label)
+            labels.sort(key=_fiscal_label_sort_key, reverse=True)
+            if len(labels) > len(best_order):
+                best_order = labels
+
+        company_label_orders[company_key] = best_order
+        longest_order = max(longest_order, len(best_order))
+
+    period_count = max_periods if max_periods is not None else longest_order
+    period_count = max(0, period_count)
+    labels = ["mrq"] + [f"mrq-{idx}q" for idx in range(1, period_count)]
+    results_by_period: dict[str, dict[str, QueryResult]] = {label: {} for label in labels}
+
+    for label_index, relative_label in enumerate(labels):
+        for company_key, qr in results.items():
+            company_order = company_label_orders.get(company_key, [])
+            target_fiscal_label = (
+                company_order[label_index] if label_index < len(company_order) else None
+            )
+            metrics_for_label: dict[str, CitedValue | DerivedValue | None] = {}
+            for metric in metrics:
+                raw_value = qr.metrics.get(metric)
+                values = raw_value if isinstance(raw_value, list) else [raw_value]
+                matched = next(
+                    (
+                        cited
+                        for cited in values
+                        if cited is not None and cited.fiscal_label == target_fiscal_label
+                    ),
+                    None,
+                )
+                metrics_for_label[metric] = matched
+
+            results_by_period[relative_label][company_key] = QueryResult(
+                company=qr.company,
+                cik=qr.cik,
+                period=relative_label,
+                metrics=metrics_for_label,
+                diagnostics=qr.diagnostics if label_index == 0 else [],
+                display_token=qr.display_token,
+            )
+
+    return results_by_period, labels
+
+
 def _compact_citation_summaries(citations: dict[str, dict[str, object]]) -> list[str]:
     """Group value-level citation IDs by filing/window for compact footers."""
     grouped: dict[tuple[object, ...], list[str]] = {}
@@ -603,7 +693,7 @@ def _period_label(spec: str) -> str:
     s = spec.strip().lower()
     if "-" in s:
         head, tail = s.split("-", 1)
-        return f"{head.upper()}-{tail}"
+        return f"{head.upper()}-{tail.upper()}"
     return s.upper()
 
 

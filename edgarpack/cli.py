@@ -2529,6 +2529,7 @@ def _cmd_comps(args: Any) -> int:
             comps,
             comps_multi_period_to_json,
             comps_multi_period_to_lean_json,
+            comps_series_to_period_grid,
             comps_to_json,
             comps_to_lean_json,
             expand_comps_periods,
@@ -2544,8 +2545,24 @@ def _cmd_comps(args: Any) -> int:
             print(f"Error: {e}", file=sys.stderr)
             return 2
 
+        quarterly_series = len(periods) == 1 and periods[0].startswith("quarterly:")
+        render_periods = periods
+
         try:
-            if len(periods) == 1:
+            if quarterly_series:
+                quarterly_count = int(periods[0].split(":", 1)[1])
+                results = await comps(
+                    companies=args.companies,
+                    metrics=metric_list,
+                    period=periods[0],
+                    force=bool(args.force),
+                )
+                results_by_period, render_periods = comps_series_to_period_grid(
+                    results,
+                    metric_list,
+                    max_periods=quarterly_count,
+                )
+            elif len(periods) == 1:
                 results = await comps(
                     companies=args.companies,
                     metrics=metric_list,
@@ -2565,6 +2582,7 @@ def _cmd_comps(args: Any) -> int:
                     ]
                 )
                 results_by_period = dict(zip(periods, gathered))
+                render_periods = periods
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
@@ -2574,7 +2592,7 @@ def _cmd_comps(args: Any) -> int:
         if strict_flag:
             from .query.strict import apply_strict
 
-            if len(periods) > 1:
+            if len(periods) > 1 or quarterly_series:
                 scan_results = [
                     result
                     for period_results in results_by_period.values()
@@ -2594,12 +2612,12 @@ def _cmd_comps(args: Any) -> int:
         if args.output_format == "json":
             import json
 
-            if len(periods) > 1:
+            if len(periods) > 1 or quarterly_series:
                 payload = json.loads(
                     comps_multi_period_to_lean_json(
                         results_by_period,
                         metric_list,
-                        periods,
+                        render_periods,
                         companies=args.companies,
                     )
                 )
@@ -2620,11 +2638,11 @@ def _cmd_comps(args: Any) -> int:
         elif args.output_format == "json-full":
             import json
 
-            if len(periods) > 1:
+            if len(periods) > 1 or quarterly_series:
                 payload = json.loads(
                     comps_multi_period_to_json(
                         results_by_period,
-                        periods,
+                        render_periods,
                         companies=args.companies,
                     )
                 )
@@ -2641,13 +2659,13 @@ def _cmd_comps(args: Any) -> int:
                 print(comps_to_json(results))
         else:
             width = shutil.get_terminal_size((120, 20)).columns
-            if len(periods) > 1:
+            if len(periods) > 1 or quarterly_series:
                 citations_mode = args.citations if args.citations is not None else "footer"
                 print(
                     format_comps_multi_period_table(
                         results_by_period,
                         metric_list,
-                        periods,
+                        render_periods,
                         companies=args.companies,
                         citations_mode=citations_mode,
                         show_links=args.show_links,
