@@ -24,6 +24,10 @@ EdgarPack exists to compress a filing down to its substantive pieces and give th
 
 Measured against the latest NVDA, AAPL, and TSLA 10-Ks on 2026-04-20, cl100k tokens:
 
+<p align="center">
+  <img src="docs/assets/edgarpack-benchmark-compression.svg" alt="Hand-drawn benchmark chart showing median raw 10-K HTML at 595k cl100k tokens compressing to a 102k-token EdgarPack pack, an 85.6 percent reduction, with the clean pack fitting under a 128k context window." width="840">
+</p>
+
 - Raw 10-K HTML is a median of **~595k tokens**. The clean EdgarPack pack is a median of **~102k tokens**. That is an **85.6% reduction**, tight across the three filings (82.9% to 86.1%).
 - The raw filings do not fit in any mainstream LLM context window. The clean packs fit in GPT-4 Turbo's 128k window with room for citations and instructions.
 - At Claude 3.5 Sonnet input pricing ($3 / 1M tokens): raw costs about $1.79 per call, the pack costs about $0.31 per call. Same filing, ~5.8x cheaper to feed in.
@@ -42,6 +46,8 @@ If this is your first time using EdgarPack, read these in order:
 3. [`docs/QUERY.md`](docs/QUERY.md): the metric, period, citation, JSON, and derived-value reference.
 4. [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md): how to use filing diffs, static HTML reports, and S-1 registration timelines.
 5. [`docs/learn/README.md`](docs/learn/README.md): the code walk-through for engineers and agents once you want internals.
+
+Hosted filing demo: [`https://samay58.github.io/edgarpack/`](https://samay58.github.io/edgarpack/).
 
 If you installed EdgarPack from PyPI, run commands as `edgarpack ...`. If you are working from this repo, run the same commands as `uv run edgarpack ...`. The docs use `edgarpack` for readability, but the repo-local form is often what you want during development.
 
@@ -113,6 +119,61 @@ For tests, add the dev extra:
 
 ```bash
 uv run --extra dev --extra china --extra sse python -m pytest -q
+```
+
+## Fresh checkout verification
+
+Use this path when you want to test EdgarPack from the ground up, as if you had
+never run the repo on the machine before.
+
+```bash
+git clone https://github.com/samay58/edgarpack.git
+cd edgarpack
+
+# Python 3.11+ is required. Install uv if your shell does not have it yet.
+python3 --version
+uv --version || curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# SEC requires a real contact string for every live filing request.
+export EDGARPACK_USER_AGENT="Your Name your.email@example.com"
+
+# First CLI sanity check.
+uv run edgarpack home
+uv run edgarpack query NVDA revenue --period ltm --audit --show-links primary
+
+# Build two real NVIDIA 10-K packs, then generate a readable filing diff.
+uv run edgarpack build NVDA --form 10-K --last 2 --with-chunks
+uv run edgarpack diff --ticker NVDA --form 10-K --format html \
+  --out ./reports/nvda-10k-smoke.html
+
+# Generate the local static filing site from whatever packs you just built.
+uv run edgarpack site --packs ./packs --out ./site
+python3 -m http.server 8080 --directory site
+```
+
+In a second terminal, confirm the local site is serving:
+
+```bash
+curl -I http://localhost:8080/
+```
+
+For the repo quality gate, run the same wrapper agents use:
+
+```bash
+EDGARPACK_CACHE_DIR=/tmp/edgarpack-ground-up-cache scripts/symphony_quality_gate.sh
+```
+
+If you touched `web/` or are preparing a demo build, include the web gate too:
+
+```bash
+SYMPHONY_WEB=1 EDGARPACK_CACHE_DIR=/tmp/edgarpack-ground-up-cache \
+  scripts/symphony_quality_gate.sh
+```
+
+The published GitHub Pages demo should also answer with `HTTP/2 200`:
+
+```bash
+curl -I -L https://samay58.github.io/edgarpack/
 ```
 
 ## What you get
