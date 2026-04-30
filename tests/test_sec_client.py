@@ -8,7 +8,30 @@ from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
 from unittest.mock import AsyncMock, patch
 
+from edgarpack.config import _env_float, _env_int
 from edgarpack.sec.client import SECClient, _parse_retry_after, get_client
+
+
+class TestConfigEnvParsing(unittest.TestCase):
+    def test_env_float_accepts_positive_values(self) -> None:
+        with patch.dict("os.environ", {"EDGARPACK_SEC_RATE_LIMIT": "2.5"}):
+            self.assertEqual(_env_float("EDGARPACK_SEC_RATE_LIMIT", 10.0), 2.5)
+
+    def test_env_float_ignores_invalid_values(self) -> None:
+        with patch.dict("os.environ", {"EDGARPACK_SEC_RATE_LIMIT": "-1"}):
+            self.assertEqual(_env_float("EDGARPACK_SEC_RATE_LIMIT", 10.0), 10.0)
+        with patch.dict("os.environ", {"EDGARPACK_SEC_RATE_LIMIT": "nope"}):
+            self.assertEqual(_env_float("EDGARPACK_SEC_RATE_LIMIT", 10.0), 10.0)
+
+    def test_env_int_accepts_positive_values(self) -> None:
+        with patch.dict("os.environ", {"EDGARPACK_SEC_MAX_RETRIES": "6"}):
+            self.assertEqual(_env_int("EDGARPACK_SEC_MAX_RETRIES", 3), 6)
+
+    def test_env_int_ignores_invalid_values(self) -> None:
+        with patch.dict("os.environ", {"EDGARPACK_SEC_MAX_RETRIES": "0"}):
+            self.assertEqual(_env_int("EDGARPACK_SEC_MAX_RETRIES", 3), 3)
+        with patch.dict("os.environ", {"EDGARPACK_SEC_MAX_RETRIES": "many"}):
+            self.assertEqual(_env_int("EDGARPACK_SEC_MAX_RETRIES", 3), 3)
 
 
 class TestRetryAfterParsing(unittest.TestCase):

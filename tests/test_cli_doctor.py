@@ -39,16 +39,24 @@ class TestDoctorCLI(unittest.TestCase):
     def test_doctor_ticker_sweep_empty_registry(self) -> None:
         from edgarpack.harvest.registry import PackRegistry
 
-        with patch.object(PackRegistry, "list_packs", return_value=[]):
-            with patch(
-                "edgarpack.cli._resolve_cli_company",
-                return_value=type(
-                    "C", (), {"cik": "0000320193", "ticker": "AAPL", "name": "Apple Inc."}
-                )(),
-            ):
-                buf = io.StringIO()
-                with redirect_stdout(buf):
-                    rc = main(["doctor", "AAPL"])
+        with TemporaryDirectory() as td:
+            old_cwd = Path.cwd()
+            try:
+                os.chdir(td)
+                with patch.object(PackRegistry, "list_packs", return_value=[]):
+                    with patch(
+                        "edgarpack.cli._resolve_cli_company",
+                        return_value=type(
+                            "C",
+                            (),
+                            {"cik": "0000320193", "ticker": "AAPL", "name": "Apple Inc."},
+                        )(),
+                    ):
+                        buf = io.StringIO()
+                        with redirect_stdout(buf):
+                            rc = main(["doctor", "AAPL"])
+            finally:
+                os.chdir(old_cwd)
             self.assertEqual(rc, 0)
             self.assertIn("No packs registered", buf.getvalue())
 

@@ -29,15 +29,58 @@ jobs:
 
       - name: Build showcase packs
         run: |
+          set -euo pipefail
+
           # Well-known companies so visitors see recognizable filings.
-          # SEC EDGAR is public; no API key needed.
-          edgarpack build 320193  --form 10-K --out ./packs   # Apple
-          edgarpack build 789019  --form 10-K --out ./packs   # Microsoft
-          edgarpack build 1018724 --form 10-K --out ./packs   # Amazon
-          edgarpack build 1045810 --form 10-K --out ./packs   # NVIDIA
-          edgarpack build 1652044 --form 10-K --out ./packs   # Alphabet
+          # SEC EDGAR is public; no API key needed. GitHub-hosted runners share
+          # outbound IP pools, so keep this showcase build deliberately patient.
+          build_pack() {
+            local cik="$1"
+            local label="$2"
+            local attempt=1
+            local max_attempts=4
+            local delay
+            local log
+            local next_attempt
+
+            while true; do
+              log="$(mktemp)"
+              if edgarpack build "$cik" --form 10-K --out ./packs 2>&1 | tee "$log"; then
+                rm -f "$log"
+                break
+              fi
+
+              if ! grep -Eq "HTTP 429|HTTP 5[0-9][0-9]|timed out|Temporary failure|Connection reset" "$log"; then
+                rm -f "$log"
+                return 1
+              fi
+
+              rm -f "$log"
+
+              if (( attempt >= max_attempts )); then
+                echo "::error title=Showcase pack build failed::${label} (${cik}) failed after ${max_attempts} attempts."
+                return 1
+              fi
+
+              delay=$(( attempt * 30 ))
+              next_attempt=$(( attempt + 1 ))
+              echo "::warning title=SEC build retry::${label} (${cik}) hit transient SEC/network throttling; waiting ${delay}s before attempt ${next_attempt}/${max_attempts}."
+              sleep "$delay"
+              attempt="$next_attempt"
+            done
+
+            sleep 20
+          }
+
+          build_pack 320193 Apple
+          build_pack 789019 Microsoft
+          build_pack 1018724 Amazon
+          build_pack 1045810 NVIDIA
+          build_pack 1652044 Alphabet
         env:
           EDGARPACK_USER_AGENT: "EdgarPack/CI admin@edgarpack.dev"
+          EDGARPACK_SEC_RATE_LIMIT: "2"
+          EDGARPACK_SEC_MAX_RETRIES: "6"
 
       - name: Generate site
         run: edgarpack site --packs ./packs --out ./site
