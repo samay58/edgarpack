@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..diff.section_diff import _display_title
 from .templates import (
     CompanyRow,
     FilingRow,
@@ -201,13 +203,15 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
 
     for s in pack.sections:
         sid = str(s.get("id") or "")
-        title = str(s.get("title") or sid)
+        title = _section_display_title(sid, str(s.get("title") or sid))
         tokens = s.get("tokens_approx")
         tokens_str = f"{int(tokens):,}" if isinstance(tokens, int) else None
         page_name = _section_page_name(sid)
         href = f"sections/{page_name}.html"
-        section_items.append((f"{title} (Chinese)", href, tokens_str))
-        if (out_pack_dir / "sections" / f"{sid}.en.md").exists():
+        has_english = (out_pack_dir / "sections" / f"{sid}.en.md").exists()
+        label = f"{title} (Chinese)" if has_english else title
+        section_items.append((label, href, tokens_str))
+        if has_english:
             section_items.append(
                 (f"{title} (English)", f"sections/{page_name}.en.html", tokens_str)
             )
@@ -279,21 +283,24 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
     sections_dir.mkdir(parents=True, exist_ok=True)
     for s in pack.sections:
         sid = str(s.get("id") or "")
-        title = str(s.get("title") or sid)
+        title = _section_display_title(sid, str(s.get("title") or sid))
         page_name = _section_page_name(sid)
         md_path = out_pack_dir / str(s.get("path") or f"sections/{sid}.md")
         en_md_path = out_pack_dir / f"sections/{sid}.en.md"
         md = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
+        md = _strip_redundant_section_heading(md, sid)
         tokens = s.get("tokens_approx")
         tokens_str = f"{int(tokens):,}" if isinstance(tokens, int) else "?"
+        has_english = en_md_path.exists()
+        page_title = f"{title} (Chinese)" if has_english else title
 
         body = content_page(
-            title=f"{title} (Chinese)",
+            title=page_title,
             stats=[f"{tokens_str} tokens · {len(md):,} chars"],
             html=_markdown_to_html(md),
         )
         header_links = [("Full", "../full.html"), ("Raw MD", _section_md_href(sid))]
-        if en_md_path.exists():
+        if has_english:
             header_links.insert(0, ("English", f"{page_name}.en.html"))
         page = html_doc(
             title=f"{pack.company_name} {pack.form_type} {title}",
@@ -303,8 +310,9 @@ def _write_filing_pages(pack: PackInfo, out_pack_dir: Path) -> None:
         )
         (sections_dir / f"{page_name}.html").write_text(page, encoding="utf-8")
 
-        if en_md_path.exists():
+        if has_english:
             en_md = en_md_path.read_text(encoding="utf-8")
+            en_md = _strip_redundant_section_heading(en_md, sid)
             en_body = content_page(
                 title=f"{title} (English)",
                 stats=[f"{tokens_str} tokens · {len(en_md):,} chars"],
@@ -342,6 +350,23 @@ def _section_page_name(section_id: str) -> str:
     return sid
 
 
+def _section_display_title(section_id: str, raw_title: str) -> str:
+    return _display_title(section_id, raw_title)
+
+
+def _strip_redundant_section_heading(md: str, section_id: str) -> str:
+    lines = md.splitlines()
+    for idx, line in enumerate(lines):
+        stripped = line.strip().lstrip(">").strip()
+        if not stripped:
+            continue
+        if _section_display_title(section_id, stripped) != stripped:
+            del lines[idx]
+            return "\n".join(lines)
+        break
+    return md
+
+
 def _section_md_href(section_id: str) -> str:
     # Raw markdown stays in sections/{id}.md
     return f"../sections/{section_id}.md"
@@ -371,7 +396,7 @@ def _markdown_to_html(md: str) -> str:
     para_buf: list[str] = []
 
     while i < len(lines):
-        line = lines[i]
+        line = _normalize_rendered_markdown_line(lines[i])
         stripped = line.strip()
 
         # Code fences
@@ -454,7 +479,7 @@ def _markdown_to_html(md: str) -> str:
             flush_paragraph(para_buf)
             out.append("<blockquote>")
             while i < len(lines):
-                s = lines[i].rstrip()
+                s = _normalize_rendered_markdown_line(lines[i]).rstrip()
                 if not s.lstrip().startswith(">"):
                     break
                 q = s.lstrip()[1:].lstrip()
@@ -485,6 +510,27 @@ def _markdown_to_html(md: str) -> str:
 def _escape_block(text: str) -> str:
     # Block escaping (pre/code) – keep newlines.
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _normalize_rendered_markdown_line(line: str) -> str:
+    """Clean display-only TOC breadcrumbs from generated HTML pages."""
+    if len(re.findall(r"form\s+10-k\s+summary", line, flags=re.IGNORECASE)) < 2:
+        return line
+    if line.count("/") < 3:
+        return line
+
+    leading = line[: len(line) - len(line.lstrip())]
+    body = line.strip()
+    quote_prefix = ""
+    if body.startswith(">"):
+        quote_prefix = "> "
+        body = body[1:].lstrip()
+    pageish = re.search(r"(?:^|/)\s*(?:page\s*)?\d{1,4}\s*(?=/|$)", body, re.IGNORECASE)
+    if pageish is None:
+        return line
+
+    item_prefix = "Item 16. " if re.search(r"\bitem\s*16\b", body, re.IGNORECASE) else ""
+    return f"{leading}{quote_prefix}{item_prefix}Form 10-K Summary"
 
 
 def _inline(text: str) -> str:
