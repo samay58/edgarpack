@@ -33,15 +33,15 @@ class RateLimiter:
     async def acquire(self) -> None: ...
 ```
 
-Token bucket with `rate` tokens per second and a maximum capacity of `rate`. Uses `time.monotonic()` for elapsed time and an `asyncio.Lock` for mutual exclusion on the token count.
+No-burst request pacer with `rate` request starts per second. Uses `time.monotonic()` and an `asyncio.Lock` to reserve request slots in order.
 
 **Load-bearing invariants:**
 
-- The lock is held only while reading/updating the token count. Sleeping happens after releasing the lock, so waiting callers don't serialize on the sleep. See `edgarpack/sec/client.py:53-68`.
-- The bucket is refilled lazily on each `acquire` call. No background task. If the bucket is untouched for 10 seconds, the next `acquire` sees `rate * 10` tokens available, clamped to `rate`.
+- The first request can proceed immediately, but the second request must wait for the next slot. There is no startup burst.
+- The lock is held only while reserving the next slot. Sleeping happens after releasing the lock, so waiting callers don't serialize on the sleep.
 - `rate <= 0` raises `ValueError` at construction time. Negative or zero rate would mean infinite wait or division-by-zero in the wait calculation.
 
-The default rate comes from `config.RATE_LIMIT` (10 req/s, SEC's published ceiling).
+The default rate comes from `config.RATE_LIMIT` (5 req/s, below SEC's published ceiling).
 
 ---
 
@@ -77,12 +77,13 @@ Async HTTP client. Validates the user agent at construction, owns a `RateLimiter
 
 `edgarpack/sec/client.py:114`. The retry loop. Runs up to `max_retries` attempts. Each iteration:
 
-1. Acquire a rate limiter token.
+1. Acquire a rate limiter request slot.
 2. Call `_fetch_sync` inside `asyncio.to_thread`.
 3. On network error (`TimeoutError`, `OSError`, `URLError`): retry with exponential backoff starting at 1s, capped at 10s.
-4. On 429 or 5xx: read `Retry-After` header via `_parse_retry_after`, wait the larger of the current backoff or that value, then retry.
-5. On 4xx (non-429): raise `HTTPError` immediately.
-6. On 2xx: return `(content, headers)`.
+4. On SEC traffic-limit 429 pages: raise `SECRateLimitError` with cooldown guidance.
+5. On other 429 or 5xx responses: read `Retry-After` header via `_parse_retry_after`, wait the larger of the current backoff or that value, then retry.
+6. On 4xx (non-429): raise `HTTPError` immediately.
+7. On 2xx: return `(content, headers)`.
 
 Raises `RuntimeError("unreachable")` if the loop exits normally, which it never should.
 

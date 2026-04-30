@@ -50,7 +50,7 @@ Return type for `build_pack`. `output_dir` is the final pack directory. `filing_
 1. **Resolve filing metadata**. Call `get_filing_by_accession` or `get_latest_filing`. Returns a `FilingMeta`.
 2. **Create output directory structure**. `pack_dir = out_dir / meta.cik / meta.accession`, `sections_dir = pack_dir / "sections"`.
 3. **Idempotent early-return checks**. If `pack_dir/manifest.json` already exists (and not `force`), parse it and return a `PackResult` from the existing manifest. Also checks a legacy layout at `out_dir / cik / accession_nodash` for backward compatibility with older pack directories.
-4. **Fetch HTML files** via `fetch_filing_html(meta)`. Returns `list[(filename, bytes)]`.
+4. **Fetch the primary HTML file** via `fetch_primary_filing_html(meta)`. Returns `list[(filename, bytes)]` so the parse pipeline can stay generic.
 5. **Run the parse pipeline** via `_process_html_files`. Returns a single markdown string.
 6. **Sectionize** via `sectionize(markdown, form_type)`. Returns `list[Section]` and collects any per-section warnings.
 7. **Write `filing.full.md`**. The full markdown content.
@@ -108,5 +108,6 @@ The order is not reorderable. Each pass assumes the previous one has already run
 - **It does not download companyfacts XBRL data unless `with_xbrl=True`.** The pack's financial content comes from the parsed markdown. XBRL is an optional sidecar.
 - **It does not generate chunks unless `with_chunks=True`.** Chunking is for RAG use cases; it's not needed for reading the pack.
 - **It does not touch the harvest registry.** Pack building is a pure function of `(cik, accession, form_type)` input and filesystem state. Harvest orchestration is `edgarpack/harvest/`; see that module for batch workflows.
+- **It does not fetch related exhibit HTML by default.** Normal builds use the primary filing document and skip `index.json`, consents, certifications, and other exhibit pages. The older multi-file archive helper still exists for explicit callers.
 - **It does not re-fetch on a cache hit.** The parse pipeline is rerun every time even if the HTML is cached (SEC filings are immutable, but `_process_html_files` is fast enough that re-running it is cheaper than tracking parse-version staleness). Compare this to the idempotent early-return, which short-circuits the entire build when the pack itself is already on disk.
 - **It does not validate section IDs against the manifest.** The manifest records whatever `sectionize` returned. If sectionize is wrong, the manifest is wrong in the same way.

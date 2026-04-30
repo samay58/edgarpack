@@ -6,7 +6,7 @@ from typing import Any
 
 from ..config import CACHE_DIR, SEC_ARCHIVES_BASE
 from .cache import DiskCache
-from .client import get_client
+from .client import SECRateLimitError, get_client
 from .submissions import FilingMeta
 
 
@@ -72,6 +72,20 @@ async def fetch_file(
     cache.put(url, content, headers)
 
     return content
+
+
+async def fetch_primary_filing_html(
+    meta: FilingMeta,
+    force: bool = False,
+) -> list[tuple[str, bytes]]:
+    """Fetch only the filing's primary HTML document.
+
+    This is the default build path: the primary document carries the filing
+    body and avoids downloading index pages, consents, certifications, and
+    other exhibit HTML that can both inflate SEC traffic and pollute markdown.
+    """
+    content = await fetch_file(meta, meta.primary_document, force=force)
+    return [(meta.primary_document, content)]
 
 
 def identify_html_files(index: dict[str, Any], primary_doc: str) -> list[str]:
@@ -151,16 +165,28 @@ async def fetch_filing_html(
     tasks = [
         asyncio.create_task(fetch_file(meta, filename, force=force)) for filename in html_files
     ]
+    try:
+        task_results = await asyncio.gather(*tasks, return_exceptions=True)
+    except BaseException:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
 
-    for filename, task in zip(html_files, tasks, strict=False):
-        try:
-            content = await task
-        except Exception as e:
+    rate_limit_error: SECRateLimitError | None = None
+    for filename, result in zip(html_files, task_results, strict=False):
+        if isinstance(result, SECRateLimitError):
+            rate_limit_error = rate_limit_error or result
+            continue
+        if isinstance(result, Exception):
             # Log warning but continue - some files may be missing
             import warnings
 
-            warnings.warn(f"Failed to fetch {filename}: {e}")
+            warnings.warn(f"Failed to fetch {filename}: {result}")
             continue
-        results.append((filename, content))
+        results.append((filename, result))
+
+    if rate_limit_error is not None:
+        raise rate_limit_error
 
     return results

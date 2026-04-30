@@ -274,7 +274,7 @@ Optional cache location:
 export EDGARPACK_CACHE_DIR="$HOME/.edgarpack/cache"
 ```
 
-If `EDGARPACK_USER_AGENT` is missing, the first network call fails with an actionable error. Requests are rate-limited to 10 per second by default and cached on disk to keep repeated runs polite. For shared CI runners, set `EDGARPACK_SEC_RATE_LIMIT` and `EDGARPACK_SEC_MAX_RETRIES` to use a more conservative SEC fetch lane.
+If `EDGARPACK_USER_AGENT` is missing, the first network call fails with an actionable error. Requests are paced at 5 per second by default, cached on disk, and the pack builder fetches the primary filing document instead of every exhibit HTML. For shared CI runners, set `EDGARPACK_SEC_RATE_LIMIT` and `EDGARPACK_SEC_MAX_RETRIES` to tune the SEC fetch lane. If SEC returns its traffic-limit page, wait 10 minutes before retrying.
 
 ## Output layout
 

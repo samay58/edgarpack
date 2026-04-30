@@ -14,7 +14,7 @@ You run a CLI command (build, query, comps, compare, which, list, diff, timeline
     v
   Route by source:
     sec   -> submissions / archives / companyfacts / filing HTML over SECClient
-            (rate-limited token bucket, SHA256 disk cache, atomic writes)
+            (no-burst request pacer, SHA256 disk cache, atomic writes)
     hkex  -> read prebuilt pack's facts.json (HKEX extractor ran at pack time)
     v
   Parse (build only):  strip iXBRL -> clean HTML -> semantic normalize -> render markdown -> sectionize

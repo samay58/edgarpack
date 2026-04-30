@@ -131,8 +131,9 @@ async def _measure_filing(
     artifact_dir = artifacts_root / f"{canonical_ticker}_10K_{meta.accession}"
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
-    # Stage A: fetch raw HTML. Time the whole fetch (primary + any exhibits
-    # the filing index lists).
+    # Stage A: fetch raw HTML. The normal pack builder is primary-document-only;
+    # this benchmark still fetches related HTML so historical "combined raw"
+    # figures remain reproducible as an upper-bound payload comparison.
     fetch_start = time.monotonic()
     html_files = await fetch_filing_html(meta)
     fetch_seconds = time.monotonic() - fetch_start
@@ -143,8 +144,8 @@ async def _measure_filing(
     primary_filename, primary_bytes = html_files[0]
     primary_text = primary_bytes.decode("utf-8", errors="replace")
 
-    # The build pipeline concatenates all HTML files, so "combined" is the
-    # honest denominator when we compare against filing.full.md.
+    # "Combined" is retained for continuity with older benchmark artifacts.
+    # The operational build denominator is now the primary filing document.
     combined_text = "\n".join(blob.decode("utf-8", errors="replace") for _, blob in html_files)
 
     primary_metrics = _bytes_and_tokens(primary_text)
@@ -168,7 +169,7 @@ async def _measure_filing(
     # commit since we also commit the stripped + clean forms.
     (artifact_dir / "raw.htm").write_bytes(primary_bytes)
 
-    # Stage B: iXBRL tag strip on the same combined text the builder uses.
+    # Stage B: iXBRL tag strip on the combined text for historical comparison.
     strip_start = time.monotonic()
     stripped_combined = strip_ixbrl(combined_text)
     strip_seconds = time.monotonic() - strip_start

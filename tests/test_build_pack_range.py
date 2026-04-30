@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import unittest
 from datetime import date
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from edgarpack.pack.build import PackResult
+from edgarpack.sec.client import SECRateLimitError
 from edgarpack.sec.submissions import FilingMeta
 
 
@@ -176,3 +178,52 @@ class TestBuildPackRange(unittest.IsolatedAsyncioTestCase):
             )
         self.assertEqual(results, [])
         self.assertEqual(mock_build.await_count, 0)
+
+    async def test_rate_limit_error_cancels_range_without_unawaited_siblings(self) -> None:
+        from edgarpack.pack.build import build_pack_range
+
+        filings = [
+            _meta("a", date(2024, 11, 1)),
+            _meta("b", date(2023, 11, 1)),
+            _meta("c", date(2022, 11, 1)),
+        ]
+        started: list[str] = []
+        cancelled: list[str] = []
+
+        async def fake_build(cik: str, accession: str, **_kw: object) -> PackResult:
+            started.append(accession)
+            if accession == "a":
+                raise SECRateLimitError(
+                    url="https://www.sec.gov/Archives/a.htm",
+                    status_code=429,
+                    headers={},
+                    content=b"traffic limit",
+                    cooldown_seconds=600,
+                )
+            try:
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                cancelled.append(accession)
+                raise
+            return _result(accession)
+
+        with (
+            patch(
+                "edgarpack.pack.build.list_filings",
+                new=AsyncMock(return_value=filings),
+            ),
+            patch("edgarpack.pack.build.build_pack", new=fake_build),
+        ):
+            with self.assertRaises(SECRateLimitError):
+                await build_pack_range(
+                    cik="0000320193",
+                    form_type="10-K",
+                    last=3,
+                    out_dir=Path("/tmp/packs"),
+                    with_chunks=False,
+                    with_xbrl=False,
+                    force=False,
+                )
+
+        self.assertEqual(started, ["a", "b", "c"])
+        self.assertEqual(cancelled, ["b", "c"])

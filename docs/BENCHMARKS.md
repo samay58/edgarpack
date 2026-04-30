@@ -9,8 +9,8 @@ Every figure in this doc maps to a row in `[benchmarks/efficiency-2026-04-20.jso
 - Sample: the latest 10-K for NVDA, AAPL, TSLA as of 2026-04-20.
 - Tokenizer: OpenAI `cl100k_base` via `tiktoken`. Claude's tokenizer produces numbers a few percent different; the shape of the claim does not change.
 - Stages measured, per filing:
-  1. Raw HTML as fetched from SEC EDGAR. We record both the primary filing document and the concatenation of every HTML file in the filing index (exhibits, audit letters, etc.). The combined number is the one that matters because the build pipeline concatenates them.
-  2. iXBRL tag strip applied to the combined HTML (`[edgarpack/parse/ixbrl_strip.py](../edgarpack/parse/ixbrl_strip.py)`). Isolates how much of the bloat is pure XBRL tagging.
+  1. Raw HTML as fetched from SEC EDGAR. We record both the primary filing document and the concatenation of every HTML file in the filing index (exhibits, audit letters, etc.). This dated benchmark used the combined number as the headline denominator; current builds fetch the primary document by default, so the primary-to-clean reduction is the operational comparison.
+  2. iXBRL tag strip applied to the combined HTML (`[edgarpack/parse/ixbrl_strip.py](../edgarpack/parse/ixbrl_strip.py)`). Isolates how much of the historical combined-payload bloat is pure XBRL tagging.
   3. Clean `filing.full.md` produced by `[edgarpack/pack/build.py](../edgarpack/pack/build.py)`. This is what you actually hand to an LLM.
   4. Single section: `sections/10k_parti_item1a_risk_factors.md` when present.
 - Wall-clock: `time.monotonic()` around each stage. Host: Apple Silicon laptop, Python 3.14, SEC disk cache warm for the fetches (typical dev loop). Reported times are indicative, not guarantees.
@@ -138,4 +138,3 @@ That regenerates both the JSON under `benchmarks/efficiency-YYYY-MM-DD.json` and
 ## Changelog
 
 - **2026-04-20**: initial run against NVDA/AAPL/TSLA latest 10-Ks. Median reduction 85.6%. Section-level targeting limitation documented for incorporation-by-reference filers.
-
