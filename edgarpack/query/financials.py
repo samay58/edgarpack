@@ -36,6 +36,7 @@ from .self_heal import try_learn
 logger = logging.getLogger(__name__)
 
 _DerivedCache = dict[str, CitedValue | None]
+_SERIES_PERIOD_RE = re.compile(r"^(annual|quarterly):(\d+)$")
 
 
 def _requested_metrics_list(metrics: str | list[str] | None) -> list[str]:
@@ -72,6 +73,19 @@ def _is_stale(cited: CitedValue, period: str) -> bool:
     if limit >= 999:
         return False
     return cited.fiscal_year < _date.today().year - limit
+
+
+def _series_period(period: str) -> tuple[str, int] | None:
+    """Return (kind, count) for annual:N / quarterly:N selectors."""
+    match = _SERIES_PERIOD_RE.fullmatch(period.strip().lower())
+    if not match:
+        return None
+    return match.group(1), int(match.group(2))
+
+
+def _period_alignment_key(cited: CitedValue) -> tuple[int, str, _date]:
+    """Key used to ensure derived components describe the same reporting window."""
+    return cited.fiscal_year, cited.fiscal_period.upper(), cited.period_end
 
 
 def _discovered_slugs_for_cik(cik: str) -> set[str]:
@@ -489,21 +503,35 @@ async def financials(
             continue
 
         if meta.derived:
-            cited = _compute_derived(
-                facts,
-                metric,
-                meta,
-                company_name,
-                cik,
-                period,
-                doc_map,
-                cache=derived_cache,
-                in_progress=set(),
-                diagnostics=diagnostics_list,
-            )
-            if cited is not None and _is_stale(cited, period):
-                cited = None
-            result_metrics[metric] = cited
+            series_kind = _series_period(period)
+            if series_kind is not None:
+                cited_series = _compute_derived_series(
+                    facts,
+                    metric,
+                    meta,
+                    company_name,
+                    cik,
+                    period,
+                    doc_map,
+                    diagnostics=diagnostics_list,
+                )
+                result_metrics[metric] = cited_series if cited_series else None
+            else:
+                cited = _compute_derived(
+                    facts,
+                    metric,
+                    meta,
+                    company_name,
+                    cik,
+                    period,
+                    doc_map,
+                    cache=derived_cache,
+                    in_progress=set(),
+                    diagnostics=diagnostics_list,
+                )
+                if cited is not None and _is_stale(cited, period):
+                    cited = None
+                result_metrics[metric] = cited
         else:
             resolved = resolve_concept(metric, facts)
             if resolved is None:
@@ -875,6 +903,203 @@ async def _scan_headcount_fallback(
     return None
 
 
+def _series_values_for_component(
+    facts: dict[str, Any],
+    comp_name: str,
+    comp_meta: MetricMeta,
+    company: str,
+    cik: str,
+    period: str,
+    doc_map: dict[str, str] | None,
+    diagnostics: list[Diagnostic] | None,
+) -> list[CitedValue]:
+    """Resolve one component as a period series."""
+    if comp_meta.derived:
+        return _compute_derived_series(
+            facts,
+            comp_name,
+            comp_meta,
+            company,
+            cik,
+            period,
+            doc_map,
+            diagnostics=diagnostics,
+        )
+
+    hkex_concept = _hkex_concept_for_metric(facts, comp_name)
+    if hkex_concept is not None:
+        concept, taxonomy = hkex_concept
+    else:
+        resolved = resolve_concept(comp_name, facts)
+        if resolved is None:
+            return []
+        concept, taxonomy = resolved
+
+    value = select_period(
+        facts,
+        concept,
+        comp_name,
+        comp_meta,
+        company,
+        cik,
+        period,
+        taxonomy=taxonomy,
+        doc_map=doc_map,
+        diagnostics=diagnostics,
+    )
+    if not isinstance(value, list):
+        return [value] if value is not None else []
+
+    scope_warn = get_scope_warning(concept)
+    if scope_warn:
+        for item in value:
+            item.warnings.append(scope_warn)
+    return value
+
+
+def _compute_derived_series(
+    facts: dict[str, Any],
+    metric: str,
+    meta: MetricMeta,
+    company: str,
+    cik: str,
+    period: str,
+    doc_map: dict[str, str] | None = None,
+    diagnostics: list[Diagnostic] | None = None,
+) -> list[DerivedValue]:
+    """Compute a derived annual:N / quarterly:N series from aligned components."""
+    parsed = _series_period(period)
+    if parsed is None or not meta.components or not meta.formula:
+        return []
+
+    kind, count = parsed
+    if count <= 0:
+        return []
+
+    shifted_components = [
+        component
+        for component in meta.components
+        if isinstance(component, tuple) and len(component) == 2 and component[1] != 0
+    ]
+    if shifted_components:
+        if kind != "annual":
+            return []
+        results: list[DerivedValue] = []
+        for idx in range(count):
+            value = _compute_derived(
+                facts,
+                metric,
+                meta,
+                company,
+                cik,
+                "lfy",
+                doc_map,
+                cache={},
+                in_progress=set(),
+                period_offset=-idx,
+                diagnostics=diagnostics,
+            )
+            if isinstance(value, DerivedValue):
+                results.append(value)
+        return results
+
+    component_maps: dict[str, dict[tuple[int, str, _date], CitedValue]] = {}
+    component_order: list[tuple[int, str, _date]] = []
+
+    for raw_comp in meta.components:
+        comp_name, raw_comp_offset = _normalize_component(raw_comp)
+        if raw_comp_offset != 0:
+            return []
+
+        comp_meta = METRIC_MAP.get(comp_name)
+        if comp_meta is None:
+            return []
+
+        series = _series_values_for_component(
+            facts,
+            comp_name,
+            comp_meta,
+            company,
+            cik,
+            period,
+            doc_map,
+            diagnostics,
+        )
+        if not series:
+            return []
+
+        by_key: dict[tuple[int, str, _date], CitedValue] = {}
+        for cited in series:
+            if cited.value is None:
+                continue
+            key = _period_alignment_key(cited)
+            by_key.setdefault(key, cited)
+
+        if not by_key:
+            return []
+        if not component_order:
+            component_order = [
+                _period_alignment_key(cited) for cited in series if cited.value is not None
+            ]
+        component_maps[comp_name] = by_key
+
+    results: list[DerivedValue] = []
+    for key in component_order:
+        components: dict[str, CitedValue] = {}
+        for raw_comp in meta.components:
+            comp_name, _raw_comp_offset = _normalize_component(raw_comp)
+            comp_value = component_maps.get(comp_name, {}).get(key)
+            if comp_value is None:
+                components = {}
+                break
+            components[comp_name] = comp_value
+        if not components:
+            continue
+
+        result_value = _eval_formula(meta.formula, components)
+        if result_value is None:
+            continue
+
+        first_comp = next(iter(components.values()))
+        results.append(
+            DerivedValue(
+                value=result_value,
+                unit=_derived_unit(metric, components),
+                metric=metric,
+                concept=meta.formula,
+                period_start=first_comp.period_start,
+                period_end=first_comp.period_end,
+                fiscal_year=first_comp.fiscal_year,
+                fiscal_period=first_comp.fiscal_period,
+                form_type=first_comp.form_type,
+                filed=first_comp.filed,
+                accession=first_comp.accession,
+                cik=cik,
+                company=company,
+                taxonomy=first_comp.taxonomy,
+                primary_document=first_comp.primary_document,
+                derived=True,
+                components=components,
+            )
+        )
+        if len(results) >= count:
+            break
+
+    if 0 < len(results) < count and diagnostics is not None:
+        diagnostics.append(
+            Diagnostic(
+                metric=metric,
+                kind="partial_coverage",
+                message=(
+                    f"Only {len(results)} of {count} requested periods available for "
+                    f"derived metric '{metric}' because component periods did not align."
+                ),
+            )
+        )
+
+    return results
+
+
 def _compute_derived(
     facts: dict[str, Any],
     metric: str,
@@ -1011,13 +1236,13 @@ def _compute_derived(
             )
             components[f"{comp_name}{suffix}"] = comp_value
 
-    # Cross-year validation: when no component has an offset, every component
-    # should resolve to the same fiscal year. Offsetted formulas (YoY, trend)
-    # intentionally cross FYs, so skip the check for those.
+    # Cross-period validation: when no component has an offset, every component
+    # should resolve to the same fiscal year/period/end date. Offsetted formulas
+    # (YoY, trend) intentionally cross FYs, so skip the check for those.
     any_shifted = any(isinstance(c, tuple) and len(c) == 2 and c[1] != 0 for c in meta.components)
     if not any_shifted and period_offset == 0:
-        fiscal_years = {comp.fiscal_year for comp in components.values()}
-        if len(fiscal_years) > 1:
+        alignment_keys = {_period_alignment_key(comp) for comp in components.values()}
+        if len(alignment_keys) > 1:
             in_progress.discard(cache_key)
             cache[cache_key] = None
             return None

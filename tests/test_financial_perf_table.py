@@ -8,6 +8,8 @@ from datetime import date
 
 from edgarpack.query.comps import (
     _period_label,
+    expand_comps_periods,
+    format_comps_multi_period_table,
     format_financial_perf_table,
     multi_period_to_full_json,
     multi_period_to_lean_json,
@@ -172,6 +174,105 @@ class TestFormatFinancialPerfTable(unittest.TestCase):
         results["lfy-2"].metrics["revenue"] = None
         out = format_financial_perf_table(results, self.metrics, self.periods, terminal_width=200)
         self.assertIn("N/A", out)
+
+    def test_footer_sources_group_repeated_filing_ids(self) -> None:
+        periods = ["lfy"]
+        results = {
+            "lfy": QueryResult(
+                company="Test Corp",
+                cik="0000000001",
+                period="lfy",
+                metrics={
+                    "revenue": _cv(
+                        value=100e9,
+                        fy=2024,
+                        metric="revenue",
+                        concept="Revenues",
+                        accession="0000000001-25-000001",
+                    ),
+                    "net_income": _cv(
+                        value=30e9,
+                        fy=2024,
+                        metric="net_income",
+                        concept="NetIncomeLoss",
+                        accession="0000000001-25-000001",
+                    ),
+                },
+            )
+        }
+
+        out = format_financial_perf_table(
+            results,
+            ["revenue", "net_income"],
+            periods,
+            citations_mode="footer",
+            terminal_width=200,
+        )
+
+        source_lines = [
+            line for line in out.splitlines() if "0000000001-25-000001" in line
+        ]
+        self.assertEqual(len(source_lines), 1)
+        self.assertIn("[C1, C2]", source_lines[0])
+
+
+class TestCompsMultiPeriod(unittest.TestCase):
+    def test_expand_comps_periods_supports_csv_and_annual_series(self) -> None:
+        self.assertEqual(expand_comps_periods("lfy,lfy-1,lfy-2"), ["lfy", "lfy-1", "lfy-2"])
+        self.assertEqual(expand_comps_periods("annual:3"), ["lfy", "lfy-1", "lfy-2"])
+
+    def test_company_metric_rows_with_period_columns(self) -> None:
+        periods = ["lfy", "lfy-1"]
+        results_by_period = {
+            "lfy": {
+                "NVDA": QueryResult(
+                    company="NVIDIA CORP",
+                    cik="0001045810",
+                    period="lfy",
+                    metrics={"revenue": _cv(value=60_922_000_000, fy=2025)},
+                ),
+                "AMD": QueryResult(
+                    company="ADVANCED MICRO DEVICES INC",
+                    cik="0000002488",
+                    period="lfy",
+                    metrics={"revenue": _cv(value=22_680_000_000, fy=2024)},
+                ),
+            },
+            "lfy-1": {
+                "NVDA": QueryResult(
+                    company="NVIDIA CORP",
+                    cik="0001045810",
+                    period="lfy-1",
+                    metrics={"revenue": _cv(value=26_974_000_000, fy=2024)},
+                ),
+                "AMD": QueryResult(
+                    company="ADVANCED MICRO DEVICES INC",
+                    cik="0000002488",
+                    period="lfy-1",
+                    metrics={"revenue": _cv(value=16_434_000_000, fy=2023)},
+                ),
+            },
+        }
+
+        out = format_comps_multi_period_table(
+            results_by_period,
+            ["revenue"],
+            periods,
+            companies=["NVDA", "AMD"],
+            citations_mode="footer",
+            terminal_width=200,
+        )
+
+        header = out.splitlines()[0]
+        self.assertIn("Company", header)
+        self.assertIn("Metric", header)
+        self.assertIn("LFY", header)
+        self.assertIn("LFY-1", header)
+        self.assertIn("NVIDIA CORP", out)
+        self.assertIn("ADVANCED MICRO DEVICES INC", out)
+        self.assertIn("Revenue", out)
+        self.assertIn("$60.9B", out)
+        self.assertIn("$27.0B", out)
 
 
 class TestMultiPeriodLeanJson(unittest.TestCase):

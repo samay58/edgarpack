@@ -117,6 +117,25 @@ class TestRenderQueryTable(unittest.TestCase):
         out = _render_query_table(qr, _args(strict=True))
         self.assertNotIn("N/A", out)
 
+    def test_footer_sources_group_repeated_filing_ids(self) -> None:
+        qr = QueryResult(
+            company="NVIDIA CORP",
+            cik="0001045810",
+            period="annual:1",
+            metrics={
+                "revenue": _cited("revenue", "Revenues", 130e9),
+                "net_income": _cited("net_income", "NetIncomeLoss", 30e9),
+            },
+        )
+
+        out = _render_query_table(qr, _args(citations="footer", show_links="none"))
+
+        source_lines = [
+            line for line in out.splitlines() if "0001045810-25-000001" in line
+        ]
+        self.assertEqual(len(source_lines), 1)
+        self.assertIn("[C1, C2]", source_lines[0])
+
 
 class TestCliMetricNotFound(unittest.TestCase):
     def test_unknown_metric_prints_suggestions_and_exits_nonzero(self) -> None:
