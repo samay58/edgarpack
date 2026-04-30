@@ -1596,14 +1596,16 @@ def _cmd_translate_sse(args: Any) -> int:
     async def _run() -> int:
         from .china.translate.cache import TranslationCache, provider_namespace
         from .china.translate.deepinfra import (
+            PROMPT_VERSION,
             DeepInfraConfigurationError,
             DeepInfraTranslator,
         )
         from .china.translate.glossary import FinancialGlossary
         from .china.translate.numbers import tag_numbers
         from .china.translate.preprocess import preprocess_paragraphs
-        from .china.translate.router import SectionRouter
+        from .china.translate.router import ROUTER_VERSION, SectionRouter
         from .china.translate.validators import (
+            VALIDATOR_VERSION,
             GlossaryConsistencyValidator,
             validate_translation,
         )
@@ -1642,7 +1644,15 @@ def _cmd_translate_sse(args: Any) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             return 2
         router = SectionRouter(translator)
-        cache = TranslationCache(namespace=provider_namespace(translator.provider))
+        strategy_fingerprint = (
+            f"prompt-{PROMPT_VERSION}/router-{ROUTER_VERSION}/validator-{VALIDATOR_VERSION}"
+        )
+        cache = TranslationCache(
+            namespace=provider_namespace(
+                translator.provider,
+                strategy_fingerprint=strategy_fingerprint,
+            )
+        )
         glossary_validator = GlossaryConsistencyValidator()
 
         cached_count = 0
@@ -1652,6 +1662,76 @@ def _cmd_translate_sse(args: Any) -> int:
         en_sections: list[str] = []
         failed_sections: list[str] = []
         translated_sections: list[str] = []
+        failure_records: list[dict[str, Any]] = []
+        recorded_failure_keys: set[tuple[str, int | None]] = set()
+
+        def _excerpt(text: str, limit: int = 220) -> str:
+            compact = " ".join(text.split())
+            if len(compact) <= limit:
+                return compact
+            return compact[: limit - 3] + "..."
+
+        def _record_validation_failure(
+            section_id: str,
+            index: int,
+            text_zh: str,
+            text_en: str,
+            report: Any,
+        ) -> list[str]:
+            key = (section_id, index)
+            if key not in recorded_failure_keys:
+                recorded_failure_keys.add(key)
+                failure_records.append(
+                    {
+                        "section_id": section_id,
+                        "paragraph_index": index,
+                        "source": text_zh,
+                        "target": text_en,
+                        "source_excerpt": _excerpt(text_zh),
+                        "target_excerpt": _excerpt(text_en),
+                        "issues": [
+                            {
+                                "validator": issue.validator,
+                                "message": issue.message,
+                                "severity": issue.severity,
+                            }
+                            for issue in report.issues
+                        ],
+                    }
+                )
+            return [
+                f"p{index}: {issue.message} "
+                f"(source: {_excerpt(text_zh, 90)}; target: {_excerpt(text_en, 90)})"
+                for issue in report.issues
+                if issue.severity == "error"
+            ]
+
+        def _record_exception_failure(
+            section_id: str,
+            exc: Exception,
+            batch_texts: list[str],
+        ) -> None:
+            key = (section_id, None)
+            if key in recorded_failure_keys:
+                return
+            recorded_failure_keys.add(key)
+            failure_records.append(
+                {
+                    "section_id": section_id,
+                    "paragraph_index": None,
+                    "source": "\n\n".join(batch_texts),
+                    "target": "",
+                    "source_excerpt": _excerpt("\n\n".join(batch_texts)),
+                    "target_excerpt": "",
+                    "issues": [
+                        {
+                            "validator": "translation_exception",
+                            "message": f"{type(exc).__name__}: {exc}",
+                            "severity": "error",
+                        }
+                    ],
+                }
+            )
 
         for zh_file in zh_files:
             section_id = zh_file.stem
@@ -1738,6 +1818,7 @@ def _cmd_translate_sse(args: Any) -> int:
                     except Exception as exc:
                         section_failed = True
                         section_error_messages.append(f"{type(exc).__name__}: {exc}")
+                        _record_exception_failure(section_id, exc, batch_texts)
                         print(
                             f"  {section_id}: failed closed ({type(exc).__name__}: {exc})",
                             file=sys.stderr,
@@ -1767,6 +1848,7 @@ def _cmd_translate_sse(args: Any) -> int:
                         except Exception as exc:
                             section_failed = True
                             section_error_messages.append(f"{type(exc).__name__}: {exc}")
+                            _record_exception_failure(section_id, exc, retry_texts)
                             print(
                                 f"  {section_id}: failed closed ({type(exc).__name__}: {exc})",
                                 file=sys.stderr,
@@ -1777,9 +1859,13 @@ def _cmd_translate_sse(args: Any) -> int:
                             if report.has_errors:
                                 section_failed = True
                                 section_error_messages.extend(
-                                    f"p{idx}: {issue.message}"
-                                    for issue in report.issues
-                                    if issue.severity == "error"
+                                    _record_validation_failure(
+                                        section_id,
+                                        idx,
+                                        result.text_zh,
+                                        result.text_en,
+                                        report,
+                                    )
                                 )
                                 break
                             para_results[idx] = result.text_en
@@ -1797,6 +1883,29 @@ def _cmd_translate_sse(args: Any) -> int:
                 translation_sources[i] is None and decisions[i].action == "translate"
                 for i in range(len(decisions))
             ):
+                for i, decision in enumerate(decisions):
+                    if translation_sources[i] is not None or decision.action != "translate":
+                        continue
+                    if (section_id, i) in recorded_failure_keys:
+                        continue
+                    failure_records.append(
+                        {
+                            "section_id": section_id,
+                            "paragraph_index": i,
+                            "source": decision.cleaned,
+                            "target": para_results[i] or "",
+                            "source_excerpt": _excerpt(decision.cleaned),
+                            "target_excerpt": _excerpt(para_results[i] or ""),
+                            "issues": [
+                                {
+                                    "validator": "translation_missing",
+                                    "message": "No valid translation was produced",
+                                    "severity": "error",
+                                }
+                            ],
+                        }
+                    )
+                    recorded_failure_keys.add((section_id, i))
                 failed_sections.append(section_id)
                 en_path = sections_dir / f"{section_id}.en.md"
                 if en_path.exists():
@@ -1825,11 +1934,24 @@ def _cmd_translate_sse(args: Any) -> int:
             if full_en_path.exists():
                 full_en_path.unlink()
 
+        failure_artifact: str | None = None
+        failure_path = pack_dir / "translation.failures.json"
+        if failure_records:
+            failure_artifact = "translation.failures.json"
+            failure_path.write_text(
+                json.dumps(failure_records, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            print(f"  wrote {failure_artifact}")
+        elif failure_path.exists():
+            failure_path.unlink()
+
         # Update manifest
-        manifest_data["translation"] = {
+        translation_metadata = {
             "provider": translator.provider,
             "model": args.model,
             "glossary_version": glossary.version,
+            "strategy_fingerprint": strategy_fingerprint,
             "cached_paragraphs": cached_count,
             "translated_paragraphs": translated_count,
             "failed_sections": failed_sections,
@@ -1838,6 +1960,9 @@ def _cmd_translate_sse(args: Any) -> int:
             "validation_warning_count": validation_warning_count,
             "validation_error_count": validation_error_count,
         }
+        if failure_artifact is not None:
+            translation_metadata["failure_artifact"] = failure_artifact
+        manifest_data["translation"] = translation_metadata
         manifest_path.write_text(
             json.dumps(manifest_data, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
             encoding="utf-8",

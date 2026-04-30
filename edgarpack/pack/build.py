@@ -600,12 +600,13 @@ async def _translate_sections(
 ) -> dict[str, Any]:
     """Run translation pipeline on all sections. Returns translation metadata dict."""
     from ..china.translate.cache import TranslationCache, provider_namespace
-    from ..china.translate.deepinfra import DeepInfraTranslator
+    from ..china.translate.deepinfra import PROMPT_VERSION, DeepInfraTranslator
     from ..china.translate.glossary import FinancialGlossary
     from ..china.translate.numbers import tag_numbers
     from ..china.translate.preprocess import preprocess_paragraphs
-    from ..china.translate.router import SectionRouter
+    from ..china.translate.router import ROUTER_VERSION, SectionRouter
     from ..china.translate.validators import (
+        VALIDATOR_VERSION,
         GlossaryConsistencyValidator,
         validate_translation,
     )
@@ -617,7 +618,15 @@ async def _translate_sections(
         max_concurrency=max(1, max_concurrency),
     )
     router = SectionRouter(translator)
-    cache = TranslationCache(namespace=provider_namespace(translator.provider))
+    strategy_fingerprint = (
+        f"prompt-{PROMPT_VERSION}/router-{ROUTER_VERSION}/validator-{VALIDATOR_VERSION}"
+    )
+    cache = TranslationCache(
+        namespace=provider_namespace(
+            translator.provider,
+            strategy_fingerprint=strategy_fingerprint,
+        )
+    )
     glossary_validator = GlossaryConsistencyValidator()
 
     cached_paragraphs = 0
@@ -815,6 +824,7 @@ async def _translate_sections(
         "provider": translator.provider,
         "model": model,
         "glossary_version": glossary.version,
+        "strategy_fingerprint": strategy_fingerprint,
         "cached_paragraphs": cached_paragraphs,
         "translated_paragraphs": translated_paragraphs,
         "validation_warnings": len(validation_warnings),

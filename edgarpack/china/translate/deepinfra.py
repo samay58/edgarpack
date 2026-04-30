@@ -92,6 +92,14 @@ _ENGLISH_ONLY_RETRY_PROMPT_SUFFIX = (
     "- Preserve markdown heading markers, numbering, bold, and punctuation.\n"
     "- Output only the English translation."
 )
+_RESIDUAL_HAN_REPAIR_PROMPT_SUFFIX = (
+    "\n\nFinal repair pass:\n"
+    "- The prior output still contained Chinese characters.\n"
+    "- Translate every remaining Chinese character into English.\n"
+    "- Preserve every existing <<NUM_XXX>> and <<LIT_XXX>> placeholder exactly.\n"
+    "- Preserve all raw numbers, dates, markdown markers, table pipes, and line breaks.\n"
+    "- Output only the repaired English translation."
+)
 _TRANSIENT_HTTP_EXCEPTIONS = (
     httpx.ConnectError,
     httpx.ReadError,
@@ -248,6 +256,21 @@ class DeepInfraTranslator:
                     and _has_invented_markdown_artifacts(text_zh, text_en_raw)
                 ):
                     text_en_raw = text_zh
+                elif _contains_chinese(text_en_raw) and _contains_chinese(text_zh):
+                    repair_prompt = system_prompt + _RESIDUAL_HAN_REPAIR_PROMPT_SUFFIX
+                    repaired = await self._call_api(tagged_text, repair_prompt)
+                    repaired = _clean_translation_output(repaired, text_zh)
+                    if (
+                        _has_invented_placeholders(repaired, allowed_placeholders)
+                        or (
+                            not allow_markdown_artifacts
+                            and _has_invented_markdown_artifacts(text_zh, repaired)
+                        )
+                        or _contains_chinese(repaired)
+                    ):
+                        text_en_raw = text_zh
+                    else:
+                        text_en_raw = repaired
 
         text_en_with_literals = _restore_literal_tokens(text_en_raw, literal_tags)
         text_en = _clean_restored_translation(restore_numbers(text_en_with_literals, number_tags))

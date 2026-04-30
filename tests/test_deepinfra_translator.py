@@ -302,6 +302,34 @@ class TestDeepInfraTranslator:
         assert mock_api.await_count == 2
 
     @pytest.mark.asyncio
+    async def test_residual_chinese_output_gets_one_bounded_repair_attempt(self, translator):
+        with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
+            mock_api.side_effect = [
+                "公司持续深化技术创新。",
+                "The Company 持续深化 technological innovation.",
+                "The Company continued to deepen technological innovation.",
+            ]
+
+            result = await translator.translate_async("公司持续深化技术创新。")
+
+        assert result.text_en == "The Company continued to deepen technological innovation."
+        assert mock_api.await_count == 3
+
+    @pytest.mark.asyncio
+    async def test_residual_chinese_repair_still_fails_closed_when_invalid(self, translator):
+        with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
+            mock_api.side_effect = [
+                "公司持续深化技术创新。",
+                "The Company 持续深化 technological innovation.",
+                "The Company 持续深化 technological innovation.",
+            ]
+
+            result = await translator.translate_async("公司持续深化技术创新。")
+
+        assert result.text_en == "公司持续深化技术创新。"
+        assert mock_api.await_count == 3
+
+    @pytest.mark.asyncio
     async def test_invented_markdown_artifacts_trigger_retry(self, translator):
         source = "型号 AlienGo 主要参数 站立尺寸：65×31×60cm 核心特点 产品布局紧凑"
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:

@@ -10,6 +10,7 @@ from edgarpack.china.translate.deepinfra import DeepInfraTranslator
 from edgarpack.china.translate.glossary import FinancialGlossary
 from edgarpack.china.translate.provider import TranslationResult
 from edgarpack.china.translate.router import SectionRouter
+from edgarpack.china.translate.validators import validate_translation
 
 
 @pytest.fixture
@@ -189,6 +190,34 @@ async def test_multiline_reporting_period_cells_are_normalized(router):
 
 
 @pytest.mark.asyncio
+async def test_spaced_year_month_table_cells_are_zero_padded(router):
+    paragraph = "\n".join(
+        [
+            "|任期起始日期|任期终止日期|",
+            "|---|---|",
+            "|2016 年8 月|2021 年4 月|",
+            "|**2016** 年**8** 月|**2021** 年**4** 月|",
+        ]
+    )
+
+    with patch.object(router._translator, "translate_async", new_callable=AsyncMock) as mock_async:
+        mapping = {
+            "任期起始日期": "Term Start Date",
+            "任期终止日期": "Term End Date",
+        }
+
+        async def _fake_translate(text_zh, system_prompt=None):
+            return TranslationResult(text_zh=text_zh, text_en=mapping[text_zh], provider="test")
+
+        mock_async.side_effect = _fake_translate
+        [result] = await router.translate_section("annual_s04_corporate_governance", [paragraph])
+
+    assert "|2016-08|2021-04|" in result.text_en
+    assert "|**2016**-**08**|**2021**-**04**|" in result.text_en
+    assert validate_translation(paragraph, result.text_en).passed
+
+
+@pytest.mark.asyncio
 async def test_multiline_fiscal_year_cells_are_normalized(router):
     paragraph = "\n".join(
         [
@@ -215,6 +244,44 @@ async def test_multiline_fiscal_year_cells_are_normalized(router):
         [result] = await router.translate_section("ipo_s05_business_technology", [paragraph])
 
     assert "|FY 2024|26.44%|" in result.text_en
+
+
+@pytest.mark.asyncio
+async def test_xgimi_annual_governance_table_dates_validate(router):
+    paragraph = "\n".join(
+        [
+            "|任职人员姓名|其他单位名称|在其他单位担任的职务|任期起始日期|任期终止日期|",
+            "|---|---|---|---|---|",
+            "|刘帅|成都极联科技有限公司|监事|2016 年8 月|/|",
+            "|尹蕾|XGIMI 株式会社|代表取缔役|2021 年4 月|/|",
+        ]
+    )
+
+    with patch.object(router._translator, "translate_async", new_callable=AsyncMock) as mock_async:
+        mapping = {
+            "任职人员姓名": "Name",
+            "其他单位名称": "Other Entity",
+            "在其他单位担任的职务": "Position Held",
+            "任期起始日期": "Term Start Date",
+            "任期终止日期": "Term End Date",
+            "刘帅": "Liu Shuai",
+            "成都极联科技有限公司": "Chengdu Jilian Technology Co., Ltd.",
+            "监事": "Supervisor",
+            "尹蕾": "Yin Lei",
+            "XGIMI株式会社": "XGIMI Corporation",
+            "代表取缔役": "Representative Director",
+        }
+
+        async def _fake_translate(text_zh, system_prompt=None):
+            return TranslationResult(text_zh=text_zh, text_en=mapping[text_zh], provider="test")
+
+        mock_async.side_effect = _fake_translate
+        [result] = await router.translate_section("annual_s04_corporate_governance", [paragraph])
+
+    assert "2016-08" in result.text_en
+    assert "2021-04" in result.text_en
+    report = validate_translation(paragraph, result.text_en)
+    assert report.passed, [issue.message for issue in report.issues]
 
 
 @pytest.mark.asyncio

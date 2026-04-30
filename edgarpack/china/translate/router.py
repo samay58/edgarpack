@@ -84,7 +84,7 @@ _AGE_RANGE_LABEL_RE = re.compile(
 )
 _AGE_UNDER_LABEL_RE = re.compile(r"^(?P<age>\d+)岁以下[（(]不含(?P=age)岁[）)]$")
 _AGE_AND_ABOVE_LABEL_RE = re.compile(r"^(?P<age>\d+)岁及以上$")
-ROUTER_VERSION = "v14"
+ROUTER_VERSION = "v15"
 _PLACEHOLDER_CELL_TRANSLATIONS: dict[str, str] = {
     "【】年【】月【】日": "[]-[]-[]",
     "【】元": "[] yuan",
@@ -487,10 +487,11 @@ class SectionRouter:
         return not _CHINESE_RE.search(reduced)
 
     def _replace_inline_date(self, match: re.Match[str]) -> str:
+        month = _zero_pad_marked_numeric_token(match.group("month"), width=2)
         day = match.group("day")
         if day is None:
-            return f"{match.group('year')}-{match.group('month')}"
-        return f"{match.group('year')}-{match.group('month')}-{day}"
+            return f"{match.group('year')}-{month}"
+        return f"{match.group('year')}-{month}-{_zero_pad_marked_numeric_token(day, width=2)}"
 
     async def _translate_percentage_list_cell(self, value: str, strict: bool = False) -> str | None:
         lines = value.split("<br>")
@@ -721,3 +722,12 @@ def _restore_missing_year_literals(source: str, translated: str) -> str:
         return translated
     prefix = " ".join(dict.fromkeys(missing_years))
     return f"{prefix} {translated}".strip()
+
+
+def _zero_pad_marked_numeric_token(token: str, width: int) -> str:
+    match = re.fullmatch(r"(?P<mark>\*{0,2})(?P<digits>\d+)(?P=mark)", token)
+    if match is None:
+        return token
+    mark = match.group("mark")
+    padded = f"{int(match.group('digits')):0{width}d}"
+    return f"{mark}{padded}{mark}"
