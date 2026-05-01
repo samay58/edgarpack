@@ -74,6 +74,29 @@ class TestManifestStateClassification(unittest.TestCase):
                 reg.close()
         self.assertEqual(result.status, "manifest_io_error")
 
+    def test_cached_empty_sentinel_reports_empty_not_cached(self) -> None:
+        with TemporaryDirectory() as td:
+            pack_dir = Path(td) / "pack"
+            pack_dir.mkdir()
+            reg = LearnedRegistry(db_path=Path(td) / "reg.db")
+            try:
+                pack = _pack_record(pack_dir)
+                reg.company_kpi_mark_empty(
+                    cik=pack.cik,
+                    accession=pack.accession,
+                    form_type=pack.form_type,
+                    period_end="2024-12-31",
+                )
+                result = _discover_pack(
+                    pack_record=pack,
+                    learned_reg=reg,
+                    force=False,
+                )
+            finally:
+                reg.close()
+        self.assertEqual(result.status, "empty")
+        self.assertEqual(result.discovered, [])
+
 
 class TestKpiExtractManifestLogging(unittest.TestCase):
     def test_missing_manifest_logs_specific_class(self) -> None:

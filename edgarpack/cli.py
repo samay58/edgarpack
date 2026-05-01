@@ -3621,6 +3621,68 @@ def _render_which_diagnostics(diagnostics: Any) -> str | None:
     return "Discovery summary: " + ", ".join(fragments)
 
 
+def _count_phrase(count: int, singular: str, plural: str | None = None) -> str:
+    word = singular if count == 1 else (plural or f"{singular}s")
+    return f"{count} {word}"
+
+
+def _render_which_coverage_note(diagnostics: Any) -> str | None:
+    """Render a stdout warning when the KPI table is based on partial coverage."""
+    eligible = int(getattr(diagnostics, "eligible_packs", 0) or 0)
+    contributing = int(getattr(diagnostics, "contributing_packs", 0) or 0)
+    if eligible <= 0 or contributing >= eligible:
+        return None
+
+    reasons: list[str] = []
+    unreadable = int(getattr(diagnostics, "unreadable_manifest_packs", 0) or 0)
+    if unreadable:
+        reasons.append(_count_phrase(unreadable, "unreadable/missing pack"))
+    llm_failed = int(getattr(diagnostics, "llm_failed_packs", 0) or 0)
+    if llm_failed:
+        reasons.append(_count_phrase(llm_failed, "discovery failure", "discovery failures"))
+    empty = int(getattr(diagnostics, "empty_packs", 0) or 0)
+    if empty:
+        reasons.append(f"{empty} no qualifying KPIs")
+
+    reason_text = f" ({', '.join(reasons)})" if reasons else ""
+    return (
+        "Coverage note: "
+        f"{contributing} of {eligible} eligible filings contributed KPI rows"
+        f"{reason_text}. Table is partial."
+    )
+
+
+def _which_diagnostics_payload(diagnostics: Any) -> dict[str, Any]:
+    eligible = int(getattr(diagnostics, "eligible_packs", 0) or 0)
+    contributing = int(getattr(diagnostics, "contributing_packs", 0) or 0)
+    filings: list[dict[str, Any]] = []
+    for item in getattr(diagnostics, "filings", []) or []:
+        if hasattr(item, "to_json"):
+            filings.append(item.to_json())
+        elif isinstance(item, dict):
+            filings.append(dict(item))
+    return {
+        "total_registered_packs": int(getattr(diagnostics, "total_registered_packs", 0) or 0),
+        "eligible_packs": eligible,
+        "contributing_packs": contributing,
+        "cached_packs": int(getattr(diagnostics, "cached_packs", 0) or 0),
+        "discovered_packs": int(getattr(diagnostics, "discovered_packs", 0) or 0),
+        "manifest_missing_packs": int(getattr(diagnostics, "manifest_missing_packs", 0) or 0),
+        "manifest_invalid_json_packs": int(
+            getattr(diagnostics, "manifest_invalid_json_packs", 0) or 0
+        ),
+        "manifest_schema_mismatch_packs": int(
+            getattr(diagnostics, "manifest_schema_mismatch_packs", 0) or 0
+        ),
+        "manifest_io_error_packs": int(getattr(diagnostics, "manifest_io_error_packs", 0) or 0),
+        "llm_failed_packs": int(getattr(diagnostics, "llm_failed_packs", 0) or 0),
+        "empty_packs": int(getattr(diagnostics, "empty_packs", 0) or 0),
+        "partial": eligible > 0 and contributing < eligible,
+        "coverage_note": _render_which_coverage_note(diagnostics),
+        "filings": filings,
+    }
+
+
 def _render_which_table(aggregates: list, max_periods: int) -> str:
     """Render a compact table view of discovered + catalog KPIs.
 
@@ -3908,6 +3970,7 @@ def _cmd_which(args: Any) -> int:
             "company": packs[0].company_name,
             "ticker": packs[0].ticker,
             "count": len(aggregates),
+            "diagnostics": _which_diagnostics_payload(diagnostics),
             "kpis": [a.to_json() for a in aggregates],
         }
         print(_json.dumps(payload, indent=2, default=str))
@@ -3916,6 +3979,10 @@ def _cmd_which(args: Any) -> int:
     print(f"Disclosed KPIs for {packs[0].company_name} (CIK: {cik}):\n")
     if aggregates:
         print("Rendering KPI table", file=sys.stderr)
+        coverage_note = _render_which_coverage_note(diagnostics)
+        if coverage_note:
+            print(coverage_note)
+            print()
         print(_render_which_table(aggregates, int(args.max_periods)))
     else:
         print(

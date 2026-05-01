@@ -66,6 +66,8 @@ class DiscoveryDiagnostics:
     manifest_io_error_packs: int = 0
     llm_failed_packs: int = 0
     empty_packs: int = 0
+    contributing_packs: int = 0
+    filings: list[DiscoveryFilingStatus] = field(default_factory=list)
 
     @property
     def unreadable_manifest_packs(self) -> int:
@@ -85,6 +87,26 @@ class DiscoveryProgressEvent:
     index: int = 0
     total: int = 0
     pack: PackRecord | None = None
+
+
+@dataclass(frozen=True)
+class DiscoveryFilingStatus:
+    """Per-filing outcome for a `which` discovery pass."""
+
+    accession: str
+    form_type: str
+    filing_date: str
+    status: str
+    contributed: bool
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "accession": self.accession,
+            "form_type": self.form_type,
+            "filing_date": self.filing_date,
+            "status": self.status,
+            "contributed": self.contributed,
+        }
 
 
 @dataclass(frozen=True)
@@ -464,10 +486,22 @@ def discover_kpis(
                 attr = status_map.get(pack_result.status)
                 if attr is not None:
                     setattr(diagnostics, attr, getattr(diagnostics, attr) + 1)
-            for kpi in pack_result.discovered:
+            usable_kpis = [kpi for kpi in pack_result.discovered if not kpi.slug.startswith("__")]
+            if diagnostics is not None:
+                contributed = bool(usable_kpis)
+                if contributed:
+                    diagnostics.contributing_packs += 1
+                diagnostics.filings.append(
+                    DiscoveryFilingStatus(
+                        accession=pack.accession,
+                        form_type=pack.form_type,
+                        filing_date=pack.filing_date,
+                        status=pack_result.status,
+                        contributed=contributed,
+                    )
+                )
+            for kpi in usable_kpis:
                 slug = kpi.slug
-                if slug.startswith("__"):
-                    continue
                 label = _period_label(
                     pack.form_type, kpi.fiscal_year, kpi.fiscal_period, kpi.period_end
                 )
