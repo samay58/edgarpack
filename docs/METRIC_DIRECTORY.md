@@ -116,7 +116,7 @@ These are read directly from SEC companyfacts when a candidate concept exists. `
 | `preferred_stock` | instant | - | `PreferredStockValue`, `RedeemablePreferredStockCarryingAmountOrRedemptionPrice` | - | - |
 | `equity_method_investments` | instant | - | `EquityMethodInvestments`, `InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures` | - | - |
 | `operating_cash_flow` | duration | `ocf` | `NetCashProvidedByUsedInOperatingActivities`, `NetCashProvidedByUsedInOperatingActivitiesContinuingOperations` | `CashFlowsFromUsedInOperatingActivities` | - |
-| `capex` | duration | `capex`, `capital_expenditure`, `capital_expenditures` | `PaymentsToAcquirePropertyPlantAndEquipment`, `PaymentsToAcquireOtherProductiveAssets`, `PaymentsToAcquireProductiveAssets` | - | - |
+| `capex` | duration | `capex`, `capital_expenditure`, `capital_expenditures` | `PaymentsToAcquirePropertyPlantAndEquipment`, `PaymentsToAcquireProductiveAssets` | - | - |
 | `shares_outstanding` | instant | - | `CommonStockSharesOutstanding`, `EntityCommonStockSharesOutstanding` | - | - |
 | `headcount` | instant | - | `EntityNumberOfEmployees`, `NumberOfEmployees` | - | - |
 | `shares_basic_wavg` | duration | - | `WeightedAverageNumberOfSharesOutstandingBasic` | - | - |
