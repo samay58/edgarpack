@@ -365,6 +365,10 @@ edgarpack cache                                               # cache stats or -
 edgarpack api --port 8000                                     # China Lens API server
 ```
 
+Need the full metric surface? See [`docs/METRIC_DIRECTORY.md`](docs/METRIC_DIRECTORY.md)
+for the generated query/comps/compare metric directory and
+[`docs/METRIC_DIRECTORY.json`](docs/METRIC_DIRECTORY.json) for the structured version.
+
 ## Historical reach
 
 `build --accession`, `list`, and the downstream `diff` / `timeline` commands reach across a filer's full submission history, not just the recent window.

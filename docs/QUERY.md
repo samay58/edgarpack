@@ -33,6 +33,8 @@ Metric concept mappings live in code, not config files, so changes get reviewed 
 
 Missing or invalid inputs return `None` instead of guesses. Period math is explicit (especially LTM) so every component can be cited and checked. Filing metadata ships on every value object by default. Audit trails are not optional.
 
+For the full generated directory of accepted metric names, aliases, formulas, concept tags, KPI catalog entries, and scope boundaries, see [`docs/METRIC_DIRECTORY.md`](METRIC_DIRECTORY.md). The structured companion is [`docs/METRIC_DIRECTORY.json`](METRIC_DIRECTORY.json).
+
 ## CLI Reference
 
 ### Single company
