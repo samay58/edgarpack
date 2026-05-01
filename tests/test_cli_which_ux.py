@@ -15,6 +15,7 @@ from edgarpack.harvest.registry import PackRecord, PackRegistry
 from edgarpack.query.kpi_discover import (
     CompanyKpiAggregate,
     DiscoveryDiagnostics,
+    DiscoveryFilingStatus,
     PeriodPoint,
 )
 from edgarpack.query.layer_zero import MetricNotFound
@@ -235,6 +236,7 @@ def test_cmd_which_shows_progress_and_summary(capsys):
         diagnostics.total_registered_packs = 1
         diagnostics.eligible_packs = 1
         diagnostics.discovered_packs = 1
+        diagnostics.contributing_packs = 1
         diagnostics.manifest_missing_packs = 1
         if progress_callback is not None:
             from edgarpack.query.kpi_discover import DiscoveryProgressEvent
@@ -267,6 +269,143 @@ def test_cmd_which_shows_progress_and_summary(capsys):
     ) in captured.err
     assert "Rendering KPI table" in captured.err
     assert "paid_seats" in captured.out
+
+
+def test_render_which_coverage_note_flags_partial_table():
+    from edgarpack.cli import _render_which_coverage_note, _which_diagnostics_payload
+
+    diagnostics = DiscoveryDiagnostics(
+        total_registered_packs=4,
+        eligible_packs=4,
+        discovered_packs=1,
+        llm_failed_packs=2,
+        empty_packs=1,
+        contributing_packs=1,
+        filings=[
+            DiscoveryFilingStatus(
+                accession="0001628280-26-009228",
+                form_type="10-K",
+                filing_date="2026-02-18",
+                status="llm_failed",
+                contributed=False,
+            ),
+            DiscoveryFilingStatus(
+                accession="0001628280-25-000111",
+                form_type="10-K",
+                filing_date="2025-02-18",
+                status="discovered",
+                contributed=True,
+            ),
+        ],
+    )
+
+    note = _render_which_coverage_note(diagnostics)
+
+    assert note is not None
+    assert "1 of 4 eligible filings contributed KPI rows" in note
+    assert "2 discovery failures" in note
+    assert "1 no qualifying KPIs" in note
+    assert "Table is partial" in note
+
+    payload = _which_diagnostics_payload(diagnostics)
+    assert payload["eligible_packs"] == 4
+    assert payload["contributing_packs"] == 1
+    assert payload["partial"] is True
+    assert payload["coverage_note"] == note
+    assert payload["filings"][0]["accession"] == "0001628280-26-009228"
+    assert payload["filings"][0]["status"] == "llm_failed"
+    assert payload["filings"][0]["contributed"] is False
+
+
+def test_cmd_which_prints_partial_coverage_note_before_table(capsys):
+    latest_pack = PackRecord(
+        accession="0001628280-26-009228",
+        cik="0001579878",
+        ticker="FIG",
+        company_name="Figma, Inc.",
+        form_type="10-K",
+        filing_date="2026-02-18",
+        sections_count=122,
+        tokens_total=144_959,
+        pack_dir="packs/0001579878/0001628280-26-009228",
+        built_at="2026-02-18T00:00:00+00:00",
+    )
+    prior_pack = PackRecord(
+        accession="0001628280-25-000111",
+        cik="0001579878",
+        ticker="FIG",
+        company_name="Figma, Inc.",
+        form_type="10-K",
+        filing_date="2025-02-18",
+        sections_count=118,
+        tokens_total=140_000,
+        pack_dir="packs/0001579878/0001628280-25-000111",
+        built_at="2025-02-18T00:00:00+00:00",
+    )
+    aggregate = CompanyKpiAggregate(
+        slug="paid_seats",
+        display_name="Paid seats",
+        source="discovered",
+        unit="count",
+        definition=None,
+        aliases=[],
+        periods=[
+            PeriodPoint(
+                label="FY2025",
+                sort_key="2025-01-31",
+                period_end="2025-01-31",
+                fiscal_year=2025,
+                fiscal_period="FY",
+                form_type="10-K",
+                accession=prior_pack.accession,
+                value=1.2,
+                unit="count",
+                magnitude="millions",
+                section_id="10k_partii_item7_managements_discussion",
+                chunk_id=None,
+                source_substring="1.2 million paid seats",
+            )
+        ],
+    )
+
+    def _fake_discover(*, diagnostics=None, progress_callback=None, **kwargs):  # noqa: ARG001
+        assert diagnostics is not None
+        diagnostics.total_registered_packs = 2
+        diagnostics.eligible_packs = 2
+        diagnostics.discovered_packs = 1
+        diagnostics.llm_failed_packs = 1
+        diagnostics.contributing_packs = 1
+        if progress_callback is not None:
+            from edgarpack.query.kpi_discover import DiscoveryProgressEvent
+
+            progress_callback(
+                DiscoveryProgressEvent(phase="pack", index=1, total=2, pack=latest_pack)
+            )
+            progress_callback(
+                DiscoveryProgressEvent(phase="pack", index=2, total=2, pack=prior_pack)
+            )
+        return [aggregate]
+
+    mock_registry = Mock()
+    mock_registry.list_packs.return_value = [latest_pack, prior_pack]
+    mock_registry.close.return_value = None
+
+    with (
+        patch(
+            "edgarpack.cli._resolve_cli_company",
+            new=AsyncMock(return_value=_resolved_company()),
+        ),
+        patch("edgarpack.harvest.registry.PackRegistry", return_value=mock_registry),
+        patch("edgarpack.query.kpi_discover.discover_kpis", side_effect=_fake_discover),
+    ):
+        rc = cli._cmd_which(_which_args(company="FIG"))
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "Coverage note: 1 of 2 eligible filings contributed KPI rows" in captured.out
+    assert "1 discovery failure" in captured.out
+    assert "Table is partial" in captured.out
+    assert captured.out.index("Coverage note:") < captured.out.index("paid_seats")
 
 
 def test_cmd_which_empty_state_is_actionable(capsys):
