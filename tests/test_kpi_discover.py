@@ -28,6 +28,7 @@ from unittest.mock import patch
 from edgarpack.harvest.registry import PackRecord, PackRegistry
 from edgarpack.query.kpi_discover import (
     CompanyKpiAggregate,
+    DiscoveryDiagnostics,
     PeriodPoint,
     discover_kpis,
     lookup_company_kpi,
@@ -404,6 +405,87 @@ class TestDiscoverKpisFiguraFixture(_DiscoverHarness):
 
         self.assertEqual(mock_run.call_count, 1)
 
+    def test_failed_filing_is_retried_without_losing_cached_success(self) -> None:
+        self._add_pack(
+            accession="0001792044-24-000001",
+            filing_date="2024-03-15",
+            period_of_report="2024-01-31",
+            section_body="Key Business Metrics. We ended with 1.2 million paid seats.",
+        )
+        self._add_pack(
+            accession="0001792044-23-000001",
+            filing_date="2023-03-15",
+            period_of_report="2023-01-31",
+            section_body="Key Business Metrics. We ended with 900 thousand paid seats.",
+        )
+
+        responses = iter(
+            [
+                _mock_llm_response(
+                    [
+                        {
+                            "slug": "paid_seats",
+                            "display_name": "Paid seats",
+                            "unit": "count",
+                            "magnitude": "millions",
+                            "value": 1.2,
+                            "period_end": "2024-01-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "1.2 million paid seats",
+                            "confidence": 0.9,
+                        }
+                    ]
+                ),
+                None,
+                _mock_llm_response(
+                    [
+                        {
+                            "slug": "paid_seats",
+                            "display_name": "Paid seats",
+                            "unit": "count",
+                            "magnitude": "thousands",
+                            "value": 900,
+                            "period_end": "2023-01-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "900 thousand paid seats",
+                            "confidence": 0.86,
+                        }
+                    ]
+                ),
+            ]
+        )
+
+        def _fake_run(_prompt, timeout=None):  # noqa: ARG001
+            return next(responses)
+
+        first_diag = DiscoveryDiagnostics()
+        second_diag = DiscoveryDiagnostics()
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract._run_llm_raw", side_effect=_fake_run) as mock_run,
+        ):
+            first = discover_kpis(
+                cik=self.CIK,
+                pack_registry=self.pack_registry,
+                registry_path=self.registry_db,
+                diagnostics=first_diag,
+            )
+            second = discover_kpis(
+                cik=self.CIK,
+                pack_registry=self.pack_registry,
+                registry_path=self.registry_db,
+                diagnostics=second_diag,
+            )
+
+        self.assertEqual(mock_run.call_count, 3)
+        self.assertEqual([f.status for f in first_diag.filings], ["discovered", "llm_failed"])
+        self.assertEqual([f.to_json()["retryable"] for f in first_diag.filings], [False, True])
+        self.assertEqual([f.status for f in second_diag.filings], ["cached", "discovered"])
+        self.assertEqual(second_diag.cached_packs, 1)
+        self.assertEqual(second_diag.discovered_packs, 1)
+        self.assertEqual(len(first[0].periods), 1)
+        self.assertEqual(len(second[0].periods), 2)
+
     def test_empty_extraction_persists_sentinel_and_skips_next_call(self) -> None:
         self._add_pack(
             accession="0001792044-24-000002",
@@ -548,7 +630,46 @@ class TestWhichCliOutput(unittest.TestCase):
         self.assertEqual(payload["latest_period"], "FY2024")
         self.assertEqual(payload["latest_value"], 1.2)
         self.assertEqual(payload["periods"][0]["accession"], "0001792044-24-000001")
+        self.assertEqual(
+            payload["periods"][0]["no_chunk_reason"],
+            {
+                "reason": "section_excerpt_fallback",
+                "section_id": "10k_parti_item7_mda",
+                "source_substring": "1.2 million paid seats",
+            },
+        )
         self.assertEqual(payload["aliases"], ["active designers"])
+
+    def test_json_period_omits_no_chunk_reason_when_chunk_id_exists(self) -> None:
+        aggregate = CompanyKpiAggregate(
+            slug="paid_seats",
+            display_name="Paid seats",
+            source="discovered",
+            unit="count",
+            definition=None,
+            periods=[
+                PeriodPoint(
+                    label="FY2024",
+                    sort_key="2024-01-31",
+                    period_end="2024-01-31",
+                    fiscal_year=2024,
+                    fiscal_period="FY",
+                    form_type="10-K",
+                    accession="0001792044-24-000001",
+                    value=1.2,
+                    unit="count",
+                    magnitude="millions",
+                    section_id="10k_parti_item7_mda",
+                    chunk_id="chunk-001",
+                    source_substring="1.2 million paid seats",
+                )
+            ],
+        )
+
+        period = aggregate.to_json()["periods"][0]
+
+        self.assertEqual(period["chunk_id"], "chunk-001")
+        self.assertNotIn("no_chunk_reason", period)
 
     def test_render_which_table_renders_latest_and_gaps(self) -> None:
         from edgarpack.cli import _render_which_table

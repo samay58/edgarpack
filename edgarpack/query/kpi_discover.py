@@ -100,12 +100,19 @@ class DiscoveryFilingStatus:
     contributed: bool
 
     def to_json(self) -> dict[str, object]:
+        resume_action: str | None = None
+        if self.status == "llm_failed":
+            resume_action = "rerun_which"
+        elif self.status.startswith("manifest_"):
+            resume_action = "rebuild_pack"
         return {
             "accession": self.accession,
             "form_type": self.form_type,
             "filing_date": self.filing_date,
             "status": self.status,
             "contributed": self.contributed,
+            "retryable": self.status == "llm_failed",
+            "resume_action": resume_action,
         }
 
 
@@ -143,6 +150,29 @@ class PeriodPoint:
     source_substring: str | None
 
 
+def _period_no_chunk_reason(point: PeriodPoint) -> dict[str, str] | None:
+    """Structured fallback locator for discovered KPI rows without chunk IDs."""
+    if point.chunk_id:
+        return None
+    if point.section_id and point.source_substring:
+        return {
+            "reason": "section_excerpt_fallback",
+            "section_id": point.section_id,
+            "source_substring": point.source_substring,
+        }
+    if point.source_substring:
+        return {
+            "reason": "source_substring_only",
+            "source_substring": point.source_substring,
+        }
+    if point.section_id:
+        return {
+            "reason": "section_only",
+            "section_id": point.section_id,
+        }
+    return {"reason": "locator_missing"}
+
+
 @dataclass
 class CompanyKpiAggregate:
     """A KPI rolled up across every filing that disclosed it.
@@ -165,6 +195,27 @@ class CompanyKpiAggregate:
     def latest(self) -> PeriodPoint | None:
         return self.periods[0] if self.periods else None
 
+    def _period_to_json(self, point: PeriodPoint) -> dict[str, object]:
+        payload: dict[str, object] = {
+            "label": point.label,
+            "period_end": point.period_end,
+            "fiscal_year": point.fiscal_year,
+            "fiscal_period": point.fiscal_period,
+            "form_type": point.form_type,
+            "accession": point.accession,
+            "value": point.value,
+            "unit": point.unit,
+            "magnitude": point.magnitude,
+            "section_id": point.section_id,
+            "chunk_id": point.chunk_id,
+            "source_substring": point.source_substring,
+        }
+        if point.source_substring or point.section_id:
+            reason = _period_no_chunk_reason(point)
+            if reason is not None:
+                payload["no_chunk_reason"] = reason
+        return payload
+
     def to_json(self) -> dict:
         latest = self.latest
         return {
@@ -176,23 +227,7 @@ class CompanyKpiAggregate:
             "aliases": list(self.aliases),
             "latest_value": latest.value if latest else None,
             "latest_period": latest.label if latest else None,
-            "periods": [
-                {
-                    "label": p.label,
-                    "period_end": p.period_end,
-                    "fiscal_year": p.fiscal_year,
-                    "fiscal_period": p.fiscal_period,
-                    "form_type": p.form_type,
-                    "accession": p.accession,
-                    "value": p.value,
-                    "unit": p.unit,
-                    "magnitude": p.magnitude,
-                    "section_id": p.section_id,
-                    "chunk_id": p.chunk_id,
-                    "source_substring": p.source_substring,
-                }
-                for p in self.periods
-            ],
+            "periods": [self._period_to_json(point) for point in self.periods],
         }
 
 

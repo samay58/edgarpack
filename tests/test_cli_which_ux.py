@@ -315,6 +315,8 @@ def test_render_which_coverage_note_flags_partial_table():
     assert payload["filings"][0]["accession"] == "0001628280-26-009228"
     assert payload["filings"][0]["status"] == "llm_failed"
     assert payload["filings"][0]["contributed"] is False
+    assert payload["filings"][0]["retryable"] is True
+    assert payload["filings"][0]["resume_action"] == "rerun_which"
 
 
 def test_cmd_which_prints_partial_coverage_note_before_table(capsys):
