@@ -987,7 +987,6 @@
       "concepts": {
         "us_gaap": [
           "PaymentsToAcquirePropertyPlantAndEquipment",
-          "PaymentsToAcquireOtherProductiveAssets",
           "PaymentsToAcquireProductiveAssets"
         ],
         "ifrs_full": []
