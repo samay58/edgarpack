@@ -439,6 +439,12 @@ class Diagnostic(BaseModel):
       - 'partial_coverage': a series selector (``annual:N`` /
         ``quarterly:N``) returned fewer rows than requested because the
         cached discovery window is shorter than N.
+      - 'period_mismatch': a concept had values, but not for the exact
+        fiscal year requested by an FY-anchored selector.
+      - 'learned_mapping_rejected': a cached learned mapping failed
+        shape validation and was not used.
+      - 'learned_mapping_unverified': a learned mapping exists, but was
+        not returned because it has not passed verification.
     """
 
     metric: str
@@ -448,6 +454,9 @@ class Diagnostic(BaseModel):
         "ltm_incomputable",
         "ltm_degraded",
         "partial_coverage",
+        "period_mismatch",
+        "learned_mapping_rejected",
+        "learned_mapping_unverified",
     ]
     message: str
 

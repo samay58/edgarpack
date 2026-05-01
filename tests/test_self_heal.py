@@ -26,16 +26,68 @@ from edgarpack.query.self_heal import (
 _FAKE_FACTS = {
     "us-gaap": {
         "Revenues": {
-            "units": {"USD": [{"val": 130_000_000_000, "fy": 2024, "fp": "FY"}]},
+            "units": {
+                "USD": [
+                    {
+                        "val": 130_000_000_000,
+                        "start": "2024-01-01",
+                        "end": "2024-12-31",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "form": "10-K",
+                        "accn": "0001045810-25-000001",
+                        "filed": "2025-02-20",
+                    }
+                ]
+            },
         },
         "NetCashProvidedByUsedInOperatingActivities": {
-            "units": {"USD": [{"val": 28_000_000_000, "fy": 2024, "fp": "FY"}]},
+            "units": {
+                "USD": [
+                    {
+                        "val": 28_000_000_000,
+                        "start": "2024-01-01",
+                        "end": "2024-12-31",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "form": "10-K",
+                        "accn": "0001045810-25-000001",
+                        "filed": "2025-02-20",
+                    }
+                ]
+            },
         },
         "PaymentsToAcquirePropertyPlantAndEquipment": {
-            "units": {"USD": [{"val": 1_100_000_000, "fy": 2024, "fp": "FY"}]},
+            "units": {
+                "USD": [
+                    {
+                        "val": 1_100_000_000,
+                        "start": "2024-01-01",
+                        "end": "2024-12-31",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "form": "10-K",
+                        "accn": "0001045810-25-000001",
+                        "filed": "2025-02-20",
+                    }
+                ]
+            },
         },
         "EarningsPerShareDiluted": {
-            "units": {"USD/shares": [{"val": 2.97, "fy": 2024, "fp": "FY"}]},
+            "units": {
+                "USD/shares": [
+                    {
+                        "val": 2.97,
+                        "start": "2024-01-01",
+                        "end": "2024-12-31",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "form": "10-K",
+                        "accn": "0001045810-25-000001",
+                        "filed": "2025-02-20",
+                    }
+                ]
+            },
         },
     },
     "dei": {
@@ -64,6 +116,41 @@ _BAD_REVENUE_FACTS = {
                 ]
             }
         }
+    }
+}
+
+_BAD_GROSS_PROFIT_FACTS = {
+    "us-gaap": {
+        "ContractWithCustomerAssetGross": {
+            "units": {
+                "USD": [
+                    {
+                        "val": 185_000_000,
+                        "fy": 2025,
+                        "fp": "FY",
+                        "form": "10-K",
+                        "end": "2025-12-31",
+                        "accn": "0001783879-26-000029",
+                        "filed": "2026-02-20",
+                    }
+                ]
+            }
+        },
+        "AvailableForSaleDebtSecuritiesAccumulatedGrossUnrealizedGainBeforeTax": {
+            "units": {
+                "USD": [
+                    {
+                        "val": 641_000_000,
+                        "fy": 2025,
+                        "fp": "FY",
+                        "form": "10-K",
+                        "end": "2025-12-31",
+                        "accn": "0001326801-26-000001",
+                        "filed": "2026-02-04",
+                    }
+                ]
+            }
+        },
     }
 }
 
@@ -136,6 +223,15 @@ class TestFuzzyMatch(unittest.TestCase):
             metric="revenue",
             candidates=candidates,
             facts=_BAD_REVENUE_FACTS,
+        )
+        self.assertIsNone(hit)
+
+    def test_gross_profit_rejects_balance_sheet_gross_concepts(self) -> None:
+        candidates = _company_concepts(_BAD_GROSS_PROFIT_FACTS)
+        hit = _fuzzy_match(
+            metric="gross_profit",
+            candidates=candidates,
+            facts=_BAD_GROSS_PROFIT_FACTS,
         )
         self.assertIsNone(hit)
 
@@ -358,7 +454,7 @@ class TestTryLearn(unittest.TestCase):
             )
         self.assertIsNone(result)
 
-    def test_unverified_persists_with_warning(self) -> None:
+    def test_unverified_persists_but_is_not_returned(self) -> None:
         # Force verification to fail by giving a prior-year value that's 28x off
         meta = MetricMeta(concepts=(), duration=True)
         result = try_learn(
@@ -371,10 +467,7 @@ class TestTryLearn(unittest.TestCase):
             doc_map={},
             registry_path=self.db_path,
         )
-        self.assertIsNotNone(result)
-        assert result is not None
-        self.assertEqual(result.source, "learned:fuzzy")
-        self.assertTrue(any("unverified" in w.lower() for w in result.warnings))
+        self.assertIsNone(result)
 
         reg = LearnedRegistry(db_path=self.db_path)
         row = reg.lookup("0001045810", "operating_cash_flow")
@@ -406,6 +499,35 @@ class TestTryLearn(unittest.TestCase):
             doc_map={},
             registry_path=self.db_path,
             period="mrq",
+        )
+
+        self.assertIsNone(result)
+
+    def test_verified_cached_gross_profit_mapping_must_pass_shape_guard(self) -> None:
+        reg = LearnedRegistry(db_path=self.db_path)
+        reg.upsert(
+            cik="0001783879",
+            metric="gross_profit",
+            concept="ContractWithCustomerAssetGross",
+            taxonomy="us-gaap",
+            source="fuzzy",
+            verified=True,
+            verif_method="manual",
+            value_sample=185_000_000,
+        )
+        reg.close()
+
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="gross_profit",
+            meta=meta,
+            facts=_BAD_GROSS_PROFIT_FACTS,
+            cik="0001783879",
+            company="Robinhood Markets, Inc.",
+            prior_year_cited=_prior_year_cited(value=1_900_000_000),
+            doc_map={},
+            registry_path=self.db_path,
+            period="lfy",
         )
 
         self.assertIsNone(result)
