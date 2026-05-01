@@ -1,0 +1,2792 @@
+{
+  "schema_version": 1,
+  "title": "EdgarPack CLI Metric Directory",
+  "scope": {
+    "included": [
+      "Hardcoded XBRL-backed metrics accepted by query, comps, and compare.",
+      "Derived and CAGR metrics computed from cited components.",
+      "Layer 0 aliases that normalize common shorthand names.",
+      "Layer B KPI catalog names that query can attempt through built packs.",
+      "Presets exposed by query --preset."
+    ],
+    "excluded": [
+      "Company-specific discovered metrics populated by edgarpack which.",
+      "Ad hoc learned_concepts rows created by self-heal for one company/filing."
+    ]
+  },
+  "sources": {
+    "hardcoded_metrics": "edgarpack/query/concepts.py:METRIC_MAP",
+    "aliases": "edgarpack/query/layer_zero.py:METRIC_ALIASES",
+    "kpi_catalog": "edgarpack/query/kpi_extract.py:KPI_CATALOG",
+    "learned_registry": "edgarpack/query/learned_registry.py",
+    "presets": "edgarpack/query/presets.py:PRESETS",
+    "cross_standard_helper": "edgarpack/query/metric_map.py"
+  },
+  "cli_commands": {
+    "query": "edgarpack query <company> <metric_csv> --period <selector>",
+    "comps": "edgarpack comps <company...> --metrics <metric_csv> --period <selector>",
+    "compare": "edgarpack compare <company...> --metrics <metric_csv> --currency usd",
+    "which": "edgarpack which <company> --format json",
+    "learned": "edgarpack learned list"
+  },
+  "counts": {
+    "hardcoded_metrics": 73,
+    "direct_metrics": 39,
+    "derived_metrics": 26,
+    "cagr_metrics": 8,
+    "aliases": 25,
+    "kpi_catalog_metrics": 25,
+    "cross_standard_canonical_metrics": 23
+  },
+  "presets": {
+    "perf": [
+      "revenue",
+      "revenue_growth_yoy",
+      "revenue_cagr_3y",
+      "gross_margin",
+      "operating_margin",
+      "net_margin",
+      "r_and_d_intensity",
+      "sga_intensity",
+      "fcf_margin"
+    ]
+  },
+  "aliases": [
+    {
+      "alias": "capex",
+      "metric": "capex"
+    },
+    {
+      "alias": "capital_expenditure",
+      "metric": "capex"
+    },
+    {
+      "alias": "capital_expenditures",
+      "metric": "capex"
+    },
+    {
+      "alias": "cogs",
+      "metric": "cost_of_revenue"
+    },
+    {
+      "alias": "d&a",
+      "metric": "depreciation_amortization"
+    },
+    {
+      "alias": "da",
+      "metric": "depreciation_amortization"
+    },
+    {
+      "alias": "eps",
+      "metric": "eps_diluted"
+    },
+    {
+      "alias": "fcf",
+      "metric": "free_cash_flow"
+    },
+    {
+      "alias": "gp",
+      "metric": "gross_profit"
+    },
+    {
+      "alias": "ni",
+      "metric": "net_income"
+    },
+    {
+      "alias": "ocf",
+      "metric": "operating_cash_flow"
+    },
+    {
+      "alias": "opi",
+      "metric": "operating_income"
+    },
+    {
+      "alias": "opinc",
+      "metric": "operating_income"
+    },
+    {
+      "alias": "r&d",
+      "metric": "rd_expense"
+    },
+    {
+      "alias": "r_and_d",
+      "metric": "rd_expense"
+    },
+    {
+      "alias": "r_and_d_expense",
+      "metric": "rd_expense"
+    },
+    {
+      "alias": "rd",
+      "metric": "rd_expense"
+    },
+    {
+      "alias": "research_and_development_expense",
+      "metric": "rd_expense"
+    },
+    {
+      "alias": "research_development_expense",
+      "metric": "rd_expense"
+    },
+    {
+      "alias": "rev",
+      "metric": "revenue"
+    },
+    {
+      "alias": "s&ga",
+      "metric": "sga_expense"
+    },
+    {
+      "alias": "sbc",
+      "metric": "stock_based_compensation"
+    },
+    {
+      "alias": "sga",
+      "metric": "sga_expense"
+    },
+    {
+      "alias": "shares",
+      "metric": "shares_diluted"
+    },
+    {
+      "alias": "subscription_customers",
+      "metric": "customer_count"
+    }
+  ],
+  "aliases_by_metric": {
+    "capex": [
+      "capex",
+      "capital_expenditure",
+      "capital_expenditures"
+    ],
+    "cost_of_revenue": [
+      "cogs"
+    ],
+    "customer_count": [
+      "subscription_customers"
+    ],
+    "depreciation_amortization": [
+      "d&a",
+      "da"
+    ],
+    "eps_diluted": [
+      "eps"
+    ],
+    "free_cash_flow": [
+      "fcf"
+    ],
+    "gross_profit": [
+      "gp"
+    ],
+    "net_income": [
+      "ni"
+    ],
+    "operating_cash_flow": [
+      "ocf"
+    ],
+    "operating_income": [
+      "opi",
+      "opinc"
+    ],
+    "rd_expense": [
+      "r&d",
+      "r_and_d",
+      "r_and_d_expense",
+      "rd",
+      "research_and_development_expense",
+      "research_development_expense"
+    ],
+    "revenue": [
+      "rev"
+    ],
+    "sga_expense": [
+      "s&ga",
+      "sga"
+    ],
+    "shares_diluted": [
+      "shares"
+    ],
+    "stock_based_compensation": [
+      "sbc"
+    ]
+  },
+  "hardcoded_metrics": [
+    {
+      "name": "revenue",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "Revenues",
+          "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "SalesRevenueNet",
+          "RevenueFromContractWithCustomerIncludingAssessedTax",
+          "SalesRevenueGoodsNet",
+          "SalesRevenueServicesNet"
+        ],
+        "ifrs_full": [
+          "Revenue",
+          "RevenueFromContractsWithCustomers"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "cost_of_revenue",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "CostOfRevenue",
+          "CostOfGoodsAndServicesSold",
+          "CostOfGoodsSold",
+          "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization"
+        ],
+        "ifrs_full": [
+          "CostOfSales"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [
+        {
+          "concept": "CostOfGoodsAndServicesSold",
+          "warning": "CostOfGoodsAndServicesSold may be broader than CostOfRevenue for companies with significant service revenue. Computed gross profit may diverge from the company's reported figure."
+        }
+      ],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "gross_profit",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "GrossProfit"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "operating_income",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "OperatingIncomeLoss",
+          "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        ],
+        "ifrs_full": [
+          "ProfitLossFromOperatingActivities",
+          "OperatingProfit"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "net_income",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "NetIncomeLoss",
+          "ProfitLoss",
+          "NetIncomeLossAvailableToCommonStockholdersBasic"
+        ],
+        "ifrs_full": [
+          "ProfitLoss",
+          "ProfitLossAttributableToOwnersOfParent"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "eps_basic",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "EarningsPerShareBasic"
+        ],
+        "ifrs_full": [
+          "BasicEarningsLossPerShare"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "eps_diluted",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "EarningsPerShareDiluted"
+        ],
+        "ifrs_full": [
+          "DilutedEarningsLossPerShare"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "rd_expense",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "ResearchAndDevelopmentExpense",
+          "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost"
+        ],
+        "ifrs_full": [
+          "ResearchAndDevelopmentExpense"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "sga_expense",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "SellingGeneralAndAdministrativeExpense",
+          "GeneralAndAdministrativeExpense"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "sm_expense",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "SellingAndMarketingExpense",
+          "MarketingExpense",
+          "MarketingAndAdvertisingExpense",
+          "AdvertisingExpense"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "stock_based_compensation",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "ShareBasedCompensation",
+          "AllocatedShareBasedCompensationExpense"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "ebitda",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "operating_income + depreciation_amortization",
+      "components": [
+        {
+          "metric": "operating_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "depreciation_amortization",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "depreciation_amortization",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "DepreciationAndAmortization",
+          "DepreciationDepletionAndAmortization",
+          "DepreciationAmortizationAndAccretionNet",
+          "Depreciation"
+        ],
+        "ifrs_full": [
+          "DepreciationAndAmortisationExpense",
+          "DepreciationAmortisationAndImpairmentExpense",
+          "DepreciationAndAmortizationExpense"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "total_assets",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "Assets"
+        ],
+        "ifrs_full": [
+          "Assets"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "current_assets",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "AssetsCurrent"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "total_liabilities",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "Liabilities",
+          "LiabilitiesAndStockholdersEquity"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [
+        {
+          "concept": "LiabilitiesAndStockholdersEquity",
+          "warning": "Reports total liabilities + equity combined, not pure liabilities."
+        }
+      ],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "current_liabilities",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "LiabilitiesCurrent"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "stockholders_equity",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "StockholdersEquity",
+          "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+        ],
+        "ifrs_full": [
+          "Equity",
+          "EquityAttributableToOwnersOfParent"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "cash",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "CashAndCashEquivalentsAtCarryingValue",
+          "CashCashEquivalentsAndShortTermInvestments",
+          "Cash"
+        ],
+        "ifrs_full": [
+          "CashAndCashEquivalents",
+          "CashAndCashEquivalentsAndShortTermInvestments",
+          "Cash"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [
+        {
+          "concept": "CashCashEquivalentsAndShortTermInvestments",
+          "warning": "Includes short-term investments alongside cash equivalents. May overstate pure cash position."
+        }
+      ],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "total_debt",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "DebtLongTermAndShortTermCombinedAmount",
+          "DebtInstrumentCarryingAmount",
+          "LongTermDebt",
+          "LongTermDebtNoncurrent",
+          "ConvertibleNotesPayable",
+          "ConvertibleDebtNoncurrent",
+          "ConvertibleLongTermNotesPayable",
+          "ConvertibleDebt",
+          "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
+          "LongTermDebtAndCapitalLeaseObligations",
+          "LongTermDebtAndCapitalLeaseObligationsCurrent"
+        ],
+        "ifrs_full": [
+          "Borrowings",
+          "BorrowingsNoncurrent",
+          "BorrowingsCurrent"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [
+        {
+          "concept": "ConvertibleNotesPayable",
+          "warning": "Convertible debt only. May understate total debt if other non-convertible debt instruments exist but are not captured."
+        },
+        {
+          "concept": "ConvertibleDebtNoncurrent",
+          "warning": "Noncurrent convertible debt only. Check for current portion and other debt instruments."
+        },
+        {
+          "concept": "ConvertibleLongTermNotesPayable",
+          "warning": "Convertible long-term notes only. May understate total debt."
+        },
+        {
+          "concept": "ConvertibleDebt",
+          "warning": "Convertible debt. Face value included in EV bridge; dilution effect handled in TSM schedule."
+        },
+        {
+          "concept": "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
+          "warning": "Includes capital lease obligations and current maturities."
+        },
+        {
+          "concept": "LongTermDebtAndCapitalLeaseObligations",
+          "warning": "Includes capital lease obligations alongside financial debt."
+        },
+        {
+          "concept": "LongTermDebtAndCapitalLeaseObligationsCurrent",
+          "warning": "Current portion only. Not total debt."
+        }
+      ],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "inventory",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "InventoryNet",
+          "InventoryFinishedGoodsAndWorkInProcess"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "accounts_receivable",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "AccountsReceivableNetCurrent",
+          "AccountsReceivableNet"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "accounts_payable",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "AccountsPayableCurrent",
+          "AccountsPayableAndAccruedLiabilitiesCurrent"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "short_term_debt",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "DebtCurrent",
+          "ShortTermBorrowings",
+          "LongTermDebtCurrent",
+          "LongTermDebtAndCapitalLeaseObligationsCurrent"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [
+        {
+          "concept": "LongTermDebtAndCapitalLeaseObligationsCurrent",
+          "warning": "Current portion only. Not total debt."
+        }
+      ],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "marketable_securities",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "MarketableSecuritiesCurrent",
+          "ShortTermInvestments",
+          "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
+          "MarketableSecurities"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "operating_lease_liabilities",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "OperatingLeaseLiability",
+          "OperatingLeaseLiabilityNoncurrent"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "noncontrolling_interests",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "MinorityInterest",
+          "RedeemableNoncontrollingInterestEquityCarryingAmount"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "preferred_stock",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "PreferredStockValue",
+          "RedeemablePreferredStockCarryingAmountOrRedemptionPrice"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "equity_method_investments",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "EquityMethodInvestments",
+          "InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "working_capital",
+      "kind": "derived",
+      "period_shape": "instant",
+      "formula": "current_assets - current_liabilities",
+      "components": [
+        {
+          "metric": "current_assets",
+          "period_offset": 0
+        },
+        {
+          "metric": "current_liabilities",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "operating_cash_flow",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "NetCashProvidedByUsedInOperatingActivities",
+          "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"
+        ],
+        "ifrs_full": [
+          "CashFlowsFromUsedInOperatingActivities"
+        ]
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "capex",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToAcquireOtherProductiveAssets",
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "free_cash_flow",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "operating_cash_flow - capex",
+      "components": [
+        {
+          "metric": "operating_cash_flow",
+          "period_offset": 0
+        },
+        {
+          "metric": "capex",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "shares_outstanding",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "CommonStockSharesOutstanding",
+          "EntityCommonStockSharesOutstanding"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "headcount",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "EntityNumberOfEmployees",
+          "NumberOfEmployees"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "shares_basic_wavg",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "WeightedAverageNumberOfSharesOutstandingBasic"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "shares_diluted",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "WeightedAverageNumberOfDilutedSharesOutstanding"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "options_itm",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+          "SharebasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "avg_strike",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
+          "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsExercisableWeightedAverageExercisePrice",
+          "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionExercisePriceOutstanding",
+          "SharebasedCompensationArrangementByShareBasedPaymentAwardOptionExercisePriceOutstanding"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "rsu_psu",
+      "kind": "direct",
+      "period_shape": "instant",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "ShareBasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber",
+          "SharebasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "convertible_incremental",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "WeightedAverageNumberOfSharesIssuedUponConversionOfConvertibleSecurities",
+          "WeightedAverageNumberOfIncrementalSharesFromAssumedConversionOfConvertibleSecurities",
+          "StockIssuedDuringPeriodSharesConversionOfConvertibleSecurities"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "dividends_per_share",
+      "kind": "direct",
+      "period_shape": "duration",
+      "formula": null,
+      "components": [],
+      "concepts": {
+        "us_gaap": [
+          "CommonStockDividendsPerShareDeclared",
+          "CommonStockDividendsPerShareCashPaid"
+        ],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "gross_margin",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "gross_profit / revenue",
+      "components": [
+        {
+          "metric": "gross_profit",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "operating_margin",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "operating_income / revenue",
+      "components": [
+        {
+          "metric": "operating_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "net_margin",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "net_income / revenue",
+      "components": [
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "roe",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "net_income / stockholders_equity",
+      "components": [
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "stockholders_equity",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "roa",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "net_income / total_assets",
+      "components": [
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "total_assets",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "current_ratio",
+      "kind": "derived",
+      "period_shape": "instant",
+      "formula": "current_assets / current_liabilities",
+      "components": [
+        {
+          "metric": "current_assets",
+          "period_offset": 0
+        },
+        {
+          "metric": "current_liabilities",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "debt_to_equity",
+      "kind": "derived",
+      "period_shape": "instant",
+      "formula": "total_debt / stockholders_equity",
+      "components": [
+        {
+          "metric": "total_debt",
+          "period_offset": 0
+        },
+        {
+          "metric": "stockholders_equity",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "ebitda_margin",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "ebitda / revenue",
+      "components": [
+        {
+          "metric": "ebitda",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "fcf_margin",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "free_cash_flow / revenue",
+      "components": [
+        {
+          "metric": "free_cash_flow",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "revenue_growth_yoy",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "revenue / revenue_prev1 - 1",
+      "components": [
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "gross_margin_trend",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "gross_margin - gross_margin_prev1",
+      "components": [
+        {
+          "metric": "gross_margin",
+          "period_offset": 0
+        },
+        {
+          "metric": "gross_margin",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "r_and_d_intensity",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "rd_expense / revenue",
+      "components": [
+        {
+          "metric": "rd_expense",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "revenue_per_employee",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "revenue / headcount",
+      "components": [
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        },
+        {
+          "metric": "headcount",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "net_income_growth_yoy",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "net_income / net_income_prev1 - 1",
+      "components": [
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "net_income",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "operating_income_growth_yoy",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "operating_income / operating_income_prev1 - 1",
+      "components": [
+        {
+          "metric": "operating_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "operating_income",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "eps_growth_yoy",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "eps_diluted / eps_diluted_prev1 - 1",
+      "components": [
+        {
+          "metric": "eps_diluted",
+          "period_offset": 0
+        },
+        {
+          "metric": "eps_diluted",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "operating_margin_trend",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "operating_margin - operating_margin_prev1",
+      "components": [
+        {
+          "metric": "operating_margin",
+          "period_offset": 0
+        },
+        {
+          "metric": "operating_margin",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "net_margin_trend",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "net_margin - net_margin_prev1",
+      "components": [
+        {
+          "metric": "net_margin",
+          "period_offset": 0
+        },
+        {
+          "metric": "net_margin",
+          "period_offset": -1
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "sga_intensity",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "sga_expense / revenue",
+      "components": [
+        {
+          "metric": "sga_expense",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "sm_intensity",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "sm_expense / revenue",
+      "components": [
+        {
+          "metric": "sm_expense",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "capex_intensity",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "capex / revenue",
+      "components": [
+        {
+          "metric": "capex",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "fcf_to_net_income",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "free_cash_flow / net_income",
+      "components": [
+        {
+          "metric": "free_cash_flow",
+          "period_offset": 0
+        },
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "rule_of_40",
+      "kind": "derived",
+      "period_shape": "duration",
+      "formula": "revenue_growth_yoy + fcf_margin",
+      "components": [
+        {
+          "metric": "revenue_growth_yoy",
+          "period_offset": 0
+        },
+        {
+          "metric": "fcf_margin",
+          "period_offset": 0
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": null,
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "revenue_cagr_3y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(revenue / revenue_prev3) ^ (1/3) - 1",
+      "components": [
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": -3
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 3,
+        "base_metric": "revenue"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "revenue_cagr_5y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(revenue / revenue_prev5) ^ (1/5) - 1",
+      "components": [
+        {
+          "metric": "revenue",
+          "period_offset": 0
+        },
+        {
+          "metric": "revenue",
+          "period_offset": -5
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 5,
+        "base_metric": "revenue"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "net_income_cagr_3y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(net_income / net_income_prev3) ^ (1/3) - 1",
+      "components": [
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "net_income",
+          "period_offset": -3
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 3,
+        "base_metric": "net_income"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "net_income_cagr_5y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(net_income / net_income_prev5) ^ (1/5) - 1",
+      "components": [
+        {
+          "metric": "net_income",
+          "period_offset": 0
+        },
+        {
+          "metric": "net_income",
+          "period_offset": -5
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 5,
+        "base_metric": "net_income"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "eps_diluted_cagr_3y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(eps_diluted / eps_diluted_prev3) ^ (1/3) - 1",
+      "components": [
+        {
+          "metric": "eps_diluted",
+          "period_offset": 0
+        },
+        {
+          "metric": "eps_diluted",
+          "period_offset": -3
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 3,
+        "base_metric": "eps_diluted"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "eps_diluted_cagr_5y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(eps_diluted / eps_diluted_prev5) ^ (1/5) - 1",
+      "components": [
+        {
+          "metric": "eps_diluted",
+          "period_offset": 0
+        },
+        {
+          "metric": "eps_diluted",
+          "period_offset": -5
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 5,
+        "base_metric": "eps_diluted"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "fcf_cagr_3y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(free_cash_flow / free_cash_flow_prev3) ^ (1/3) - 1",
+      "components": [
+        {
+          "metric": "free_cash_flow",
+          "period_offset": 0
+        },
+        {
+          "metric": "free_cash_flow",
+          "period_offset": -3
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 3,
+        "base_metric": "free_cash_flow"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    },
+    {
+      "name": "fcf_cagr_5y",
+      "kind": "cagr",
+      "period_shape": "duration",
+      "formula": "(free_cash_flow / free_cash_flow_prev5) ^ (1/5) - 1",
+      "components": [
+        {
+          "metric": "free_cash_flow",
+          "period_offset": 0
+        },
+        {
+          "metric": "free_cash_flow",
+          "period_offset": -5
+        }
+      ],
+      "concepts": {
+        "us_gaap": [],
+        "ifrs_full": []
+      },
+      "cagr": {
+        "years": 5,
+        "base_metric": "free_cash_flow"
+      },
+      "scope_warnings": [],
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ]
+    }
+  ],
+  "kpi_catalog_metrics": [
+    {
+      "name": "arr",
+      "phrases": [
+        "annual recurring revenue",
+        "ARR",
+        "ending ARR",
+        "ARR of approximately"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "Annualized subscription revenue at period end.",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "nrr",
+      "phrases": [
+        "net revenue retention",
+        "dollar-based net retention",
+        "net dollar retention",
+        "NRR",
+        "NDR"
+      ],
+      "unit_hint": "percent",
+      "industry": [],
+      "description": "Cohort-based revenue retention, typically >100% for healthy SaaS.",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "grr",
+      "phrases": [
+        "gross revenue retention",
+        "GRR",
+        "gross dollar retention"
+      ],
+      "unit_hint": "percent",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "rpo",
+      "phrases": [
+        "remaining performance obligations",
+        "RPO"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "crpo",
+      "phrases": [
+        "current remaining performance obligations",
+        "cRPO",
+        "current RPO"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "billings",
+      "phrases": [
+        "calculated billings",
+        "total billings",
+        "non-GAAP billings"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "subscription_rev",
+      "phrases": [
+        "subscription revenue"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "customer_count",
+      "phrases": [
+        "total customers",
+        "number of customers",
+        "customers with ARR over"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "dau",
+      "phrases": [
+        "daily active users",
+        "DAU"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "mau",
+      "phrases": [
+        "monthly active users",
+        "MAU"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "qau",
+      "phrases": [
+        "quarterly active users",
+        "QAU"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "arpu",
+      "phrases": [
+        "average revenue per user",
+        "ARPU"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "arppu",
+      "phrases": [
+        "average revenue per paying user",
+        "ARPPU"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "paying_users",
+      "phrases": [
+        "paying users",
+        "paid users",
+        "paying subscribers"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "gmv",
+      "phrases": [
+        "gross merchandise volume",
+        "GMV",
+        "gross transaction value",
+        "gross booking value"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "gross_bookings",
+      "phrases": [
+        "gross bookings"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "take_rate",
+      "phrases": [
+        "take rate",
+        "net take rate",
+        "effective take rate"
+      ],
+      "unit_hint": "percent",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "transactions",
+      "phrases": [
+        "number of transactions",
+        "total transactions",
+        "transactions processed"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "same_store_sales",
+      "phrases": [
+        "same-store sales",
+        "comparable store sales",
+        "comparable sales"
+      ],
+      "unit_hint": "percent",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "store_count",
+      "phrases": [
+        "number of stores",
+        "total stores",
+        "store count"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "avg_ticket",
+      "phrases": [
+        "average ticket",
+        "average transaction value",
+        "average check"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "tpv",
+      "phrases": [
+        "total payment volume",
+        "TPV",
+        "payment volume"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "active_accounts",
+      "phrases": [
+        "active accounts",
+        "active customer accounts"
+      ],
+      "unit_hint": "count",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "aum",
+      "phrases": [
+        "assets under management",
+        "AUM"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    },
+    {
+      "name": "aua",
+      "phrases": [
+        "assets under administration",
+        "AUA"
+      ],
+      "unit_hint": "USD",
+      "industry": [],
+      "description": "",
+      "queryable_via": [
+        "query",
+        "comps",
+        "compare"
+      ],
+      "notes": [
+        "Requires a built pack for the requested company/period.",
+        "Uses Layer B KPI extraction and persists rows in learned_concepts."
+      ]
+    }
+  ],
+  "cross_standard_helper": {
+    "note": "This is the smaller cross-standard helper map, not the full query/comps registry. The CLI query surface is owned by concepts.py.",
+    "standards": {
+      "US-GAAP": {
+        "revenue": [
+          "Revenues",
+          "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "SalesRevenueNet"
+        ],
+        "gross_profit": [
+          "GrossProfit"
+        ],
+        "gross_margin": [],
+        "operating_income": [
+          "OperatingIncomeLoss"
+        ],
+        "operating_margin": [],
+        "ebitda": [],
+        "net_income": [
+          "NetIncomeLoss",
+          "ProfitLoss"
+        ],
+        "eps_basic": [
+          "EarningsPerShareBasic"
+        ],
+        "eps_diluted": [
+          "EarningsPerShareDiluted"
+        ],
+        "total_assets": [
+          "Assets"
+        ],
+        "total_liabilities": [
+          "Liabilities"
+        ],
+        "total_equity": [
+          "StockholdersEquity",
+          "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+        ],
+        "cash_and_equivalents": [
+          "CashAndCashEquivalentsAtCarryingValue",
+          "Cash"
+        ],
+        "total_debt": [
+          "LongTermDebt",
+          "DebtCurrent"
+        ],
+        "shares_outstanding_basic": [
+          "WeightedAverageNumberOfSharesOutstandingBasic"
+        ],
+        "shares_outstanding_diluted": [
+          "WeightedAverageNumberOfDilutedSharesOutstanding"
+        ],
+        "cash_burn": [
+          "NetCashProvidedByUsedInOperatingActivities"
+        ],
+        "runway_months": [],
+        "headcount": [
+          "EntityNumberOfEmployees",
+          "NumberOfEmployees"
+        ],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
+        "revenue_per_employee": []
+      },
+      "IFRS": {
+        "revenue": [
+          "Revenue",
+          "RevenueFromContractsWithCustomers",
+          "RevenueFromContracts"
+        ],
+        "gross_profit": [
+          "GrossProfit"
+        ],
+        "gross_margin": [],
+        "operating_income": [
+          "ProfitLossFromOperatingActivities",
+          "OperatingProfit"
+        ],
+        "operating_margin": [],
+        "ebitda": [],
+        "net_income": [
+          "ProfitLoss",
+          "NetIncomeLoss"
+        ],
+        "eps_basic": [
+          "BasicEarningsLossPerShare"
+        ],
+        "eps_diluted": [
+          "DilutedEarningsLossPerShare"
+        ],
+        "total_assets": [
+          "Assets",
+          "TotalAssets"
+        ],
+        "total_liabilities": [
+          "Liabilities",
+          "TotalLiabilities"
+        ],
+        "total_equity": [
+          "Equity",
+          "TotalEquity"
+        ],
+        "cash_and_equivalents": [
+          "CashAndCashEquivalents"
+        ],
+        "total_debt": [
+          "Borrowings",
+          "LongTermBorrowings"
+        ],
+        "shares_outstanding_basic": [
+          "WeightedAverageShares"
+        ],
+        "shares_outstanding_diluted": [
+          "WeightedAverageDilutedShares"
+        ],
+        "cash_burn": [
+          "CashFlowsFromUsedInOperatingActivities"
+        ],
+        "runway_months": [],
+        "headcount": [],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
+        "revenue_per_employee": []
+      },
+      "HKFRS": {
+        "revenue": [
+          "Revenue",
+          "Turnover",
+          "RevenueFromContracts"
+        ],
+        "gross_profit": [
+          "GrossProfit"
+        ],
+        "gross_margin": [],
+        "operating_income": [
+          "OperatingProfit",
+          "ProfitLossFromOperatingActivities"
+        ],
+        "operating_margin": [],
+        "ebitda": [],
+        "net_income": [
+          "ProfitForTheYear",
+          "ProfitLoss"
+        ],
+        "eps_basic": [
+          "BasicEarningsPerShare",
+          "BasicEarningsLossPerShare"
+        ],
+        "eps_diluted": [
+          "DilutedEarningsPerShare",
+          "DilutedEarningsLossPerShare"
+        ],
+        "total_assets": [
+          "TotalAssets",
+          "Assets"
+        ],
+        "total_liabilities": [
+          "TotalLiabilities",
+          "Liabilities"
+        ],
+        "total_equity": [
+          "TotalEquity",
+          "Equity"
+        ],
+        "cash_and_equivalents": [
+          "CashAndCashEquivalents",
+          "BankBalancesAndCash"
+        ],
+        "total_debt": [
+          "Borrowings",
+          "BankBorrowings"
+        ],
+        "shares_outstanding_basic": [
+          "WeightedAverageNumberOfOrdinarySharesInIssue"
+        ],
+        "shares_outstanding_diluted": [
+          "WeightedAverageNumberOfOrdinarySharesDiluted"
+        ],
+        "cash_burn": [
+          "CashFlowsFromUsedInOperatingActivities"
+        ],
+        "runway_months": [],
+        "headcount": [],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
+        "revenue_per_employee": []
+      },
+      "CAS": {
+        "revenue": [],
+        "gross_profit": [],
+        "gross_margin": [],
+        "operating_income": [],
+        "operating_margin": [],
+        "ebitda": [],
+        "net_income": [],
+        "eps_basic": [],
+        "eps_diluted": [],
+        "total_assets": [],
+        "total_liabilities": [],
+        "total_equity": [],
+        "cash_and_equivalents": [],
+        "total_debt": [],
+        "shares_outstanding_basic": [],
+        "shares_outstanding_diluted": [],
+        "cash_burn": [],
+        "runway_months": [],
+        "headcount": [],
+        "r_and_d_intensity": [],
+        "revenue_growth_yoy": [],
+        "gross_margin_trend": [],
+        "revenue_per_employee": []
+      }
+    }
+  }
+}
