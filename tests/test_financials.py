@@ -390,6 +390,279 @@ GOOG_BAD_LTM_FACTS = {
 }
 
 
+GOOD_LEARNED_GROSS_PROFIT_FACTS = {
+    "cik": 9990001,
+    "entityName": "CUSTOM GROSS PROFIT CORP",
+    "facts": {
+        "us-gaap": {
+            "Revenues": {
+                "label": "Revenues",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 1_000_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0009990001-26-000001",
+                            "filed": "2026-02-15",
+                        }
+                    ]
+                },
+            },
+            "GrossProfitLoss": {
+                "label": "Gross Profit Loss",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 600_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0009990001-26-000001",
+                            "filed": "2026-02-15",
+                        }
+                    ]
+                },
+            },
+        }
+    },
+}
+
+
+BAD_CACHED_GROSS_PROFIT_FACTS = {
+    "cik": 1783879,
+    "entityName": "Robinhood Markets, Inc.",
+    "facts": {
+        "us-gaap": {
+            "Revenues": {
+                "label": "Revenues",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 4_473_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K/A",
+                            "accn": "0001783879-26-000029",
+                            "filed": "2026-02-20",
+                        }
+                    ]
+                },
+            },
+            "ContractWithCustomerAssetGross": {
+                "label": "Contract with Customer Asset, Gross",
+                "units": {
+                    "USD": [
+                        {
+                            "val": 185_000_000,
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K/A",
+                            "accn": "0001783879-26-000029",
+                            "filed": "2026-02-20",
+                        }
+                    ]
+                },
+            },
+        }
+    },
+}
+
+
+SPARSE_CAPEX_FACTS = {
+    "cik": 1783879,
+    "entityName": "Robinhood Markets, Inc.",
+    "facts": {
+        "us-gaap": {
+            "Revenues": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 4_473_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K/A",
+                            "accn": "0001783879-26-000029",
+                            "filed": "2026-02-20",
+                        }
+                    ]
+                }
+            },
+            "PaymentsToAcquireProductiveAssets": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 28_000_000,
+                            "start": "2022-01-01",
+                            "end": "2022-12-31",
+                            "fy": 2022,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001783879-23-000045",
+                            "filed": "2023-02-27",
+                        },
+                        {
+                            "val": 63_182_000,
+                            "start": "2021-01-01",
+                            "end": "2021-12-31",
+                            "fy": 2021,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001783879-22-000044",
+                            "filed": "2022-02-24",
+                        },
+                    ]
+                }
+            },
+        }
+    },
+}
+
+
+ALIGNED_CAPEX_FACTS = {
+    "cik": 1783879,
+    "entityName": "Robinhood Markets, Inc.",
+    "facts": {
+        "us-gaap": {
+            "NetCashProvidedByUsedInOperatingActivities": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 1_638_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K/A",
+                            "accn": "0001783879-26-000029",
+                            "filed": "2026-02-20",
+                        },
+                        {
+                            "val": -157_000_000,
+                            "start": "2024-01-01",
+                            "end": "2024-12-31",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001783879-25-000049",
+                            "filed": "2025-02-18",
+                        },
+                        {
+                            "val": 1_181_000_000,
+                            "start": "2023-01-01",
+                            "end": "2023-12-31",
+                            "fy": 2023,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001783879-24-000054",
+                            "filed": "2024-02-27",
+                        },
+                    ]
+                }
+            },
+            "PaymentsToAcquireOtherProductiveAssets": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 15_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K/A",
+                            "accn": "0001783879-26-000029",
+                            "filed": "2026-02-20",
+                        },
+                        {
+                            "val": 13_000_000,
+                            "start": "2024-01-01",
+                            "end": "2024-12-31",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001783879-25-000049",
+                            "filed": "2025-02-18",
+                        },
+                        {
+                            "val": 2_000_000,
+                            "start": "2023-01-01",
+                            "end": "2023-12-31",
+                            "fy": 2023,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001783879-24-000054",
+                            "filed": "2024-02-27",
+                        },
+                    ]
+                }
+            },
+        }
+    },
+}
+
+
+MIXED_REVENUE_CONCEPT_FACTS = {
+    "cik": 1652044,
+    "entityName": "Alphabet Inc.",
+    "facts": {
+        "us-gaap": {
+            "RevenueFromContractWithCustomerExcludingAssessedTax": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 402_800_000_000,
+                            "start": "2025-01-01",
+                            "end": "2025-12-31",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001652044-26-000018",
+                            "filed": "2026-02-05",
+                        },
+                        {
+                            "val": 257_600_000_000,
+                            "start": "2021-01-01",
+                            "end": "2021-12-31",
+                            "fy": 2021,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001652044-22-000019",
+                            "filed": "2022-02-02",
+                        },
+                    ]
+                }
+            },
+            "Revenues": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 350_000_000_000,
+                            "start": "2024-01-01",
+                            "end": "2024-12-31",
+                            "fy": 2024,
+                            "fp": "FY",
+                            "form": "10-K",
+                            "accn": "0001652044-25-000014",
+                            "filed": "2025-02-04",
+                        }
+                    ]
+                }
+            },
+        }
+    },
+}
+
+
 MOCK_EBITDA_SERIES_FACTS = {
     "cik": 1045810,
     "entityName": "NVIDIA CORP",
@@ -574,6 +847,141 @@ class TestPeriodAwareResolution(unittest.IsolatedAsyncioTestCase):
         self.assertIn(
             "ltm_incomputable",
             [d.kind for d in result.diagnostics if d.metric == "revenue"],
+        )
+
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_verified_learned_gross_profit_feeds_direct_and_derived_metrics(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        mock_resolve.return_value = ("0009990001", "CUSTOM GROSS PROFIT CORP")
+        mock_facts.return_value = GOOD_LEARNED_GROSS_PROFIT_FACTS
+
+        with tempfile.TemporaryDirectory() as tmp:
+            registry_path = Path(tmp) / "registry.db"
+            reg = LearnedRegistry(db_path=registry_path)
+            reg.upsert(
+                cik="0009990001",
+                metric="gross_profit",
+                concept="GrossProfitLoss",
+                taxonomy="us-gaap",
+                source="user",
+                verified=True,
+                verif_method="manual",
+                value_sample=600_000_000,
+            )
+            reg.close()
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", registry_path):
+                result = await financials(
+                    "CGP",
+                    ["gross_profit", "gross_margin"],
+                    period="lfy",
+                )
+
+        gross_profit = result.metrics["gross_profit"]
+        self.assertIsNotNone(gross_profit)
+        self.assertEqual(gross_profit.concept, "GrossProfitLoss")
+        self.assertEqual(gross_profit.value, 600_000_000)
+
+        gross_margin = result.metrics["gross_margin"]
+        self.assertIsNotNone(gross_margin)
+        self.assertIsInstance(gross_margin, DerivedValue)
+        self.assertAlmostEqual(gross_margin.value, 0.6)
+        self.assertEqual(gross_margin.components["gross_profit"].concept, "GrossProfitLoss")
+
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_bad_cached_gross_profit_does_not_feed_direct_or_derived_metrics(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        mock_resolve.return_value = ("0001783879", "Robinhood Markets, Inc.")
+        mock_facts.return_value = BAD_CACHED_GROSS_PROFIT_FACTS
+
+        with tempfile.TemporaryDirectory() as tmp:
+            registry_path = Path(tmp) / "registry.db"
+            reg = LearnedRegistry(db_path=registry_path)
+            reg.upsert(
+                cik="0001783879",
+                metric="gross_profit",
+                concept="ContractWithCustomerAssetGross",
+                taxonomy="us-gaap",
+                source="fuzzy",
+                verified=True,
+                verif_method="manual",
+                value_sample=185_000_000,
+            )
+            reg.close()
+            with patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", registry_path):
+                result = await financials(
+                    "HOOD",
+                    ["gross_profit", "gross_margin"],
+                    period="lfy",
+                )
+
+        self.assertIsNone(result.metrics["gross_profit"])
+        self.assertIsNone(result.metrics["gross_margin"])
+
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_lfy_offset_rejects_concept_local_nearest_year(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        mock_resolve.return_value = ("0001783879", "Robinhood Markets, Inc.")
+        mock_facts.return_value = SPARSE_CAPEX_FACTS
+
+        result = await financials("HOOD", "capex", period="lfy-1")
+
+        self.assertIsNone(result.metrics["capex"])
+
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_annual_series_can_merge_exact_years_across_known_concepts(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        mock_resolve.return_value = ("0001652044", "Alphabet Inc.")
+        mock_facts.return_value = MIXED_REVENUE_CONCEPT_FACTS
+
+        result = await financials("GOOG", "revenue", period="annual:2")
+
+        revenue = result.metrics["revenue"]
+        self.assertIsInstance(revenue, list)
+        self.assertEqual([v.fiscal_year for v in revenue], [2025, 2024])
+        self.assertEqual([v.value for v in revenue], [402_800_000_000, 350_000_000_000])
+
+    @patch(f"{_P}._build_doc_map", new_callable=AsyncMock, return_value={})
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_free_cash_flow_uses_aligned_capex_concept_for_annual_series(
+        self, mock_resolve, mock_facts, _mock_doc_map
+    ) -> None:
+        mock_resolve.return_value = ("0001783879", "Robinhood Markets, Inc.")
+        mock_facts.return_value = ALIGNED_CAPEX_FACTS
+
+        result = await financials(
+            "HOOD",
+            ["capex", "free_cash_flow"],
+            period="annual:3",
+        )
+
+        capex = result.metrics["capex"]
+        self.assertIsInstance(capex, list)
+        self.assertEqual([v.fiscal_year for v in capex], [2025, 2024, 2023])
+        self.assertEqual([v.value for v in capex], [15_000_000, 13_000_000, 2_000_000])
+
+        fcf = result.metrics["free_cash_flow"]
+        self.assertIsInstance(fcf, list)
+        self.assertEqual([v.fiscal_year for v in fcf], [2025, 2024, 2023])
+        self.assertEqual(
+            [v.value for v in fcf],
+            [1_623_000_000, -170_000_000, 1_179_000_000],
         )
 
 

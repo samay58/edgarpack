@@ -17,11 +17,12 @@ import logging
 import re
 import shutil
 import subprocess
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
 
-from .concepts import MetricMeta
+from .concepts import METRIC_MAP, MetricMeta
 from .learned_registry import LearnedRegistry, LearnedRow
 from .models import CitedValue, Diagnostic
 
@@ -57,6 +58,87 @@ _CAMEL_SPLIT = re.compile(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 _NON_ALPHA = re.compile(r"[^a-zA-Z]+")
 
 
+@dataclass(frozen=True)
+class ConceptShapeRule:
+    required_all: frozenset[str] = frozenset()
+    required_any: tuple[frozenset[str], ...] = ()
+    forbidden: frozenset[str] = frozenset()
+
+
+_METRIC_SHAPE_RULES: dict[str, ConceptShapeRule] = {
+    "revenue": ConceptShapeRule(
+        forbidden=frozenset(
+            {
+                "liability",
+                "liabilities",
+                "deferred",
+                "unearned",
+                "obligation",
+                "obligations",
+                "segment",
+                "geographic",
+                "region",
+            }
+        )
+    ),
+    "gross_profit": ConceptShapeRule(
+        required_all=frozenset({"gross", "profit"}),
+        forbidden=frozenset(
+            {
+                "asset",
+                "assets",
+                "available",
+                "building",
+                "buildings",
+                "contract",
+                "customer",
+                "debt",
+                "deferred",
+                "improvement",
+                "improvements",
+                "intangible",
+                "intangibles",
+                "investment",
+                "investments",
+                "receivable",
+                "receivables",
+                "securities",
+                "security",
+                "tax",
+                "unrealized",
+            }
+        ),
+    ),
+    "rd_expense": ConceptShapeRule(
+        required_all=frozenset({"research", "development"}),
+        required_any=(frozenset({"expense", "cost"}),),
+        forbidden=frozenset({"asset", "assets", "deferred", "tax"}),
+    ),
+    "stock_based_compensation": ConceptShapeRule(
+        required_all=frozenset({"compensation"}),
+        forbidden=frozenset({"not", "yet", "unrecognized", "unrecognised"}),
+    ),
+    "capex": ConceptShapeRule(
+        required_all=frozenset({"payments", "acquire"}),
+        required_any=(frozenset({"property", "plant", "equipment", "productive"}),),
+        forbidden=frozenset(
+            {
+                "business",
+                "businesses",
+                "receivable",
+                "receivables",
+                "securities",
+                "security",
+                "investments",
+                "investment",
+                "repurchase",
+                "stock",
+            }
+        ),
+    ),
+}
+
+
 def _tokenize_concept(name: str) -> list[str]:
     """Split a CamelCase GAAP concept name into lowercased word tokens."""
     parts = _CAMEL_SPLIT.split(name)
@@ -74,24 +156,68 @@ def _tokenize_metric(metric: str) -> list[str]:
     return [t for t in re.split(r"[_\W]+", metric.lower()) if t]
 
 
+def _selected_unit_values(
+    facts: dict[str, Any],
+    concept: str,
+    taxonomy: str,
+) -> list[dict[str, Any]]:
+    tax_data = facts.get(taxonomy, {})
+    concept_data = tax_data.get(concept, {})
+    units = concept_data.get("units", {}) if isinstance(concept_data, dict) else {}
+    for unit_key in ("USD", "shares", "USD/shares", "pure"):
+        values = units.get(unit_key)
+        if values:
+            return [v for v in values if isinstance(v, dict) and v.get("val") is not None]
+    for values in units.values():
+        if values:
+            return [v for v in values if isinstance(v, dict) and v.get("val") is not None]
+    return []
+
+
+def _concept_has_period_shape(
+    *,
+    metric: str,
+    meta: MetricMeta | None,
+    concept: str,
+    taxonomy: str,
+    facts: dict[str, Any],
+) -> bool:
+    if meta is None:
+        meta = METRIC_MAP.get(metric)
+    if meta is None:
+        return True
+
+    values = _selected_unit_values(facts, concept, taxonomy)
+    if not values:
+        return False
+
+    if meta.duration:
+        return any(v.get("start") and v.get("end") for v in values)
+    return any(not v.get("start") and v.get("end") for v in values)
+
+
 def _concept_shape_matches_metric(
     metric: str,
     concept: str,
     taxonomy: str,
     facts: dict[str, Any],
+    meta: MetricMeta | None = None,
 ) -> bool:
     """Reject learned candidates whose concept shape contradicts the metric."""
-    if metric != "revenue":
-        return True
-
     token_list = _tokenize_concept(concept)
     tokens = set(token_list)
     squashed = "".join(token_list)
 
-    if tokens & {"liability", "deferred", "unearned", "obligation"}:
-        return False
-    if tokens & {"segment", "geographic", "region"}:
-        return False
+    rule = _METRIC_SHAPE_RULES.get(metric)
+    if rule is not None:
+        if rule.required_all and not rule.required_all <= tokens:
+            return False
+        for required_any in rule.required_any:
+            if not (tokens & required_any):
+                return False
+        if tokens & rule.forbidden:
+            return False
+
     if {"per", "share"} <= tokens:
         return False
     if "contractwithcustomerliability" in squashed:
@@ -106,7 +232,18 @@ def _concept_shape_matches_metric(
     from .periods import _unit_for_concept
 
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
-    if unit in {"USD/shares", "shares"}:
+    if unit in {"USD/shares", "shares"} and not (
+        metric.startswith("eps_") or "shares" in metric or metric.endswith("_per_share")
+    ):
+        return False
+
+    if not _concept_has_period_shape(
+        metric=metric,
+        meta=meta,
+        concept=concept,
+        taxonomy=taxonomy,
+        facts=facts,
+    ):
         return False
 
     return True
@@ -383,6 +520,7 @@ def try_learn(
     doc_map: dict[str, str] | None = None,
     registry_path: Path | None = None,
     period: str = "lfy",
+    period_offset: int = 0,
     diagnostics: list[Diagnostic] | None = None,
 ) -> CitedValue | list[CitedValue] | None:
     """Self-heal entry point. Tries registry, fuzzy, LLM, verify, persist.
@@ -394,16 +532,46 @@ def try_learn(
     or None if no mechanism could produce a value.
 
     On unverified mappings (order-of-magnitude check failed because no prior
-    year was available, or the proposed value was out of range), the result
-    is still returned with a warning appended and the registry row is
-    persisted with verified=0.
+    year was available, or the proposed value was out of range), the registry
+    row is still persisted with verified=0, but the value is not returned.
     """
     reg = LearnedRegistry(db_path=registry_path)
     try:
         # 1. Registry cache hit
         cached = reg.lookup(cik, metric)
         if cached is not None:
-            if not _concept_shape_matches_metric(metric, cached.concept, cached.taxonomy, facts):
+            if not _concept_shape_matches_metric(
+                metric,
+                cached.concept,
+                cached.taxonomy,
+                facts,
+                meta=meta,
+            ):
+                if diagnostics is not None:
+                    diagnostics.append(
+                        Diagnostic(
+                            metric=metric,
+                            kind="learned_mapping_rejected",
+                            message=(
+                                f"Rejected cached learned mapping {cached.concept} "
+                                f"for '{metric}' because its concept shape does not "
+                                f"match the metric."
+                            ),
+                        )
+                    )
+                return None
+            if not cached.verified:
+                if diagnostics is not None:
+                    diagnostics.append(
+                        Diagnostic(
+                            metric=metric,
+                            kind="learned_mapping_unverified",
+                            message=(
+                                f"Rejected cached learned mapping {cached.concept} "
+                                f"for '{metric}' because it is not verified."
+                            ),
+                        )
+                    )
                 return None
             cited = _build_cited_from_learned(
                 cached,
@@ -414,25 +582,19 @@ def try_learn(
                 cik,
                 doc_map,
                 period,
+                period_offset,
                 diagnostics,
             )
             if cited is not None:
                 reg.bump_hit_count(cik, metric)
                 _set_source(cited, "learned:cached")
-                if not cached.verified:
-                    _append_warning(
-                        cited,
-                        f"Resolved via unverified learned mapping "
-                        f"(source={cached.source}). Verify manually: "
-                        f"`edgarpack learned verify {cik} {metric}`",
-                    )
                 return cited
 
         # 2. Build candidate list
         candidates = [
             c
             for c in _company_concepts(facts)
-            if _concept_shape_matches_metric(metric, c[0], c[1], facts)
+            if _concept_shape_matches_metric(metric, c[0], c[1], facts, meta=meta)
         ]
         if not candidates:
             return None
@@ -450,7 +612,7 @@ def try_learn(
             return None
 
         concept, taxonomy = proposed
-        if not _concept_shape_matches_metric(metric, concept, taxonomy, facts):
+        if not _concept_shape_matches_metric(metric, concept, taxonomy, facts, meta=meta):
             return None
 
         # 5. Build value for the requested period, not an arbitrary latest fact.
@@ -464,6 +626,7 @@ def try_learn(
             cik,
             doc_map,
             period,
+            period_offset,
             diagnostics,
         )
         if cited is None:
@@ -489,12 +652,18 @@ def try_learn(
 
         _set_source(cited, f"learned:{source_tag}")
         if not verified:
-            _append_warning(
-                cited,
-                f"Unverified learned mapping ({source_tag}). "
-                f"No prior-year ground truth matched, or value was "
-                f"outside the expected order of magnitude.",
-            )
+            if diagnostics is not None:
+                diagnostics.append(
+                    Diagnostic(
+                        metric=metric,
+                        kind="learned_mapping_unverified",
+                        message=(
+                            f"Learned mapping {concept} for '{metric}' via {source_tag} "
+                            f"but did not return it because verification failed."
+                        ),
+                    )
+                )
+            return None
         return cited
     finally:
         reg.close()
@@ -549,6 +718,7 @@ def _build_cited_for_concept(
     cik: str,
     doc_map: dict[str, str] | None,
     period: str,
+    period_offset: int,
     diagnostics: list[Diagnostic] | None,
 ) -> CitedValue | list[CitedValue] | None:
     from .periods import select_period
@@ -563,6 +733,7 @@ def _build_cited_for_concept(
         period,
         taxonomy=taxonomy,
         doc_map=doc_map,
+        period_offset=period_offset,
         diagnostics=diagnostics,
     )
 
@@ -576,6 +747,7 @@ def _build_cited_from_learned(
     cik: str,
     doc_map: dict[str, str] | None,
     period: str,
+    period_offset: int,
     diagnostics: list[Diagnostic] | None,
 ) -> CitedValue | list[CitedValue] | None:
     return _build_cited_for_concept(
@@ -588,6 +760,7 @@ def _build_cited_from_learned(
         cik,
         doc_map,
         period,
+        period_offset,
         diagnostics,
     )
 

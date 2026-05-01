@@ -30,7 +30,14 @@ from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
 from .learned_registry import CompanyKpiRow, LearnedRegistry
 from .models import CitedValue, DerivedValue, Diagnostic, QueryResult
-from .periods import parse_fact_ids_from_html, select_period
+from .periods import (
+    _annual_for_fy,
+    _extract_values,
+    _unit_for_concept,
+    _value_to_cited,
+    parse_fact_ids_from_html,
+    select_period,
+)
 from .self_heal import try_learn
 
 logger = logging.getLogger(__name__)
@@ -307,6 +314,149 @@ def _candidate_concepts_for_metric(
     return candidates
 
 
+_ANNUAL_FORMS = {"10-K", "10-K/A", "20-F", "20-F/A", "ANNUAL-REPORT", "ANNUAL REPORT"}
+
+
+def _company_latest_annual_fy(facts: dict[str, Any]) -> int | None:
+    """Best company-level FY anchor for exact lfy/annual period matching."""
+    best: int | None = None
+    for tax_data in facts.values():
+        if not isinstance(tax_data, dict):
+            continue
+        for concept_data in tax_data.values():
+            if not isinstance(concept_data, dict):
+                continue
+            units = concept_data.get("units", {})
+            if not isinstance(units, dict):
+                continue
+            for entries in units.values():
+                if not isinstance(entries, list):
+                    continue
+                for entry in entries:
+                    if not isinstance(entry, dict) or entry.get("val") is None:
+                        continue
+                    fp = str(entry.get("fp", "")).upper()
+                    form = str(entry.get("form", "")).upper()
+                    if fp != "FY" and form not in _ANNUAL_FORMS:
+                        continue
+                    fy = int(entry.get("fy") or 0)
+                    if fy > 0 and (best is None or fy > best):
+                        best = fy
+    return best
+
+
+def _expected_fiscal_years(
+    facts: dict[str, Any],
+    period: str,
+    period_offset: int = 0,
+) -> tuple[int, ...] | None:
+    """Return exact fiscal years a company-level FY selector is allowed to satisfy."""
+    anchor = _company_latest_annual_fy(facts)
+    if anchor is None:
+        return None
+
+    p = period.strip().lower()
+
+    def _effective_back(years_back: int) -> int:
+        return max(0, years_back - period_offset)
+
+    if p == "lfy":
+        return (anchor - _effective_back(0),)
+
+    lfy_match = re.fullmatch(r"lfy-(\d+)", p)
+    if lfy_match:
+        return (anchor - _effective_back(int(lfy_match.group(1))),)
+
+    annual_match = re.fullmatch(r"annual:(\d+)", p)
+    if annual_match:
+        count = int(annual_match.group(1))
+        return tuple(anchor - _effective_back(idx) for idx in range(count))
+
+    return None
+
+
+def _filter_to_expected_fiscal_years(
+    value: CitedValue | DerivedValue | list[CitedValue] | None,
+    *,
+    facts: dict[str, Any],
+    metric: str,
+    concept: str,
+    period: str,
+    period_offset: int,
+    diagnostics: list[Diagnostic],
+) -> CitedValue | DerivedValue | list[CitedValue] | None:
+    expected = _expected_fiscal_years(facts, period, period_offset)
+    if value is None or expected is None:
+        return value
+
+    if isinstance(value, list):
+        by_fy: dict[int, CitedValue] = {}
+        for item in value:
+            if item.fiscal_year in expected and item.fiscal_year not in by_fy:
+                by_fy[item.fiscal_year] = item
+        filtered = [by_fy[fy] for fy in expected if fy in by_fy]
+        if len(filtered) < len(expected):
+            missing = [fy for fy in expected if fy not in by_fy]
+            diagnostics.append(
+                Diagnostic(
+                    metric=metric,
+                    kind="period_mismatch",
+                    message=(
+                        f"{metric} concept {concept} did not have exact fiscal-year "
+                        f"coverage for {period}; missing FY{', FY'.join(map(str, missing))}."
+                    ),
+                )
+            )
+        return filtered
+
+    if value.fiscal_year != expected[0]:
+        diagnostics.append(
+            Diagnostic(
+                metric=metric,
+                kind="period_mismatch",
+                message=(
+                    f"{metric} concept {concept} returned FY{value.fiscal_year} for "
+                    f"{period}, expected FY{expected[0]}; rejecting nearest-period value."
+                ),
+            )
+        )
+        return None
+
+    return value
+
+
+def _select_exact_annual_values_for_concept(
+    facts: dict[str, Any],
+    concept: str,
+    metric: str,
+    company: str,
+    cik: str,
+    taxonomy: str,
+    doc_map: dict[str, str] | None,
+    expected: tuple[int, ...],
+) -> list[CitedValue]:
+    values = _extract_values(facts, concept, taxonomy=taxonomy)
+    unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+    cited_values: list[CitedValue] = []
+    for fiscal_year in expected:
+        entry = _annual_for_fy(values, fiscal_year)
+        if entry is None:
+            continue
+        cited_values.append(
+            _value_to_cited(
+                entry,
+                metric,
+                concept,
+                unit,
+                company,
+                cik,
+                taxonomy=taxonomy,
+                doc_map=doc_map,
+            )
+        )
+    return cited_values
+
+
 def _select_metric_period_value(
     facts: dict[str, Any],
     metric: str,
@@ -316,29 +466,86 @@ def _select_metric_period_value(
     period: str,
     doc_map: dict[str, str] | None,
     diagnostics: list[Diagnostic],
+    period_offset: int = 0,
 ) -> tuple[str | None, str | None, CitedValue | DerivedValue | list[CitedValue] | None]:
     """Resolve a metric only when a candidate concept satisfies the requested period."""
     candidates = _candidate_concepts_for_metric(metric, meta, facts)
     first_failure_diagnostics: list[Diagnostic] = []
+    expected = _expected_fiscal_years(facts, period, period_offset)
+    merge_annual_series = expected is not None and period.strip().lower().startswith("annual:")
+    merged_by_fy: dict[int, CitedValue] = {}
 
     for concept, taxonomy in candidates:
         local_diagnostics: list[Diagnostic] = []
-        value = select_period(
-            facts,
-            concept,
-            metric,
-            meta,
-            company,
-            cik,
-            period,
-            taxonomy=taxonomy,
-            doc_map=doc_map,
-            diagnostics=local_diagnostics,
-        )
+        if expected is not None:
+            exact_values = _select_exact_annual_values_for_concept(
+                facts,
+                concept,
+                metric,
+                company,
+                cik,
+                taxonomy,
+                doc_map,
+                expected,
+            )
+            if exact_values:
+                value: CitedValue | list[CitedValue] = (
+                    exact_values if merge_annual_series else exact_values[0]
+                )
+            else:
+                value = [] if merge_annual_series else None
+                local_diagnostics.append(
+                    Diagnostic(
+                        metric=metric,
+                        kind="period_mismatch",
+                        message=(
+                            f"{metric} concept {concept} did not have exact fiscal-year "
+                            f"coverage for {period}; missing FY"
+                            f"{', FY'.join(map(str, expected))}."
+                        ),
+                    )
+                )
+        else:
+            raw_value = select_period(
+                facts,
+                concept,
+                metric,
+                meta,
+                company,
+                cik,
+                period,
+                taxonomy=taxonomy,
+                doc_map=doc_map,
+                period_offset=period_offset,
+                diagnostics=local_diagnostics,
+            )
+            value = _filter_to_expected_fiscal_years(
+                raw_value,
+                facts=facts,
+                metric=metric,
+                concept=concept,
+                period=period,
+                period_offset=period_offset,
+                diagnostics=local_diagnostics,
+            )
         if isinstance(value, list):
             if value:
-                diagnostics.extend(local_diagnostics)
-                return concept, taxonomy, value
+                if merge_annual_series:
+                    for item in value:
+                        if item.fiscal_year in expected and item.fiscal_year not in merged_by_fy:
+                            merged_by_fy[item.fiscal_year] = item
+                    if len(merged_by_fy) >= len(expected):
+                        merged = [merged_by_fy[fy] for fy in expected]
+                        return merged[0].concept, merged[0].taxonomy, merged
+                elif expected is None or len(value) >= len(expected):
+                    diagnostics.extend(local_diagnostics)
+                    return concept, taxonomy, value
+        elif value is not None and merge_annual_series:
+            if value.fiscal_year in expected and value.fiscal_year not in merged_by_fy:
+                merged_by_fy[value.fiscal_year] = value
+            if len(merged_by_fy) >= len(expected):
+                merged = [merged_by_fy[fy] for fy in expected]
+                return merged[0].concept, merged[0].taxonomy, merged
         elif value is not None:
             diagnostics.extend(local_diagnostics)
             return concept, taxonomy, value
@@ -346,11 +553,106 @@ def _select_metric_period_value(
         if not first_failure_diagnostics:
             first_failure_diagnostics = local_diagnostics
 
+    if merge_annual_series and merged_by_fy:
+        values = [merged_by_fy[fy] for fy in expected if fy in merged_by_fy]
+        missing = [fy for fy in expected if fy not in merged_by_fy]
+        if missing:
+            diagnostics.append(
+                Diagnostic(
+                    metric=metric,
+                    kind="period_mismatch",
+                    message=(
+                        f"{metric} candidate concepts did not have exact fiscal-year "
+                        f"coverage for {period}; missing FY{', FY'.join(map(str, missing))}."
+                    ),
+                )
+            )
+        return values[0].concept, values[0].taxonomy, values
+
     diagnostics.extend(first_failure_diagnostics)
     if candidates:
         concept, taxonomy = candidates[0]
         return concept, taxonomy, None
     return None, None, None
+
+
+def _attach_scope_warning(
+    value: CitedValue | DerivedValue | list[CitedValue],
+    concept: str,
+) -> None:
+    if isinstance(value, list):
+        for item in value:
+            scope_warn = get_scope_warning(item.concept)
+            if scope_warn:
+                item.warnings.append(scope_warn)
+        return
+
+    scope_warn = get_scope_warning(concept)
+    if not scope_warn:
+        return
+    value.warnings.append(scope_warn)
+
+
+def _resolve_direct_metric_value(
+    facts: dict[str, Any],
+    metric: str,
+    meta: MetricMeta,
+    company: str,
+    cik: str,
+    period: str,
+    doc_map: dict[str, str] | None,
+    diagnostics: list[Diagnostic],
+    period_offset: int = 0,
+) -> CitedValue | DerivedValue | list[CitedValue] | None:
+    """Resolve one non-derived metric through hardcoded and guarded learned paths."""
+    concept, taxonomy, value = _select_metric_period_value(
+        facts,
+        metric,
+        meta,
+        company,
+        cik,
+        period,
+        doc_map,
+        diagnostics,
+        period_offset=period_offset,
+    )
+    if concept is None or taxonomy is None:
+        learned = try_learn(
+            metric=metric,
+            meta=meta,
+            facts=facts,
+            cik=cik,
+            company=company,
+            prior_year_cited=None,
+            doc_map=doc_map,
+            period=period,
+            period_offset=period_offset,
+            diagnostics=diagnostics,
+        )
+        if learned is None:
+            return None
+
+        learned_concept = learned[0].concept if isinstance(learned, list) else learned.concept
+        learned = _filter_to_expected_fiscal_years(
+            learned,
+            facts=facts,
+            metric=metric,
+            concept=learned_concept,
+            period=period,
+            period_offset=period_offset,
+            diagnostics=diagnostics,
+        )
+        if learned is None:
+            return None
+
+        _attach_scope_warning(learned, learned_concept)
+        return learned
+
+    if value is None:
+        return None
+
+    _attach_scope_warning(value, concept)
+    return value
 
 
 async def financials(
@@ -615,7 +917,7 @@ async def financials(
                     cited = None
                 result_metrics[metric] = cited
         else:
-            concept, taxonomy, value = _select_metric_period_value(
+            value = _resolve_direct_metric_value(
                 facts,
                 metric,
                 meta,
@@ -625,43 +927,14 @@ async def financials(
                 doc_map,
                 diagnostics_list,
             )
-            if concept is None or taxonomy is None:
-                # Hardcoded concept resolution failed: try self-heal before giving up.
-                learned = try_learn(
-                    metric=metric,
-                    meta=meta,
-                    facts=facts,
-                    cik=cik,
-                    company=company_name,
-                    prior_year_cited=None,
-                    doc_map=doc_map,
-                    period=period,
-                    diagnostics=diagnostics_list,
-                )
-                result_metrics[metric] = learned
+            if isinstance(value, list):
+                result_metrics[metric] = value if value else None
                 continue
 
-            if isinstance(value, list):
-                scope_warn = get_scope_warning(concept)
-                if scope_warn:
-                    for v in value:
-                        v.warnings.append(scope_warn)
-                result_metrics[metric] = value if value else None
-            else:
-                if value is not None and _is_stale(value, period):
-                    result_metrics[metric] = None
-                    continue
-                if value is not None:
-                    scope_warn = get_scope_warning(concept)
-                    if scope_warn:
-                        value.warnings.append(scope_warn)
-                    result_metrics[metric] = value
-                    continue
-
-                # Hardcoded concepts exist but none can satisfy this period.
-                # Fail closed so self-heal cannot replace an LTM/series miss
-                # with an arbitrary latest fact from an unrelated concept.
+            if value is not None and _is_stale(value, period):
                 result_metrics[metric] = None
+                continue
+            result_metrics[metric] = value
 
     if "headcount" in metric_list and result_metrics.get("headcount") is None:
         subs = await fetch_submissions(cik, force=force)
@@ -992,31 +1265,39 @@ def _series_values_for_component(
     hkex_concept = _hkex_concept_for_metric(facts, comp_name)
     if hkex_concept is not None:
         concept, taxonomy = hkex_concept
-    else:
-        resolved = resolve_concept(comp_name, facts)
-        if resolved is None:
-            return []
-        concept, taxonomy = resolved
+        value = select_period(
+            facts,
+            concept,
+            comp_name,
+            comp_meta,
+            company,
+            cik,
+            period,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
+            diagnostics=diagnostics,
+        )
+        if not isinstance(value, list):
+            return [value] if value is not None else []
 
-    value = select_period(
+        scope_warn = get_scope_warning(concept)
+        if scope_warn:
+            for item in value:
+                item.warnings.append(scope_warn)
+        return value
+
+    value = _resolve_direct_metric_value(
         facts,
-        concept,
         comp_name,
         comp_meta,
         company,
         cik,
         period,
-        taxonomy=taxonomy,
-        doc_map=doc_map,
-        diagnostics=diagnostics,
+        doc_map,
+        diagnostics if diagnostics is not None else [],
     )
     if not isinstance(value, list):
         return [value] if value is not None else []
-
-    scope_warn = get_scope_warning(concept)
-    if scope_warn:
-        for item in value:
-            item.warnings.append(scope_warn)
     return value
 
 
@@ -1199,6 +1480,7 @@ def _compute_derived(
             period,
             doc_map,
             period_offset=period_offset,
+            diagnostics=diagnostics,
         )
         cache[cache_key] = result
         return result
@@ -1239,35 +1521,54 @@ def _compute_derived(
         else:
             # HKEX packs tag concepts under their own taxonomy (hkfrs); use
             # that directly. For SEC facts we route through resolve_concept.
-            concept: str
-            taxonomy: str
             hkex_concept = _hkex_concept_for_metric(facts, comp_name)
             if hkex_concept is not None:
+                concept: str
+                taxonomy: str
                 concept, taxonomy = hkex_concept
+                value = select_period(
+                    facts,
+                    concept,
+                    comp_name,
+                    comp_meta,
+                    company,
+                    cik,
+                    period,
+                    taxonomy=taxonomy,
+                    doc_map=doc_map,
+                    period_offset=comp_offset,
+                    diagnostics=diagnostics,
+                )
+                if isinstance(value, list):
+                    comp_value = value[0] if value else None
+                else:
+                    comp_value = value
+
+                if comp_value is not None:
+                    scope_warn = get_scope_warning(concept)
+                    if scope_warn:
+                        comp_value.warnings.append(scope_warn)
             else:
-                resolved = resolve_concept(comp_name, facts)
-                if resolved is None:
+                value = _resolve_direct_metric_value(
+                    facts,
+                    comp_name,
+                    comp_meta,
+                    company,
+                    cik,
+                    period,
+                    doc_map,
+                    diagnostics if diagnostics is not None else [],
+                    period_offset=comp_offset,
+                )
+                if isinstance(value, list):
+                    comp_value = value[0] if value else None
+                else:
+                    comp_value = value
+
+                if comp_value is None:
                     in_progress.discard(cache_key)
                     cache[cache_key] = None
                     return None
-                concept, taxonomy = resolved
-            value = select_period(
-                facts,
-                concept,
-                comp_name,
-                comp_meta,
-                company,
-                cik,
-                period,
-                taxonomy=taxonomy,
-                doc_map=doc_map,
-                period_offset=comp_offset,
-                diagnostics=diagnostics,
-            )
-            if isinstance(value, list):
-                comp_value = value[0] if value else None
-            else:
-                comp_value = value
 
             # Staleness guard on components (skip when an offset is requested
             # because prior-year lookbacks are expected to be "stale").
@@ -1275,12 +1576,6 @@ def _compute_derived(
                 in_progress.discard(cache_key)
                 cache[cache_key] = None
                 return None
-
-            # Scope warning on component
-            if comp_value is not None:
-                scope_warn = get_scope_warning(concept)
-                if scope_warn:
-                    comp_value.warnings.append(scope_warn)
 
         if comp_value is None or comp_value.value is None:
             in_progress.discard(cache_key)
@@ -1464,6 +1759,7 @@ def _compute_cagr(
     period: str,
     doc_map: dict[str, str] | None,
     period_offset: int = 0,
+    diagnostics: list[Diagnostic] | None = None,
 ) -> DerivedValue | None:
     """Compute ``(end / start) ** (1/N) - 1`` on FY-anchored components.
 
@@ -1511,26 +1807,33 @@ def _compute_cagr(
                 doc_map,
                 cache={},
                 in_progress=set(),
+                diagnostics=diagnostics,
             )
         hkex_concept = _hkex_concept_for_metric(facts, base)
         if hkex_concept is not None:
             concept, taxonomy = hkex_concept
+            value = select_period(
+                facts,
+                concept,
+                base,
+                base_meta,
+                company,
+                cik,
+                anchor_period,
+                taxonomy=taxonomy,
+                doc_map=doc_map,
+            )
         else:
-            resolved = resolve_concept(base, facts)
-            if resolved is None:
-                return None
-            concept, taxonomy = resolved
-        value = select_period(
-            facts,
-            concept,
-            base,
-            base_meta,
-            company,
-            cik,
-            anchor_period,
-            taxonomy=taxonomy,
-            doc_map=doc_map,
-        )
+            value = _resolve_direct_metric_value(
+                facts,
+                base,
+                base_meta,
+                company,
+                cik,
+                anchor_period,
+                doc_map,
+                diagnostics if diagnostics is not None else [],
+            )
         if isinstance(value, list):
             return value[0] if value else None
         return value

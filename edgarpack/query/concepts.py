@@ -327,6 +327,7 @@ METRIC_MAP: dict[str, MetricMeta] = {
     "capex": MetricMeta(
         concepts=(
             "PaymentsToAcquirePropertyPlantAndEquipment",
+            "PaymentsToAcquireOtherProductiveAssets",
             "PaymentsToAcquireProductiveAssets",
         ),
         duration=True,
