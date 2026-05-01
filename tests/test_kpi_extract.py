@@ -17,12 +17,15 @@ from edgarpack.query.kpi_extract import (
     _build_extraction_prompt,
     _extract_via_llm,
     _load_pack_manifest,
+    _order_sections_for_kpi_prompt,
     _read_section_text,
     _resolve_filing_for_period,
+    _run_llm_raw,
     _select_sections,
     _trim_to_budget,
     _verify_against_prior_filing,
     _verify_excerpt_in_text,
+    extract_discoveries_detailed,
 )
 
 
@@ -445,6 +448,210 @@ class TestReadSectionText(unittest.TestCase):
             self.assertIn("good_sec", text)
 
 
+_HOOD_PROMPT_PACKING_CASES = {
+    "0001783879-26-000023": (
+        "  - Funded Customers increased by 1.8 million, 7%, to 27.0 million "
+        "compared to 25.2 million and Investment Accounts increased by 2.2 "
+        "million, 8%, to 28.4 million compared to 26.2 million;\n"
+        "  - Total Platform Assets increased 67% to $322.1 billion compared "
+        "to $192.9 billion, driven by continued Net Deposits, acquired assets, "
+        "and higher equity valuations;\n"
+        "  - Net Deposits were $68.1 billion, which translates to a growth "
+        "rate of 35% relative to Total Platform Assets at the end of the "
+        "fourth quarter of 2024, compared to $50.5 billion;\n"
+        "  - ARPU increased 40% to $171 compared to $122.\n"
+    ),
+    "0001783879-25-000049": (
+        "  - Funded Customers increased 8% to 25.2 million compared to 23.4 "
+        "million and Investment Accounts increased by 10% to 26.2 million "
+        "compared to 23.8 million;\n"
+        "  - AUC increased 88% to $192.9 billion compared to $102.6 billion, "
+        "driven by continued Net Deposits and higher equity and cryptocurrency "
+        "valuations;\n"
+        "  - Net Deposits were $50.5 billion, which translates to a growth "
+        "rate of 49% relative to AUC at the end of the fourth quarter of 2023;\n"
+        "  - ARPU increased 53% to $122 compared to $80.\n"
+    ),
+    "0001783879-24-000054": (
+        "  - we had 23.4 million Funded Customers compared to 23.0 million, "
+        "an increase of 2%;\n"
+        "  - we had AUC of $102.6 billion compared to $62.2 billion, an "
+        "increase of 65%;\n"
+        "  - Net Deposits were $17.1 billion, which translates to a growth "
+        "rate of 27% relative to AUC at the end of the fourth quarter of 2022;\n"
+        "  - we had ARPU of $80 compared to $60, an increase of 33%;\n"
+        "  - we had MAU of 10.9 million in December 2023 compared to 11.4 "
+        "million in December 2022.\n"
+    ),
+}
+
+
+class TestPromptSectionOrdering(unittest.TestCase):
+    def test_orders_mda_before_manifest_leading_business(self) -> None:
+        sections = [
+            {"id": "10k_parti_item1_business", "path": "sections/business.md"},
+            {"id": "10k_partii_item7_managements_discussion", "path": "sections/mda.md"},
+            {"id": "10k_partii_item7a_quantitative_qualitative", "path": "sections/risk.md"},
+        ]
+
+        ordered = _order_sections_for_kpi_prompt(sections)
+
+        self.assertEqual(
+            [section["id"] for section in ordered],
+            [
+                "10k_partii_item7_managements_discussion",
+                "10k_parti_item1_business",
+                "10k_partii_item7a_quantitative_qualitative",
+            ],
+        )
+
+    def test_orders_key_metric_sections_before_mda_and_business(self) -> None:
+        sections = [
+            {"id": "10k_parti_item1_business", "path": "sections/business.md"},
+            {"id": "10k_segment_data", "path": "sections/segment.md"},
+            {"id": "10k_partii_item7_managements_discussion", "path": "sections/mda.md"},
+            {"id": "10k_key_metric_nontraditional", "path": "sections/metrics.md"},
+            {"id": "10k_partii_item7a_quantitative_qualitative", "path": "sections/risk.md"},
+        ]
+
+        ordered = _order_sections_for_kpi_prompt(sections)
+
+        self.assertEqual(
+            [section["id"] for section in ordered],
+            [
+                "10k_key_metric_nontraditional",
+                "10k_partii_item7_managements_discussion",
+                "10k_segment_data",
+                "10k_parti_item1_business",
+                "10k_partii_item7a_quantitative_qualitative",
+            ],
+        )
+
+    def test_hood_annual_kpi_terms_survive_trimmed_prompt(self) -> None:
+        for accession, mda_excerpt in _HOOD_PROMPT_PACKING_CASES.items():
+            with self.subTest(accession=accession), tempfile.TemporaryDirectory() as td:
+                pack_dir = Path(td)
+                sections_dir = pack_dir / "sections"
+                sections_dir.mkdir(parents=True)
+                (sections_dir / "business.md").write_text(
+                    "Robinhood business overview and product narrative.\n" * 2_500,
+                    encoding="utf-8",
+                )
+                (sections_dir / "mda.md").write_text(mda_excerpt, encoding="utf-8")
+
+                manifest_sections = [
+                    {
+                        "id": "10k_parti_item1_business",
+                        "path": "sections/business.md",
+                        "title": "Business",
+                    },
+                    {
+                        "id": "10k_partii_item7_managements_discussion",
+                        "path": "sections/mda.md",
+                        "title": "Management's Discussion and Analysis",
+                    },
+                ]
+
+                selected = _select_sections(manifest_sections)
+                ordered = _order_sections_for_kpi_prompt(selected)
+                text = _trim_to_budget(_read_section_text(pack_dir, ordered))
+
+                self.assertIn("Funded Customers", text)
+                self.assertIn("Net Deposits", text)
+                self.assertIn("ARPU", text)
+                if accession == "0001783879-26-000023":
+                    self.assertIn("Total Platform Assets", text)
+                else:
+                    self.assertIn("AUC", text)
+
+    def test_discovery_prompt_packing_keeps_hood_metrics_in_llm_input(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            pack_dir = Path(td)
+            sections_dir = pack_dir / "sections"
+            sections_dir.mkdir(parents=True)
+            (sections_dir / "business.md").write_text(
+                "Robinhood business overview and product narrative.\n" * 2_500,
+                encoding="utf-8",
+            )
+            (sections_dir / "mda.md").write_text(
+                _HOOD_PROMPT_PACKING_CASES["0001783879-26-000023"],
+                encoding="utf-8",
+            )
+            manifest = {
+                "filing": {
+                    "accession": "0001783879-26-000023",
+                    "cik": "0001783879",
+                    "form_type": "10-K",
+                    "filing_date": "2026-02-25",
+                    "company_name": "Robinhood Markets, Inc.",
+                    "period_of_report": "2025-12-31",
+                },
+                "sections": [
+                    {
+                        "id": "10k_parti_item1_business",
+                        "path": "sections/business.md",
+                        "title": "Business",
+                    },
+                    {
+                        "id": "10k_partii_item7_managements_discussion",
+                        "path": "sections/mda.md",
+                        "title": "Management's Discussion and Analysis",
+                    },
+                ],
+            }
+            pack_record = PackRecord(
+                accession="0001783879-26-000023",
+                cik="0001783879",
+                ticker="HOOD",
+                company_name="Robinhood Markets, Inc.",
+                form_type="10-K",
+                filing_date="2026-02-25",
+                sections_count=2,
+                tokens_total=20_000,
+                pack_dir=str(pack_dir),
+                built_at=datetime.now(UTC).isoformat(),
+            )
+            fake_raw = json.dumps(
+                {
+                    "kpis": [
+                        {
+                            "slug": "funded_customers",
+                            "display_name": "Funded Customers",
+                            "unit": "count",
+                            "magnitude": "millions",
+                            "value": 27.0,
+                            "period_end": "2025-12-31",
+                            "definition": None,
+                            "section_id": "10k_partii_item7_managements_discussion",
+                            "source_substring": "Funded Customers increased by 1.8 million",
+                            "confidence": 0.92,
+                        }
+                    ]
+                }
+            )
+
+            def _fake_run(prompt: str, timeout: int | None = None) -> str:  # noqa: ARG001
+                self.assertIn("Funded Customers", prompt)
+                self.assertIn("Total Platform Assets", prompt)
+                self.assertIn("Net Deposits", prompt)
+                self.assertIn("ARPU", prompt)
+                self.assertIn("TEXT (with `--- [section_id] ---` markers):", prompt)
+                return fake_raw
+
+            with (
+                patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+                patch("edgarpack.query.kpi_extract._run_llm_raw", side_effect=_fake_run),
+            ):
+                result = extract_discoveries_detailed(
+                    pack_dir=pack_dir,
+                    pack_record=pack_record,
+                    manifest=manifest,
+                )
+
+            self.assertEqual(result.status, "success")
+            self.assertEqual([kpi.slug for kpi in result.kpis], ["funded_customers"])
+
+
 class TestTrimToBudget(unittest.TestCase):
     def test_passthrough_when_under_budget(self) -> None:
         text = "short text"
@@ -562,6 +769,92 @@ class TestExtractViaLlm(unittest.TestCase):
             self.assertEqual(result["confidence"], "high")
             self.assertEqual(result["value"], 3440000000)
             self.assertEqual(result["unit"], "USD")
+
+    def test_codex_backend_reads_output_last_message_file(self) -> None:
+        fake = json.dumps(
+            {
+                "value": 122,
+                "unit": "USD",
+                "excerpt": "ARPU increased 40% to $171 compared to $122",
+                "section_id": "10k_partii_item7_managements_discussion",
+                "confidence": "high",
+            }
+        )
+
+        class _Fake:
+            stdout = "codex session chatter"
+            stderr = ""
+            returncode = 0
+
+        def _fake_run(cmd, *, capture_output, input, text, timeout):  # noqa: A002, ARG001
+            self.assertIn("--output-last-message", cmd)
+            output_path = Path(cmd[cmd.index("--output-last-message") + 1])
+            output_path.write_text(fake, encoding="utf-8")
+            self.assertEqual(cmd[-1], "-")
+            self.assertEqual(input, "prompt")
+            return _Fake
+
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", side_effect=_fake_run),
+        ):
+            result = _extract_via_llm("prompt")
+
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result["value"], 122)
+
+    def test_codex_timeout_cleans_output_last_message_file(self) -> None:
+        import subprocess as _sp
+
+        output_paths: list[Path] = []
+
+        def _fake_run(cmd, *, capture_output, input, text, timeout):  # noqa: A002, ARG001
+            output_path = Path(cmd[cmd.index("--output-last-message") + 1])
+            output_path.write_text("partial response", encoding="utf-8")
+            output_paths.append(output_path)
+            raise _sp.TimeoutExpired(cmd=cmd, timeout=timeout)
+
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", side_effect=_fake_run),
+        ):
+            self.assertIsNone(_run_llm_raw("prompt", timeout=1))
+
+        self.assertEqual(len(output_paths), 1)
+        self.assertFalse(output_paths[0].exists())
+
+    def test_claude_backend_runs_without_tools(self) -> None:
+        fake = json.dumps(
+            {
+                "value": 27,
+                "unit": "count",
+                "excerpt": "Funded Customers increased by 1.8 million",
+                "section_id": "10k_partii_item7_managements_discussion",
+                "confidence": "high",
+            }
+        )
+
+        class _Fake:
+            stdout = fake
+            stderr = ""
+            returncode = 0
+
+        def _fake_run(cmd, *, capture_output, input, text, timeout):  # noqa: A002, ARG001
+            self.assertEqual(cmd[:4], ["claude", "--bare", "--tools", ""])
+            self.assertIn("-p", cmd)
+            self.assertIsNone(input)
+            return _Fake
+
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "claude"),
+            patch("edgarpack.query.kpi_extract.subprocess.run", side_effect=_fake_run),
+        ):
+            result = _extract_via_llm("prompt")
+
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result["value"], 27)
 
     def test_returns_none_on_malformedjson(self) -> None:
         class _Fake:

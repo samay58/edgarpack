@@ -31,6 +31,7 @@ import math
 import re
 import shutil
 import subprocess
+import tempfile
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import date as _date
@@ -378,6 +379,52 @@ def _select_sections(sections: list[dict]) -> list[dict]:
     return result
 
 
+def _section_prompt_priority(section: dict[str, object]) -> int:
+    """Rank selected sections for KPI prompt packing.
+
+    Some 10-Ks put long Item 1 Business text before MD&A in the manifest.
+    If we concatenate that order and then trim to the LLM budget, the actual
+    KPI tables can disappear. Keep the filter separate from ordering so cache
+    and diagnostics still know which sections were selected.
+    """
+    sec_id = str(section.get("id", "")).lower()
+    title = str(section.get("title", "")).lower()
+    haystack = f"{sec_id} {title}"
+
+    if any(token in haystack for token in ("key_metric", "key metric", "key performance")):
+        return 0
+    if "operating_data" in haystack or "operating data" in haystack:
+        return 0
+    if re.match(r"^10k_parti+_item7(?=_|$)", sec_id) or re.match(
+        r"^10q_parti+_item2(?=_|$)", sec_id
+    ):
+        return 1
+    if "_segment" in sec_id or "segment" in title:
+        return 2
+    if re.match(r"^10k_parti+_item1(?=_|$)", sec_id):
+        return 3
+    if re.match(r"^10k_parti+_item7a(?=_|$)", sec_id):
+        return 4
+    return 5
+
+
+def _order_sections_for_kpi_prompt(
+    sections: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Return selected sections in prompt-priority order.
+
+    Sorting is stable inside each priority bucket so comparable sections keep
+    their manifest order.
+    """
+    return [
+        section
+        for _, section in sorted(
+            enumerate(sections),
+            key=lambda item: (_section_prompt_priority(item[1]), item[0]),
+        )
+    ]
+
+
 _SECTION_SEPARATOR = "\n\n--- [{id}] ---\n\n"
 
 
@@ -426,7 +473,7 @@ def _trim_to_budget(text: str, max_chars: int = _DEFAULT_MAX_CHARS) -> str:
 # Module-level LLM backend detection for Layer B. Separate from Layer A's
 # _LLM_CMD so tests can patch each independently.
 _LLM_CMD_KPI: str | None = None
-for _candidate in ("codex", "claude"):
+for _candidate in ("claude", "codex"):
     if shutil.which(_candidate):
         _LLM_CMD_KPI = _candidate
         break
@@ -497,8 +544,35 @@ def _run_llm_raw(prompt: str, timeout: int = _LLM_TIMEOUT_SECONDS_KPI) -> str | 
     """
     if _LLM_CMD_KPI is None:
         return None
+
+    output_path: Path | None = None
+    stdin_text: str | None = None
     if _LLM_CMD_KPI == "codex":
-        cmd = [_LLM_CMD_KPI, "exec", prompt]
+        # Codex CLI emits session logs on stdout. Ask it to write only the
+        # final model response to a temp file and pass the prompt through stdin
+        # so long SEC filing excerpts do not ride through argv.
+        output_file = tempfile.NamedTemporaryFile(
+            prefix="edgarpack-kpi-",
+            suffix=".json",
+            delete=False,
+        )
+        output_path = Path(output_file.name)
+        output_file.close()
+        cmd = [
+            _LLM_CMD_KPI,
+            "exec",
+            "--ephemeral",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--sandbox",
+            "read-only",
+            "--output-last-message",
+            str(output_path),
+            "-",
+        ]
+        stdin_text = prompt
+    elif _LLM_CMD_KPI == "claude":
+        cmd = [_LLM_CMD_KPI, "--bare", "--tools", "", "-p", prompt]
     else:
         cmd = [_LLM_CMD_KPI, "-p", prompt]
 
@@ -506,11 +580,14 @@ def _run_llm_raw(prompt: str, timeout: int = _LLM_TIMEOUT_SECONDS_KPI) -> str | 
         completed = subprocess.run(
             cmd,
             capture_output=True,
+            input=stdin_text,
             text=True,
             timeout=timeout,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
         logger.info("KPI LLM call failed: %s", e)
+        if output_path is not None:
+            output_path.unlink(missing_ok=True)
         return None
 
     if completed.returncode != 0:
@@ -518,9 +595,21 @@ def _run_llm_raw(prompt: str, timeout: int = _LLM_TIMEOUT_SECONDS_KPI) -> str | 
             "KPI LLM returned non-zero: %s",
             (completed.stderr or "")[:200],
         )
+        if output_path is not None:
+            output_path.unlink(missing_ok=True)
         return None
 
-    raw = (completed.stdout or "").strip()
+    raw = ""
+    if output_path is not None:
+        try:
+            raw = output_path.read_text(encoding="utf-8").strip()
+        except OSError as e:
+            logger.info("KPI LLM output file read failed: %s", e)
+        finally:
+            output_path.unlink(missing_ok=True)
+
+    if not raw:
+        raw = (completed.stdout or "").strip()
     return raw or None
 
 
@@ -908,7 +997,7 @@ def try_extract_kpi(
             return None
 
         # 5. Read and trim text
-        raw_text = _read_section_text(pack_dir, selected)
+        raw_text = _read_section_text(pack_dir, _order_sections_for_kpi_prompt(selected))
         if not raw_text:
             return None
         text = _trim_to_budget(raw_text)
@@ -1396,7 +1485,7 @@ def extract_discoveries_detailed(
     if not selected:
         return DiscoveryExtractResult(kpis=[], status="no_kpis")
 
-    raw_text = _read_section_text(pack_dir, selected)
+    raw_text = _read_section_text(pack_dir, _order_sections_for_kpi_prompt(selected))
     if not raw_text:
         return DiscoveryExtractResult(kpis=[], status="no_kpis")
     text = _trim_to_budget(raw_text)
