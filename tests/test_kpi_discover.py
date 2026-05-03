@@ -543,10 +543,10 @@ class TestDiscoverKpisFiguraFixture(_DiscoverHarness):
                     [
                         {
                             "slug": "paid_seats",
-                            "display_name": "Active designers",
+                            "display_name": "Paid seats",
                             "unit": "count",
-                            "magnitude": "thousands",
-                            "value": 900,
+                            "magnitude": "millions",
+                            "value": 1.2,
                             "period_end": "2024-01-31",
                             "section_id": "10k_parti_item7_mda",
                             "source_substring": "1.2 million paid seats",
@@ -595,6 +595,143 @@ class TestDiscoverKpisFiguraFixture(_DiscoverHarness):
         self.assertEqual(len(paid.periods), 2)
         # Latest (2024) should lead.
         self.assertEqual(paid.periods[0].period_end, "2024-01-31")
+
+    def test_reconciles_known_slug_drift_without_merging_distinct_counts(self) -> None:
+        self._add_pack(
+            accession="0001792044-25-000001",
+            filing_date="2025-02-26",
+            period_of_report="2024-12-31",
+            section_body=(
+                "Key Business Metrics. Funded Customers increased 8% to 25.2 million. "
+                "AUC increased 88% to $192.9 billion. ARPU increased 53% to $122."
+            ),
+        )
+        self._add_pack(
+            accession="0001792044-26-000001",
+            filing_date="2026-02-25",
+            period_of_report="2025-12-31",
+            section_body=(
+                "Key Business Metrics. Funded Customers increased by 1.8 million to "
+                "27.0 million. Total Platform Assets increased 67% to $322.1 billion. "
+                "Average Revenues Per User increased 40% to $171. MAU was 10.9 million."
+            ),
+        )
+
+        responses = iter(
+            [
+                _mock_llm_response(
+                    [
+                        {
+                            "slug": "funded_customers",
+                            "display_name": "Funded Customers",
+                            "unit": "count",
+                            "magnitude": "millions",
+                            "value": 27.0,
+                            "period_end": "2025-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": (
+                                "Funded Customers increased by 1.8 million to 27.0 million"
+                            ),
+                            "confidence": 0.9,
+                        },
+                        {
+                            "slug": "total_platform_assets",
+                            "display_name": "Total Platform Assets",
+                            "unit": "USD",
+                            "magnitude": "billions",
+                            "value": 322.1,
+                            "period_end": "2025-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": (
+                                "Total Platform Assets increased 67% to $322.1 billion"
+                            ),
+                            "confidence": 0.9,
+                        },
+                        {
+                            "slug": "average_revenues_per_user",
+                            "display_name": "Average Revenues Per User",
+                            "unit": "USD",
+                            "magnitude": None,
+                            "value": 171,
+                            "period_end": "2025-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "Average Revenues Per User increased 40% to $171",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "slug": "mau",
+                            "display_name": "MAU",
+                            "unit": "count",
+                            "magnitude": "millions",
+                            "value": 10.9,
+                            "period_end": "2025-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "MAU was 10.9 million",
+                            "confidence": 0.88,
+                        },
+                    ]
+                ),
+                _mock_llm_response(
+                    [
+                        {
+                            "slug": "funded_customers",
+                            "display_name": "Funded Customers",
+                            "unit": "count",
+                            "magnitude": "millions",
+                            "value": 25.2,
+                            "period_end": "2024-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "Funded Customers increased 8% to 25.2 million",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "slug": "auc",
+                            "display_name": "AUC",
+                            "unit": "USD",
+                            "magnitude": "billions",
+                            "value": 192.9,
+                            "period_end": "2024-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "AUC increased 88% to $192.9 billion",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "slug": "arpu",
+                            "display_name": "ARPU",
+                            "unit": "USD",
+                            "magnitude": None,
+                            "value": 122,
+                            "period_end": "2024-12-31",
+                            "section_id": "10k_parti_item7_mda",
+                            "source_substring": "ARPU increased 53% to $122",
+                            "confidence": 0.9,
+                        },
+                    ]
+                ),
+            ]
+        )
+
+        def _fake_run(_prompt, timeout=None):  # noqa: ARG001
+            try:
+                return next(responses)
+            except StopIteration:
+                return _mock_llm_response([])
+
+        with (
+            patch("edgarpack.query.kpi_extract._LLM_CMD_KPI", "codex"),
+            patch("edgarpack.query.kpi_extract._run_llm_raw", side_effect=_fake_run),
+        ):
+            aggregates = discover_kpis(
+                cik=self.CIK,
+                pack_registry=self.pack_registry,
+                registry_path=self.registry_db,
+            )
+
+        by_slug = {aggregate.slug: aggregate for aggregate in aggregates}
+        self.assertEqual(len(by_slug["assets_under_custody"].periods), 2)
+        self.assertEqual(len(by_slug["arpu"].periods), 2)
+        self.assertEqual(len(by_slug["funded_customers"].periods), 2)
+        self.assertEqual(len(by_slug["mau"].periods), 1)
 
 
 class TestWhichCliOutput(unittest.TestCase):

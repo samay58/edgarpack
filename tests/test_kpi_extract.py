@@ -26,6 +26,7 @@ from edgarpack.query.kpi_extract import (
     _verify_against_prior_filing,
     _verify_excerpt_in_text,
     extract_discoveries_detailed,
+    locate_kpi_candidate_windows,
 )
 
 
@@ -564,6 +565,58 @@ class TestPromptSectionOrdering(unittest.TestCase):
                 else:
                     self.assertIn("AUC", text)
 
+    def test_locator_finds_later_mda_window_when_business_section_is_long(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            pack_dir = Path(td)
+            sections_dir = pack_dir / "sections"
+            sections_dir.mkdir(parents=True)
+            (sections_dir / "business.md").write_text(
+                "Robinhood business overview and product narrative.\n" * 2_500,
+                encoding="utf-8",
+            )
+            (sections_dir / "mda.md").write_text(
+                _HOOD_PROMPT_PACKING_CASES["0001783879-25-000049"],
+                encoding="utf-8",
+            )
+            sections = [
+                {
+                    "id": "10k_parti_item1_business",
+                    "path": "sections/business.md",
+                    "title": "Business",
+                },
+                {
+                    "id": "10k_partii_item7_managements_discussion",
+                    "path": "sections/mda.md",
+                    "title": "Management's Discussion and Analysis",
+                },
+            ]
+            pack_record = PackRecord(
+                accession="0001783879-25-000049",
+                cik="0001783879",
+                ticker="HOOD",
+                company_name="Robinhood Markets, Inc.",
+                form_type="10-K",
+                filing_date="2025-02-26",
+                sections_count=2,
+                tokens_total=20_000,
+                pack_dir=str(pack_dir),
+                built_at=datetime.now(UTC).isoformat(),
+            )
+
+            windows = locate_kpi_candidate_windows(
+                pack_dir=pack_dir,
+                pack_record=pack_record,
+                sections=_order_sections_for_kpi_prompt(_select_sections(sections)),
+            )
+
+            self.assertTrue(
+                any(w.section_id == "10k_partii_item7_managements_discussion" for w in windows)
+            )
+            joined = "\n".join(w.window_text for w in windows)
+            self.assertIn("Funded Customers", joined)
+            self.assertIn("AUC increased 88%", joined)
+            self.assertTrue(all(len(w.window_text) <= 4000 for w in windows))
+
     def test_discovery_prompt_packing_keeps_hood_metrics_in_llm_input(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             pack_dir = Path(td)
@@ -623,7 +676,10 @@ class TestPromptSectionOrdering(unittest.TestCase):
                             "period_end": "2025-12-31",
                             "definition": None,
                             "section_id": "10k_partii_item7_managements_discussion",
-                            "source_substring": "Funded Customers increased by 1.8 million",
+                            "source_substring": (
+                                "Funded Customers increased by 1.8 million, 7%, "
+                                "to 27.0 million"
+                            ),
                             "confidence": 0.92,
                         }
                     ]
@@ -635,7 +691,8 @@ class TestPromptSectionOrdering(unittest.TestCase):
                 self.assertIn("Total Platform Assets", prompt)
                 self.assertIn("Net Deposits", prompt)
                 self.assertIn("ARPU", prompt)
-                self.assertIn("TEXT (with `--- [section_id] ---` markers):", prompt)
+                self.assertIn("Candidate ID:", prompt)
+                self.assertIn("WINDOW:", prompt)
                 return fake_raw
 
             with (

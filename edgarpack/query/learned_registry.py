@@ -26,6 +26,8 @@ Migration history:
               can coexist (Task 4).
     v2 -> v3: add company_kpis table (per-company discovered KPIs for
               `edgarpack which`, keyed by (cik, accession, slug)).
+    v3 -> v4: add versioned staged-discovery run/candidate/rejection tables
+              beside company_kpis.
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from ..config import CACHE_DIR
 
@@ -89,6 +92,61 @@ CREATE INDEX IF NOT EXISTS idx_company_kpis_cik_slug
     ON company_kpis(cik, slug);
 CREATE INDEX IF NOT EXISTS idx_company_kpis_cik_period
     ON company_kpis(cik, period_end);
+"""
+
+_COMPANY_KPI_DISCOVERY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS company_kpi_discovery_runs (
+    cik                  TEXT NOT NULL,
+    accession            TEXT NOT NULL,
+    discovery_version    TEXT NOT NULL,
+    pack_fingerprint     TEXT NOT NULL,
+    locator_status       TEXT NOT NULL DEFAULT '',
+    extractor_status     TEXT NOT NULL DEFAULT '',
+    reconciler_status    TEXT NOT NULL DEFAULT '',
+    candidate_count      INTEGER NOT NULL DEFAULT 0,
+    model_attempts       INTEGER NOT NULL DEFAULT 0,
+    accepted_rows        INTEGER NOT NULL DEFAULT 0,
+    rejected_rows        INTEGER NOT NULL DEFAULT 0,
+    retryable_failures   INTEGER NOT NULL DEFAULT 0,
+    retryable            INTEGER NOT NULL DEFAULT 0,
+    started_at           TEXT NOT NULL,
+    completed_at         TEXT,
+    PRIMARY KEY (cik, accession, discovery_version)
+);
+
+CREATE TABLE IF NOT EXISTS company_kpi_candidates (
+    cik                  TEXT NOT NULL,
+    accession            TEXT NOT NULL,
+    discovery_version    TEXT NOT NULL,
+    candidate_id         TEXT NOT NULL,
+    section_id           TEXT,
+    chunk_id             TEXT,
+    label_hint           TEXT,
+    value_hints_json     TEXT NOT NULL DEFAULT '[]',
+    signal_names_json    TEXT NOT NULL DEFAULT '[]',
+    window_text          TEXT NOT NULL,
+    char_start           INTEGER NOT NULL DEFAULT 0,
+    char_end             INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (cik, accession, discovery_version, candidate_id)
+);
+
+CREATE TABLE IF NOT EXISTS company_kpi_rejections (
+    cik                  TEXT NOT NULL,
+    accession            TEXT NOT NULL,
+    discovery_version    TEXT NOT NULL,
+    candidate_id         TEXT,
+    stage                TEXT NOT NULL,
+    reason               TEXT NOT NULL,
+    raw_payload          TEXT,
+    rejected_at          TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_kpi_runs_cik_accession
+    ON company_kpi_discovery_runs(cik, accession);
+CREATE INDEX IF NOT EXISTS idx_company_kpi_candidates_cik_accession
+    ON company_kpi_candidates(cik, accession);
+CREATE INDEX IF NOT EXISTS idx_company_kpi_rejections_cik_accession
+    ON company_kpi_rejections(cik, accession);
 """
 
 _REBUILD_TABLE_SQL = """
@@ -228,6 +286,13 @@ class LearnedRegistry:
             # re-running on a v3 db is harmless.
             conn.executescript(_COMPANY_KPIS_SCHEMA)
             conn.execute("PRAGMA user_version = 3")
+            current_version = 3
+        if current_version < 4:
+            # v3 -> v4: add staged-discovery intermediate state. The final
+            # user-facing rows stay in company_kpis; these tables only make
+            # retries and JSON diagnostics auditable.
+            conn.executescript(_COMPANY_KPI_DISCOVERY_SCHEMA)
+            conn.execute("PRAGMA user_version = 4")
         conn.commit()
 
     def close(self) -> None:
@@ -596,6 +661,194 @@ class LearnedRegistry:
         cur = conn.execute(sql, tuple(params))
         conn.commit()
         return cur.rowcount or 0
+
+    # ------------------------------------------------------------------
+    # Staged discovery cache DAO (`edgarpack which`)
+    # ------------------------------------------------------------------
+
+    def company_kpi_discovery_run_is_complete(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        discovery_version: str,
+        pack_fingerprint: str,
+    ) -> bool:
+        conn = self._get_conn()
+        row = conn.execute(
+            """
+            SELECT retryable, completed_at, pack_fingerprint
+            FROM company_kpi_discovery_runs
+            WHERE cik = ? AND accession = ? AND discovery_version = ?
+            """,
+            (cik, accession, discovery_version),
+        ).fetchone()
+        if row is None:
+            return False
+        return (
+            row["pack_fingerprint"] == pack_fingerprint
+            and bool(row["completed_at"])
+            and int(row["retryable"] or 0) == 0
+        )
+
+    def company_kpi_discovery_run_exists(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        discovery_version: str,
+    ) -> bool:
+        conn = self._get_conn()
+        row = conn.execute(
+            """
+            SELECT 1 FROM company_kpi_discovery_runs
+            WHERE cik = ? AND accession = ? AND discovery_version = ?
+            LIMIT 1
+            """,
+            (cik, accession, discovery_version),
+        ).fetchone()
+        return row is not None
+
+    def company_kpi_discovery_run_upsert(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        discovery_version: str,
+        pack_fingerprint: str,
+        locator_status: str,
+        extractor_status: str,
+        reconciler_status: str,
+        candidate_count: int,
+        model_attempts: int,
+        accepted_rows: int,
+        rejected_rows: int,
+        retryable_failures: int,
+        retryable: bool,
+        completed: bool,
+    ) -> None:
+        now = datetime.now(UTC).isoformat()
+        conn = self._get_conn()
+        conn.execute(
+            """
+            INSERT INTO company_kpi_discovery_runs (
+                cik, accession, discovery_version, pack_fingerprint,
+                locator_status, extractor_status, reconciler_status,
+                candidate_count, model_attempts, accepted_rows, rejected_rows,
+                retryable_failures, retryable, started_at, completed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(cik, accession, discovery_version) DO UPDATE SET
+                pack_fingerprint   = excluded.pack_fingerprint,
+                locator_status     = excluded.locator_status,
+                extractor_status   = excluded.extractor_status,
+                reconciler_status  = excluded.reconciler_status,
+                candidate_count    = excluded.candidate_count,
+                model_attempts     = excluded.model_attempts,
+                accepted_rows      = excluded.accepted_rows,
+                rejected_rows      = excluded.rejected_rows,
+                retryable_failures = excluded.retryable_failures,
+                retryable          = excluded.retryable,
+                completed_at       = excluded.completed_at
+            """,
+            (
+                cik,
+                accession,
+                discovery_version,
+                pack_fingerprint,
+                locator_status,
+                extractor_status,
+                reconciler_status,
+                int(candidate_count),
+                int(model_attempts),
+                int(accepted_rows),
+                int(rejected_rows),
+                int(retryable_failures),
+                1 if retryable else 0,
+                now,
+                now if completed else None,
+            ),
+        )
+        conn.commit()
+
+    def company_kpi_candidates_replace(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        discovery_version: str,
+        candidates: list[Any],
+    ) -> None:
+        conn = self._get_conn()
+        conn.execute(
+            """
+            DELETE FROM company_kpi_candidates
+            WHERE cik = ? AND accession = ? AND discovery_version = ?
+            """,
+            (cik, accession, discovery_version),
+        )
+        for candidate in candidates:
+            conn.execute(
+                """
+                INSERT INTO company_kpi_candidates (
+                    cik, accession, discovery_version, candidate_id,
+                    section_id, chunk_id, label_hint, value_hints_json,
+                    signal_names_json, window_text, char_start, char_end
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    cik,
+                    accession,
+                    discovery_version,
+                    getattr(candidate, "candidate_id", ""),
+                    getattr(candidate, "section_id", None),
+                    getattr(candidate, "chunk_id", None),
+                    getattr(candidate, "label_hint", None),
+                    json.dumps(list(getattr(candidate, "value_hints", ()) or ())),
+                    json.dumps(list(getattr(candidate, "signal_names", ()) or ())),
+                    getattr(candidate, "window_text", ""),
+                    int(getattr(candidate, "char_start", 0) or 0),
+                    int(getattr(candidate, "char_end", 0) or 0),
+                ),
+            )
+        conn.commit()
+
+    def company_kpi_rejections_replace(
+        self,
+        *,
+        cik: str,
+        accession: str,
+        discovery_version: str,
+        rejections: list[Any],
+    ) -> None:
+        now = datetime.now(UTC).isoformat()
+        conn = self._get_conn()
+        conn.execute(
+            """
+            DELETE FROM company_kpi_rejections
+            WHERE cik = ? AND accession = ? AND discovery_version = ?
+            """,
+            (cik, accession, discovery_version),
+        )
+        for rejection in rejections:
+            conn.execute(
+                """
+                INSERT INTO company_kpi_rejections (
+                    cik, accession, discovery_version, candidate_id,
+                    stage, reason, raw_payload, rejected_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    cik,
+                    accession,
+                    discovery_version,
+                    getattr(rejection, "candidate_id", None),
+                    getattr(rejection, "stage", ""),
+                    getattr(rejection, "reason", ""),
+                    getattr(rejection, "raw_payload", None),
+                    now,
+                ),
+            )
+        conn.commit()
 
 
 def _company_kpi_row_to_dataclass(row: sqlite3.Row) -> CompanyKpiRow:

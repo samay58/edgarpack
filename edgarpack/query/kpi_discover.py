@@ -17,6 +17,7 @@ double-extracting the same metric.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -28,6 +29,7 @@ from pathlib import Path
 from ..harvest.registry import PackRecord, PackRegistry
 from ..sec.submissions import is_registration_form
 from .kpi_extract import (
+    _DISCOVERY_VERSION,
     KPI_CATALOG,
     DiscoveredKpi,
     _load_pack_manifest,
@@ -98,10 +100,17 @@ class DiscoveryFilingStatus:
     filing_date: str
     status: str
     contributed: bool
+    candidate_count: int = 0
+    model_attempts: int = 0
+    accepted_rows: int = 0
+    rejected_rows: int = 0
+    retryable_failures: int = 0
+    retryable: bool = False
 
     def to_json(self) -> dict[str, object]:
         resume_action: str | None = None
-        if self.status == "llm_failed":
+        is_retryable = self.retryable or self.status == "llm_failed"
+        if is_retryable:
             resume_action = "rerun_which"
         elif self.status.startswith("manifest_"):
             resume_action = "rebuild_pack"
@@ -111,7 +120,12 @@ class DiscoveryFilingStatus:
             "filing_date": self.filing_date,
             "status": self.status,
             "contributed": self.contributed,
-            "retryable": self.status == "llm_failed",
+            "candidate_count": self.candidate_count,
+            "model_attempts": self.model_attempts,
+            "accepted_rows": self.accepted_rows,
+            "rejected_rows": self.rejected_rows,
+            "retryable_failures": self.retryable_failures,
+            "retryable": is_retryable,
             "resume_action": resume_action,
         }
 
@@ -124,6 +138,12 @@ class PackDiscoveryResult:
     status: str
     # one of: cached | discovered | manifest_missing | manifest_invalid_json
     #       | manifest_schema_mismatch | manifest_io_error | llm_failed | empty
+    candidate_count: int = 0
+    model_attempts: int = 0
+    accepted_rows: int = 0
+    rejected_rows: int = 0
+    retryable_failures: int = 0
+    retryable: bool = False
 
 
 @dataclass(frozen=True)
@@ -249,6 +269,34 @@ def _period_label(form_type: str, fiscal_year: int, fiscal_period: str, period_e
     return form or "unknown"
 
 
+def _pack_fingerprint(pack_record: PackRecord, manifest: dict) -> str:
+    """Stable fingerprint for versioned discovery cache invalidation."""
+    sections = manifest.get("sections", []) if isinstance(manifest, dict) else []
+    section_fingerprints: list[object] = []
+    if isinstance(sections, list):
+        for section in sections:
+            if not isinstance(section, dict):
+                continue
+            section_fingerprints.append(
+                {
+                    "id": section.get("id"),
+                    "path": section.get("path"),
+                    "sha256": section.get("sha256"),
+                    "char_start": section.get("char_start"),
+                    "char_end": section.get("char_end"),
+                }
+            )
+    payload = {
+        "accession": pack_record.accession,
+        "built_at": pack_record.built_at,
+        "schema_version": manifest.get("schema_version") if isinstance(manifest, dict) else None,
+        "parser_version": manifest.get("parser_version") if isinstance(manifest, dict) else None,
+        "sections": section_fingerprints,
+    }
+    raw = json.dumps(payload, sort_keys=True, default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 def _discover_pack(
     *,
     pack_record: PackRecord,
@@ -266,13 +314,22 @@ def _discover_pack(
     cik = pack_record.cik
     accession = pack_record.accession
 
-    if not force and learned_reg.company_kpi_has_accession(cik, accession):
+    run_exists = learned_reg.company_kpi_discovery_run_exists(
+        cik=cik,
+        accession=accession,
+        discovery_version=_DISCOVERY_VERSION,
+    )
+    if not force and not run_exists and learned_reg.company_kpi_has_accession(cik, accession):
+        # Legacy pre-staged cache rows did not have discovery run metadata, so
+        # preserve the old behavior: cache hits do not need the pack directory
+        # to still be readable.
         cached_rows = learned_reg.company_kpi_list(cik=cik, accession=accession)
         if not cached_rows:
             return PackDiscoveryResult(discovered=[], status="empty")
         return PackDiscoveryResult(
             discovered=[_cached_row_to_discovered(row) for row in cached_rows],
             status="cached",
+            accepted_rows=len(cached_rows),
         )
 
     pack_dir = Path(pack_record.pack_dir)
@@ -305,6 +362,22 @@ def _discover_pack(
         )
         return PackDiscoveryResult(discovered=[], status="manifest_schema_mismatch")
 
+    pack_fingerprint = _pack_fingerprint(pack_record, manifest)
+    if not force and learned_reg.company_kpi_discovery_run_is_complete(
+        cik=cik,
+        accession=accession,
+        discovery_version=_DISCOVERY_VERSION,
+        pack_fingerprint=pack_fingerprint,
+    ):
+        cached_rows = learned_reg.company_kpi_list(cik=cik, accession=accession)
+        if not cached_rows:
+            return PackDiscoveryResult(discovered=[], status="empty")
+        return PackDiscoveryResult(
+            discovered=[_cached_row_to_discovered(row) for row in cached_rows],
+            status="cached",
+            accepted_rows=len(cached_rows),
+        )
+
     existing_slugs = learned_reg.company_kpi_distinct_slugs(cik)
     extraction = extract_discoveries_detailed(
         pack_dir=pack_dir,
@@ -313,8 +386,20 @@ def _discover_pack(
         existing_slugs=existing_slugs,
     )
     discovered = extraction.kpis
+    learned_reg.company_kpi_candidates_replace(
+        cik=cik,
+        accession=accession,
+        discovery_version=_DISCOVERY_VERSION,
+        candidates=extraction.candidate_windows,
+    )
+    learned_reg.company_kpi_rejections_replace(
+        cik=cik,
+        accession=accession,
+        discovery_version=_DISCOVERY_VERSION,
+        rejections=extraction.rejections,
+    )
 
-    if force:
+    if force or run_exists:
         # Drop prior rows for this accession before writing fresh ones so a
         # rerun with a different prompt / model doesn't accumulate stale
         # rows next to the new ones.
@@ -323,7 +408,8 @@ def _discover_pack(
     if not discovered:
         if extraction.status == "no_kpis":
             # Persist a sentinel so the next `which` call doesn't re-invoke the
-            # LLM on a filing that genuinely has no qualifying KPIs.
+            # LLM on a filing that genuinely has no qualifying KPIs. Retryable
+            # failures never reach this branch.
             period_end_iso = ""
             filing = manifest.get("filing", {}) if isinstance(manifest, dict) else {}
             por = filing.get("period_of_report") if isinstance(filing, dict) else None
@@ -335,8 +421,59 @@ def _discover_pack(
                 form_type=pack_record.form_type,
                 period_end=period_end_iso,
             )
-            return PackDiscoveryResult(discovered=[], status="empty")
-        return PackDiscoveryResult(discovered=[], status="llm_failed")
+            learned_reg.company_kpi_discovery_run_upsert(
+                cik=cik,
+                accession=accession,
+                discovery_version=_DISCOVERY_VERSION,
+                pack_fingerprint=pack_fingerprint,
+                locator_status=(
+                    "no_candidates" if not extraction.candidate_windows else "candidates"
+                ),
+                extractor_status=extraction.status,
+                reconciler_status="not_needed",
+                candidate_count=extraction.candidate_count,
+                model_attempts=extraction.model_attempts,
+                accepted_rows=0,
+                rejected_rows=extraction.rejected_rows,
+                retryable_failures=extraction.retryable_failures,
+                retryable=False,
+                completed=True,
+            )
+            return PackDiscoveryResult(
+                discovered=[],
+                status="empty",
+                candidate_count=extraction.candidate_count,
+                model_attempts=extraction.model_attempts,
+                accepted_rows=0,
+                rejected_rows=extraction.rejected_rows,
+                retryable_failures=extraction.retryable_failures,
+            )
+        learned_reg.company_kpi_discovery_run_upsert(
+            cik=cik,
+            accession=accession,
+            discovery_version=_DISCOVERY_VERSION,
+            pack_fingerprint=pack_fingerprint,
+            locator_status="candidates" if extraction.candidate_windows else "no_candidates",
+            extractor_status=extraction.status,
+            reconciler_status="not_run",
+            candidate_count=extraction.candidate_count,
+            model_attempts=extraction.model_attempts,
+            accepted_rows=0,
+            rejected_rows=extraction.rejected_rows,
+            retryable_failures=extraction.retryable_failures,
+            retryable=True,
+            completed=False,
+        )
+        return PackDiscoveryResult(
+            discovered=[],
+            status="llm_failed",
+            candidate_count=extraction.candidate_count,
+            model_attempts=extraction.model_attempts,
+            accepted_rows=0,
+            rejected_rows=extraction.rejected_rows,
+            retryable_failures=extraction.retryable_failures,
+            retryable=True,
+        )
 
     for kpi in discovered:
         learned_reg.company_kpi_upsert(
@@ -358,7 +495,32 @@ def _discover_pack(
             source_substring=kpi.source_substring,
             confidence=kpi.confidence,
         )
-    return PackDiscoveryResult(discovered=discovered, status="discovered")
+    learned_reg.company_kpi_discovery_run_upsert(
+        cik=cik,
+        accession=accession,
+        discovery_version=_DISCOVERY_VERSION,
+        pack_fingerprint=pack_fingerprint,
+        locator_status="candidates",
+        extractor_status=extraction.status,
+        reconciler_status="completed",
+        candidate_count=extraction.candidate_count,
+        model_attempts=extraction.model_attempts,
+        accepted_rows=extraction.accepted_rows,
+        rejected_rows=extraction.rejected_rows,
+        retryable_failures=extraction.retryable_failures,
+        retryable=extraction.retryable,
+        completed=not extraction.retryable,
+    )
+    return PackDiscoveryResult(
+        discovered=discovered,
+        status="discovered",
+        candidate_count=extraction.candidate_count,
+        model_attempts=extraction.model_attempts,
+        accepted_rows=extraction.accepted_rows,
+        rejected_rows=extraction.rejected_rows,
+        retryable_failures=extraction.retryable_failures,
+        retryable=extraction.retryable,
+    )
 
 
 def _cached_row_to_discovered(row: CompanyKpiRow) -> DiscoveredKpi:
@@ -533,6 +695,12 @@ def discover_kpis(
                         filing_date=pack.filing_date,
                         status=pack_result.status,
                         contributed=contributed,
+                        candidate_count=pack_result.candidate_count,
+                        model_attempts=pack_result.model_attempts,
+                        accepted_rows=pack_result.accepted_rows,
+                        rejected_rows=pack_result.rejected_rows,
+                        retryable_failures=pack_result.retryable_failures,
+                        retryable=pack_result.retryable,
                     )
                 )
             for kpi in usable_kpis:
