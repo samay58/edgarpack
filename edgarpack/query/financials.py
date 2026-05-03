@@ -9,7 +9,7 @@ import re
 from datetime import date as _date
 from datetime import datetime as _datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from ..sec.archives import fetch_file
 from ..sec.client import HTTPError
@@ -29,7 +29,8 @@ from .kpi_discover import lookup_company_kpi
 from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
 from .learned_registry import CompanyKpiRow, LearnedRegistry
-from .models import CitedValue, DerivedValue, Diagnostic, QueryResult
+from .metric_map import AccountingStandard
+from .models import CitedValue, DerivedValue, Diagnostic, MetricScalar, MetricValue, QueryResult
 from .periods import (
     _annual_for_fy,
     _extract_values,
@@ -467,7 +468,7 @@ def _select_metric_period_value(
     doc_map: dict[str, str] | None,
     diagnostics: list[Diagnostic],
     period_offset: int = 0,
-) -> tuple[str | None, str | None, CitedValue | DerivedValue | list[CitedValue] | None]:
+) -> tuple[str | None, str | None, MetricValue]:
     """Resolve a metric only when a candidate concept satisfies the requested period."""
     candidates = _candidate_concepts_for_metric(metric, meta, facts)
     first_failure_diagnostics: list[Diagnostic] = []
@@ -489,7 +490,7 @@ def _select_metric_period_value(
                 expected,
             )
             if exact_values:
-                value: CitedValue | list[CitedValue] = (
+                value: MetricValue = (
                     exact_values if merge_annual_series else exact_values[0]
                 )
             else:
@@ -531,6 +532,7 @@ def _select_metric_period_value(
         if isinstance(value, list):
             if value:
                 if merge_annual_series:
+                    assert expected is not None
                     for item in value:
                         if item.fiscal_year in expected and item.fiscal_year not in merged_by_fy:
                             merged_by_fy[item.fiscal_year] = item
@@ -541,6 +543,7 @@ def _select_metric_period_value(
                     diagnostics.extend(local_diagnostics)
                     return concept, taxonomy, value
         elif value is not None and merge_annual_series:
+            assert expected is not None
             if value.fiscal_year in expected and value.fiscal_year not in merged_by_fy:
                 merged_by_fy[value.fiscal_year] = value
             if len(merged_by_fy) >= len(expected):
@@ -554,6 +557,7 @@ def _select_metric_period_value(
             first_failure_diagnostics = local_diagnostics
 
     if merge_annual_series and merged_by_fy:
+        assert expected is not None
         values = [merged_by_fy[fy] for fy in expected if fy in merged_by_fy]
         missing = [fy for fy in expected if fy not in merged_by_fy]
         if missing:
@@ -577,9 +581,11 @@ def _select_metric_period_value(
 
 
 def _attach_scope_warning(
-    value: CitedValue | DerivedValue | list[CitedValue],
+    value: MetricValue,
     concept: str,
 ) -> None:
+    if value is None:
+        return
     if isinstance(value, list):
         for item in value:
             scope_warn = get_scope_warning(item.concept)
@@ -603,7 +609,7 @@ def _resolve_direct_metric_value(
     doc_map: dict[str, str] | None,
     diagnostics: list[Diagnostic],
     period_offset: int = 0,
-) -> CitedValue | DerivedValue | list[CitedValue] | None:
+) -> MetricValue:
     """Resolve one non-derived metric through hardcoded and guarded learned paths."""
     concept, taxonomy, value = _select_metric_period_value(
         facts,
@@ -787,7 +793,7 @@ async def financials(
         resolved_list.append(resolved)
     metric_list = resolved_list
 
-    result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
+    result_metrics: dict[str, MetricValue] = {}
     derived_cache: _DerivedCache = {}
     diagnostics_list: list[Diagnostic] = []
 
@@ -959,10 +965,10 @@ async def financials(
             cik, doc_map, accessions_sorted, accession_meta, force=force
         )
         if fallback is not None:
-            value, accn, meta = fallback
-            report_date_str = meta.get("reportDate") or ""
-            filing_date_str = meta.get("filingDate") or report_date_str
-            form_str = meta.get("form") or "10-K"
+            headcount_value, accn, accession_info = fallback
+            report_date_str = accession_info.get("reportDate") or ""
+            filing_date_str = accession_info.get("filingDate") or report_date_str
+            form_str = accession_info.get("form") or "10-K"
             try:
                 report_date = (
                     _date.fromisoformat(report_date_str) if report_date_str else _date.today()
@@ -976,7 +982,7 @@ async def financials(
             except ValueError:
                 filing_date = report_date
             result_metrics["headcount"] = CitedValue(
-                value=value,
+                value=headcount_value,
                 unit="headcount",
                 metric="headcount",
                 concept="EntityNumberOfEmployees",
@@ -1006,7 +1012,7 @@ async def financials(
                 "units": {
                     "pure": [
                         {
-                            "val": value,
+                            "val": headcount_value,
                             "fy": report_date.year,
                             "fp": "FY",
                             "start": report_date.isoformat(),
@@ -1153,8 +1159,8 @@ def _fetch_prior_year_for_self_heal(
 
 
 def _check_low_debt(
-    result_metrics: dict,
-    facts: dict,
+    result_metrics: dict[str, MetricValue],
+    facts: dict[str, Any],
     company_name: str,
     cik: str,
     period: str,
@@ -1248,19 +1254,22 @@ def _series_values_for_component(
     period: str,
     doc_map: dict[str, str] | None,
     diagnostics: list[Diagnostic] | None,
-) -> list[CitedValue]:
+) -> list[MetricScalar]:
     """Resolve one component as a period series."""
     if comp_meta.derived:
-        return _compute_derived_series(
-            facts,
-            comp_name,
-            comp_meta,
-            company,
-            cik,
-            period,
-            doc_map,
-            diagnostics=diagnostics,
+        derived_series: list[MetricScalar] = list(
+            _compute_derived_series(
+                facts,
+                comp_name,
+                comp_meta,
+                company,
+                cik,
+                period,
+                doc_map,
+                diagnostics=diagnostics,
+            )
         )
+        return derived_series
 
     hkex_concept = _hkex_concept_for_metric(facts, comp_name)
     if hkex_concept is not None:
@@ -1286,7 +1295,7 @@ def _series_values_for_component(
                 item.warnings.append(scope_warn)
         return value
 
-    value = _resolve_direct_metric_value(
+    resolved_value = _resolve_direct_metric_value(
         facts,
         comp_name,
         comp_meta,
@@ -1296,9 +1305,9 @@ def _series_values_for_component(
         doc_map,
         diagnostics if diagnostics is not None else [],
     )
-    if not isinstance(value, list):
-        return [value] if value is not None else []
-    return value
+    if not isinstance(resolved_value, list):
+        return [resolved_value] if resolved_value is not None else []
+    return list(resolved_value)
 
 
 def _compute_derived_series(
@@ -1387,7 +1396,7 @@ def _compute_derived_series(
             ]
         component_maps[comp_name] = by_key
 
-    results: list[DerivedValue] = []
+    derived_results: list[DerivedValue] = []
     for key in component_order:
         components: dict[str, CitedValue] = {}
         for raw_comp in meta.components:
@@ -1405,7 +1414,7 @@ def _compute_derived_series(
             continue
 
         first_comp = next(iter(components.values()))
-        results.append(
+        derived_results.append(
             DerivedValue(
                 value=result_value,
                 unit=_derived_unit(metric, components),
@@ -1426,22 +1435,22 @@ def _compute_derived_series(
                 components=components,
             )
         )
-        if len(results) >= count:
+        if len(derived_results) >= count:
             break
 
-    if 0 < len(results) < count and diagnostics is not None:
+    if 0 < len(derived_results) < count and diagnostics is not None:
         diagnostics.append(
             Diagnostic(
                 metric=metric,
                 kind="partial_coverage",
                 message=(
-                    f"Only {len(results)} of {count} requested periods available for "
+                    f"Only {len(derived_results)} of {count} requested periods available for "
                     f"derived metric '{metric}' because component periods did not align."
                 ),
             )
         )
 
-    return results
+    return derived_results
 
 
 def _compute_derived(
@@ -1549,7 +1558,7 @@ def _compute_derived(
                     if scope_warn:
                         comp_value.warnings.append(scope_warn)
             else:
-                value = _resolve_direct_metric_value(
+                direct_value = _resolve_direct_metric_value(
                     facts,
                     comp_name,
                     comp_meta,
@@ -1560,10 +1569,10 @@ def _compute_derived(
                     diagnostics if diagnostics is not None else [],
                     period_offset=comp_offset,
                 )
-                if isinstance(value, list):
-                    comp_value = value[0] if value else None
+                if isinstance(direct_value, list):
+                    comp_value = direct_value[0] if direct_value else None
                 else:
-                    comp_value = value
+                    comp_value = direct_value
 
                 if comp_value is None:
                     in_progress.discard(cache_key)
@@ -1824,7 +1833,7 @@ def _compute_cagr(
                 doc_map=doc_map,
             )
         else:
-            value = _resolve_direct_metric_value(
+            direct_value = _resolve_direct_metric_value(
                 facts,
                 base,
                 base_meta,
@@ -1834,6 +1843,9 @@ def _compute_cagr(
                 doc_map,
                 diagnostics if diagnostics is not None else [],
             )
+            if isinstance(direct_value, list):
+                return direct_value[0] if direct_value else None
+            return direct_value
         if isinstance(value, list):
             return value[0] if value else None
         return value
@@ -1967,7 +1979,7 @@ def _hkex_concept_to_canonical(concept: str, standard: str) -> str:
 
     from .metric_map import METRIC_MAP as _MM
 
-    std_key = standard if standard in _MM else "HKFRS"
+    std_key: AccountingStandard = cast(AccountingStandard, standard) if standard in _MM else "HKFRS"
     for metric, concepts in _MM.get(std_key, {}).items():
         if concept in concepts:
             return metric
@@ -2132,8 +2144,10 @@ def _china_manifest_filed_date(
         if parsed is not None:
             return parsed
     fiscal_year = point.get("fy") or manifest.get("fiscal_year")
+    if not isinstance(fiscal_year, int | str):
+        return None
     try:
-        return _date(int(fiscal_year), 12, 31)
+        return _date(int(str(fiscal_year)), 12, 31)
     except (TypeError, ValueError):
         return None
 
@@ -2234,7 +2248,7 @@ async def _query_china_pack(
     # canonical metric name.
     standard_by_taxonomy: dict[str, str] = {}
     reporting_currency_by_concept: dict[str, str] = {}
-    facts: dict[str, dict] = {}
+    facts: dict[str, dict[str, Any]] = {}
     concept_to_metric: dict[str, tuple[str, str]] = {}  # concept -> (metric, taxonomy)
 
     for standard_key, concepts in data["facts"].items():
@@ -2252,7 +2266,7 @@ async def _query_china_pack(
                 first_unit = next(iter(units.keys()))
                 reporting_currency_by_concept[concept] = first_unit
 
-    result_metrics: dict[str, CitedValue | list[CitedValue] | None] = {}
+    result_metrics: dict[str, MetricValue] = {}
     diagnostics_list: list[Diagnostic] = []
 
     # Derive meta lookup per metric: HKFact concepts aren't in METRIC_MAP
@@ -2325,7 +2339,7 @@ async def _query_china_pack(
                 _apply_extraction_source([enriched_single], facts[taxonomy][concept])
                 result_metrics[metric] = enriched_single
             else:
-                result_metrics[metric] = value  # type: ignore[assignment]
+                result_metrics[metric] = value
             continue
 
         # Not in the pack as a concrete concept. Try a derived computation.
@@ -2348,8 +2362,11 @@ async def _query_china_pack(
         )
         if cited is not None:
             # Propagate HKEX metadata (accounting standard + reporting currency).
-            cited.accounting_standard = next(  # type: ignore[assignment]
-                iter(standard_by_taxonomy.values()), "HKFRS"
+            raw_standard = next(iter(standard_by_taxonomy.values()), "HKFRS")
+            cited.accounting_standard = (
+                cast(AccountingStandard, raw_standard)
+                if raw_standard in {"US-GAAP", "IFRS", "HKFRS", "CAS"}
+                else "HKFRS"
             )
             # Use the native currency of the first non-headcount component.
             ratio_or_growth = metric in {
@@ -2396,7 +2413,7 @@ async def _query_china_pack(
 
 def _apply_extraction_source(
     cited_list: list[CitedValue | None],
-    concept_info: dict,
+    concept_info: dict[str, Any],
 ) -> None:
     """Copy extraction_method from the underlying pack fact onto CitedValues.
 

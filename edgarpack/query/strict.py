@@ -9,11 +9,7 @@ names so it can surface the rejection in output.
 
 from __future__ import annotations
 
-from typing import TypeVar
-
-from .models import CitedValue, QueryResult
-
-_T = TypeVar("_T", CitedValue, list[CitedValue], None)
+from .models import CitedValue, MetricValue, QueryResult
 
 
 def is_strict_allowed(value: CitedValue) -> bool:
@@ -27,7 +23,7 @@ def is_strict_allowed(value: CitedValue) -> bool:
     return getattr(value, "source", "hardcoded") == "hardcoded"
 
 
-def _strict_value(value: _T) -> _T:
+def _strict_value(value: MetricValue) -> MetricValue:
     """Zero out a metric value under strict mode.
 
     Scalars become None, list values lose any non-hardcoded entries.
@@ -36,11 +32,11 @@ def _strict_value(value: _T) -> _T:
     components via the deterministic _compute_derived path).
     """
     if value is None:
-        return None  # type: ignore[return-value]
+        return None
     if isinstance(value, list):
         kept = [v for v in value if is_strict_allowed(v)]
-        return kept if kept else None  # type: ignore[return-value]
-    return value if is_strict_allowed(value) else None  # type: ignore[return-value]
+        return kept if kept else None
+    return value if is_strict_allowed(value) else None
 
 
 def apply_strict(result: QueryResult) -> list[str]:

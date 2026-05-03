@@ -13,6 +13,7 @@ import json
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -218,7 +219,7 @@ class PackRegistry:
         rows = conn.execute(query, params).fetchall()
         return [PackRecord(**dict(r)) for r in rows]
 
-    def list_companies(self) -> list[dict]:
+    def list_companies(self) -> list[dict[str, Any]]:
         """List all unique companies with their filing counts."""
         conn = self._get_conn()
         rows = conn.execute(
@@ -232,7 +233,7 @@ class PackRegistry:
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         conn = self._get_conn()
         row = conn.execute(
@@ -291,7 +292,7 @@ class PackRegistry:
         )
         conn.commit()
 
-    def get_errors(self, limit: int = 100) -> list[dict]:
+    def get_errors(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get recent harvest errors."""
         conn = self._get_conn()
         rows = conn.execute(

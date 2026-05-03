@@ -8,10 +8,12 @@ import re
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from ..pack.manifest import load_manifest_dict
 from .models import ChangeType, ParagraphDelta
 from .report_models import (
+    ChunkStatus,
     DiffReport,
     EvidenceAnchor,
     FilingSourceRef,
@@ -142,7 +144,10 @@ def _load_chunks(pack_dir: Path) -> _ChunkLookup:
     return _ChunkLookup(chunks)
 
 
-def _chunk_file_status(before_chunks: _ChunkLookup, after_chunks: _ChunkLookup) -> str:
+_SectionPayload = dict[str, Any]
+
+
+def _chunk_file_status(before_chunks: _ChunkLookup, after_chunks: _ChunkLookup) -> ChunkStatus:
     before_available = before_chunks.has_chunks
     after_available = after_chunks.has_chunks
     if before_available and after_available:
@@ -156,7 +161,7 @@ def _chunk_status(
     before_chunks: _ChunkLookup,
     after_chunks: _ChunkLookup,
     sections: list[ReportSectionDelta],
-) -> str:
+) -> ChunkStatus:
     file_status = _chunk_file_status(before_chunks, after_chunks)
     if file_status == "missing":
         return "missing"
@@ -179,7 +184,7 @@ def _chunk_status(
     return "partial"
 
 
-def _filing_ref(pack_dir: Path, manifest: dict) -> FilingSourceRef:
+def _filing_ref(pack_dir: Path, manifest: dict[str, Any]) -> FilingSourceRef:
     filing = manifest.get("filing", {})
     source = manifest.get("source", {})
     return FilingSourceRef(
@@ -193,7 +198,7 @@ def _filing_ref(pack_dir: Path, manifest: dict) -> FilingSourceRef:
     )
 
 
-def _sections_by_id(manifest: dict) -> dict[str, dict]:
+def _sections_by_id(manifest: dict[str, Any]) -> dict[str, _SectionPayload]:
     return {
         section["id"]: section
         for section in manifest.get("sections", [])
@@ -201,7 +206,7 @@ def _sections_by_id(manifest: dict) -> dict[str, dict]:
     }
 
 
-def _section_ref(section: dict | None) -> SectionSourceRef | None:
+def _section_ref(section: _SectionPayload | None) -> SectionSourceRef | None:
     if section is None:
         return None
     return SectionSourceRef(
@@ -214,11 +219,11 @@ def _section_ref(section: dict | None) -> SectionSourceRef | None:
     )
 
 
-def _section_text(pack_dir: Path, section: dict | None) -> str:
+def _section_text(pack_dir: Path, section: _SectionPayload | None) -> str:
     if section is None:
         return ""
     path = section.get("path")
-    if not path:
+    if not isinstance(path, str) or not path:
         return ""
     section_path = pack_dir / path
     if not section_path.exists():
@@ -228,14 +233,14 @@ def _section_text(pack_dir: Path, section: dict | None) -> str:
 
 def _infer_before_section(
     before_dir: Path,
-    before_sections: dict[str, dict],
+    before_sections: dict[str, _SectionPayload],
     delta_paragraphs: list[ParagraphDelta],
-) -> dict | None:
+) -> _SectionPayload | None:
     old_paragraphs = [delta.old_text for delta in delta_paragraphs if delta.old_text]
     if not old_paragraphs:
         return None
 
-    candidates: list[tuple[int, int, str, dict]] = []
+    candidates: list[tuple[int, int, str, _SectionPayload]] = []
     for section_id, section in before_sections.items():
         text = _section_text(before_dir, section)
         available = Counter(_split_paragraphs(text))

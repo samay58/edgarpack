@@ -410,7 +410,7 @@ def _strip_broken_anchors(md: str) -> str:
     """
     toc_span = _find_toc_span(md)
 
-    def _replace(m: re.Match) -> str:
+    def _replace(m: re.Match[str]) -> str:
         if toc_span is not None:
             toc_start, toc_end = toc_span
             if toc_start <= m.start() < toc_end:

@@ -10,7 +10,7 @@ from typing import Any
 from .fx import RateTable
 from .query.citations import CitationRegistry, calculation_summary, citation_summary
 from .query.formatting import format_number
-from .query.models import CitedValue, DerivedValue
+from .query.models import CitedValue, DerivedValue, MetricValue
 
 # Signed percent (e.g. "+12%", "-3%"): YoY growth and period-over-period deltas.
 _GROWTH_METRICS: frozenset[str] = frozenset({"revenue_growth_yoy", "gross_margin_trend"})
@@ -47,7 +47,7 @@ class CompanyColumn:
     diagnostics: list[dict[str, str]] | None = None
 
 
-def _flatten(value: CitedValue | list[CitedValue] | None) -> CitedValue | None:
+def _flatten(value: MetricValue) -> CitedValue | None:
     if value is None:
         return None
     if isinstance(value, list):

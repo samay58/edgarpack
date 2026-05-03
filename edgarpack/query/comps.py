@@ -10,8 +10,10 @@ from typing import Any
 from .citations import CitationRegistry, calculation_summary, citation_summary
 from .financials import financials
 from .formatting import format_number
-from .models import CitedValue, DerivedValue, QueryResult
+from .models import CitedValue, DerivedValue, MetricScalar, MetricValue, QueryResult
 from .periods import parse_period_spec
+
+_CitationGroupKey = tuple[object, object, object, object, object]
 
 
 async def comps(
@@ -117,6 +119,20 @@ def _fiscal_label_sort_key(label: str) -> tuple[int, int]:
     return 0, 0
 
 
+def _metric_items(raw_value: MetricValue) -> list[MetricScalar]:
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, list):
+        items: list[MetricScalar] = list(raw_value)
+        return items
+    return [raw_value]
+
+
+def _first_metric_item(raw_value: MetricValue) -> MetricScalar | None:
+    items = _metric_items(raw_value)
+    return items[0] if items else None
+
+
 def comps_series_to_period_grid(
     results: dict[str, QueryResult],
     metrics: list[str],
@@ -138,11 +154,8 @@ def comps_series_to_period_grid(
         best_order: list[str] = []
         for metric in metrics:
             raw_value = qr.metrics.get(metric)
-            values = raw_value if isinstance(raw_value, list) else [raw_value]
             labels: list[str] = []
-            for cited in values:
-                if cited is None:
-                    continue
+            for cited in _metric_items(raw_value):
                 label = cited.fiscal_label
                 if label not in labels:
                     labels.append(label)
@@ -164,15 +177,14 @@ def comps_series_to_period_grid(
             target_fiscal_label = (
                 company_order[label_index] if label_index < len(company_order) else None
             )
-            metrics_for_label: dict[str, CitedValue | DerivedValue | None] = {}
+            metrics_for_label: dict[str, MetricValue] = {}
             for metric in metrics:
                 raw_value = qr.metrics.get(metric)
-                values = raw_value if isinstance(raw_value, list) else [raw_value]
                 matched = next(
                     (
                         cited
-                        for cited in values
-                        if cited is not None and cited.fiscal_label == target_fiscal_label
+                        for cited in _metric_items(raw_value)
+                        if cited.fiscal_label == target_fiscal_label
                     ),
                     None,
                 )
@@ -192,10 +204,10 @@ def comps_series_to_period_grid(
 
 def _compact_citation_summaries(citations: dict[str, dict[str, object]]) -> list[str]:
     """Group value-level citation IDs by filing/window for compact footers."""
-    grouped: dict[tuple[object, ...], list[str]] = {}
-    records_by_key: dict[tuple[object, ...], dict[str, object]] = {}
+    grouped: dict[_CitationGroupKey, list[str]] = {}
+    records_by_key: dict[_CitationGroupKey, dict[str, object]] = {}
     for cid, record in citations.items():
-        key = (
+        key: _CitationGroupKey = (
             record.get("form_type"),
             record.get("fiscal_label"),
             record.get("period"),
@@ -266,7 +278,7 @@ def format_comps_table(
         row = [qr.company or company]
         for m in metrics:
             raw_value = qr.metrics.get(m)
-            cited = raw_value[0] if isinstance(raw_value, list) and raw_value else raw_value
+            cited = _first_metric_item(raw_value)
             if cited is None or cited.value is None:
                 row.append("N/A")
             else:
@@ -457,7 +469,7 @@ def format_comps_multi_period_table(
             for period in periods:
                 qr = results_by_period.get(period, {}).get(company_key)
                 raw_value = None if qr is None else qr.metrics.get(metric)
-                cited = raw_value[0] if isinstance(raw_value, list) and raw_value else raw_value
+                cited = _first_metric_item(raw_value)
                 if cited is None or cited.value is None:
                     row.append("N/A")
                     continue
@@ -466,8 +478,9 @@ def format_comps_multi_period_table(
                 warn_marker = ""
                 if cited.warnings:
                     warn_marker = " !"
+                    company_name = qr.company if qr is not None else company_key
                     warnings.extend(
-                        f"{qr.company or company_key} {metric} ({period}): {w}"
+                        f"{company_name or company_key} {metric} ({period}): {w}"
                         for w in cited.warnings
                     )
 
@@ -755,7 +768,7 @@ def format_financial_perf_table(
         for period in periods:
             qr = results_by_period.get(period)
             raw_value = None if qr is None else qr.metrics.get(metric)
-            cited = raw_value[0] if isinstance(raw_value, list) and raw_value else raw_value
+            cited = _first_metric_item(raw_value)
             if cited is None or cited.value is None:
                 row.append("N/A")
                 continue

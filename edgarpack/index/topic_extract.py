@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 # Risk category patterns (matched against section headings and content)
-_RISK_PATTERNS: dict[str, list[re.Pattern]] = {
+_RISK_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     "export_controls": [
         re.compile(r"export\s+control", re.I),
         re.compile(r"export\s+restriction", re.I),
@@ -71,7 +71,7 @@ _RISK_PATTERNS: dict[str, list[re.Pattern]] = {
 }
 
 # Financial concept patterns (GAAP terminology)
-_FINANCIAL_PATTERNS: dict[str, list[re.Pattern]] = {
+_FINANCIAL_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     "revenue_recognition": [
         re.compile(r"revenue\s+recognition", re.I),
         re.compile(r"ASC\s+606", re.I),
@@ -105,7 +105,7 @@ _FINANCIAL_PATTERNS: dict[str, list[re.Pattern]] = {
 }
 
 # Regulatory reference patterns
-_REGULATORY_PATTERNS: dict[str, list[re.Pattern]] = {
+_REGULATORY_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     "sec_rules": [
         re.compile(r"SEC\s+Rule", re.I),
         re.compile(r"Regulation\s+S-[KX]", re.I),
@@ -129,7 +129,7 @@ _REGULATORY_PATTERNS: dict[str, list[re.Pattern]] = {
 }
 
 # Industry terms from headings / bold text
-_INDUSTRY_PATTERNS: dict[str, list[re.Pattern]] = {
+_INDUSTRY_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     "datacenter": [
         re.compile(r"data\s*center", re.I),
         re.compile(r"cloud\s+(computing|infrastructure)", re.I),

@@ -65,6 +65,12 @@ select = ["E", "F", "I", "N", "W", "UP"]
 python_version = "3.11"
 strict = true
 
+[[tool.mypy.overrides]]
+# Optional runtime integrations without useful public typing metadata. These
+# imports are guarded at runtime and validated at the adapter boundary.
+module = ["anthropic", "pymupdf4llm", "yaml"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

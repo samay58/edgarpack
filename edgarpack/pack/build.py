@@ -21,6 +21,7 @@ from ..parse.semantic_html import reduce_to_semantic
 from ..parse.tokenize import count_tokens, has_tiktoken
 from ..sec.archives import fetch_primary_filing_html
 from ..sec.submissions import (
+    FilingMeta,
     get_filing_by_accession,
     get_latest_filing,
     is_registration_form,
@@ -683,9 +684,10 @@ async def _translate_sections(
 
         # Validate cached translations before reusing them.
         for i, decision in enumerate(decisions):
-            if translation_sources[i] != "cache" or para_results[i] is None:
+            translated = para_results[i]
+            if translation_sources[i] != "cache" or translated is None:
                 continue
-            report = _validate_paragraph(i, decision.cleaned, para_results[i], allow_han=False)
+            report = _validate_paragraph(i, decision.cleaned, translated, allow_han=False)
             for issue in report.warnings:
                 validation_warnings.append(f"[{section.id}] p{i}: {issue.message}")
             if report.has_errors:
@@ -932,7 +934,7 @@ async def build_pack_range(
     fetch_limit = max(last or 50, 50)
     candidates = await list_filings(cik, form_type=form_type, limit=fetch_limit)
 
-    filtered: list = []
+    filtered: list[FilingMeta] = []
     for meta in candidates:
         if after is not None and meta.filing_date < after:
             continue

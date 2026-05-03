@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from ..china.extract.pdf_extract import extract_pdf_pages
 from . import load_section_map
@@ -62,9 +63,9 @@ def build_hk_pack(ref: HKFilingRef, out_dir: Path) -> PackRef:
     pages = extract_pdf_pages(str(pdf_path))
     section_map = load_section_map()
 
-    sections: list[dict] = []
+    sections: list[dict[str, Any]] = []
     unmapped_counter = 0
-    current: dict | None = None
+    current: dict[str, Any] | None = None
 
     for page in pages:
         page_lines = page.text.split("\n")
@@ -104,7 +105,7 @@ def build_hk_pack(ref: HKFilingRef, out_dir: Path) -> PackRef:
     if current:
         sections.append(current)
 
-    merged: list[dict] = []
+    merged: list[dict[str, Any]] = []
     for s in sections:
         if merged and merged[-1]["section_id"] == s["section_id"]:
             merged[-1]["text"] += "\n" + s["text"]

@@ -5,9 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 try:
-    import tiktoken  # type: ignore
+    import tiktoken as _tiktoken
 except Exception:  # pragma: no cover - environment-dependent
-    tiktoken = None  # type: ignore
+    tiktoken: Any | None = None
+else:
+    tiktoken = _tiktoken
 
 from ..config import TIKTOKEN_ENCODING
 
@@ -88,6 +90,6 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
         tokens = encoder.encode(text)
         if len(tokens) <= max_tokens:
             return text
-        return encoder.decode(tokens[:max_tokens])
+        return str(encoder.decode(tokens[:max_tokens]))
     except Exception:
         return text[: max_tokens * 4]

@@ -832,11 +832,11 @@ def _translate_entity_name_fallback(label: str) -> str | None:
     for zh_term, en_term in _ENTITY_TERM_TRANSLATIONS:
         translated = translated.replace(zh_term, f" {en_term} ")
 
-    translated = _romanize_chinese_runs(translated)
-    if translated is None or _CHINESE_RE.search(translated):
+    romanized = _romanize_chinese_runs(translated)
+    if romanized is None or _CHINESE_RE.search(romanized):
         return None
 
-    return _normalize_fallback_label_spacing(translated)
+    return _normalize_fallback_label_spacing(romanized)
 
 
 def _romanize_chinese_runs(text: str) -> str | None:

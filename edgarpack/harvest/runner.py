@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
 from ..pack.build import PackResult, build_pack
 from ..pack.manifest import compute_sha256
@@ -111,7 +112,7 @@ async def run_harvest(
     with_chunks: bool = False,
     force: bool = False,
     describe_images: bool = False,
-) -> dict:
+) -> dict[str, Any]:
     """Execute a harvest plan with bounded concurrency.
 
     Args:

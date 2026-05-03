@@ -21,10 +21,11 @@ import hashlib
 import json
 import logging
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
+from typing import Any
 
 from ..harvest.registry import PackRecord, PackRegistry
 from ..sec.submissions import is_registration_form
@@ -41,8 +42,8 @@ from .learned_registry import CompanyKpiRow, LearnedRegistry
 logger = logging.getLogger(__name__)
 
 
-def _filter_eligible_packs(packs):
-    out = []
+def _filter_eligible_packs(packs: Iterable[PackRecord]) -> list[PackRecord]:
+    out: list[PackRecord] = []
     for p in packs:
         ft = (getattr(p, "form_type", "") or "").upper()
         if ft.startswith(("10-K", "10-Q", "20-F")) or is_registration_form(ft):
@@ -236,7 +237,7 @@ class CompanyKpiAggregate:
                 payload["no_chunk_reason"] = reason
         return payload
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         latest = self.latest
         return {
             "slug": self.slug,
@@ -269,7 +270,7 @@ def _period_label(form_type: str, fiscal_year: int, fiscal_period: str, period_e
     return form or "unknown"
 
 
-def _pack_fingerprint(pack_record: PackRecord, manifest: dict) -> str:
+def _pack_fingerprint(pack_record: PackRecord, manifest: dict[str, Any]) -> str:
     """Stable fingerprint for versioned discovery cache invalidation."""
     sections = manifest.get("sections", []) if isinstance(manifest, dict) else []
     section_fingerprints: list[object] = []
@@ -731,9 +732,12 @@ def discover_kpis(
                 # aliases so naming drift is visible.
                 existing_display = per_slug_display.get(slug)
                 if existing_display and existing_display != kpi.display_name:
-                    aliases = per_slug_aliases.setdefault(slug, [])
-                    if existing_display not in aliases and existing_display != kpi.display_name:
-                        aliases.append(existing_display)
+                    display_aliases = per_slug_aliases.setdefault(slug, [])
+                    if (
+                        existing_display not in display_aliases
+                        and existing_display != kpi.display_name
+                    ):
+                        display_aliases.append(existing_display)
                 per_slug_display[slug] = kpi.display_name or existing_display or slug
                 if kpi.definition:
                     per_slug_definition[slug] = kpi.definition
@@ -833,7 +837,7 @@ def lookup_company_kpi(
         def _is_quarterly(r: CompanyKpiRow) -> bool:
             return (r.form_type or "").upper().startswith("10-Q")
 
-        def _sort_key(r: CompanyKpiRow) -> tuple:
+        def _sort_key(r: CompanyKpiRow) -> tuple[int, str, str]:
             return (r.fiscal_year or 0, r.period_end or "", r.extracted_at)
 
         p = period.strip().lower()

@@ -145,8 +145,8 @@ def _retry_delay_seconds(response: httpx.Response | None, attempt: int) -> float
                     if parsed.tzinfo is None:
                         parsed = parsed.replace(tzinfo=UTC)
                     delay = max(0.0, (parsed - datetime.now(UTC)).total_seconds())
-                    return min(60.0, delay)
-    return min(60.0, 2.0 * (2**attempt))
+                    return float(min(60.0, delay))
+    return float(min(60.0, 2.0 * (2**attempt)))
 
 
 def _build_system_prompt(glossary: FinancialGlossary, extra: str = "") -> str:
@@ -305,7 +305,8 @@ class DeepInfraTranslator:
                 choices = data.get("choices", [])
                 if not choices:
                     return text
-                return choices[0].get("message", {}).get("content", text)
+                content = choices[0].get("message", {}).get("content", text)
+                return content if isinstance(content, str) else text
             except httpx.HTTPStatusError as exc:
                 last_error = exc
                 status = exc.response.status_code

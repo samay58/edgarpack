@@ -144,7 +144,7 @@ def _filter_segment_entries(values: list[dict[str, Any]]) -> list[dict[str, Any]
     same filing context (accession, fiscal year/period, date span), entries
     with ``frame`` are kept and unframed duplicates are dropped.
     """
-    by_context: dict[tuple, list[dict[str, Any]]] = {}
+    by_context: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
     for v in values:
         key = (
             v.get("accn", ""),

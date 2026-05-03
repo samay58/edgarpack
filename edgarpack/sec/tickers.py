@@ -6,13 +6,16 @@ import difflib
 import json
 import re
 import urllib.parse
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..config import CACHE_DIR
 from ..errors import AmbiguousCompany, UnknownCompany
 from .cache import DiskCache
 from .client import get_client
 from .submissions import normalize_cik
+
+if TYPE_CHECKING:
+    from ..harvest.universe import CompanySpec
 
 _TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 _TICKERS_CACHE_TTL = 86400
@@ -295,7 +298,7 @@ async def resolve_company_by_name(name: str) -> tuple[str, str]:
     return only_cik, only_title
 
 
-async def resolve_filer(spec: CompanySpec) -> tuple[str, str]:  # noqa: F821
+async def resolve_filer(spec: CompanySpec) -> tuple[str, str]:
     """Resolve a CompanySpec to (cik, title) trying cik, ticker, then name.
 
     Import of CompanySpec is deferred to avoid a circular import between

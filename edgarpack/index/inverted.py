@@ -191,7 +191,7 @@ class SearchIndex:
             JOIN chunks c ON chunks_fts.rowid = c.rowid
             WHERE chunks_fts MATCH ?
         """
-        params: list = [query]
+        params: list[object] = [query]
 
         if topic:
             sql += " AND c.topics_json LIKE ?"

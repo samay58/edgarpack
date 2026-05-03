@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from ..query.metric_map import CANONICAL_METRICS, METRIC_MAP, AccountingStandard
 from .extract import HKFact, _scope_for_section
@@ -42,7 +42,7 @@ def extract_metric_via_llm(
     cache_dir: Path,
     client: LLMClient,
     standard: str = "HKFRS",
-) -> dict:
+) -> dict[str, Any]:
     prompt = _PROMPT.format(
         section_id=section_id,
         metric=metric,
@@ -52,10 +52,15 @@ def extract_metric_via_llm(
     key = cache_key_for(accession, section_id, metric, prompt)
     cache_file = cache_dir / f"{key}.json"
     if cache_file.exists():
-        return json.loads(cache_file.read_text())
+        cached = json.loads(cache_file.read_text())
+        if not isinstance(cached, dict):
+            raise ValueError(f"Cached HKEX LLM extraction at {cache_file} was not an object")
+        return cached
 
     response = client.send(prompt)
     parsed = json.loads(response)
+    if not isinstance(parsed, dict):
+        raise ValueError("HKEX LLM extraction response was not an object")
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(parsed))
     return parsed

@@ -30,7 +30,10 @@ async def fetch_filing_index(meta: FilingMeta, force: bool = False) -> dict[str,
         if cached is not None:
             import json
 
-            return json.loads(cached)
+            parsed = json.loads(cached)
+            if not isinstance(parsed, dict):
+                raise ValueError(f"Cached filing index for {meta.accession} was not an object")
+            return parsed
 
     client = await get_client()
     data, headers = await client.fetch_json(url)
@@ -184,7 +187,8 @@ async def fetch_filing_html(
 
             warnings.warn(f"Failed to fetch {filename}: {result}")
             continue
-        results.append((filename, result))
+        if isinstance(result, bytes):
+            results.append((filename, result))
 
     if rate_limit_error is not None:
         raise rate_limit_error

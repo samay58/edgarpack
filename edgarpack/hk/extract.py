@@ -4,7 +4,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from ..query.metric_map import AccountingStandard
 
@@ -562,7 +562,7 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
 
         all_facts = fill_missing_with_llm(all_facts, sections_dir, standard, accession)
 
-    nested: dict = {standard.lower(): {}}
+    nested: dict[str, Any] = {standard.lower(): {}}
     for fact in all_facts:
         concept_key = fact.concept
         fact_unit = fact.unit if fact.unit == "headcount" else currency
