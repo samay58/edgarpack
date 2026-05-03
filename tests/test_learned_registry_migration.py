@@ -130,6 +130,16 @@ class TestLearnedRegistryMigration(unittest.TestCase):
         self.assertGreaterEqual(version, 2)
         cols = [row[1] for row in conn.execute("PRAGMA table_info(learned_concepts)").fetchall()]
         self.assertIn("accession", cols)
+        for table in (
+            "company_kpi_discovery_runs",
+            "company_kpi_candidates",
+            "company_kpi_rejections",
+        ):
+            exists = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+                (table,),
+            ).fetchone()
+            self.assertIsNotNone(exists)
         conn.close()
         reg.close()
 

@@ -25,6 +25,7 @@ Resolution order inside this module:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
@@ -36,6 +37,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
+from typing import Protocol
 
 from ..harvest.registry import PackRecord, PackRegistry
 from ..pack.manifest import load_manifest_dict
@@ -1146,6 +1148,54 @@ class DiscoveryExtractResult:
 
     kpis: list[DiscoveredKpi]
     status: str  # success | no_kpis | no_backend | llm_failed
+    candidate_windows: list[KpiCandidateWindow] = field(default_factory=list)
+    rejections: list[KpiDiscoveryRejection] = field(default_factory=list)
+    model_attempts: int = 0
+    accepted_rows: int = 0
+    rejected_rows: int = 0
+    retryable_failures: int = 0
+
+    @property
+    def candidate_count(self) -> int:
+        return len(self.candidate_windows)
+
+    @property
+    def retryable(self) -> bool:
+        return self.status in {"no_backend", "llm_failed"} or self.retryable_failures > 0
+
+
+@dataclass(frozen=True)
+class KpiCandidateWindow:
+    """Bounded evidence window for staged free-form KPI discovery."""
+
+    candidate_id: str
+    cik: str
+    accession: str
+    section_id: str | None
+    chunk_id: str | None
+    window_text: str
+    label_hint: str | None
+    value_hints: tuple[str, ...]
+    signal_names: tuple[str, ...]
+    char_start: int
+    char_end: int
+
+
+@dataclass(frozen=True)
+class KpiDiscoveryRejection:
+    """Rejected staged discovery payload with enough context for diagnostics."""
+
+    candidate_id: str | None
+    stage: str
+    reason: str
+    raw_payload: str | None = None
+
+
+class KpiModelClient(Protocol):
+    """Pure text-in/text-out JSON completion interface for KPI extraction."""
+
+    def complete_json(self, prompt: str, *, timeout: int) -> str | None:
+        ...
 
 
 _DISCOVERY_MAX_ITEMS = 40  # sane bound; real filings rarely list more than 15
@@ -1371,6 +1421,325 @@ def _coerce_confidence(value: object) -> float:
 
 _DISCOVERY_UNIT_ALLOWED = frozenset({"USD", "count", "percent", "days", "pure"})
 _DISCOVERY_MAG_ALLOWED = frozenset({"thousands", "millions", "billions"})
+_DISCOVERY_VERSION = "staged-kpi-v1"
+_LOCATOR_VERSION = "locator-v1"
+
+_KPI_KEYWORD_RE = re.compile(
+    r"\b("
+    r"user|users|customer|customers|subscriber|subscribers|account|accounts|asset|assets|"
+    r"deposit|deposits|booking|bookings|volume|retention|store|stores|location|locations|"
+    r"active|paying|paid|funded|platform|marketplace|cohort|take rate|arpu|auc|mau|dau|"
+    r"arr|nrr|rpo|seat|seats|member|members"
+    r")\b",
+    re.IGNORECASE,
+)
+_NUMBER_RE = re.compile(
+    r"(?<![A-Za-z])(?:\$|US\$)?\s*\d[\d,]*(?:\.\d+)?\s*(?:%|percent|million|billion|thousand)?",
+    re.IGNORECASE,
+)
+_HIGH_SIGNAL_SECTION_RE = re.compile(
+    r"key[ _-]?(metric|performance)|operating[ _-]?data|business[ _-]?metrics|segment",
+    re.IGNORECASE,
+)
+_GAAP_ONLY_SLUGS = frozenset(
+    {
+        "revenue",
+        "net_revenue",
+        "total_revenue",
+        "cost_of_revenue",
+        "gross_profit",
+        "operating_income",
+        "income_from_operations",
+        "net_income",
+        "net_loss",
+        "ebitda",
+        "assets",
+        "liabilities",
+        "equity",
+        "cash",
+        "debt",
+        "interest_expense",
+    }
+)
+
+
+class SubprocessKpiModelClient:
+    """Adapter from the legacy subprocess backend to the staged client API."""
+
+    def complete_json(self, prompt: str, *, timeout: int) -> str | None:
+        return _run_llm_raw(prompt, timeout=timeout)
+
+
+def _default_kpi_model_client() -> KpiModelClient | None:
+    if not _llm_backend_available_kpi():
+        return None
+    return SubprocessKpiModelClient()
+
+
+def _section_signal_name(section: dict[str, object]) -> str | None:
+    haystack = f"{section.get('id', '')} {section.get('title', '')}"
+    if _HIGH_SIGNAL_SECTION_RE.search(haystack):
+        return "high_signal_section"
+    return None
+
+
+def _stable_candidate_id(
+    *,
+    accession: str,
+    section_id: str | None,
+    char_start: int,
+    char_end: int,
+    label_hint: str | None,
+) -> str:
+    raw = (
+        f"{_LOCATOR_VERSION}|{accession}|{section_id or ''}|"
+        f"{char_start}|{char_end}|{label_hint or ''}"
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
+
+
+def _bounded_window(
+    text: str,
+    center: int,
+    *,
+    min_chars: int = 1500,
+    max_chars: int = 4000,
+) -> tuple[int, int]:
+    size = min(max_chars, max(min_chars, min(len(text), max_chars)))
+    start = max(0, center - size // 2)
+    end = min(len(text), start + size)
+    start = max(0, end - size)
+
+    # Prefer paragraph boundaries when they are close enough to keep the
+    # citation text intact without growing the prompt.
+    para_start = text.rfind("\n\n", 0, center)
+    if para_start >= 0 and center - para_start < size:
+        start = max(0, para_start)
+        end = min(len(text), start + size)
+    para_end = text.find("\n\n", center)
+    if para_end >= 0 and para_end - start <= max_chars:
+        end = max(end, para_end)
+    return start, end
+
+
+def _label_hint(window_text: str) -> str | None:
+    match = _KPI_KEYWORD_RE.search(window_text)
+    if match:
+        return match.group(0)
+    for line in window_text.splitlines():
+        stripped = line.strip(" -*|\t")
+        if stripped:
+            return stripped[:80]
+    return None
+
+
+def _value_hints(window_text: str) -> tuple[str, ...]:
+    seen: list[str] = []
+    for match in _NUMBER_RE.finditer(window_text):
+        value = match.group(0).strip()
+        if value and value not in seen:
+            seen.append(value)
+        if len(seen) >= 8:
+            break
+    return tuple(seen)
+
+
+def _candidate_chunk_id(chunks: list[dict], section_id: str | None, window_text: str) -> str | None:
+    if not chunks or not section_id:
+        return None
+    norm_window = _normalize_for_match(window_text)
+    for chunk in chunks:
+        if chunk.get("section_id") != section_id:
+            continue
+        text = chunk.get("text")
+        chunk_id = chunk.get("chunk_id")
+        if not isinstance(text, str) or not isinstance(chunk_id, str) or not chunk_id:
+            continue
+        norm_chunk = _normalize_for_match(text)
+        if norm_chunk and (norm_chunk in norm_window or norm_window in norm_chunk):
+            return chunk_id
+    return None
+
+
+def locate_kpi_candidate_windows(
+    *,
+    pack_dir: Path,
+    pack_record: PackRecord,
+    sections: list[dict[str, object]],
+    chunks: list[dict] | None = None,
+) -> list[KpiCandidateWindow]:
+    """Deterministically locate bounded operating-KPI evidence windows.
+
+    The locator intentionally over-selects. Final KPI identity still goes
+    through model classification plus deterministic validation.
+    """
+    candidates: list[KpiCandidateWindow] = []
+    chunk_index = list(chunks or [])
+
+    for section in sections:
+        section_id = str(section.get("id", "") or "") or None
+        rel_path = section.get("path")
+        if not isinstance(rel_path, str) or not rel_path:
+            continue
+        section_file = pack_dir / rel_path
+        try:
+            text = section_file.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if not text.strip():
+            continue
+
+        section_signal = _section_signal_name(section)
+        hit_offsets: list[tuple[int, tuple[str, ...]]] = []
+        for match in _KPI_KEYWORD_RE.finditer(text):
+            left = max(0, match.start() - 350)
+            right = min(len(text), match.end() + 350)
+            if _NUMBER_RE.search(text[left:right]):
+                signals = ["keyword_near_number"]
+                if section_signal:
+                    signals.append(section_signal)
+                hit_offsets.append((match.start(), tuple(signals)))
+
+        if section_signal:
+            for match in _NUMBER_RE.finditer(text):
+                hit_offsets.append((match.start(), (section_signal, "number_in_signal_section")))
+
+        if not hit_offsets:
+            continue
+
+        accepted_spans: list[tuple[int, int]] = []
+        for offset, signals in sorted(hit_offsets, key=lambda item: item[0]):
+            start, end = _bounded_window(text, offset)
+            if any(
+                start < prior_end and end > prior_start
+                for prior_start, prior_end in accepted_spans
+            ):
+                continue
+            window_text = text[start:end].strip()
+            if not window_text:
+                continue
+            hints = _value_hints(window_text)
+            if not hints:
+                continue
+            label = _label_hint(window_text)
+            candidate = KpiCandidateWindow(
+                candidate_id=_stable_candidate_id(
+                    accession=pack_record.accession,
+                    section_id=section_id,
+                    char_start=start,
+                    char_end=end,
+                    label_hint=label,
+                ),
+                cik=pack_record.cik,
+                accession=pack_record.accession,
+                section_id=section_id,
+                chunk_id=_candidate_chunk_id(chunk_index, section_id, window_text),
+                window_text=window_text,
+                label_hint=label,
+                value_hints=hints,
+                signal_names=tuple(dict.fromkeys(signals)),
+                char_start=start,
+                char_end=end,
+            )
+            candidates.append(candidate)
+            accepted_spans.append((start, end))
+
+    return candidates
+
+
+def _build_candidate_discovery_prompt(
+    *,
+    company: str,
+    form_type: str,
+    filing_date: str,
+    period_of_report: str,
+    existing_slugs: list[str],
+    candidate: KpiCandidateWindow,
+) -> str:
+    existing_hint = ", ".join(f"'{slug}'" for slug in existing_slugs) or "(none)"
+    return (
+        "You are extracting recurring business / operating KPIs from one bounded "
+        "evidence window. Be conservative and do not use outside knowledge.\n\n"
+        f"Company: {company}\n"
+        f"Filing: {form_type} filed {filing_date}\n"
+        f"Period of report: {period_of_report or 'unknown'}\n"
+        f"Candidate ID: {candidate.candidate_id}\n"
+        f"Section ID: {candidate.section_id or 'unknown'}\n"
+        f"Existing company slugs: {existing_hint}\n"
+        f"Locator signals: {', '.join(candidate.signal_names) or '(none)'}\n"
+        f"Value hints: {', '.join(candidate.value_hints) or '(none)'}\n\n"
+        "Include recurring operating metrics such as users, funded customers, "
+        "accounts, AUC/assets, net deposits, ARPU, ARR, retention, seats, stores, "
+        "members, bookings, volume, or take rate. Exclude GAAP-only line items "
+        "such as revenue, gross profit, operating income, net income, cash, debt, "
+        "assets, liabilities, and one-off transaction figures.\n\n"
+        "For each KPI, return slug, display_name, unit, magnitude, value, "
+        "period_end, definition, section_id, source_substring, confidence. "
+        "source_substring must be a verbatim substring of the window and contain "
+        "the cited value. Return an empty list if there is no qualifying KPI.\n\n"
+        "Respond with strict JSON only:\n"
+        '  {"kpis": [{...}], "rejections": [{"reason": "..."}]}\n\n'
+        f"WINDOW:\n{candidate.window_text}\n"
+    )
+
+
+def _payload_excerpt(payload: object) -> str:
+    try:
+        return json.dumps(payload, sort_keys=True)[:2000]
+    except TypeError:
+        return repr(payload)[:2000]
+
+
+def _canonical_discovered_slug(slug: str, display_name: str, existing_slugs: set[str]) -> str:
+    haystack = f"{slug} {display_name}".lower().replace("-", " ")
+    normalized = _slugify(haystack)
+
+    groups: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("arpu", ("arpu", "average_revenues_per_user", "average_revenue_per_user")),
+        (
+            "assets_under_custody",
+            (
+                "auc",
+                "assets_under_custody",
+                "asset_under_custody",
+                "total_platform_assets",
+                "platform_assets",
+            ),
+        ),
+    )
+    for canonical, aliases in groups:
+        if any(alias in normalized for alias in aliases):
+            for existing in existing_slugs:
+                if existing == canonical or existing in aliases:
+                    return canonical
+            return canonical
+    return slug
+
+
+def _value_expected_text(value: float | None) -> str | None:
+    if value is None:
+        return None
+    if math.isclose(value, round(value)):
+        return str(int(round(value)))
+    return f"{value:f}".rstrip("0").rstrip(".")
+
+
+def _value_appears_in_excerpt(value: float | None, excerpt: str) -> bool:
+    expected = _value_expected_text(value)
+    if expected is None:
+        return True
+    norm_excerpt = _normalize_for_match(excerpt).replace(",", "")
+    if expected in norm_excerpt:
+        return True
+    try:
+        compact = f"{float(value):g}".rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return False
+    return bool(compact and compact in norm_excerpt)
+
+
+def _is_gaap_only_slug(slug: str) -> bool:
+    return slug in _GAAP_ONLY_SLUGS
 
 
 def _clean_discovered_item(
@@ -1391,13 +1760,19 @@ def _clean_discovered_item(
     slug = _slugify(raw_slug) or _slugify(display_name)
     if not slug:
         return None
+    if _is_gaap_only_slug(slug):
+        return None
 
     reused = slug in existing_slugs
 
     source_substring = str(item.get("source_substring") or "").strip()
     if not source_substring:
         return None
-    if not _verify_excerpt_in_text(source_substring, source_text):
+
+    value = _coerce_float(item.get("value"))
+    if not _verify_excerpt_in_text(source_substring, source_text) or not _value_appears_in_excerpt(
+        value, source_substring
+    ):
         logger.info(
             "Discovery firewall rejected substring for slug=%s: %s",
             slug,
@@ -1423,8 +1798,6 @@ def _clean_discovered_item(
         if isinstance(magnitude_raw, str) and magnitude_raw in _DISCOVERY_MAG_ALLOWED
         else None
     )
-
-    value = _coerce_float(item.get("value"))
 
     period_end_raw = str(item.get("period_end") or "").strip()
     if period_end_raw:
@@ -1467,17 +1840,7 @@ def extract_discoveries_detailed(
     manifest: dict,
     existing_slugs: list[str] | None = None,
 ) -> DiscoveryExtractResult:
-    """Run the discovery LLM on a single pack and return validated KPIs.
-
-    Returns an empty list when:
-      - the pack has no qualifying sections,
-      - the LLM backend is unavailable,
-      - the LLM returned nothing valid,
-      - every returned item failed the hallucination firewall.
-
-    Callers get back a deterministically validated list: every item's
-    source_substring appears verbatim in the selected sections.
-    """
+    """Run staged discovery on a single pack and return validated KPIs."""
     existing = list(existing_slugs or [])
 
     sections = manifest.get("sections", [])
@@ -1485,33 +1848,32 @@ def extract_discoveries_detailed(
     if not selected:
         return DiscoveryExtractResult(kpis=[], status="no_kpis")
 
-    raw_text = _read_section_text(pack_dir, _order_sections_for_kpi_prompt(selected))
+    ordered_sections = _order_sections_for_kpi_prompt(selected)
+    raw_text = _read_section_text(pack_dir, ordered_sections)
     if not raw_text:
         return DiscoveryExtractResult(kpis=[], status="no_kpis")
-    text = _trim_to_budget(raw_text)
 
-    if not _llm_backend_available_kpi():
-        return DiscoveryExtractResult(kpis=[], status="no_backend")
+    chunks = _load_chunks_index(pack_dir)
+    candidates = locate_kpi_candidate_windows(
+        pack_dir=pack_dir,
+        pack_record=pack_record,
+        sections=ordered_sections,
+        chunks=chunks,
+    )
+    if not candidates:
+        return DiscoveryExtractResult(kpis=[], status="no_kpis")
+
+    client = _default_kpi_model_client()
+    if client is None:
+        return DiscoveryExtractResult(
+            kpis=[],
+            status="no_backend",
+            candidate_windows=candidates,
+            retryable_failures=len(candidates),
+        )
 
     filing_meta = manifest.get("filing", {})
     period_of_report = str(filing_meta.get("period_of_report") or "")
-    prompt = _build_discovery_prompt(
-        company=filing_meta.get("company_name", pack_record.company_name),
-        form_type=filing_meta.get("form_type", pack_record.form_type),
-        filing_date=filing_meta.get("filing_date", pack_record.filing_date),
-        period_of_report=period_of_report,
-        existing_slugs=existing,
-        text=text,
-    )
-    raw = _run_llm_raw(prompt, timeout=_DISCOVERY_TIMEOUT_SECONDS)
-    if raw is None:
-        return DiscoveryExtractResult(kpis=[], status="llm_failed")
-    items = _parse_discovery_response(raw)
-    if items is None:
-        return DiscoveryExtractResult(kpis=[], status="llm_failed")
-    if not items:
-        return DiscoveryExtractResult(kpis=[], status="no_kpis")
-
     selected_ids = {str(s.get("id", "")) for s in selected}
     existing_set = set(existing)
 
@@ -1521,38 +1883,105 @@ def extract_discoveries_detailed(
         period_end_date.isoformat() if period_end_date and period_end_date != _date.min else ""
     )
 
-    chunks = _load_chunks_index(pack_dir)
+    best_by_slug: dict[str, DiscoveredKpi] = {}
+    rejections: list[KpiDiscoveryRejection] = []
+    model_attempts = 0
+    rejected_rows = 0
+    retryable_failures = 0
 
-    results: list[DiscoveredKpi] = []
-    seen_slugs: set[str] = set()
-    for raw_item in items[:_DISCOVERY_MAX_ITEMS]:
-        cleaned = _clean_discovered_item(raw_item, selected_ids, text, existing_set)
-        if cleaned is None:
+    for candidate in candidates:
+        prompt = _build_candidate_discovery_prompt(
+            company=str(filing_meta.get("company_name", pack_record.company_name)),
+            form_type=str(filing_meta.get("form_type", pack_record.form_type)),
+            filing_date=str(filing_meta.get("filing_date", pack_record.filing_date)),
+            period_of_report=period_of_report,
+            existing_slugs=sorted(existing_set),
+            candidate=candidate,
+        )
+        model_attempts += 1
+        raw = client.complete_json(prompt, timeout=_DISCOVERY_TIMEOUT_SECONDS)
+        if raw is None:
+            retryable_failures += 1
+            rejections.append(
+                KpiDiscoveryRejection(
+                    candidate_id=candidate.candidate_id,
+                    stage="model",
+                    reason="model_unavailable_or_timeout",
+                )
+            )
             continue
-        if cleaned.slug in seen_slugs:
+        items = _parse_discovery_response(raw)
+        if items is None:
+            retryable_failures += 1
+            rejections.append(
+                KpiDiscoveryRejection(
+                    candidate_id=candidate.candidate_id,
+                    stage="parse",
+                    reason="invalid_json",
+                    raw_payload=raw[:2000],
+                )
+            )
             continue
-        seen_slugs.add(cleaned.slug)
+        if not items:
+            rejections.append(
+                KpiDiscoveryRejection(
+                    candidate_id=candidate.candidate_id,
+                    stage="model",
+                    reason="no_kpis_returned",
+                    raw_payload=raw[:2000],
+                )
+            )
+            continue
 
-        chunk_id = _lookup_chunk_id(chunks, cleaned.section_id, cleaned.source_substring)
+        for raw_item in items[:_DISCOVERY_MAX_ITEMS]:
+            item = dict(raw_item)
+            if candidate.section_id and not item.get("section_id"):
+                item["section_id"] = candidate.section_id
+            cleaned = _clean_discovered_item(
+                item,
+                selected_ids,
+                candidate.window_text,
+                existing_set,
+            )
+            if cleaned is None:
+                rejected_rows += 1
+                rejections.append(
+                    KpiDiscoveryRejection(
+                        candidate_id=candidate.candidate_id,
+                        stage="validation",
+                        reason="validation_firewall_rejected",
+                        raw_payload=_payload_excerpt(raw_item),
+                    )
+                )
+                continue
 
-        # Each row inherits the pack's period metadata. The LLM's own
-        # period_end guess is kept when it's populated and parseable, since
-        # 10-Qs sometimes cite prior-period figures; otherwise we back-fill
-        # from the pack's period_of_report.
-        final_period_end = cleaned.period_end or period_end_str
-        final_fy = fiscal_year
-        final_fp = fiscal_period
-        if cleaned.period_end:
-            try:
-                d = _date.fromisoformat(cleaned.period_end)
-                final_fy = d.year
-                final_fp = _infer_fiscal_period_label(pack_record.form_type, d)
-            except ValueError:
-                pass
+            slug = _canonical_discovered_slug(
+                cleaned.slug,
+                cleaned.display_name,
+                existing_set | set(best_by_slug),
+            )
 
-        results.append(
-            DiscoveredKpi(
-                slug=cleaned.slug,
+            chunk_id = _lookup_chunk_id(
+                chunks,
+                cleaned.section_id or candidate.section_id,
+                cleaned.source_substring,
+            ) or candidate.chunk_id
+
+            # Each row inherits the pack's period metadata. The model's own
+            # period_end guess is kept only when populated and parseable.
+            final_period_end = cleaned.period_end or period_end_str
+            final_fy = fiscal_year
+            final_fp = fiscal_period
+            if cleaned.period_end:
+                try:
+                    d = _date.fromisoformat(cleaned.period_end)
+                    final_fy = d.year
+                    final_fp = _infer_fiscal_period_label(pack_record.form_type, d)
+                except ValueError:
+                    pass
+
+            discovered = DiscoveredKpi(
+                slug=slug,
                 display_name=cleaned.display_name,
                 unit=cleaned.unit,
                 magnitude=cleaned.magnitude,
@@ -1565,13 +1994,35 @@ def extract_discoveries_detailed(
                 chunk_id=chunk_id,
                 source_substring=cleaned.source_substring,
                 confidence=cleaned.confidence,
-                reused_slug=cleaned.reused_slug,
+                reused_slug=cleaned.reused_slug or slug in existing_set,
             )
-        )
+            prior = best_by_slug.get(slug)
+            if prior is None or discovered.confidence >= prior.confidence:
+                best_by_slug[slug] = discovered
 
+    results = list(best_by_slug.values())
     if not results:
-        return DiscoveryExtractResult(kpis=[], status="no_kpis")
-    return DiscoveryExtractResult(kpis=results, status="success")
+        status = "llm_failed" if retryable_failures else "no_kpis"
+        return DiscoveryExtractResult(
+            kpis=[],
+            status=status,
+            candidate_windows=candidates,
+            rejections=rejections,
+            model_attempts=model_attempts,
+            accepted_rows=0,
+            rejected_rows=rejected_rows,
+            retryable_failures=retryable_failures,
+        )
+    return DiscoveryExtractResult(
+        kpis=results,
+        status="success",
+        candidate_windows=candidates,
+        rejections=rejections,
+        model_attempts=model_attempts,
+        accepted_rows=len(results),
+        rejected_rows=rejected_rows,
+        retryable_failures=retryable_failures,
+    )
 
 
 def extract_discoveries(
