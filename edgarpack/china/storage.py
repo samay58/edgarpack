@@ -374,7 +374,7 @@ class PostgresChinaLensRepository:
     @staticmethod
     def _load_driver() -> Any:
         try:
-            import psycopg  # type: ignore[import-not-found]
+            import psycopg
         except Exception as exc:
             raise RuntimeError(
                 "psycopg is required for the postgres China Lens backend. "

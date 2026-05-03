@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -52,7 +53,7 @@ def detect_emerging_topics(
         (prior_cutoff, current_cutoff),
     ).fetchall()
 
-    def _count_topics(rows: list) -> tuple[dict[str, int], dict[str, set[str]]]:
+    def _count_topics(rows: list[Any]) -> tuple[dict[str, int], dict[str, set[str]]]:
         """Count topics by unique filings (accessions), not chunks."""
         # Track which (topic, accession) pairs we've seen
         seen: dict[str, set[str]] = {}

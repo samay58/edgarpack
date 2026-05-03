@@ -153,7 +153,10 @@ async def fetch_submissions(cik: str, force: bool = False) -> dict[str, Any]:
     if not force:
         cached = cache.get(url, max_age_seconds=3600)
         if cached is not None:
-            return json.loads(cached)
+            parsed = json.loads(cached)
+            if not isinstance(parsed, dict):
+                raise ValueError(f"Cached SEC submissions payload for CIK{cik} was not an object")
+            return parsed
 
     client = await get_client()
     data, headers = await client.fetch_json(url)
@@ -181,7 +184,10 @@ async def _fetch_submissions_page(name: str, force: bool = False) -> dict[str, A
     if not force:
         cached = cache.get(url, max_age_seconds=_OLDER_PAGE_TTL_SECONDS)
         if cached is not None:
-            return json.loads(cached)
+            parsed = json.loads(cached)
+            if not isinstance(parsed, dict):
+                raise ValueError(f"Cached SEC submissions page {name} was not an object")
+            return parsed
 
     client = await get_client()
     data, headers = await client.fetch_json(url)

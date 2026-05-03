@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -545,7 +546,7 @@ def _inline(text: str) -> str:
     text = _re_sub(r"`([^`]+)`", text, lambda m: stash(f"<code>{_escape_block(m.group(1))}</code>"))
 
     # Links
-    def _link_repl(match) -> str:
+    def _link_repl(match: re.Match[str]) -> str:
         href = _safe_href(match.group(2))
         label = match.group(1)
         if not href:
@@ -584,9 +585,7 @@ def _safe_href(href: str) -> str | None:
     return cleaned
 
 
-def _re_sub(pattern: str, text: str, fn) -> str:
-    import re
-
+def _re_sub(pattern: str, text: str, fn: Callable[[re.Match[str]], str]) -> str:
     return re.sub(pattern, fn, text, flags=re.DOTALL)
 
 

@@ -52,9 +52,13 @@ async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
             import json
 
             try:
-                return json.loads(cached)
+                parsed = json.loads(cached)
             except json.JSONDecodeError as e:
                 raise XBRLFetchError(cik, e) from e
+            if not isinstance(parsed, dict):
+                error = ValueError("cached companyfacts payload was not an object")
+                raise XBRLFetchError(cik, error)
+            return parsed
 
     client = await get_client()
     try:
@@ -157,7 +161,7 @@ def _format_period(value: dict[str, Any]) -> str:
     if start and end:
         return f"{start}/{end}"
     elif end:
-        return end
+        return str(end)
     else:
         return "unknown"
 

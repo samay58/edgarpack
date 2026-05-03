@@ -665,11 +665,13 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if is_table:
                 cells = _split_table_cells(line_stripped)
                 for idx, cell in enumerate(cells):
-                    m = _match_item_in_cell(cell, ITEM_PATTERN_8K, r"ITEM\s+\d+\.\d+\b")
-                    if not m:
+                    cell_match_8k = _match_item_in_cell(
+                        cell, ITEM_PATTERN_8K, r"ITEM\s+\d+\.\d+\b"
+                    )
+                    if not cell_match_8k:
                         continue
-                    item = m.group("item")
-                    title = (m.group("title") or "").strip()
+                    item = cell_match_8k.group("item")
+                    title = (cell_match_8k.group("title") or "").strip()
                     if not title and idx + 1 < len(cells):
                         title = cells[idx + 1]
                     _add_item_match(
@@ -680,10 +682,10 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                     )
                     break
             else:
-                m = ITEM_PATTERN_8K.match(line_stripped)
-                if m and m.group("item"):
-                    item = m.group("item")
-                    title = (m.group("title") or "").strip()
+                heading_match_8k = ITEM_PATTERN_8K.match(line_stripped)
+                if heading_match_8k and heading_match_8k.group("item"):
+                    item = heading_match_8k.group("item")
+                    title = (heading_match_8k.group("title") or "").strip()
                     _add_item_match(
                         item=item,
                         title=title,
@@ -710,15 +712,17 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if is_table:
                 cells = _split_table_cells(line_stripped)
                 for idx, cell in enumerate(cells):
-                    m = _match_item_in_cell(cell, ITEM_PATTERN_10K, r"ITEM\s*\d+[A-Z]?\b")
-                    if not m or not m.group("item"):
+                    cell_match_10k = _match_item_in_cell(
+                        cell, ITEM_PATTERN_10K, r"ITEM\s*\d+[A-Z]?\b"
+                    )
+                    if not cell_match_10k or not cell_match_10k.group("item"):
                         continue
-                    item = m.group("item")
-                    part = m.group("part") or current_part
+                    item = cell_match_10k.group("item")
+                    part = cell_match_10k.group("part") or current_part
                     if part:
                         part = part.upper()
                         current_part = part
-                    title = (m.group("title") or "").strip()
+                    title = (cell_match_10k.group("title") or "").strip()
                     if not title and idx + 1 < len(cells):
                         title = cells[idx + 1]
                     _add_item_match(
@@ -729,14 +733,14 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
                     )
                     break
             else:
-                m = ITEM_PATTERN_10K.match(line_stripped)
-                if m and m.group("item"):
-                    item = m.group("item")
-                    part = m.group("part") or current_part
+                heading_match_10k = ITEM_PATTERN_10K.match(line_stripped)
+                if heading_match_10k and heading_match_10k.group("item"):
+                    item = heading_match_10k.group("item")
+                    part = heading_match_10k.group("part") or current_part
                     if part:
                         part = part.upper()
                         current_part = part
-                    title = (m.group("title") or "").strip()
+                    title = (heading_match_10k.group("title") or "").strip()
                     _add_item_match(
                         item=item,
                         title=title,
@@ -773,9 +777,9 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
 
         # Also check for titled sections (SIGNATURES, etc.) on their own line.
         if not is_table:
-            m = TITLED_SECTION_PATTERN.match(line_stripped)
-            if m:
-                title = m.group("title")
+            titled_match = TITLED_SECTION_PATTERN.match(line_stripped)
+            if titled_match:
+                title = titled_match.group("title")
                 if not _should_ignore_title(title):
                     _add_item_match(
                         item="other",
@@ -788,11 +792,11 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
     matches.sort(key=lambda m: (m.char_pos, m.line_num))
     deduped: list[SectionMatch] = []
     seen_pos: set[int] = set()
-    for m in matches:
-        if m.char_pos in seen_pos:
+    for section_match in matches:
+        if section_match.char_pos in seen_pos:
             continue
-        seen_pos.add(m.char_pos)
-        deduped.append(m)
+        seen_pos.add(section_match.char_pos)
+        deduped.append(section_match)
 
     return deduped
 

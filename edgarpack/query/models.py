@@ -415,6 +415,11 @@ class DerivedValue(CitedValue):
         return d
 
 
+MetricScalar = CitedValue | DerivedValue
+MetricSeries = list[CitedValue] | list[DerivedValue] | list[MetricScalar]
+MetricValue = MetricScalar | MetricSeries | None
+
+
 class Diagnostic(BaseModel):
     """Structured failure diagnostic attached to a QueryResult.
 
@@ -467,7 +472,7 @@ class QueryResult(BaseModel):
     company: str
     cik: str
     period: str = "lfy"
-    metrics: dict[str, CitedValue | list[CitedValue] | None]  # metric_name -> value(s) or None
+    metrics: dict[str, MetricValue]  # metric_name -> value(s) or None
 
     # Self-heal v2: structured diagnostics for Layer B failures.
     diagnostics: list[Diagnostic] = Field(default_factory=list)

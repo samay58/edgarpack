@@ -121,7 +121,7 @@ def render_markdown(html: str, *, asset_map: dict[str, str] | None = None) -> st
     )
 
     # Process strong/bold
-    def _render_strong(m: re.Match) -> str:
+    def _render_strong(m: re.Match[str]) -> str:
         inner = _process_inline(m.group(1)).strip()
         if not inner:
             return ""
@@ -135,7 +135,7 @@ def render_markdown(html: str, *, asset_map: dict[str, str] | None = None) -> st
     )
 
     # Process emphasis/italic
-    def _render_em(m: re.Match) -> str:
+    def _render_em(m: re.Match[str]) -> str:
         inner = _process_inline(m.group(1)).strip()
         if not inner:
             return ""
@@ -253,15 +253,22 @@ def _process_lists(html: str) -> str:
     prev = None
     while prev != result:
         prev = result
+        def _render_ul(match: re.Match[str]) -> str:
+            return _render_list_items(match.group(1), ordered=False, depth=0)
+
         result = re.sub(
             r"<ul[^>]*>((?:(?!<ul|<ol).)*?)</ul>",
-            lambda m: _render_list_items(m.group(1), ordered=False, depth=0),
+            _render_ul,
             result,
             flags=re.DOTALL | re.IGNORECASE,
         )
+
+        def _render_ol(match: re.Match[str]) -> str:
+            return _render_list_items(match.group(1), ordered=True, depth=0)
+
         result = re.sub(
             r"<ol[^>]*>((?:(?!<ul|<ol).)*?)</ol>",
-            lambda m: _render_list_items(m.group(1), ordered=True, depth=0),
+            _render_ol,
             result,
             flags=re.DOTALL | re.IGNORECASE,
         )
@@ -308,11 +315,11 @@ def _process_tables(html: str) -> str:
             return 1
         return max(1, int(m.group(1)))
 
-    def process_table(match: re.Match) -> str:
+    def process_table(match: re.Match[str]) -> str:
         content = match.group(1)
 
         # Build a 2D grid accounting for colspan/rowspan
-        grid: list[list[str]] = []
+        grid: list[list[str | None]] = []
 
         row_idx = -1
         for tr_match in re.finditer(r"<tr[^>]*>(.*?)</tr>", content, re.DOTALL | re.IGNORECASE):
@@ -372,20 +379,19 @@ def _process_tables(html: str) -> str:
 
         # Replace None placeholders with empty strings and pad rows
         max_cols = max(len(row) for row in grid) if grid else 0
+        render_grid: list[list[str]] = []
         for row in grid:
-            for i in range(len(row)):
-                if row[i] is None:
-                    row[i] = ""
             while len(row) < max_cols:
-                row.append("")
+                row.append(None)
+            render_grid.append([cell or "" for cell in row])
 
         # Render as GFM table
         lines: list[str] = []
-        header = grid[0] if grid else [""] * max_cols
+        header = render_grid[0] if render_grid else [""] * max_cols
         lines.append("| " + " | ".join(_escape_table_cell(c) for c in header) + " |")
         lines.append("| " + " | ".join("---" for _ in range(max_cols)) + " |")
-        for row in grid[1:]:
-            lines.append("| " + " | ".join(_escape_table_cell(c) for c in row) + " |")
+        for render_row in render_grid[1:]:
+            lines.append("| " + " | ".join(_escape_table_cell(c) for c in render_row) + " |")
 
         return "\n\n" + "\n".join(lines) + "\n\n"
 

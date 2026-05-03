@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 from ..config import CACHE_DIR
 from ..pack.manifest import load_manifest_dict
@@ -59,7 +60,10 @@ _CROSS_REF_PATTERN = re.compile(
 _SENTENCE_LIKE_PATTERN = re.compile(r"^(?:our|we|this|that|in|of|as)\b", re.IGNORECASE)
 
 
-def _load_manifest(pack_dir: Path) -> dict:
+_SectionPayload = dict[str, Any]
+
+
+def _load_manifest(pack_dir: Path) -> dict[str, Any]:
     """Load and parse manifest.json from a pack directory.
 
     Thin wrapper around `pack.manifest.load_manifest_dict` retained for
@@ -76,7 +80,7 @@ def _read_section(pack_dir: Path, section_path: str) -> str:
     return full_path.read_text(encoding="utf-8")
 
 
-def _manifest_fingerprint(manifest: dict) -> str:
+def _manifest_fingerprint(manifest: dict[str, Any]) -> str:
     """Stable fingerprint of a manifest payload."""
     manifest_hash = manifest.get("manifest_hash")
     if isinstance(manifest_hash, str) and manifest_hash:
@@ -85,7 +89,7 @@ def _manifest_fingerprint(manifest: dict) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _cache_key(before_manifest: dict, after_manifest: dict) -> str:
+def _cache_key(before_manifest: dict[str, Any], after_manifest: dict[str, Any]) -> str:
     combined = (
         f"{_DIFF_CACHE_VERSION}:"
         f"{_manifest_fingerprint(before_manifest)}:{_manifest_fingerprint(after_manifest)}"
@@ -335,14 +339,22 @@ def diff_filings(
     after_filing = after_manifest.get("filing", {})
 
     # Build section lookup maps: id -> {path, sha256, title}
-    before_sections = {s["id"]: s for s in before_manifest.get("sections", [])}
-    after_sections = {s["id"]: s for s in after_manifest.get("sections", [])}
+    before_sections: dict[str, _SectionPayload] = {
+        str(s["id"]): s
+        for s in before_manifest.get("sections", [])
+        if isinstance(s, dict) and "id" in s
+    }
+    after_sections: dict[str, _SectionPayload] = {
+        str(s["id"]): s
+        for s in after_manifest.get("sections", [])
+        if isinstance(s, dict) and "id" in s
+    }
 
     # --- Pass 1: exact ID matching ---
     exact_both = sorted(set(before_sections.keys()) & set(after_sections.keys()))
     exact_matched_before: set[str] = set(exact_both)
     exact_matched_after: set[str] = set(exact_both)
-    section_pairs: list[tuple[str, dict | None, dict | None]] = [
+    section_pairs: list[tuple[str, _SectionPayload | None, _SectionPayload | None]] = [
         (sid, before_sections[sid], after_sections[sid]) for sid in exact_both
     ]
 
@@ -425,6 +437,7 @@ def diff_filings(
             continue
 
         # Both exist: check SHA256 for instant unchanged detection
+        assert before_sec is not None and after_sec is not None
         if before_sec["sha256"] == after_sec["sha256"]:
             section_deltas.append(
                 SectionDelta(

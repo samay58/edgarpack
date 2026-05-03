@@ -414,7 +414,7 @@ _MAX_OUTPUT_TOKENS = 4000
 
 async def _call_haiku_extract(section_text: str) -> str:
     try:
-        from anthropic import AsyncAnthropic  # type: ignore[import-not-found]
+        from anthropic import AsyncAnthropic
     except ImportError as exc:
         raise RuntimeError(
             "S-1 financial extraction requires the `anthropic` package. "

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -59,7 +59,9 @@ class PackDiagnosis(BaseModel):
     remediation: str | None = None
 
 
-def _classify_manifest(pack_dir: Path) -> tuple[ManifestState, str | None, dict | None]:
+def _classify_manifest(
+    pack_dir: Path,
+) -> tuple[ManifestState, str | None, dict[str, Any] | None]:
     manifest_path = pack_dir / "manifest.json"
     if not manifest_path.exists():
         return "manifest_missing", None, None
@@ -94,7 +96,9 @@ def _list_artifacts(pack_dir: Path) -> tuple[list[str], dict[str, int]]:
     return present, sizes
 
 
-def _coverage(manifest: dict, pack_record: PackRecord | None) -> tuple[int, int, list[str], int]:
+def _coverage(
+    manifest: dict[str, Any], pack_record: PackRecord | None
+) -> tuple[int, int, list[str], int]:
     from ..query.kpi_extract import KPI_CATALOG
     from ..query.learned_registry import LearnedRegistry
 

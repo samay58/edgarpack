@@ -208,6 +208,11 @@ def _register_pack_result(result: Any, *, ticker: str | None = None) -> None:
         for value in (accession, cik, form_type, filing_date, company_name)
     ):
         return
+    accession = cast(str, accession)
+    cik = cast(str, cik)
+    form_type = cast(str, form_type)
+    filing_date = cast(str, filing_date)
+    company_name = cast(str, company_name)
 
     manifest_path = Path(result.output_dir) / "manifest.json"
     manifest_hash = compute_sha256(manifest_path.read_bytes()) if manifest_path.exists() else None
@@ -1081,8 +1086,11 @@ async def _cik_from_company_args(args: Any) -> tuple[int, str | None]:
             "name as a positional argument instead.",
             file=sys.stderr,
         )
-        return 0, cik
+        return 0, str(cik)
 
+    if not isinstance(company, str):
+        print("Error: company must be a string.", file=sys.stderr)
+        return 2, None
     try:
         resolved = await _resolve_cli_company(company)
     except (UnknownCompany, AmbiguousCompany) as exc:
@@ -1116,7 +1124,7 @@ def _cmd_doctor(args: Any) -> int:
     is_path = target_path.exists() and target_path.is_dir()
 
     registry = PackRegistry()
-    results: list = []
+    results: list[Any] = []
 
     if is_path:
         diag = diagnose_pack(target_path, registry=registry)
@@ -1129,7 +1137,7 @@ def _cmd_doctor(args: Any) -> int:
             except (UnknownCompany, AmbiguousCompany) as exc:
                 print(f"Error: {exc}", file=sys.stderr)
                 return None
-            return resolved.cik
+            return resolved.cik if isinstance(resolved.cik, str) else None
 
         cik = asyncio.run(_resolve())
         if cik is None:
@@ -2558,7 +2566,7 @@ def _cmd_query(args: Any) -> int:
             metric_list_for_error = expanded
             metric_list_for_render = [resolve_alias(metric) for metric in expanded]
 
-        async def _fetch(period: str):
+        async def _fetch(period: str) -> Any:
             return await financials(
                 company=args.company,
                 metrics=metric_input,
@@ -3683,7 +3691,7 @@ def _which_diagnostics_payload(diagnostics: Any) -> dict[str, Any]:
     }
 
 
-def _render_which_table(aggregates: list, max_periods: int) -> str:
+def _render_which_table(aggregates: list[Any], max_periods: int) -> str:
     """Render a compact table view of discovered + catalog KPIs.
 
     Layout:
@@ -4066,7 +4074,7 @@ def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
     return ordered
 
 
-def _render_which_s1_metrics(packs: list) -> str:
+def _render_which_s1_metrics(packs: list[Any]) -> str:
     """Render an S-1 disclosures block for any registration-class packs.
 
     Shown only when the CIK has at least one pack with non-empty extractor

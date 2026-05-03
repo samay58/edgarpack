@@ -14,7 +14,7 @@ from ..config import PARSER_VERSION, SCHEMA_VERSION
 def load_manifest_dict(
     pack_dir: Path,
     on_missing: Literal["raise", "empty"] = "raise",
-) -> dict:
+) -> dict[str, Any]:
     """Load manifest.json from a pack directory as a plain dict.
 
     Args:
@@ -35,7 +35,10 @@ def load_manifest_dict(
         if on_missing == "empty":
             return {}
         raise FileNotFoundError(f"No manifest.json at {manifest_path}. Pack may be incomplete.")
-    return json.loads(manifest_path.read_text(encoding="utf-8"))
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"manifest.json at {manifest_path} did not contain an object")
+    return data
 
 
 class SourceInfo(BaseModel):

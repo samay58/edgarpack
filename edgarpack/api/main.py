@@ -52,7 +52,7 @@ def create_app() -> Any:
     )
     app.state.china_service = create_default_service()
 
-    @app.get("/healthz", tags=["infra"])
+    @app.get("/healthz", tags=["infra"])  # type: ignore[untyped-decorator]
     def healthz() -> dict[str, str]:
         return {"status": "ok"}
 

@@ -4,6 +4,7 @@ import hashlib
 import re
 from bisect import bisect_right
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -233,7 +234,7 @@ def chunk_section(
 
 
 def generate_chunks(
-    sections: list,  # List of Section objects
+    sections: list[Any],  # List of Section objects
     min_tokens: int = DEFAULT_CHUNK_MIN_TOKENS,
     max_tokens: int = DEFAULT_CHUNK_MAX_TOKENS,
 ) -> list[Chunk]:

@@ -8,6 +8,7 @@ users.
 from __future__ import annotations
 
 import math
+from typing import Any
 
 _CURRENCY_SYMBOLS: dict[str, str] = {
     "USD": "$",
@@ -115,7 +116,7 @@ def format_number(value: float | None, unit: str) -> str:
     return f"{value:,.2f}"
 
 
-def format_citation_marker(cited) -> str:  # noqa: ANN001 (duck-typed on CitedValue)
+def format_citation_marker(cited: Any) -> str:  # noqa: ANN401 (duck-typed on CitedValue)
     """Inline citation marker for table renderings.
 
     - S-1 snapshot rows:   [S-1, 24-041596]

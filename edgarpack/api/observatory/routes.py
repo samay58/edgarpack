@@ -42,7 +42,7 @@ def _parse_section_types(section_types: str) -> set[str] | None:
     return parsed or None
 
 
-def _filtered_diff_payload(result: DiffResult, section_types: set[str] | None) -> dict:
+def _filtered_diff_payload(result: DiffResult, section_types: set[str] | None) -> dict[str, Any]:
     payload = result.model_dump()
     if section_types is None:
         return payload
@@ -74,13 +74,13 @@ def _make_router() -> Any:
     router = APIRouter(prefix="/observatory", tags=["observatory"])
 
     @router.get("/companies")
-    def list_companies() -> list[dict]:
+    def list_companies() -> list[dict[str, Any]]:
         """Company grid with filing counts and metadata."""
         registry = _get_registry()
         return registry.list_companies()
 
     @router.get("/companies/{ticker}")
-    def get_company(ticker: str) -> dict:
+    def get_company(ticker: str) -> dict[str, Any]:
         """Company detail with filing list and section map."""
         registry = _get_registry()
         packs = registry.list_packs(ticker=ticker)
@@ -117,7 +117,7 @@ def _make_router() -> Any:
                 "Comma-separated section types: prose,financial_statement,signature,exhibit_index"
             ),
         ),
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Diff the two most recent filings of a given form type."""
         registry = _get_registry()
         packs = registry.list_packs(ticker=ticker, form_type=form_type)
@@ -141,7 +141,7 @@ def _make_router() -> Any:
         ticker: str,
         section_id: str,
         form_type: str = Query(default="10-K"),
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Section evolution across all available filings."""
         registry = _get_registry()
         packs = registry.list_packs(ticker=ticker, form_type=form_type)
@@ -162,7 +162,7 @@ def _make_router() -> Any:
         ticker: str | None = Query(default=None),
         form_type: str | None = Query(default=None),
         limit: int = Query(default=20, le=100),
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Cross-corpus full-text search with topic facets."""
         index = _get_search_index()
         result = search_corpus(
@@ -176,7 +176,7 @@ def _make_router() -> Any:
         return result.model_dump()
 
     @router.get("/stats")
-    def get_stats() -> dict:
+    def get_stats() -> dict[str, Any]:
         """Registry and index statistics."""
         registry = _get_registry()
         index = _get_search_index()
@@ -192,7 +192,7 @@ def _make_router() -> Any:
         }
 
     @router.get("/topics")
-    def list_topics() -> dict:
+    def list_topics() -> dict[str, Any]:
         """Topic catalog and stats."""
         from ...index.catalog import TOPIC_CATALOG
 

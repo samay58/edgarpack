@@ -37,7 +37,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from ..harvest.registry import PackRecord, PackRegistry
 from ..pack.manifest import load_manifest_dict
@@ -81,7 +81,7 @@ def _parse_filing_date_safe(filing_date: str | None) -> tuple[int, _date]:
         return 0, _date.min
 
 
-def _load_pack_manifest(pack_dir: Path) -> dict:
+def _load_pack_manifest(pack_dir: Path) -> dict[str, Any]:
     """Load manifest.json from a pack directory.
 
     Thin wrapper around `pack.manifest.load_manifest_dict`. Re-exported via
@@ -113,7 +113,7 @@ def _infer_fiscal_period_label(form_type: str, period_end: _date) -> str:
 
 
 def _resolve_period_end(
-    pack_manifest: dict,
+    pack_manifest: dict[str, Any],
     pack_record: PackRecord,
 ) -> tuple[_date, int, str]:
     """Resolve (period_end, fiscal_year, fiscal_period) for a pack.
@@ -367,13 +367,13 @@ _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 
-def _select_sections(sections: list[dict]) -> list[dict]:
+def _select_sections(sections: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return manifest section entries whose IDs match MD&A / key-metrics patterns.
 
     Preserves manifest order. Empty list if none match. The caller handles
     the 'malformed pack' case.
     """
-    result: list[dict] = []
+    result: list[dict[str, Any]] = []
     for sec in sections:
         sec_id = str(sec.get("id", ""))
         if any(pat.search(sec_id) for pat in _SECTION_PATTERNS):
@@ -430,7 +430,7 @@ def _order_sections_for_kpi_prompt(
 _SECTION_SEPARATOR = "\n\n--- [{id}] ---\n\n"
 
 
-def _read_section_text(pack_dir: Path, sections: list[dict]) -> str:
+def _read_section_text(pack_dir: Path, sections: list[dict[str, Any]]) -> str:
     """Concatenate section markdown from disk in manifest order.
 
     Missing files are skipped with a warning log; the function never raises.
@@ -615,7 +615,7 @@ def _run_llm_raw(prompt: str, timeout: int = _LLM_TIMEOUT_SECONDS_KPI) -> str | 
     return raw or None
 
 
-def _extract_via_llm(prompt: str) -> dict | None:
+def _extract_via_llm(prompt: str) -> dict[str, Any] | None:
     raw = _run_llm_raw(prompt)
     if raw is None:
         return None
@@ -661,7 +661,7 @@ def _extract_via_llm(prompt: str) -> dict | None:
     if not isinstance(section_id, str) or not section_id.strip():
         return None
 
-    return parsed
+    return dict(parsed)
 
 
 _WS_RUN = re.compile(r"\s+")
@@ -735,11 +735,11 @@ def _verify_excerpt_in_text(
 
 
 def _build_cited_from_extraction(
-    response: dict,
+    response: dict[str, Any],
     metric: str,
     kpi_def: KpiDef,
     pack_record: PackRecord,
-    pack_manifest: dict,
+    pack_manifest: dict[str, Any],
     primary_document: str,
 ) -> CitedValue:
     filing = pack_manifest.get("filing", {})
@@ -890,7 +890,7 @@ def try_extract_kpi(
     try:
         # 1. Resolve filing
         if _override_pack is not None:
-            pack_record = _override_pack
+            pack_record: PackRecord | None = _override_pack
         else:
             pack_record = _resolve_filing_for_period(cik, period, pack_registry)
         if pack_record is None:
@@ -1296,7 +1296,7 @@ def _build_discovery_prompt(
     )
 
 
-def _parse_discovery_response(raw: str) -> list[dict] | None:
+def _parse_discovery_response(raw: str) -> list[dict[str, Any]] | None:
     """Parse the discovery LLM response. Tolerates surrounding whitespace,
     markdown fences, and stray prose. Returns the list of KPI dicts or None
     on unrecoverable failure."""
@@ -1323,13 +1323,13 @@ def _parse_discovery_response(raw: str) -> list[dict] | None:
         if isinstance(parsed, dict):
             kpis = parsed.get("kpis")
             if isinstance(kpis, list):
-                return [item for item in kpis if isinstance(item, dict)]
+                return [dict(item) for item in kpis if isinstance(item, dict)]
         elif isinstance(parsed, list):
-            return [item for item in parsed if isinstance(item, dict)]
+            return [dict(item) for item in parsed if isinstance(item, dict)]
     return None
 
 
-def _load_chunks_index(pack_dir: Path) -> list[dict]:
+def _load_chunks_index(pack_dir: Path) -> list[dict[str, Any]]:
     """Load optional/chunks.ndjson if present. Returns empty list otherwise.
 
     Chunks give finer-grained provenance than section IDs. The `which`
@@ -1339,7 +1339,7 @@ def _load_chunks_index(pack_dir: Path) -> list[dict]:
     chunks_path = pack_dir / "optional" / "chunks.ndjson"
     if not chunks_path.exists():
         return []
-    chunks: list[dict] = []
+    chunks: list[dict[str, Any]] = []
     try:
         with chunks_path.open("r", encoding="utf-8") as f:
             for line in f:
@@ -1358,7 +1358,7 @@ def _load_chunks_index(pack_dir: Path) -> list[dict]:
 
 
 def _lookup_chunk_id(
-    chunks: list[dict],
+    chunks: list[dict[str, Any]],
     section_id: str | None,
     substring: str,
 ) -> str | None:
@@ -1375,7 +1375,7 @@ def _lookup_chunk_id(
     if not needle:
         return None
 
-    scoped: list[dict] = (
+    scoped: list[dict[str, Any]] = (
         [c for c in chunks if c.get("section_id") == section_id] if section_id else chunks
     )
     for pool in (scoped, chunks):
@@ -1544,7 +1544,9 @@ def _value_hints(window_text: str) -> tuple[str, ...]:
     return tuple(seen)
 
 
-def _candidate_chunk_id(chunks: list[dict], section_id: str | None, window_text: str) -> str | None:
+def _candidate_chunk_id(
+    chunks: list[dict[str, Any]], section_id: str | None, window_text: str
+) -> str | None:
     if not chunks or not section_id:
         return None
     norm_window = _normalize_for_match(window_text)
@@ -1566,7 +1568,7 @@ def locate_kpi_candidate_windows(
     pack_dir: Path,
     pack_record: PackRecord,
     sections: list[dict[str, object]],
-    chunks: list[dict] | None = None,
+    chunks: list[dict[str, Any]] | None = None,
 ) -> list[KpiCandidateWindow]:
     """Deterministically locate bounded operating-KPI evidence windows.
 
@@ -1608,7 +1610,7 @@ def locate_kpi_candidate_windows(
             continue
 
         accepted_spans: list[tuple[int, int]] = []
-        for offset, signals in sorted(hit_offsets, key=lambda item: item[0]):
+        for offset, signal_names in sorted(hit_offsets, key=lambda item: item[0]):
             start, end = _bounded_window(text, offset)
             if any(
                 start < prior_end and end > prior_start
@@ -1637,7 +1639,7 @@ def locate_kpi_candidate_windows(
                 window_text=window_text,
                 label_hint=label,
                 value_hints=hints,
-                signal_names=tuple(dict.fromkeys(signals)),
+                signal_names=tuple(dict.fromkeys(signal_names)),
                 char_start=start,
                 char_end=end,
             )
@@ -1728,6 +1730,7 @@ def _value_appears_in_excerpt(value: float | None, excerpt: str) -> bool:
     expected = _value_expected_text(value)
     if expected is None:
         return True
+    assert value is not None
     norm_excerpt = _normalize_for_match(excerpt).replace(",", "")
     if expected in norm_excerpt:
         return True
@@ -1743,7 +1746,7 @@ def _is_gaap_only_slug(slug: str) -> bool:
 
 
 def _clean_discovered_item(
-    item: dict,
+    item: dict[str, Any],
     selected_section_ids: set[str],
     source_text: str,
     existing_slugs: set[str],
@@ -1837,7 +1840,7 @@ def extract_discoveries_detailed(
     *,
     pack_dir: Path,
     pack_record: PackRecord,
-    manifest: dict,
+    manifest: dict[str, Any],
     existing_slugs: list[str] | None = None,
 ) -> DiscoveryExtractResult:
     """Run staged discovery on a single pack and return validated KPIs."""
@@ -2029,7 +2032,7 @@ def extract_discoveries(
     *,
     pack_dir: Path,
     pack_record: PackRecord,
-    manifest: dict,
+    manifest: dict[str, Any],
     existing_slugs: list[str] | None = None,
 ) -> list[DiscoveredKpi]:
     """Backward-compatible wrapper returning only discovered KPI rows."""
