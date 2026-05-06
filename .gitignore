@@ -43,6 +43,15 @@ test-site/
 site_test/
 test_packs/
 
+# Local generated demos and report renders
+/demo/generated/
+/reports/local/
+/reports/*.html
+/*.gif
+/*.mp4
+/edgarpack-hero-cover-*.png
+/optimized-gifs/
+
 # Cache
 .edgarpack/
 
