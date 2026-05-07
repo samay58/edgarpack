@@ -35,8 +35,8 @@ jobs:
           # SEC EDGAR is public; no API key needed. GitHub-hosted runners share
           # outbound IP pools, so keep this showcase build deliberately patient.
           build_pack() {
-            local cik="$1"
-            local label="$2"
+            local label="$1"
+            shift
             local attempt=1
             local max_attempts=4
             local delay
@@ -45,7 +45,7 @@ jobs:
 
             while true; do
               log="$(mktemp)"
-              if edgarpack build "$cik" --form 10-K --out ./packs 2>&1 | tee "$log"; then
+              if edgarpack build "$@" --out ./packs 2>&1 | tee "$log"; then
                 rm -f "$log"
                 break
               fi
@@ -58,13 +58,13 @@ jobs:
               rm -f "$log"
 
               if (( attempt >= max_attempts )); then
-                echo "::error title=Showcase pack build failed::${label} (${cik}) failed after ${max_attempts} attempts."
+                echo "::error title=Showcase pack build failed::${label} failed after ${max_attempts} attempts."
                 return 1
               fi
 
               delay=$(( attempt * 30 ))
               next_attempt=$(( attempt + 1 ))
-              echo "::warning title=SEC build retry::${label} (${cik}) hit transient SEC/network throttling; waiting ${delay}s before attempt ${next_attempt}/${max_attempts}."
+              echo "::warning title=SEC build retry::${label} hit transient SEC/network throttling; waiting ${delay}s before attempt ${next_attempt}/${max_attempts}."
               sleep "$delay"
               attempt="$next_attempt"
             done
@@ -72,11 +72,15 @@ jobs:
             sleep 20
           }
 
-          build_pack 320193 Apple
-          build_pack 789019 Microsoft
-          build_pack 1018724 Amazon
-          build_pack 1045810 NVIDIA
-          build_pack 1652044 Alphabet
+          build_pack Apple 320193 --form 10-K
+          build_pack Microsoft 789019 --form 10-K
+          build_pack Amazon 1018724 --form 10-K
+          build_pack NVIDIA 1045810 --form 10-K
+          build_pack Alphabet 1652044 --form 10-K
+
+          # Cerebras S-1 filings used in the public thread.
+          build_pack "Cerebras 2024 S-1" 0002021728 --accession 0001628280-24-041596
+          build_pack "Cerebras 2026 S-1" 0002021728 --accession 0001628280-26-025762
         env:
           EDGARPACK_USER_AGENT: "EdgarPack/CI admin@edgarpack.dev"
           EDGARPACK_SEC_RATE_LIMIT: "2"
