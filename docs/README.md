@@ -8,6 +8,7 @@ point; this directory is the deeper reference surface.
 
 - `GETTING_STARTED.md`: first install, first query, first pack, first diff.
 - `WORKFLOWS.md`: task-oriented research recipes.
+- `S1.md`: how to build and query S-1 packs.
 - `QUERY.md`: metric, period, derived-value, JSON, and citation reference.
 - `OBSERVATORY.md`: filing diffs, HTML reports, and registration timelines.
 - `BENCHMARKS.md`: compression and token-count methodology.

@@ -320,7 +320,12 @@ def _discover_pack(
         accession=accession,
         discovery_version=_DISCOVERY_VERSION,
     )
-    if not force and not run_exists and learned_reg.company_kpi_has_accession(cik, accession):
+    if (
+        not force
+        and not run_exists
+        and not is_registration_form(pack_record.form_type)
+        and learned_reg.company_kpi_has_accession(cik, accession)
+    ):
         # Legacy pre-staged cache rows did not have discovery run metadata, so
         # preserve the old behavior: cache hits do not need the pack directory
         # to still be readable.
@@ -832,7 +837,7 @@ def lookup_company_kpi(
 
         def _is_annual(r: CompanyKpiRow) -> bool:
             ft = (r.form_type or "").upper()
-            return ft.startswith("10-K") or ft in {"20-F", "40-F"}
+            return ft.startswith("10-K") or ft in {"20-F", "40-F"} or is_registration_form(ft)
 
         def _is_quarterly(r: CompanyKpiRow) -> bool:
             return (r.form_type or "").upper().startswith("10-Q")

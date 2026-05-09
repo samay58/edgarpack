@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from edgarpack.query.kpi_discover import extract_s1_metrics_from_pack
+from edgarpack.query.registration_profile import build_registration_profile
 
 _S1_SAMPLE = """\
 # Prospectus Summary
@@ -72,6 +73,22 @@ def test_bundle_aggregates_all_five_extractors(tmp_path):
         + len(bundle.lockup)
         + len(bundle.principal_holders)
     )
+
+
+def test_registration_profile_dedupes_repeated_framing_claims(tmp_path):
+    markdown = """\
+# Prospectus Summary
+
+We estimate our TAM to be approximately $69.1 billion.
+We estimate our TAM to be approximately $69.1 billion.
+"""
+    pack = _write_pack(tmp_path, "test-accn-profile", "S-1", markdown=markdown)
+    profile = build_registration_profile(pack)
+
+    assert profile is not None
+    framing = [group for group in profile.disclosures if group.label == "framing claims"]
+    assert len(framing) == 1
+    assert framing[0].claims == ("TAM to be approximately $69.1 billion",)
 
 
 def test_bundle_scopes_use_of_proceeds_to_section_files_when_available(tmp_path):

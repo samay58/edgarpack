@@ -13,7 +13,11 @@ import pytest
 
 from edgarpack.query.financials import financials
 from edgarpack.query.models import DerivedValue, QueryResult
-from edgarpack.query.s1_financials import SCHEMA_VERSION, source_sha256_for_pack
+from edgarpack.query.s1_financials import (
+    SCHEMA_VERSION,
+    default_registration_query_metrics,
+    source_sha256_for_pack,
+)
 
 # Ensure the real module object is cached before any test runs
 importlib.import_module("edgarpack.query.financials")
@@ -161,6 +165,66 @@ async def test_financials_returns_s1_snapshot_when_periodic_empty(tmp_path):
     assert row.accession == "0001628280-24-041596"
     assert row.filed == date(2024, 9, 30)
     assert row.value == 78287000.0
+
+
+@pytest.mark.asyncio
+async def test_financials_uses_registration_defaults_when_metrics_omitted(tmp_path):
+    _seed_s1_pack(
+        tmp_path,
+        accession="0001628280-26-032523",
+        revenue_cents=88_671_900_000,
+        filing_date="2026-05-08",
+        fiscal_year=2025,
+        period_end="2025-12-31",
+        extra_facts=[
+            {
+                "accession": "0001628280-26-032523",
+                "fiscal_year": 2025,
+                "period_end": "2025-12-31",
+                "metric": "adjusted_ebitda",
+                "value_cents": 21_810_000_000,
+                "currency": "USD",
+                "is_audited": True,
+                "is_pro_forma": False,
+                "pro_forma_note": None,
+                "source_text": "Adjusted EBITDA was $218.1 million.",
+            }
+        ],
+    )
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {"facts": {}}
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        from edgarpack.errors import UnknownCompany
+
+        raise UnknownCompany("not in map")
+
+    async def fake_resolve_by_name(name):  # noqa: ARG001
+        return "0002021728", "Cerebras Systems Inc."
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            with patch(
+                "edgarpack.sec.tickers.resolve_company_by_name",
+                side_effect=fake_resolve_by_name,
+            ):
+                result = await financials(
+                    company="Cerebras Systems",
+                    metrics=None,
+                    period="lfy",
+                    pack_root=tmp_path,
+                )
+
+    assert list(result.metrics) == default_registration_query_metrics()
+    assert "cost_of_revenue" not in result.metrics
+    assert result.metrics["revenue"] is not None
+    assert result.metrics["adjusted_ebitda"] is not None
+    assert result.metrics["adjusted_ebitda"].source == "s1_snapshot"
 
 
 @pytest.mark.asyncio

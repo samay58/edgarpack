@@ -27,10 +27,12 @@ METRIC_SLUGS: frozenset[str] = frozenset(
     {
         "revenue",
         "gross_profit",
+        "adjusted_gross_profit",
         "operating_income_loss",
         "net_income_loss",
         "operating_cash_flow",
         "capex",
+        "adjusted_ebitda",
         "cash_and_equivalents",
         "total_assets",
         "stockholders_equity",
@@ -59,6 +61,10 @@ class SnapshotFact:
     is_audited: bool
     is_pro_forma: bool
     pro_forma_note: str | None
+    fiscal_period: str = "FY"
+    source_text: str | None = None
+    section_id: str | None = None
+    chunk_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -119,6 +125,7 @@ def _utc_iso_now() -> str:
 # Data" and Klarna's "SELECTED FINANCIAL DATA" both fire.
 _FINANCIAL_DATA_HEADINGS = [
     r"selected consolidated financial data",
+    r"summary consolidated financial and other data",
     r"summary consolidated financial data",
     r"selected financial data",
     r"summary financial data",
@@ -157,12 +164,69 @@ def find_financial_data_section(markdown: str) -> str | None:
     return rest[:_SECTION_CAP_CHARS]
 
 
+def _financial_section_texts(pack_dir: Path, markdown: str) -> list[str]:
+    sections: list[str] = []
+    primary = find_financial_data_section(markdown)
+    if primary:
+        sections.append(primary)
+
+    sections_dir = Path(pack_dir) / "sections"
+    if not sections_dir.exists():
+        return sections
+    name_fragments = (
+        "summary_consolidated",
+        "selected_financial",
+        "summary_financial",
+        "consolidated_statements",
+        "prospectus_summary",
+        "managements_discussion",
+        "non_gaap",
+    )
+    content_markers = (
+        "summary consolidated financial",
+        "selected financial data",
+        "consolidated statements of operations",
+        "results of operations",
+        "cash flows",
+        "non-gaap financial measures",
+    )
+    for section_path in sorted(sections_dir.glob("*.md")):
+        lowered = section_path.name.lower()
+        try:
+            text = section_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        lowered_text = text.lower()
+        has_name_match = any(fragment in lowered for fragment in name_fragments)
+        has_content_match = any(marker in lowered_text for marker in content_markers)
+        if not has_name_match and not has_content_match:
+            continue
+
+        candidates: list[str] = []
+        section_primary = find_financial_data_section(text)
+        if section_primary:
+            candidates.append(section_primary)
+        for marker in content_markers:
+            marker_index = lowered_text.find(marker)
+            if marker_index >= 0:
+                candidates.append(text[marker_index : marker_index + _SECTION_CAP_CHARS])
+        if has_name_match and not candidates:
+            candidates.append(text[:_SECTION_CAP_CHARS])
+
+        for candidate in candidates:
+            if candidate.strip() and candidate not in sections:
+                sections.append(candidate[:_SECTION_CAP_CHARS])
+    return sections
+
+
 _DETERMINISTIC_TABLE_MODEL = "deterministic-summary-table"
-_YEAR_PAIR_RE = re.compile(r"^((?:19|20)\d{2})\s*/\s*((?:19|20)\d{2})$")
+_YEAR_ROW_RE = re.compile(r"^((?:19|20)\d{2})(?:\s*/\s*((?:19|20)\d{2}))*$")
+_YEAR_TOKEN_RE = re.compile(r"\b((?:19|20)\d{2})\b")
 _SUMMARY_VALUE_TOKEN_RE = r"(?:\$?\(?\$?\d[\d,]*(?:\.\d+)?\)?|[\u2014-])"
 _SUMMARY_ROW_VALUE_RE = re.compile(
     rf"(?P<left>{_SUMMARY_VALUE_TOKEN_RE})\s*/\s*(?P<right>{_SUMMARY_VALUE_TOKEN_RE})\s*$"
 )
+_SUMMARY_ANY_VALUE_RE = re.compile(rf"(?<![A-Za-z0-9]){_SUMMARY_VALUE_TOKEN_RE}(?![A-Za-z0-9])")
 
 
 def _strip_summary_line(line: str) -> str:
@@ -179,6 +243,69 @@ def _summary_scale_multiplier(section_text: str) -> int:
     if "in thousands" in lowered:
         return 100_000
     return 100
+
+
+def _clean_summary_cell(raw: str) -> str:
+    return raw.replace("*", "").replace("_", "").replace("\xa0", " ").strip()
+
+
+def _split_summary_cells(line: str) -> list[str]:
+    return [_clean_summary_cell(cell) for cell in _strip_summary_line(line).split("/")]
+
+
+def _summary_period_from_context(year: int, context: str | None) -> tuple[str, str]:
+    lowered = (context or "").lower()
+    if "three months ended" in lowered and "march 31" in lowered:
+        return "Q1", f"{year}-03-31"
+    if "six months ended" in lowered and "june 30" in lowered:
+        return "Q2", f"{year}-06-30"
+    if "nine months ended" in lowered and "september 30" in lowered:
+        return "Q3", f"{year}-09-30"
+    return "FY", f"{year}-12-31"
+
+
+def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int]:
+    contexts: list[str] | None = None
+    for index, line in enumerate(lines):
+        lowered = line.lower()
+        if any(
+            marker in lowered
+            for marker in (
+                "year ended",
+                "three months ended",
+                "six months ended",
+                "nine months ended",
+            )
+        ):
+            cells = [cell for cell in _split_summary_cells(line) if cell]
+            if cells:
+                contexts = cells
+            header_columns: list[tuple[int, str, str]] = []
+            for cell in cells:
+                year_match = _YEAR_TOKEN_RE.search(cell)
+                if year_match is None:
+                    continue
+                year = int(year_match.group(1))
+                fiscal_period, period_end = _summary_period_from_context(year, cell)
+                header_columns.append((year, fiscal_period, period_end))
+            unique_header_columns = list(dict.fromkeys(header_columns))
+            if len(unique_header_columns) >= 2:
+                return unique_header_columns, index + 1
+            continue
+
+        year_tokens = [int(match.group(1)) for match in _YEAR_TOKEN_RE.finditer(line)]
+        if not year_tokens:
+            continue
+        if not _YEAR_ROW_RE.fullmatch(line.strip()) and len(year_tokens) < 2:
+            continue
+
+        columns: list[tuple[int, str, str]] = []
+        for position, year in enumerate(year_tokens):
+            context = contexts[position] if contexts and position < len(contexts) else None
+            fiscal_period, period_end = _summary_period_from_context(year, context)
+            columns.append((year, fiscal_period, period_end))
+        return columns, index + 1
+    return [], 0
 
 
 def _parse_summary_number(raw: str) -> Decimal | None:
@@ -202,18 +329,29 @@ def _scaled_summary_cents(value: Decimal, *, metric: str, money_multiplier: int)
 def _summary_metric_for_label(label: str, *, context: str | None) -> str | None:
     normalized = re.sub(r"\s+", " ", label).strip().lower()
     normalized = normalized.replace("\u2019", "'").replace("\u2013", "-")
-    if normalized in {"revenue", "total revenue"}:
+    normalized = re.sub(r"\(\d+\)", "", normalized).strip()
+    if normalized in {"revenue", "revenues", "total revenue", "total revenues"}:
         return "revenue"
     if normalized == "gross profit":
         return "gross_profit"
+    if normalized == "adjusted gross profit":
+        return "adjusted_gross_profit"
+    if normalized in {
+        "adjusted ebitda",
+        "adjusted ebitda loss",
+        "adjusted earnings before interest taxes depreciation and amortization",
+    }:
+        return "adjusted_ebitda"
     if normalized in {
         "operating loss",
         "loss from operations",
         "income (loss) from operations",
         "operating income (loss)",
+        "operating income",
+        "operating (loss) income",
     }:
         return "operating_income_loss"
-    if normalized in {"net loss", "net income", "net income (loss)"}:
+    if normalized in {"net loss", "net income", "net income (loss)", "net (loss) income"}:
         return "net_income_loss"
     if (
         "net cash" in normalized
@@ -236,28 +374,83 @@ def _summary_metric_for_label(label: str, *, context: str | None) -> str | None:
     return None
 
 
+def _summary_label_for_line(line: str) -> str:
+    dot_match = re.search(r"\.{3,}", line)
+    if dot_match is not None:
+        prefix = line[: dot_match.start()]
+    else:
+        first_value = _SUMMARY_ANY_VALUE_RE.search(line)
+        prefix = line[: first_value.start()] if first_value is not None else line
+    prefix = prefix.replace("$", " ")
+    prefix = re.sub(r"\.{3,}.*$", "", prefix).strip()
+    prefix = re.sub(r"\(\d+\)", "", prefix).strip()
+    if "/" in prefix:
+        prefix = prefix.split("/", 1)[0].strip()
+    return re.sub(r"\s+", " ", prefix).strip()
+
+
+def _summary_values_for_line(line: str, column_count: int) -> list[Decimal | None]:
+    line = re.sub(r"\(\d+\)", "", line)
+    matches = [match.group(0) for match in _SUMMARY_ANY_VALUE_RE.finditer(line)]
+    parsed = [_parse_summary_number(match) for match in matches]
+    if parsed and len(parsed) % 2 == 0:
+        pairs = list(zip(parsed[0::2], parsed[1::2], strict=True))
+        if all(left == right for left, right in pairs):
+            parsed = [left for left, _right in pairs]
+    if len(parsed) == column_count:
+        return parsed
+    if len(parsed) > column_count:
+        if "%" in line and column_count in {2, 3}:
+            return parsed[:column_count]
+        return parsed[-column_count:]
+    if 1 < len(parsed) < column_count:
+        return parsed
+    return []
+
+
+def _compact_summary_columns(
+    columns: list[tuple[int, str, str]],
+    value_count: int,
+) -> list[tuple[int, str, str]]:
+    if len(columns) == value_count:
+        return columns
+
+    unique_years = list(dict.fromkeys(year for year, _period, _end in columns))
+    has_interim = any(period != "FY" for _year, period, _end in columns)
+    if has_interim and value_count >= 3 and len(unique_years) >= value_count - 1:
+        interim_count = 2
+        annual_count = value_count - interim_count
+        annual_years = unique_years[:annual_count]
+        interim_start = max(0, annual_count - 1)
+        interim_years = unique_years[interim_start : interim_start + interim_count]
+        compact: list[tuple[int, str, str]] = [
+            (year, "FY", f"{year}-12-31") for year in annual_years
+        ]
+        compact.extend((year, "Q1", f"{year}-03-31") for year in interim_years)
+        if len(compact) == value_count:
+            return compact
+
+    compact_unique = list(dict.fromkeys(columns))
+    if len(compact_unique) == value_count:
+        return compact_unique
+    return columns
+
+
 def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[SnapshotFact]:
     """Parse common S-1 summary financial tables without an LLM.
 
-    The parser is intentionally narrow: it only emits facts from rows with an
-    explicit two-year header such as `2025 / 2024` and an explicit pair of
-    values at the end of the row. Ambiguous rows are skipped.
+    The parser is intentionally narrow: it only emits facts from rows with
+    explicit period headers such as `2025 / 2024` or S-1 annual-plus-quarterly
+    tables. Ambiguous rows are skipped.
     """
     lines = [_strip_summary_line(line) for line in section_text.splitlines()]
-    years: tuple[int, int] | None = None
-    start_index = 0
-    for index, line in enumerate(lines):
-        match = _YEAR_PAIR_RE.fullmatch(line)
-        if match is not None:
-            years = (int(match.group(1)), int(match.group(2)))
-            start_index = index + 1
-            break
-    if years is None:
+    columns, start_index = _summary_columns(lines)
+    if not columns:
         return []
 
     money_multiplier = _summary_scale_multiplier(section_text)
     context: str | None = None
-    facts_by_key: dict[tuple[str, int], SnapshotFact] = {}
+    facts_by_key: dict[tuple[str, int, str, str], SnapshotFact] = {}
     for line in lines[start_index:]:
         if not line:
             continue
@@ -274,20 +467,20 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
         if normalized_line.startswith("other financial information"):
             context = None
 
-        row_match = _SUMMARY_ROW_VALUE_RE.search(line)
-        if row_match is None:
+        values = _summary_values_for_line(line, len(columns))
+        if not values:
             continue
-        raw_label = line[: row_match.start()].strip()
-        label = re.sub(r"\.{3,}.*$", "", raw_label).strip()
+        label = _summary_label_for_line(line)
         metric = _summary_metric_for_label(label, context=context)
         if metric is None:
             continue
 
-        values = (
-            _parse_summary_number(row_match.group("left")),
-            _parse_summary_number(row_match.group("right")),
-        )
-        for fiscal_year, value in zip(years, values, strict=True):
+        row_columns = _compact_summary_columns(columns, len(values))
+        if len(row_columns) != len(values):
+            continue
+
+        row_values = zip(row_columns, values, strict=True)
+        for (fiscal_year, fiscal_period, period_end), value in row_values:
             if value is None:
                 continue
             value_cents = _scaled_summary_cents(
@@ -297,16 +490,18 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
             )
             if metric == "capex":
                 value_cents = abs(value_cents)
-            facts_by_key[(metric, fiscal_year)] = SnapshotFact(
+            facts_by_key[(metric, fiscal_year, fiscal_period, period_end)] = SnapshotFact(
                 accession=accession,
                 fiscal_year=fiscal_year,
-                period_end=f"{fiscal_year}-12-31",
+                period_end=period_end,
                 metric=metric,
                 value_cents=value_cents,
                 currency="USD",
                 is_audited=True,
                 is_pro_forma=False,
                 pro_forma_note=None,
+                fiscal_period=fiscal_period,
+                source_text=line,
             )
     return list(facts_by_key.values())
 
@@ -322,11 +517,17 @@ def _supplement_cash_flow_facts_from_full_filing(
         return facts
 
     supplemented = list(facts)
-    seen = {(fact.metric, fact.fiscal_year, fact.period_end) for fact in supplemented}
+    seen = {
+        (fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)
+        for fact in supplemented
+    }
+    valid_years = {fact.fiscal_year for fact in supplemented if fact.fiscal_year}
     for fact in _extract_summary_table_facts(full_text, accession=accession):
         if fact.metric not in {"operating_cash_flow", "capex"}:
             continue
-        key = (fact.metric, fact.fiscal_year, fact.period_end)
+        if valid_years and fact.fiscal_year not in valid_years:
+            continue
+        key = (fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)
         if key in seen:
             continue
         supplemented.append(fact)
@@ -346,8 +547,9 @@ _PROMPT_USER_TEMPLATE = """Return a JSON array. Each element is one fact:
 {{
   "fiscal_year": 2024,
   "period_end": "2024-12-31",
-  "metric": "revenue" | "gross_profit" | "operating_income_loss" | "net_income_loss"
-          | "operating_cash_flow" | "capex" | "cash_and_equivalents"
+  "metric": "revenue" | "gross_profit" | "adjusted_gross_profit"
+          | "operating_income_loss" | "net_income_loss"
+          | "operating_cash_flow" | "capex" | "adjusted_ebitda" | "cash_and_equivalents"
           | "total_assets" | "stockholders_equity"
           | "shares_outstanding_basic" | "eps_basic",
   "value_cents": 78287000000,
@@ -372,6 +574,8 @@ RULES:
 - Pro-forma rows MUST set is_pro_forma=true and record the assumption verbatim
   in pro_forma_note. Historical audited rows set is_pro_forma=false.
 - period_end must be ISO YYYY-MM-DD.
+- fiscal_period should be "FY" for annual rows and "Q1" / "Q2" / "Q3" for interim rows.
+- source_text should be the shortest verbatim row or sentence that contains the value.
 - Return [] when the text contains no extractable financial data.
 
 TEXT:
@@ -472,6 +676,22 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
                 pro_forma_note=(
                     str(row["pro_forma_note"]) if row.get("pro_forma_note") is not None else None
                 ),
+                fiscal_period=str(row.get("fiscal_period") or "FY"),
+                source_text=(
+                    str(row["source_text"]).strip()
+                    if row.get("source_text") is not None
+                    else None
+                ),
+                section_id=(
+                    str(row["section_id"]).strip()
+                    if row.get("section_id") is not None
+                    else None
+                ),
+                chunk_id=(
+                    str(row["chunk_id"]).strip()
+                    if row.get("chunk_id") is not None
+                    else None
+                ),
             )
         except (ValueError, TypeError):
             continue
@@ -479,7 +699,7 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
     return facts
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 7
 _CACHE_FILENAME = "s1_financials.json"
 _SOURCE_SCAN_CHARS = 50_000
 
@@ -526,8 +746,8 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
     if md_path.exists():
         markdown = md_path.read_text(encoding="utf-8", errors="replace")
 
-    section = find_financial_data_section(markdown)
-    if section is None:
+    financial_sections = _financial_section_texts(pack_dir, markdown)
+    if not financial_sections:
         result = SnapshotResult(
             schema_version=SCHEMA_VERSION,
             accession=accession,
@@ -540,7 +760,13 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         cache_path.write_text(result.to_json(), encoding="utf-8")
         return result
 
-    deterministic_facts = _extract_summary_table_facts(section, accession=accession)
+    deterministic_facts: list[SnapshotFact] = []
+    for section in financial_sections:
+        deterministic_facts.extend(_extract_summary_table_facts(section, accession=accession))
+    deduped_facts: dict[tuple[str, int, str, str], SnapshotFact] = {}
+    for fact in deterministic_facts:
+        deduped_facts[(fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)] = fact
+    deterministic_facts = list(deduped_facts.values())
     deterministic_facts = _supplement_cash_flow_facts_from_full_filing(
         deterministic_facts,
         full_text=markdown,
@@ -560,8 +786,8 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         return result
 
     try:
-        raw = await _call_haiku_extract(section)
-    except RuntimeError:
+        raw = await _call_haiku_extract("\n\n".join(financial_sections)[:_SECTION_CAP_CHARS])
+    except Exception:
         return SnapshotResult(
             schema_version=SCHEMA_VERSION,
             accession=accession,
@@ -619,10 +845,12 @@ class _SnapshotCandidate:
 _UNIT_FOR_METRIC: dict[str, tuple[str, int]] = {
     "revenue": ("USD", 100),
     "gross_profit": ("USD", 100),
+    "adjusted_gross_profit": ("USD", 100),
     "operating_income_loss": ("USD", 100),
     "net_income_loss": ("USD", 100),
     "operating_cash_flow": ("USD", 100),
     "capex": ("USD", 100),
+    "adjusted_ebitda": ("USD", 100),
     "cash_and_equivalents": ("USD", 100),
     "total_assets": ("USD", 100),
     "stockholders_equity": ("USD", 100),
@@ -636,10 +864,12 @@ _UNIT_FOR_METRIC: dict[str, tuple[str, int]] = {
 _DEFAULT_CONCEPTS: dict[str, str] = {
     "revenue": "Revenues",
     "gross_profit": "GrossProfit",
+    "adjusted_gross_profit": "AdjustedGrossProfit",
     "operating_income_loss": "OperatingIncomeLoss",
     "net_income_loss": "NetIncomeLoss",
     "operating_cash_flow": "NetCashProvidedByUsedInOperatingActivities",
     "capex": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "adjusted_ebitda": "AdjustedEBITDA",
     "cash_and_equivalents": "CashAndCashEquivalentsAtCarryingValue",
     "total_assets": "Assets",
     "stockholders_equity": "StockholdersEquity",
@@ -652,6 +882,26 @@ _PUBLIC_TO_SNAPSHOT_METRIC: dict[str, str] = {
     "net_income": "net_income_loss",
     "cash": "cash_and_equivalents",
 }
+
+S1_DEFAULT_QUERY_METRICS: tuple[str, ...] = (
+    "revenue",
+    "gross_profit",
+    "gross_margin",
+    "operating_income",
+    "operating_margin",
+    "net_income",
+    "net_margin",
+    "adjusted_gross_profit",
+    "adjusted_ebitda",
+    "operating_cash_flow",
+    "capex",
+    "free_cash_flow",
+    "cash_and_equivalents",
+    "total_assets",
+    "stockholders_equity",
+    "shares_outstanding_basic",
+    "eps_basic",
+)
 
 _S1_DERIVED_FORMULAS: dict[str, tuple[str, tuple[str, ...]]] = {
     "free_cash_flow": ("operating_cash_flow - capex", ("operating_cash_flow", "capex")),
@@ -692,7 +942,7 @@ def snapshot_fact_to_cited_value(
         period_start=None,
         period_end=period_end,
         fiscal_year=fact.fiscal_year,
-        fiscal_period="FY",
+        fiscal_period=fact.fiscal_period or "FY",
         form_type=form_type,
         filed=filed,
         accession=fact.accession,
@@ -725,15 +975,21 @@ def pick_snapshot_fact(
     audited = [f for f in candidates if f.is_audited and not f.is_pro_forma]
     if not audited:
         return None
-    audited.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
 
-    if period in ("lfy", "mrp"):
+    if period == "mrp":
+        audited.sort(key=lambda f: (f.period_end, f.fiscal_year), reverse=True)
         return audited[0]
+
+    annual = [f for f in audited if (f.fiscal_period or "FY").upper() == "FY"]
+    annual.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
+
+    if period == "lfy":
+        return annual[0] if annual else None
 
     match_lfy_n = re.match(r"^lfy-(\d+)$", period)
     if match_lfy_n:
         offset = int(match_lfy_n.group(1))
-        return audited[offset] if offset < len(audited) else None
+        return annual[offset] if offset < len(annual) else None
 
     return None
 
@@ -751,7 +1007,9 @@ def _read_registration_pack(manifest: Path, *, cik: str) -> _RegistrationPack | 
     except (OSError, json.JSONDecodeError):
         return None
     filing = data.get("filing") or {}
-    if str(filing.get("cik", "")) != cik:
+    filing_cik = str(filing.get("cik", "")).lstrip("0")
+    requested_cik = str(cik).lstrip("0")
+    if filing_cik != requested_cik:
         return None
     form_type = str(filing.get("form_type", ""))
     if not is_registration_form(form_type):
@@ -773,6 +1031,14 @@ def _registration_packs_for_cik(cik: str, pack_root: Path) -> list[_Registration
             packs.append(pack)
     packs.sort(key=lambda p: (p.filing_date, p.accession), reverse=True)
     return packs
+
+
+def has_registration_pack_for_cik(cik: str, pack_root: Path) -> bool:
+    return bool(_registration_packs_for_cik(cik, pack_root))
+
+
+def default_registration_query_metrics() -> list[str]:
+    return list(S1_DEFAULT_QUERY_METRICS)
 
 
 def _current_cached_snapshot(pack: _RegistrationPack) -> SnapshotResult | None:
@@ -828,6 +1094,17 @@ def _pick_snapshot_candidate(
     if not audited:
         return None
 
+    if period == "mrp":
+        audited.sort(
+            key=lambda c: (c.fact.period_end, c.fact.fiscal_year, c.filing_date),
+            reverse=True,
+        )
+        return audited[0]
+
+    audited = [c for c in audited if (c.fact.fiscal_period or "FY").upper() == "FY"]
+    if not audited:
+        return None
+
     newest_per_period: dict[tuple[int, str], _SnapshotCandidate] = {}
     for candidate in sorted(
         audited,
@@ -843,7 +1120,7 @@ def _pick_snapshot_candidate(
         reverse=True,
     )
 
-    if period in ("lfy", "mrp"):
+    if period == "lfy":
         return ordered[0] if ordered else None
 
     match_lfy_n = re.match(r"^lfy-(\d+)$", period)
@@ -1038,7 +1315,7 @@ def snapshots_for_cik(cik: str, pack_root: Path) -> list[SnapshotFact]:
         except (OSError, json.JSONDecodeError):
             continue
         filing = data.get("filing") or {}
-        if str(filing.get("cik", "")) != cik:
+        if str(filing.get("cik", "")).lstrip("0") != str(cik).lstrip("0"):
             continue
         if not is_registration_form(str(filing.get("form_type", ""))):
             continue

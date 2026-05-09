@@ -41,6 +41,7 @@ from typing import Any, Protocol
 
 from ..harvest.registry import PackRecord, PackRegistry
 from ..pack.manifest import load_manifest_dict
+from ..sec.submissions import is_registration_form
 from .learned_registry import LearnedRegistry
 from .models import CitedValue
 
@@ -364,6 +365,11 @@ _SECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"_key_metric"),
     re.compile(r"_operating_data"),
     re.compile(r"_key_performance"),
+    re.compile(r"^s1_itemother_prospectus_summary(?=_|$)"),
+    re.compile(r"^s1_itemother_managements_discussion(?=_|$)"),
+    re.compile(r"^s1_itemother_business(?=_|$)"),
+    re.compile(r"^s1_itemother_summary_consolidated(?=_|$)"),
+    re.compile(r"_non_gaap"),
 )
 
 
@@ -397,6 +403,10 @@ def _section_prompt_priority(section: dict[str, object]) -> int:
         return 0
     if "operating_data" in haystack or "operating data" in haystack:
         return 0
+    if "prospectus_summary" in haystack or "prospectus summary" in haystack:
+        return 0
+    if "managements_discussion" in haystack or "management's discussion" in haystack:
+        return 1
     if re.match(r"^10k_parti+_item7(?=_|$)", sec_id) or re.match(
         r"^10q_parti+_item2(?=_|$)", sec_id
     ):
@@ -404,6 +414,8 @@ def _section_prompt_priority(section: dict[str, object]) -> int:
     if "_segment" in sec_id or "segment" in title:
         return 2
     if re.match(r"^10k_parti+_item1(?=_|$)", sec_id):
+        return 3
+    if "business" in haystack:
         return 3
     if re.match(r"^10k_parti+_item7a(?=_|$)", sec_id):
         return 4
@@ -1421,7 +1433,7 @@ def _coerce_confidence(value: object) -> float:
 
 _DISCOVERY_UNIT_ALLOWED = frozenset({"USD", "count", "percent", "days", "pure"})
 _DISCOVERY_MAG_ALLOWED = frozenset({"thousands", "millions", "billions"})
-_DISCOVERY_VERSION = "staged-kpi-v1"
+_DISCOVERY_VERSION = "staged-kpi-v2"
 _LOCATOR_VERSION = "locator-v1"
 
 _KPI_KEYWORD_RE = re.compile(
@@ -1429,7 +1441,8 @@ _KPI_KEYWORD_RE = re.compile(
     r"user|users|customer|customers|subscriber|subscribers|account|accounts|asset|assets|"
     r"deposit|deposits|booking|bookings|volume|retention|store|stores|location|locations|"
     r"active|paying|paid|funded|platform|marketplace|cohort|take rate|arpu|auc|mau|dau|"
-    r"arr|nrr|rpo|seat|seats|member|members"
+    r"maau|rvd|rider|riders|trip|trips|city|cities|fleet|vehicle|vehicles|"
+    r"operational fleet|market share|retention|arr|nrr|rpo|seat|seats|member|members"
     r")\b",
     re.IGNORECASE,
 )
@@ -1438,7 +1451,8 @@ _NUMBER_RE = re.compile(
     re.IGNORECASE,
 )
 _HIGH_SIGNAL_SECTION_RE = re.compile(
-    r"key[ _-]?(metric|performance)|operating[ _-]?data|business[ _-]?metrics|segment",
+    r"key[ _-]?(metric|performance)|operating[ _-]?data|business[ _-]?metrics|segment|"
+    r"prospectus[ _-]?summary|managements?[ _-]?discussion|non[ _-]?gaap|business",
     re.IGNORECASE,
 )
 _GAAP_ONLY_SLUGS = frozenset(
@@ -1461,6 +1475,7 @@ _GAAP_ONLY_SLUGS = frozenset(
         "interest_expense",
     }
 )
+_MAX_REGISTRATION_CANDIDATES = 16
 
 
 class SubprocessKpiModelClient:
@@ -1481,6 +1496,26 @@ def _section_signal_name(section: dict[str, object]) -> str | None:
     if _HIGH_SIGNAL_SECTION_RE.search(haystack):
         return "high_signal_section"
     return None
+
+
+def _allow_number_sweep(section: dict[str, object], *, form_type: str) -> bool:
+    if not is_registration_form(form_type):
+        return True
+    haystack = f"{section.get('id', '')} {section.get('title', '')}".lower()
+    return any(
+        token in haystack
+        for token in (
+            "key_metric",
+            "key metric",
+            "operating_data",
+            "operating data",
+            "business_metrics",
+            "business metrics",
+            "segment",
+            "non_gaap",
+            "non-gaap",
+        )
+    )
 
 
 def _stable_candidate_id(
@@ -1602,7 +1637,7 @@ def locate_kpi_candidate_windows(
                     signals.append(section_signal)
                 hit_offsets.append((match.start(), tuple(signals)))
 
-        if section_signal:
+        if section_signal and _allow_number_sweep(section, form_type=pack_record.form_type):
             for match in _NUMBER_RE.finditer(text):
                 hit_offsets.append((match.start(), (section_signal, "number_in_signal_section")))
 
@@ -1646,6 +1681,8 @@ def locate_kpi_candidate_windows(
             candidates.append(candidate)
             accepted_spans.append((start, end))
 
+    if is_registration_form(pack_record.form_type):
+        return candidates[:_MAX_REGISTRATION_CANDIDATES]
     return candidates
 
 
@@ -1670,7 +1707,8 @@ def _build_candidate_discovery_prompt(
         f"Existing company slugs: {existing_hint}\n"
         f"Locator signals: {', '.join(candidate.signal_names) or '(none)'}\n"
         f"Value hints: {', '.join(candidate.value_hints) or '(none)'}\n\n"
-        "Include recurring operating metrics such as users, funded customers, "
+        "Include recurring operating metrics such as users, riders, cities, "
+        "operational fleet, vehicles, trips, MAU, RVD, market share, funded customers, "
         "accounts, AUC/assets, net deposits, ARPU, ARR, retention, seats, stores, "
         "members, bookings, volume, or take rate. Exclude GAAP-only line items "
         "such as revenue, gross profit, operating income, net income, cash, debt, "

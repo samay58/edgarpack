@@ -73,10 +73,12 @@ def test_metric_slugs_contains_all_v2_metrics():
     assert {
         "revenue",
         "gross_profit",
+        "adjusted_gross_profit",
         "operating_income_loss",
         "net_income_loss",
         "operating_cash_flow",
         "capex",
+        "adjusted_ebitda",
         "cash_and_equivalents",
         "total_assets",
         "stockholders_equity",
@@ -345,6 +347,177 @@ def test_extract_summary_table_facts_parses_cerebras_2026_statement_table():
     assert by_key[("capex", 2024)].value_cents == 2_343_500_000
     assert by_key[("eps_basic", 2025)].value_cents == 164
     assert by_key[("eps_basic", 2024)].value_cents == -990
+
+
+_NEUTRON_2026_SUMMARY_TABLE = "\n".join(
+    [
+        "",
+        " Summary Consolidated Financial Data",
+        " The following tables set forth our summary consolidated financial data.",
+        "",
+        (
+            "> **Year Ended December 31, / Year Ended December 31, / "
+            "Year Ended December 31, / Three Months Ended March 31, / "
+            "Three Months Ended March 31,**"
+        ),
+        "> 2023 / 2024 / 2025 / 2025 / 2026",
+        (
+            "> (in thousands, except per share amounts) / "
+            "(in thousands, except per share amounts) / "
+            "(in thousands, except per share amounts) / "
+            "(in thousands, except per share amounts) / "
+            "(in thousands, except per share amounts)"
+        ),
+        (
+            "> Revenue ................................. Revenue / Revenue / "
+            "$ / 521,983 / $ / 686,630 / $ / 886,719 / $ / 129,015 / "
+            "$ / 170,150"
+        ),
+        (
+            "> Gross profit ............................ Gross profit / Gross profit / "
+            "169,205 / 169,205 / 281,073 / 281,073 / 345,447 / 345,447 / "
+            "28,885 / 28,885 / 44,591 / 44,591"
+        ),
+        (
+            "> Operating (loss) income .................. Operating (loss) income / "
+            "Operating (loss) income / (24,624) / (24,624) / 46,969 / "
+            "46,969 / 70,401 / 70,401 / (31,422) / (31,422) / "
+            "(29,032) / (29,032)"
+        ),
+        (
+            "> Net loss ................................. Net loss / Net loss / "
+            "$ / (122,358) / $ / (33,913) / $ / (59,309) / "
+            "$ / (55,964) / $ / (61,286)"
+        ),
+        (
+            "> Adjusted Gross Profit .................... Adjusted Gross Profit / "
+            "Adjusted Gross Profit / $ / 276,300 / $ / 368,600 / "
+            "$ / 467,200 / $ / 56,500 / $ / 74,200"
+        ),
+        (
+            "> Adjusted EBITDA .......................... Adjusted EBITDA / "
+            "Adjusted EBITDA / $ / 99,754 / $ / 153,400 / $ / 218,100 / "
+            "$ / 2,100 / $ / 7,500"
+        ),
+        (
+            "> Net cash provided by operating activities  "
+            "Net cash provided by operating activities / "
+            "Net cash provided by operating activities / 81,199 / 81,199 / "
+            "168,953 / 168,953 / 214,841 / 214,841 / (20,615) / "
+            "(20,615) / (22,302) / (22,302)"
+        ),
+    ]
+)
+
+
+def test_extract_summary_table_facts_parses_neutron_multi_year_and_quarterly_rows():
+    facts = _extract_summary_table_facts(
+        _NEUTRON_2026_SUMMARY_TABLE,
+        accession="0001628280-26-032523",
+    )
+    by_key = {(fact.metric, fact.fiscal_year, fact.fiscal_period): fact for fact in facts}
+
+    assert by_key[("revenue", 2025, "FY")].value_cents == 88_671_900_000
+    assert by_key[("revenue", 2026, "Q1")].period_end == "2026-03-31"
+    assert by_key[("revenue", 2026, "Q1")].value_cents == 17_015_000_000
+    assert by_key[("gross_profit", 2024, "FY")].value_cents == 28_107_300_000
+    assert by_key[("operating_income_loss", 2025, "FY")].value_cents == 7_040_100_000
+    assert by_key[("net_income_loss", 2024, "FY")].value_cents == -3_391_300_000
+    assert by_key[("adjusted_gross_profit", 2025, "FY")].value_cents == 46_720_000_000
+    assert by_key[("adjusted_ebitda", 2025, "FY")].value_cents == 21_810_000_000
+    assert by_key[("operating_cash_flow", 2025, "FY")].value_cents == 21_484_100_000
+    assert "Adjusted EBITDA" in (by_key[("adjusted_ebitda", 2025, "FY")].source_text or "")
+
+
+_FERVO_2026_SUMMARY_TABLE = "\n".join(
+    [
+        "Summary Consolidated Financial and Other Data",
+        "> **(In thousands, except share and per share data)**",
+        ">",
+        "> Year ended December 31, / Year ended December 31, / Year ended December 31,",
+        ">",
+        "> (In thousands, except share and per share data) ... 2025 / 2024",
+        "> Consolidated Statements of Operations",
+        "> Revenues ... $138 / $199",
+        "> Operating loss ... (48,806) / (41,838)",
+        "> Net loss ... $(57,788) / $(41,110)",
+        "> Consolidated Statements of Cash Flows",
+        "> Net cash used in operating activities ... $(31,757) / $(54,748)",
+    ]
+)
+
+
+def test_extract_summary_table_facts_parses_fervo_two_year_summary_rows():
+    facts = _extract_summary_table_facts(
+        _FERVO_2026_SUMMARY_TABLE,
+        accession="0001628280-26-029515",
+    )
+    by_key = {(fact.metric, fact.fiscal_year, fact.fiscal_period): fact for fact in facts}
+
+    assert by_key[("revenue", 2025, "FY")].value_cents == 13_800_000
+    assert by_key[("revenue", 2024, "FY")].value_cents == 19_900_000
+    assert by_key[("operating_income_loss", 2025, "FY")].value_cents == -4_880_600_000
+    assert by_key[("net_income_loss", 2024, "FY")].value_cents == -4_111_000_000
+    assert by_key[("operating_cash_flow", 2025, "FY")].value_cents == -3_175_700_000
+
+
+_HAWKEYE_2026_MDA_TABLES = "\n".join(
+    [
+        "Results of Operations",
+        "> **(in thousands)**",
+        ">",
+        (
+            "> (in thousands) / (in thousands) / Year ended December 31, 2025 / "
+            "Year ended December 31, 2025 / Year ended December 31, 2025 / "
+            "Year ended December 31, 2024 / Year ended December 31, 2024 / "
+            "Year ended December 31, 2024 / $ Change / $ Change / $ Change / "
+            "% Change / % Change / % Change"
+        ),
+        ">",
+        (
+            "> Revenue ... Revenue / Revenue / $ / 98,743 / $ / 49,835 / "
+            "$ / 48,908 / 98 / 98 / %"
+        ),
+        (
+            "> Revenue from related parties ... Revenue from related parties / "
+            "Revenue from related parties / 18,917 / 18,917 / 17,724 / "
+            "17,724 / 1,193 / 1,193 / 7 / 7 / %"
+        ),
+        (
+            "> Total Revenue ... Total Revenue / Total Revenue / 117,660 / "
+            "117,660 / 67,559 / 67,559 / 50,101 / 50,101 / 74 / 74 / %"
+        ),
+        "Cash Flows",
+        "> **(in thousands)**",
+        ">",
+        (
+            "> (in thousands) / (in thousands) / Year ended December 31, 2025 / "
+            "Year ended December 31, 2025 / Year ended December 31, 2025 / "
+            "Year ended December 31, 2024 / Year ended December 31, 2024 / "
+            "Year ended December 31, 2024"
+        ),
+        ">",
+        (
+            "> Net cash (used in) provided by operating activities ... "
+            "Net cash (used in) provided by operating activities / "
+            "Net cash (used in) provided by operating activities / "
+            "$ / (17,339) / $ / 11,966"
+        ),
+    ]
+)
+
+
+def test_extract_summary_table_facts_parses_hawkeye_mda_comparison_rows():
+    facts = _extract_summary_table_facts(
+        _HAWKEYE_2026_MDA_TABLES,
+        accession="0001628280-26-029373",
+    )
+    by_key = {(fact.metric, fact.fiscal_year, fact.fiscal_period): fact for fact in facts}
+
+    assert by_key[("revenue", 2025, "FY")].value_cents == 11_766_000_000
+    assert by_key[("revenue", 2024, "FY")].value_cents == 6_755_900_000
+    assert by_key[("operating_cash_flow", 2025, "FY")].value_cents == -1_733_900_000
+    assert by_key[("operating_cash_flow", 2024, "FY")].value_cents == 1_196_600_000
 
 
 @pytest.mark.asyncio

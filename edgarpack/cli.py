@@ -296,14 +296,19 @@ def _local_pack_records(
 
 def _local_pack_hint(records: list[Any], *, command_label: str, form_type: str = "10-K") -> str:
     if not records:
-        return f"Run `edgarpack build {command_label} --form {form_type}` first."
+        return (
+            f"Run `edgarpack build {command_label} --form {form_type}` for a periodic "
+            f"filing, or `edgarpack build {command_label} --form S-1 --with-chunks` "
+            "for a new filer."
+        )
     first_path = records[0].pack_dir
     count = len(records)
     noun = "directory" if count == 1 else "directories"
     return (
         f"Found {count} pack {noun} on disk but none in the registry. "
         f"Inspect one with `edgarpack doctor {first_path}` or rebuild/register with "
-        f"`edgarpack build {command_label} --form {form_type}`."
+        f"`edgarpack build {command_label} --form {form_type}`. For a new filer, use "
+        f"`edgarpack build {command_label} --form S-1 --with-chunks`."
     )
 
 
@@ -347,6 +352,7 @@ def main(argv: list[str] | None = None) -> int:
             "Build and register a filing pack. "
             "Examples: `edgarpack build AAPL --form 10-K` (latest), "
             "`edgarpack build AAPL --form 10-K --last 5` (five most recent), "
+            "`edgarpack build Fervo Energy --form S-1 --with-chunks`, "
             "`edgarpack build AAPL --form 10-K --after 2020-01-01 --before 2022-12-31`."
         ),
     )
@@ -369,7 +375,7 @@ def main(argv: list[str] | None = None) -> int:
         "--form",
         "-f",
         help=(
-            "Form type: 10-K, 10-Q, 8-K. "
+            "Form type: 10-K, 10-Q, 8-K, S-1, S-1/A. "
             "Defaults to 10-K when combined with --last/--after/--before; "
             "fetches latest when used alone."
         ),
@@ -3557,13 +3563,17 @@ def _render_which_empty_state(
     if diagnostics.total_registered_packs == 0:
         return (
             f"No registered packs found for {display_name} (CIK: {cik}).\n"
-            f"Build one first with `edgarpack build {command_label} --form 10-K`."
+            f"Build a periodic pack with `edgarpack build {command_label} --form 10-K`, "
+            f"or build an S-1 pack with `edgarpack build {command_label} --form S-1 "
+            "--with-chunks`."
         )
     if diagnostics.unreadable_manifest_packs >= diagnostics.eligible_packs > 0:
         return (
             f"No KPIs shown for {display_name} because all {diagnostics.eligible_packs} "
             "candidate filing packs were unreadable on disk.\n"
-            f"Rebuild a fresh pack with `edgarpack build {command_label} --form 10-K --force`."
+            f"Rebuild a fresh periodic pack with `edgarpack build {command_label} "
+            f"--form 10-K --force`, or a fresh S-1 pack with `edgarpack build "
+            f"{command_label} --form S-1 --with-chunks --force`."
         )
     if diagnostics.llm_failed_packs > 0 and diagnostics.discovered_packs == 0:
         return (
@@ -3575,6 +3585,19 @@ def _render_which_empty_state(
     if diagnostics.empty_packs > 0:
         if has_s1_context:
             name = display_name.rstrip(".")
+            candidate_filings = [f for f in diagnostics.filings if f.candidate_count > 0]
+            if candidate_filings:
+                candidate_count = sum(f.candidate_count for f in candidate_filings)
+                accepted = sum(f.accepted_rows for f in candidate_filings)
+                rejected = sum(f.rejected_rows for f in candidate_filings)
+                return (
+                    f"No recurring operating KPI rows were accepted for {name}, but "
+                    f"registration discovery scanned {candidate_count} candidate window(s) "
+                    f"({accepted} accepted, {rejected} rejected).\n"
+                    "Cached registration disclosures and S-1 financial metrics are shown below.\n"
+                    f"Retry with `edgarpack which {command_label} --no-cache` after changing "
+                    "the discovery backend or prompt."
+                )
             return (
                 f"No recurring operating KPI table was found for {name}.\n"
                 "Cached registration disclosures and S-1 financial metrics are shown below.\n"
@@ -3603,7 +3626,8 @@ def _render_which_diagnostics(diagnostics: Any) -> str | None:
     if diagnostics.manifest_missing_packs:
         fragments.append(
             f"{diagnostics.manifest_missing_packs} skipped "
-            "(manifest missing; run `edgarpack build <ticker>`)"
+            "(manifest missing; run `edgarpack build <ticker> --form 10-K` "
+            "or `edgarpack build <ticker> --form S-1 --with-chunks`)"
         )
     if diagnostics.manifest_invalid_json_packs:
         fragments.append(
@@ -3970,7 +3994,7 @@ def _cmd_which(args: Any) -> int:
     if summary:
         print(summary, file=sys.stderr)
 
-    s1_block = _render_which_s1_metrics(packs)
+    s1_block = _render_which_s1_metrics(packs, diagnostics=diagnostics)
 
     if args.which_format == "json":
         payload = {
@@ -4026,7 +4050,11 @@ def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
         return []
 
     raw_metrics = {
-        fact.metric for fact in snapshot.facts if fact.is_audited and not fact.is_pro_forma
+        fact.metric
+        for fact in snapshot.facts
+        if fact.is_audited
+        and not fact.is_pro_forma
+        and (fact.fiscal_period or "FY").upper() == "FY"
     }
     display_metrics: set[str] = set()
     for metric in raw_metrics:
@@ -4054,10 +4082,12 @@ def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
         "revenue",
         "gross_profit",
         "gross_margin",
+        "adjusted_gross_profit",
         "operating_income",
         "operating_margin",
         "net_income",
         "net_margin",
+        "adjusted_ebitda",
         "operating_cash_flow",
         "capex",
         "free_cash_flow",
@@ -4074,55 +4104,74 @@ def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
     return ordered
 
 
-def _render_which_s1_metrics(packs: list[Any]) -> str:
-    """Render an S-1 disclosures block for any registration-class packs.
+def _render_which_s1_metrics(
+    packs: list[Any],
+    *,
+    diagnostics: Any | None = None,
+) -> str:
+    """Render a registration profile block for any registration-class packs.
 
     Shown only when the CIK has at least one pack with non-empty extractor
     output. Kept compact so periodic-filer queries don't get visually heavier.
     """
-    from .query.kpi_discover import extract_s1_metrics_from_pack
+    from .query.registration_profile import build_registration_profile
     from .sec.submissions import is_registration_form
 
     lines: list[str] = []
     reg_packs = [p for p in packs if is_registration_form(getattr(p, "form_type", ""))]
     reg_packs.sort(key=lambda p: getattr(p, "filing_date", "") or "")
+    filing_status = {
+        status.accession: status for status in getattr(diagnostics, "filings", []) or []
+    }
 
     for pack in reg_packs:
-        bundle = extract_s1_metrics_from_pack(Path(pack.pack_dir))
-        financial_metrics = _cached_s1_queryable_metrics(Path(pack.pack_dir))
-        if (not bundle or not bundle.total_hits) and not financial_metrics:
+        profile = build_registration_profile(Path(pack.pack_dir))
+        status = filing_status.get(getattr(pack, "accession", ""))
+        status_has_content = bool(
+            status is not None
+            and (
+                status.candidate_count
+                or status.accepted_rows
+                or status.rejected_rows
+                or status.retryable
+            )
+        )
+        if (profile is None or not profile.has_content) and not status_has_content:
             continue
 
-        if bundle:
+        if profile:
             header = (
-                f"S-1 disclosures ({bundle.form_type}, {pack.filing_date}, {bundle.accession}):"
+                f"Registration profile ({profile.form_type}, {profile.filing_date}, "
+                f"{profile.accession}):"
             )
         else:
-            header = f"S-1 disclosures ({pack.form_type}, {pack.filing_date}, {pack.accession}):"
+            header = (
+                f"Registration profile ({pack.form_type}, {pack.filing_date}, {pack.accession}):"
+            )
         lines.append(header)
 
-        if financial_metrics:
-            lines.append("  Queryable S-1 financial metrics (cached):")
-            lines.append(f"    {', '.join(financial_metrics)}")
+        if profile and profile.financial_metrics:
+            lines.append("  Queryable S-1 financial metrics:")
+            lines.append(f"    {', '.join(profile.financial_metrics)}")
+        elif profile and profile.financial_status not in {"not_extracted", "ok"}:
+            lines.append(f"  S-1 financial extraction: {profile.financial_status}")
 
-        if not bundle:
-            lines.append("")
-            continue
+        if status is not None and status.candidate_count:
+            retryable = " retryable" if status.retryable else ""
+            lines.append(
+                "  KPI discovery:"
+                f" {status.candidate_count} candidate window(s),"
+                f" {status.accepted_rows} accepted,"
+                f" {status.rejected_rows} rejected{retryable}"
+            )
 
-        for label, hits in (
-            ("framing claims", bundle.framing),
-            ("use of proceeds", bundle.use_of_proceeds),
-            ("dilution", bundle.dilution),
-            ("lockup terms", bundle.lockup),
-            ("principal holders", bundle.principal_holders),
-        ):
-            if not hits:
-                continue
-            lines.append(f"  {label} ({len(hits)}):")
-            for hit in hits[:3]:
-                lines.append(f"    - {hit.claim}")
-            if len(hits) > 3:
-                lines.append(f"    ... {len(hits) - 3} more")
+        if profile:
+            for group in profile.disclosures:
+                lines.append(f"  {group.label} ({len(group.claims)}):")
+                for claim in group.claims[:3]:
+                    lines.append(f"    - {claim}")
+                if len(group.claims) > 3:
+                    lines.append(f"    ... {len(group.claims) - 3} more")
         lines.append("")
 
     return "\n".join(lines).rstrip()

@@ -758,8 +758,17 @@ async def financials(
 
     doc_map = await _build_doc_map(cik, force=force)
 
+    pack_root_path = Path(pack_root) if pack_root is not None else Path("./packs")
     if metrics is None:
-        metric_list = list(ALL_METRICS)
+        from .s1_financials import (
+            default_registration_query_metrics,
+            has_registration_pack_for_cik,
+        )
+
+        if has_registration_pack_for_cik(cik, pack_root_path):
+            metric_list = default_registration_query_metrics()
+        else:
+            metric_list = list(ALL_METRICS)
     elif isinstance(metrics, str):
         metric_list = [m.strip() for m in metrics.split(",")]
     else:
@@ -824,6 +833,10 @@ async def financials(
                             ),
                         )
                     )
+                continue
+
+            if metric in _S1_METRIC_SLUGS:
+                result_metrics[metric] = None
                 continue
 
             # Company-specific discovered KPI (populated by `edgarpack which`).
@@ -1104,20 +1117,20 @@ async def financials(
     # `metrics=["Revenue"]` or `metrics=["rev"]` would compute any_empty=True
     # even when the cell was successfully resolved, spuriously triggering
     # the S-1 lazy-extraction path on every periodic-filer query.
+    requested_for_s1_aug = metric_list if metrics is None else _requested_metrics_list(metrics)
     resolved_requested = [
-        resolve_alias((m or "").strip().lower()) for m in _requested_metrics_list(metrics)
+        resolve_alias((m or "").strip().lower()) for m in requested_for_s1_aug
     ]
     any_empty = any(result.metrics.get(m) is None for m in resolved_requested)
     if any_empty or period == "pro-forma":
         from .s1_financials import augment_with_s1_snapshot
 
-        root = Path(pack_root) if pack_root is not None else Path("./packs")
         result = await augment_with_s1_snapshot(
             result=result,
             cik=cik,
             metrics=list(result.metrics.keys()),
             period=period,
-            pack_root=root,
+            pack_root=pack_root_path,
             company=company_name,
             form_type="S-1",
         )

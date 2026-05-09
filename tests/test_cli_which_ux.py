@@ -265,7 +265,8 @@ def test_cmd_which_shows_progress_and_summary(capsys):
     assert "Running KPI discovery on filing 1/1 (10-K 2026-02-18)" in captured.err
     assert (
         "Discovery summary: 1 analyzed, 1 skipped "
-        "(manifest missing; run `edgarpack build <ticker>`)"
+        "(manifest missing; run `edgarpack build <ticker> --form 10-K` "
+        "or `edgarpack build <ticker> --form S-1 --with-chunks`)"
     ) in captured.err
     assert "Rendering KPI table" in captured.err
     assert "paid_seats" in captured.out

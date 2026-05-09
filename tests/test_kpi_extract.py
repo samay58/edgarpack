@@ -318,6 +318,25 @@ class TestSelectSections(unittest.TestCase):
     def test_empty_section_list_returns_empty(self) -> None:
         self.assertEqual(_select_sections([]), [])
 
+    def test_matches_registration_profile_sections(self) -> None:
+        sections = [
+            {"id": "s1_itemother_prospectus_summary", "path": "sections/summary.md"},
+            {"id": "s1_itemother_managements_discussion", "path": "sections/mda.md"},
+            {"id": "s1_itemother_business", "path": "sections/business.md"},
+            {"id": "s1_itemother_underwriting", "path": "sections/underwriting.md"},
+        ]
+
+        selected = _select_sections(sections)
+
+        self.assertEqual(
+            [section["id"] for section in selected],
+            [
+                "s1_itemother_prospectus_summary",
+                "s1_itemother_managements_discussion",
+                "s1_itemother_business",
+            ],
+        )
+
     def test_preserves_manifest_order(self) -> None:
         """Sections in the output must appear in the same order as the input,
         regardless of which pattern matched which entry."""
@@ -369,6 +388,52 @@ class TestSelectSections(unittest.TestCase):
                 "10k_key_metric_nontraditional",
             ],
         )
+
+
+class TestS1KpiCandidateLocator(unittest.TestCase):
+    def test_registration_locator_finds_lime_operating_windows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_dir = Path(tmp)
+            sections_dir = pack_dir / "sections"
+            sections_dir.mkdir()
+            (sections_dir / "summary.md").write_text(
+                "In 2025, we delivered a seamless rider experience to approximately "
+                "19 million riders across approximately 230 cities. Our market share "
+                "was approximately 27% across the countries we operated in.\n",
+                encoding="utf-8",
+            )
+            (sections_dir / "mda.md").write_text(
+                "Revenue growth was driven by a 21% increase in our MAU and a 10% "
+                "growth in RVD, in each case compared to 2024.\n",
+                encoding="utf-8",
+            )
+            sections = [
+                {"id": "s1_itemother_prospectus_summary", "path": "sections/summary.md"},
+                {"id": "s1_itemother_managements_discussion", "path": "sections/mda.md"},
+            ]
+            pack_record = PackRecord(
+                accession="0001628280-26-032523",
+                cik="0001699963",
+                ticker="",
+                company_name="Neutron Holdings, Inc.",
+                form_type="S-1",
+                filing_date="2026-05-08",
+                sections_count=2,
+                tokens_total=1000,
+                pack_dir=str(pack_dir),
+                built_at=datetime.now(UTC).isoformat(),
+            )
+
+            candidates = locate_kpi_candidate_windows(
+                pack_dir=pack_dir,
+                pack_record=pack_record,
+                sections=sections,
+            )
+
+        section_ids = {candidate.section_id for candidate in candidates}
+        self.assertIn("s1_itemother_prospectus_summary", section_ids)
+        self.assertIn("s1_itemother_managements_discussion", section_ids)
+        self.assertTrue(any("riders" in candidate.window_text for candidate in candidates))
 
 
 class TestReadSectionText(unittest.TestCase):
