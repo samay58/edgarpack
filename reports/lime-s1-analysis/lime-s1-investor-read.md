@@ -260,5 +260,5 @@ External links referenced:
 
 - SEC filing URL from pack manifest: https://www.sec.gov/Archives/edgar/data/0001699963/000162828026032523/neutronholdingsinc-sx1.htm
 - Business Wire release syndicated by Yahoo Finance: https://finance.yahoo.com/markets/stocks/articles/lime-files-registration-statement-proposed-101700340.html
-- Financial Times valuation context: https://www.ft.com/content/6622a3fa-5dbf-4790-90c3-618a70f7f11c
-- MarketWatch debt context: https://www.marketwatch.com/story/uber-backed-lime-plans-ipo-as-debt-concerns-mount-for-the-e-scooter-maker-62f4f09a
+- Financial Times valuation context, access-restricted in link check: https://www.ft.com/content/6622a3fa-5dbf-4790-90c3-618a70f7f11c
+- MarketWatch debt context, access-restricted in link check: https://www.marketwatch.com/story/uber-backed-lime-plans-ipo-as-debt-concerns-mount-for-the-e-scooter-maker-62f4f09a
