@@ -173,7 +173,26 @@ edgarpack which "Cerebras Systems"
 
 For S-1 filers, `which` may show two different things: recurring operating KPIs if they exist, and cached queryable S-1 financial metrics from built registration packs. If no recurring operating KPIs are found, that is not a failed financial query. Use `query` for catalog financial metrics.
 
-## Workflow 6: Filing-change review
+## Workflow 6: Distill one filing
+
+Use this when a filing is too large and you want the compact substance with citations.
+
+```bash
+edgarpack distill run lime-s1 --pack packs/0001699963/0001628280-26-032523
+edgarpack distill check reports/lime-s1
+```
+
+The useful files are:
+
+- `index.md`: two-minute human scan.
+- `findings.csv`: business, ownership, proceeds, risk, and other disclosure rows.
+- `metrics.csv`: financial rows with period, unit, status, and evidence IDs.
+- `evidence.jsonl`: compact evidence records for LLMs and downstream tools.
+- `gaps.csv`: missing, ambiguous, or unsafe extraction areas.
+
+`distill` reads existing packs only. Build the pack first, then distill it. It does not write memos or generate narrative.
+
+## Workflow 7: Filing-change review
 
 Use this when the question is not "what was revenue?" but "what changed in the disclosure?"
 
@@ -196,7 +215,7 @@ For one section over time:
 edgarpack timeline --ticker NVDA --section 10k_parti_item1a_risk_factors
 ```
 
-## Workflow 7: Agent / LLM handoff
+## Workflow 8: Agent / LLM handoff
 
 Use packs when you want another tool or model to read filings.
 
@@ -220,11 +239,12 @@ Use JSON when the next tool should not parse terminal tables:
 edgarpack query NVDA revenue --period ltm --format json-full
 edgarpack comps NVDA AMD --metrics revenue,gross_margin --period ltm --format json
 edgarpack diff --ticker NVDA --form 10-K --format json
+edgarpack distill run lime-s1 --pack packs/0001699963/0001628280-26-032523
 ```
 
 The rule: make the model read cleaned source and citations, not raw SEC HTML and vibes.
 
-## Workflow 8: Maximum-capability research loop
+## Workflow 9: Maximum-capability research loop
 
 Use this when you are starting on a new company and want the full EdgarPack loop without getting lost.
 

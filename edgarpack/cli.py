@@ -444,6 +444,52 @@ def main(argv: list[str] | None = None) -> int:
         help="Output format (default: text)",
     )
 
+    p_distill = sub.add_parser(
+        "distill",
+        help="Compress an existing filing pack into cited human and machine-readable files",
+    )
+    distill_sub = p_distill.add_subparsers(dest="distill_cmd", required=True)
+    p_distill_run = distill_sub.add_parser(
+        "run",
+        help="Distill one existing pack into reports/<slug>/",
+    )
+    p_distill_run.add_argument("slug", help="Output slug under --out")
+    p_distill_run.add_argument(
+        "--pack",
+        type=Path,
+        help="Existing pack directory to distill",
+    )
+    p_distill_run.add_argument(
+        "--company",
+        help="Company name for build-command hints and output metadata",
+    )
+    p_distill_run.add_argument(
+        "--accession",
+        help="Accession to resolve under --packs when --pack is omitted",
+    )
+    p_distill_run.add_argument(
+        "--packs",
+        type=Path,
+        default=Path("./packs"),
+        help="Pack root used with --accession (default: ./packs)",
+    )
+    p_distill_run.add_argument(
+        "--out",
+        type=Path,
+        default=Path("./reports"),
+        help="Reports output root (default: ./reports)",
+    )
+    p_distill_run.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite an existing distill output directory",
+    )
+    p_distill_check = distill_sub.add_parser(
+        "check",
+        help="Validate a distilled filing bundle",
+    )
+    p_distill_check.add_argument("bundle", type=Path, help="Distill output directory")
+
     p_company = sub.add_parser("company-llms", help="Generate company-level llms.txt")
     p_company.add_argument(
         "company",
@@ -1015,6 +1061,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_build(args)
     if args.cmd == "doctor":
         return _cmd_doctor(args)
+    if args.cmd == "distill":
+        return _cmd_distill(args)
     if args.cmd == "company-llms":
         return _cmd_company_llms(args)
     if args.cmd == "list":
@@ -1210,6 +1258,61 @@ def _cmd_doctor(args: Any) -> int:
             f"{len(results) - healthy} need attention"
         )
 
+    return 0
+
+
+def _cmd_distill(args: Any) -> int:
+    from .distill import (
+        DistillError,
+        build_distill_bundle,
+        check_distill_bundle,
+        resolve_pack_path,
+        write_distill_bundle,
+    )
+
+    if args.distill_cmd == "check":
+        result = check_distill_bundle(args.bundle)
+        for warning in result.warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+        if not result.ok:
+            for error in result.errors:
+                print(f"error: {error}", file=sys.stderr)
+            return 1
+        print(f"distill check ok: {result.path}")
+        return 0
+
+    if args.distill_cmd != "run":
+        print("error: unknown distill command", file=sys.stderr)
+        return 2
+
+    try:
+        pack_dir = resolve_pack_path(
+            pack=args.pack,
+            accession=args.accession,
+            packs_root=args.packs,
+        )
+        bundle = build_distill_bundle(
+            slug=args.slug,
+            pack_dir=pack_dir,
+            output_root=args.out,
+            company_hint=args.company,
+        )
+        output_dir = write_distill_bundle(bundle, force=args.force)
+    except DistillError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        if args.accession and args.company:
+            print(
+                "hint: build the pack first with "
+                f"`edgarpack build \"{args.company}\" --accession {args.accession} --with-chunks`",
+                file=sys.stderr,
+            )
+        return 2
+    except FileExistsError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(f"Wrote distilled filing bundle to {output_dir}")
+    print(f"Run `edgarpack distill check {output_dir}` to validate it.")
     return 0
 
 
