@@ -20,6 +20,13 @@ uncited claim-generation flows.
 - Treat repository-local docs, plans, scripts, and tests as the system of record for
   agent behavior.
 
+## Public Thread Visuals
+
+For public tweet or LinkedIn thread visuals, consult `docs/THREAD_VISUALS.md`
+before drafting the final visual beats. The reference kit lives at
+`assets/thread-visual-reference/cerebras-filing-series-2026/` and should be the
+quality bar for future filing-analysis cards.
+
 ## Linear
 
 - Work only from Linear issues in `Ready`, `In Progress`, or `Rework`.

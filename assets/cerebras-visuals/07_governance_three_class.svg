@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="full" height="900" version="1.1" width="1600">
+  <defs>
+    <pattern height="32" id="dotgrid" patternUnits="userSpaceOnUse" width="32">
+      <circle cx="2" cy="2" fill="#D8D1C2" opacity="0.48" r="1.2"/>
+    </pattern>
+  </defs>
+  <rect fill="#F7F1E6" height="900" width="1600" x="0" y="0"/>
+  <circle cx="1450" cy="135" fill="#FFD95A" opacity="0.55" r="105"/>
+  <path d="M1367,64 L1525,222" fill="none" opacity="0.1" stroke="#111723" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+  <rect fill="url(#dotgrid)" height="900" opacity="0.3" width="1600" x="0" y="0"/>
+  <rect fill="none" height="812" opacity="0.88" rx="42" ry="42" stroke="#D8D1C2" stroke-width="1.3" width="1504" x="48" y="44"/>
+  <rect fill="#111723" height="42" opacity="0.96" rx="20" ry="20" width="284" x="88" y="78"/>
+  <text fill="#FFF9EE" font-family="DejaVu Sans Mono, SFMono-Regular, ui-monospace, monospace" font-size="17" font-weight="600" letter-spacing="1.7px" opacity="1" text-anchor="start" x="112" y="107">CEREBRAS S-1 DIFF</text>
+  <rect fill="#FFF9EE" height="42" opacity="0.98" rx="20" ry="20" stroke="#D8D1C2" stroke-width="1.1" width="92" x="1419" y="78"/>
+  <text fill="#3E4249" font-family="DejaVu Sans Mono, SFMono-Regular, ui-monospace, monospace" font-size="18" font-weight="600" opacity="1" text-anchor="middle" x="1465" y="107">07</text>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="56" font-weight="600" opacity="1" text-anchor="start" x="88" y="185">
+    <tspan dy="0" x="88">The IPO adds a founder-control layer</tspan>
+  </text>
+  <text fill="#3E4249" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="25" font-weight="400" opacity="1" text-anchor="start" x="92" y="275">
+    <tspan dy="0" x="92">2024 had two share classes. 2026 adds Class B with 20 votes per share before the public-market</tspan>
+    <tspan dy="33" x="92">entry.</tspan>
+  </text>
+  <line opacity="1" stroke="#E7DDCC" stroke-linecap="round" stroke-width="1" x1="88" x2="1512" y1="822" y2="822"/>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="600" opacity="1" text-anchor="start" x="92" y="856">edgarpack</text>
+  <text fill="#7B8273" font-family="DejaVu Sans Mono, SFMono-Regular, ui-monospace, monospace" font-size="19" font-weight="400" opacity="1" text-anchor="start" x="222" y="856">primary-source graphics</text>
+  <text fill="#7B8273" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" opacity="1" text-anchor="end" x="1512" y="856">Sources: Cerebras S-1 filings and warrant exhibit. Data labels use the thread draft.</text>
+  <rect fill="#FFF9EE" height="400" opacity="1" rx="34" ry="34" stroke="#D8D1C2" stroke-width="1.4" width="590" x="135" y="368"/>
+  <rect fill="#FFF9EE" height="400" opacity="1" rx="34" ry="34" stroke="#D8D1C2" stroke-width="1.4" width="590" x="875" y="368"/>
+  <text fill="#7B8273" font-family="DejaVu Sans Mono, SFMono-Regular, ui-monospace, monospace" font-size="26" font-weight="600" opacity="1" text-anchor="start" x="190" y="428">2024</text>
+  <text fill="#7B8273" font-family="DejaVu Sans Mono, SFMono-Regular, ui-monospace, monospace" font-size="26" font-weight="600" opacity="1" text-anchor="start" x="930" y="428">2026</text>
+  <rect fill="#FFD95A" height="78" opacity="1" rx="24" ry="24" width="405" x="205" y="500"/>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="31" font-weight="700" opacity="1" text-anchor="start" x="235" y="550">Class A</text>
+  <text fill="#3E4249" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="28" font-weight="600" opacity="1" text-anchor="end" x="565" y="550">1 vote</text>
+  <rect fill="#FCF4E6" height="78" opacity="1" rx="24" ry="24" stroke="#D8D1C2" stroke-width="1.2" width="405" x="205" y="605"/>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="31" font-weight="700" opacity="1" text-anchor="start" x="235" y="655">Class N</text>
+  <text fill="#3E4249" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="28" font-weight="600" opacity="1" text-anchor="end" x="565" y="655">0 votes</text>
+  <text fill="#7B8273" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="500" opacity="1" text-anchor="middle" x="405" y="720">public shareholders had the voting class</text>
+  <rect fill="#FFD95A" height="64" opacity="1" rx="22" ry="22" width="405" x="945" y="474"/>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="26" font-weight="700" opacity="1" text-anchor="start" x="975" y="516">Class A</text>
+  <text fill="#3E4249" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="25" font-weight="600" opacity="1" text-anchor="end" x="1320" y="516">1 vote</text>
+  <text fill="#7B8273" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="500" opacity="1" text-anchor="start" x="975" y="553">public IPO shares</text>
+  <rect fill="#111723" height="64" opacity="1" rx="22" ry="22" width="405" x="945" y="560"/>
+  <text fill="#FFF9EE" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="26" font-weight="700" opacity="1" text-anchor="start" x="975" y="602">Class B</text>
+  <text fill="#FFD95A" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="25" font-weight="600" opacity="1" text-anchor="end" x="1320" y="602">20 votes</text>
+  <text fill="#7B8273" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="500" opacity="1" text-anchor="start" x="975" y="639">founders and insiders</text>
+  <rect fill="#FCF4E6" height="64" opacity="1" rx="22" ry="22" stroke="#D8D1C2" stroke-width="1.2" width="405" x="945" y="646"/>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="26" font-weight="700" opacity="1" text-anchor="start" x="975" y="688">Class N</text>
+  <text fill="#3E4249" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="25" font-weight="600" opacity="1" text-anchor="end" x="1320" y="688">0 votes</text>
+  <text fill="#7B8273" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="500" opacity="1" text-anchor="start" x="975" y="725">strategic non-voting</text>
+  <line opacity="1" stroke="#111723" stroke-linecap="round" stroke-width="3" x1="764" x2="840" y1="565" y2="565"/>
+  <polygon fill="#111723" opacity="1" points="840,565 817,552 817,578"/>
+  <rect fill="#FFD95A" height="56" opacity="0.95" rx="24" ry="24" width="434" x="583" y="310"/>
+  <text fill="#111723" font-family="Inter Display, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="28" font-weight="800" opacity="1" text-anchor="middle" x="800" y="346">capital without governance</text>
+</svg>
