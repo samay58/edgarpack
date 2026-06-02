@@ -25,6 +25,7 @@ from .concepts import (
     get_scope_warning,
     resolve_concept,
 )
+from .formula import eval_formula
 from .kpi_discover import lookup_company_kpi
 from .kpi_extract import KPI_CATALOG
 from .layer_zero import MetricNotFound, resolve_alias, suggest_metrics
@@ -1633,63 +1634,7 @@ def _eval_formula(formula: str, components: dict[str, CitedValue]) -> float | No
     Numeric literals are supported in any operand position (e.g. ``revenue - 1``).
     """
     vals = {k: float(v.value) for k, v in components.items() if v.value is not None}
-
-    def _lookup(token: str) -> float | None:
-        # Allow numeric literals in the formula (e.g. "... - 1" for YoY growth).
-        try:
-            return float(token)
-        except ValueError:
-            return vals.get(token)
-
-    parts = formula.split()
-    if len(parts) == 3:
-        left_name, op, right_name = parts
-        left = _lookup(left_name)
-        right = _lookup(right_name)
-        if left is None or right is None:
-            return None
-        if op == "+":
-            return left + right
-        elif op == "-":
-            return left - right
-        elif op == "*":
-            return left * right
-        elif op == "/":
-            if right == 0:
-                return None
-            return left / right
-    elif len(parts) == 5:
-        # a + b - c  or  a + b + c  or  (a / b) - c (left-to-right for -)
-        a_name, op1, b_name, op2, c_name = parts
-        a = _lookup(a_name)
-        b = _lookup(b_name)
-        c = _lookup(c_name)
-        if a is None or b is None or c is None:
-            return None
-        # Respect precedence for /: (a / b) first, then +/- c.
-        if op1 == "/":
-            if b == 0:
-                return None
-            result = a / b
-        elif op1 == "*":
-            result = a * b
-        elif op1 == "+":
-            result = a + b
-        else:
-            result = a - b
-        if op2 == "+":
-            result = result + c
-        elif op2 == "-":
-            result = result - c
-        elif op2 == "*":
-            result = result * c
-        elif op2 == "/":
-            if c == 0:
-                return None
-            result = result / c
-        return result
-
-    return None
+    return eval_formula(formula, vals)
 
 
 def _fy_equivalent(period: str) -> str:

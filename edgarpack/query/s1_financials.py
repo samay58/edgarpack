@@ -678,19 +678,13 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
                 ),
                 fiscal_period=str(row.get("fiscal_period") or "FY"),
                 source_text=(
-                    str(row["source_text"]).strip()
-                    if row.get("source_text") is not None
-                    else None
+                    str(row["source_text"]).strip() if row.get("source_text") is not None else None
                 ),
                 section_id=(
-                    str(row["section_id"]).strip()
-                    if row.get("section_id") is not None
-                    else None
+                    str(row["section_id"]).strip() if row.get("section_id") is not None else None
                 ),
                 chunk_id=(
-                    str(row["chunk_id"]).strip()
-                    if row.get("chunk_id") is not None
-                    else None
+                    str(row["chunk_id"]).strip() if row.get("chunk_id") is not None else None
                 ),
             )
         except (ValueError, TypeError):
@@ -820,6 +814,7 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
 
 from datetime import date as _date_cls  # noqa: E402
 
+from edgarpack.query.formula import eval_formula  # noqa: E402
 from edgarpack.query.models import CitedValue, DerivedValue  # noqa: E402
 from edgarpack.sec.submissions import is_registration_form  # noqa: E402
 
@@ -1188,25 +1183,7 @@ def _eval_s1_formula(
     values = {
         name: float(value.value) for name, value in components.items() if value.value is not None
     }
-    parts = formula.split()
-    if len(parts) != 3:
-        return None
-    left_name, operator, right_name = parts
-    left = values.get(left_name)
-    right = values.get(right_name)
-    if left is None or right is None:
-        return None
-    if operator == "+":
-        return left + right
-    if operator == "-":
-        return left - right
-    if operator == "*":
-        return left * right
-    if operator == "/":
-        if right == 0:
-            return None
-        return left / right
-    return None
+    return eval_formula(formula, values)
 
 
 def _s1_derived_unit(metric: str) -> str:
