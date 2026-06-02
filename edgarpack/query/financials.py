@@ -490,9 +490,7 @@ def _select_metric_period_value(
                 expected,
             )
             if exact_values:
-                value: MetricValue = (
-                    exact_values if merge_annual_series else exact_values[0]
-                )
+                value: MetricValue = exact_values if merge_annual_series else exact_values[0]
             else:
                 value = [] if merge_annual_series else None
                 local_diagnostics.append(
@@ -1118,9 +1116,7 @@ async def financials(
     # even when the cell was successfully resolved, spuriously triggering
     # the S-1 lazy-extraction path on every periodic-filer query.
     requested_for_s1_aug = metric_list if metrics is None else _requested_metrics_list(metrics)
-    resolved_requested = [
-        resolve_alias((m or "").strip().lower()) for m in requested_for_s1_aug
-    ]
+    resolved_requested = [resolve_alias((m or "").strip().lower()) for m in requested_for_s1_aug]
     any_empty = any(result.metrics.get(m) is None for m in resolved_requested)
     if any_empty or period == "pro-forma":
         from .s1_financials import augment_with_s1_snapshot
@@ -1426,27 +1422,8 @@ def _compute_derived_series(
         if result_value is None:
             continue
 
-        first_comp = next(iter(components.values()))
         derived_results.append(
-            DerivedValue(
-                value=result_value,
-                unit=_derived_unit(metric, components),
-                metric=metric,
-                concept=meta.formula,
-                period_start=first_comp.period_start,
-                period_end=first_comp.period_end,
-                fiscal_year=first_comp.fiscal_year,
-                fiscal_period=first_comp.fiscal_period,
-                form_type=first_comp.form_type,
-                filed=first_comp.filed,
-                accession=first_comp.accession,
-                cik=cik,
-                company=company,
-                taxonomy=first_comp.taxonomy,
-                primary_document=first_comp.primary_document,
-                derived=True,
-                components=components,
-            )
+            _make_derived_value(metric, result_value, meta.formula, components, cik, company)
         )
         if len(derived_results) >= count:
             break
@@ -1634,31 +1611,7 @@ def _compute_derived(
         cache[cache_key] = None
         return None
 
-    # Use the first component's provenance for the derived value
-    first_comp = next(iter(components.values()))
-
-    # Determine unit for derived metrics
-    unit = _derived_unit(metric, components)
-
-    derived = DerivedValue(
-        value=result_value,
-        unit=unit,
-        metric=metric,
-        concept=meta.formula,
-        period_start=first_comp.period_start,
-        period_end=first_comp.period_end,
-        fiscal_year=first_comp.fiscal_year,
-        fiscal_period=first_comp.fiscal_period,
-        form_type=first_comp.form_type,
-        filed=first_comp.filed,
-        accession=first_comp.accession,
-        cik=cik,
-        company=company,
-        taxonomy=first_comp.taxonomy,
-        primary_document=first_comp.primary_document,
-        derived=True,
-        components=components,
-    )
+    derived = _make_derived_value(metric, result_value, meta.formula, components, cik, company)
     in_progress.discard(cache_key)
     cache[cache_key] = derived
     return derived
@@ -1947,6 +1900,40 @@ def _derived_unit(metric: str, components: dict[str, CitedValue]) -> str:
     # Additive/subtractive: inherit from first component
     first = next(iter(components.values()), None)
     return first.unit if first else "USD"
+
+
+def _make_derived_value(
+    metric: str,
+    value: float,
+    concept: str,
+    components: dict[str, CitedValue],
+    cik: str,
+    company: str,
+) -> DerivedValue:
+    # Shared assembly for _compute_derived and _compute_derived_series: a derived
+    # value inherits period/fiscal/filing provenance from its first component.
+    # _compute_cagr does NOT use this; it derives those fields from its start/end
+    # window, not the first component.
+    first = next(iter(components.values()))
+    return DerivedValue(
+        value=value,
+        unit=_derived_unit(metric, components),
+        metric=metric,
+        concept=concept,
+        period_start=first.period_start,
+        period_end=first.period_end,
+        fiscal_year=first.fiscal_year,
+        fiscal_period=first.fiscal_period,
+        form_type=first.form_type,
+        filed=first.filed,
+        accession=first.accession,
+        cik=cik,
+        company=company,
+        taxonomy=first.taxonomy,
+        primary_document=first.primary_document,
+        derived=True,
+        components=components,
+    )
 
 
 _HKEX_CONCEPT_CANONICAL: dict[str, str] = {
