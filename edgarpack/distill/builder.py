@@ -84,7 +84,8 @@ def build_distill_bundle(
         "filing_date": str(filing_raw.get("filing_date") or ""),
         "period_of_report": str(filing_raw.get("period_of_report") or ""),
     }
-    source = manifest.get("source") if isinstance(manifest.get("source"), dict) else {}
+    source_raw = manifest.get("source")
+    source = source_raw if isinstance(source_raw, dict) else {}
     source_url = str(source.get("url") or "")
 
     evidence: list[EvidenceRecord] = []

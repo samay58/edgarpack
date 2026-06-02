@@ -7,7 +7,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from .models import OUTPUT_FILES, DistillBundle
+from .models import OUTPUT_FILES, DistillBundle, FindingRow, GapRow, MetricRow
 
 
 def write_distill_bundle(bundle: DistillBundle, *, force: bool = False) -> Path:
@@ -30,7 +30,7 @@ def write_distill_bundle(bundle: DistillBundle, *, force: bool = False) -> Path:
     return out
 
 
-def _write_csv(path: Path, rows: tuple[object, ...]) -> None:
+def _write_csv(path: Path, rows: tuple[FindingRow | MetricRow | GapRow, ...]) -> None:
     if not rows:
         path.write_text("", encoding="utf-8")
         return
@@ -75,11 +75,11 @@ def _write_index(bundle: DistillBundle, path: Path) -> None:
                 "| --- | --- | ---: | --- | --- | --- |",
             ]
         )
-        for row in bundle.metrics:
-            value = _format_metric_value(row.value, row.unit)
+        for metric_row in bundle.metrics:
+            value = _format_metric_value(metric_row.value, metric_row.unit)
             lines.append(
-                f"| {row.metric} | {row.period} | {value} | {row.unit} | "
-                f"{'; '.join(row.evidence_ids)} | {row.status} |"
+                f"| {metric_row.metric} | {metric_row.period} | {value} | {metric_row.unit} | "
+                f"{'; '.join(metric_row.evidence_ids)} | {metric_row.status} |"
             )
     else:
         lines.append("No metrics extracted.")
@@ -92,10 +92,11 @@ def _write_index(bundle: DistillBundle, path: Path) -> None:
                 "| --- | --- | --- | --- |",
             ]
         )
-        for row in bundle.findings:
-            statement = row.statement.replace("\n", " ")
+        for finding_row in bundle.findings:
+            statement = finding_row.statement.replace("\n", " ")
             lines.append(
-                f"| {row.topic} | {statement} | {'; '.join(row.evidence_ids)} | {row.status} |"
+                f"| {finding_row.topic} | {statement} | "
+                f"{'; '.join(finding_row.evidence_ids)} | {finding_row.status} |"
             )
     else:
         lines.append("No findings extracted.")
@@ -103,8 +104,8 @@ def _write_index(bundle: DistillBundle, path: Path) -> None:
     lines.extend(["", "## Gaps", ""])
     if bundle.gaps:
         lines.extend(["| Area | Issue | Status |", "| --- | --- | --- |"])
-        for row in bundle.gaps:
-            lines.append(f"| {row.area} | {row.issue} | {row.status} |")
+        for gap_row in bundle.gaps:
+            lines.append(f"| {gap_row.area} | {gap_row.issue} | {gap_row.status} |")
     else:
         lines.append("No gaps recorded.")
 
