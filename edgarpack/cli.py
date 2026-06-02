@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from . import __version__
+from .config import DEFAULT_PACKS_DIR, DEFAULT_REPORTS_DIR, DEFAULT_SITE_DIR
 from .errors import AmbiguousCompany, UnknownCompany
 
 # Re-exported so existing `from edgarpack.cli import ...` call sites (tests) keep working
@@ -246,7 +247,7 @@ def _local_pack_records(
     cik: str,
     ticker: str | None = None,
     form_type: str | None = None,
-    packs_root: Path = Path("packs"),
+    packs_root: Path = DEFAULT_PACKS_DIR,
     limit: int = 200,
 ) -> list[Any]:
     """Best-effort discovery for packs present on disk but absent from registry."""
@@ -389,7 +390,7 @@ def main(argv: list[str] | None = None) -> int:
         "--out",
         "-o",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Output directory",
     )
     p_build.add_argument(
@@ -475,13 +476,13 @@ def main(argv: list[str] | None = None) -> int:
     p_distill_run.add_argument(
         "--packs",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Pack root used with --accession (default: ./packs)",
     )
     p_distill_run.add_argument(
         "--out",
         type=Path,
-        default=Path("./reports"),
+        default=DEFAULT_REPORTS_DIR,
         help="Reports output root (default: ./reports)",
     )
     p_distill_run.add_argument(
@@ -510,7 +511,7 @@ def main(argv: list[str] | None = None) -> int:
         "--out",
         "-o",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Packs output directory",
     )
 
@@ -535,14 +536,14 @@ def main(argv: list[str] | None = None) -> int:
     p_site.add_argument(
         "--packs",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Directory containing packs",
     )
     p_site.add_argument(
         "--out",
         "-o",
         type=Path,
-        default=Path("./site"),
+        default=DEFAULT_SITE_DIR,
         help="Site output directory",
     )
     p_site.add_argument("--base-url", default=None, help="Optional base URL (reserved)")
@@ -655,7 +656,7 @@ def main(argv: list[str] | None = None) -> int:
         "--out",
         "-o",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Output directory for packs",
     )
     p_harvest.add_argument(
@@ -735,7 +736,7 @@ def main(argv: list[str] | None = None) -> int:
     p_timeline.add_argument(
         "--packs",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Packs directory (default: ./packs)",
     )
     p_timeline.add_argument(
@@ -780,7 +781,7 @@ def main(argv: list[str] | None = None) -> int:
     p_index.add_argument(
         "--packs",
         type=Path,
-        default=Path("./packs"),
+        default=DEFAULT_PACKS_DIR,
         help="Packs directory to index (default: ./packs)",
     )
     p_index.add_argument(
@@ -981,7 +982,7 @@ def main(argv: list[str] | None = None) -> int:
     p_build_sse.add_argument("--company", help="Company name")
     p_build_sse.add_argument("--filing-date", help="Filing date (YYYY-MM-DD)")
     p_build_sse.add_argument(
-        "--out", "-o", type=Path, default=Path("./packs"), help="Output directory"
+        "--out", "-o", type=Path, default=DEFAULT_PACKS_DIR, help="Output directory"
     )
     p_build_sse.add_argument("--pdf", type=Path, help="Local PDF file (skip download)")
     p_build_sse.add_argument(
@@ -2852,7 +2853,7 @@ def _render_registration_timeline(args: Any) -> int:
         print("error: --cik is required when --series=registration", file=sys.stderr)
         return 2
 
-    pack_root = Path(getattr(args, "packs", "./packs"))
+    pack_root = Path(getattr(args, "packs", DEFAULT_PACKS_DIR))
     entries = build_registration_timeline(pack_root=pack_root, cik=args.cik)
 
     if not entries:

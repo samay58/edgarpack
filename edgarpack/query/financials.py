@@ -11,6 +11,7 @@ from datetime import datetime as _datetime
 from pathlib import Path
 from typing import Any, cast
 
+from ..config import DEFAULT_PACKS_DIR
 from ..sec.archives import fetch_file
 from ..sec.client import HTTPError
 from ..sec.submissions import FilingMeta, fetch_submissions
@@ -757,7 +758,7 @@ async def financials(
 
     doc_map = await _build_doc_map(cik, force=force)
 
-    pack_root_path = Path(pack_root) if pack_root is not None else Path("./packs")
+    pack_root_path = Path(pack_root) if pack_root is not None else DEFAULT_PACKS_DIR
     if metrics is None:
         from .s1_financials import (
             default_registration_query_metrics,
@@ -1975,7 +1976,7 @@ def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) ->
     if pack_root is not None:
         roots.append(Path(pack_root))
     else:
-        roots.extend([Path("packs"), Path(".")])
+        roots.extend([DEFAULT_PACKS_DIR, Path(".")])
 
     exchange_dirs = ["sse"] if source == "SSE" else ["hk", "hkex"]
     variants = [v for v in (stock_code, stock_code.lstrip("0"), ticker, ticker.upper()) if v]

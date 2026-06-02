@@ -25,6 +25,7 @@ def _env_int(name: str, default: int) -> int:
         return default
     return parsed if parsed > 0 else default
 
+
 # SEC requires every request to identify the caller in the format
 # "Name email@example.com". No default is supplied: callers must set
 # EDGARPACK_USER_AGENT before making any network calls. SECClient validates.
@@ -32,6 +33,13 @@ USER_AGENT = os.getenv("EDGARPACK_USER_AGENT", "")
 
 # Cache location. User-level so it survives project moves.
 CACHE_DIR = Path(os.getenv("EDGARPACK_CACHE_DIR", Path.home() / ".edgarpack" / "cache"))
+
+# Canonical on-disk output locations. Path('packs') == Path('./packs')
+# (pathlib strips the leading './'), so these unify the spellings that were
+# scattered as argparse defaults without changing any behavior.
+DEFAULT_PACKS_DIR = Path("packs")
+DEFAULT_SITE_DIR = Path("site")
+DEFAULT_REPORTS_DIR = Path("reports")
 
 # SEC fair-access limit is 10 requests/second. EdgarPack defaults below that
 # ceiling so local builds have headroom for browser/user activity sharing the
