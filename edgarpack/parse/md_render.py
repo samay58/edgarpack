@@ -253,6 +253,7 @@ def _process_lists(html: str) -> str:
     prev = None
     while prev != result:
         prev = result
+
         def _render_ul(match: re.Match[str]) -> str:
             return _render_list_items(match.group(1), ordered=False, depth=0)
 

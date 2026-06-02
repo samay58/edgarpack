@@ -230,8 +230,7 @@ def _compact_citation_summaries(citations: dict[str, dict[str, object]]) -> list
         filing = record.get("accession")
         filed = record.get("filed")
         lines.append(
-            f"[{id_list}] {form_type} {fiscal} | period {period} | "
-            f"filing {filing} | filed {filed}"
+            f"[{id_list}] {form_type} {fiscal} | period {period} | filing {filing} | filed {filed}"
         )
     return lines
 

@@ -327,9 +327,7 @@ def _span_html(span: TextSpan) -> str:
 
 def _is_numeric_cell(text: str) -> bool:
     cleaned = text.strip().replace(",", "")
-    return bool(cleaned) and bool(
-        re.fullmatch(r"[$€£¥]?\(?-?\d+(?:\.\d+)?%?\)?", cleaned)
-    )
+    return bool(cleaned) and bool(re.fullmatch(r"[$€£¥]?\(?-?\d+(?:\.\d+)?%?\)?", cleaned))
 
 
 def _is_escaped_pipe(line: str, index: int) -> bool:
@@ -414,9 +412,7 @@ def _is_flattened_financial_ledger(text: str) -> bool:
         return False
     slash_lines = sum(1 for line in lines if line.count("/") >= 2)
     dotted_lines = sum(1 for line in lines if "..." in line)
-    money_or_paren_lines = sum(
-        1 for line in lines if "$" in line or ("(" in line and ")" in line)
-    )
+    money_or_paren_lines = sum(1 for line in lines if "$" in line or ("(" in line and ")" in line))
     return slash_lines >= 2 and (dotted_lines >= 1 or money_or_paren_lines >= 1)
 
 

@@ -111,10 +111,7 @@ def _financial_metrics_from_cache(pack_dir: Path) -> tuple[tuple[str, ...], str]
         and not fact.is_pro_forma
         and (fact.fiscal_period or "FY").upper() == "FY"
     }
-    display_metrics = {
-        _DISPLAY_FOR_SNAPSHOT_METRIC.get(metric, metric)
-        for metric in raw_metrics
-    }
+    display_metrics = {_DISPLAY_FOR_SNAPSHOT_METRIC.get(metric, metric) for metric in raw_metrics}
     if {"gross_profit", "revenue"}.issubset(raw_metrics):
         display_metrics.add("gross_margin")
     if {"operating_income_loss", "revenue"}.issubset(raw_metrics):

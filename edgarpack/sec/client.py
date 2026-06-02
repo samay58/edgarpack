@@ -209,9 +209,8 @@ def _maybe_gunzip(content: bytes, headers: dict[str, str]) -> bytes:
 def _is_sec_traffic_limit_page(content: bytes) -> bool:
     """Return True for SEC's fair-access timeout HTML page."""
     head = content[:8192].lower()
-    return (
-        b"request rate threshold exceeded" in head
-        or (b"exceeded" in head and b"sec" in head and b"traffic limit" in head)
+    return b"request rate threshold exceeded" in head or (
+        b"exceeded" in head and b"sec" in head and b"traffic limit" in head
     )
 
 
