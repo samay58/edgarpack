@@ -183,7 +183,7 @@ def _recover_bullet_tables(md: str) -> str:
                 break
 
         if bullet_col is None:
-            continue  # no bullet column — leave table alone
+            continue  # no bullet column; leave table alone
 
         # Find the content column: the single non-empty, non-bullet column
         content_col = None
@@ -198,7 +198,7 @@ def _recover_bullet_tables(md: str) -> str:
                 content_col = col
 
         if content_col is None:
-            continue  # ambiguous or no content — leave table alone
+            continue  # ambiguous or no content; leave table alone
 
         # Build list lines
         list_lines = [
@@ -414,8 +414,8 @@ def _strip_broken_anchors(md: str) -> str:
         if toc_span is not None:
             toc_start, toc_end = toc_span
             if toc_start <= m.start() < toc_end:
-                return m.group(0)  # inside TOC — preserve
-        return m.group(1)  # outside TOC — strip to plain text
+                return m.group(0)  # inside TOC; preserve
+        return m.group(1)  # outside TOC; strip to plain text
 
     return _FRAGMENT_LINK_RE.sub(_replace, md)
 
@@ -431,7 +431,7 @@ def _normalize_whitespace(md: str) -> str:
     4. Strip leading and trailing blank lines from the document.
     """
     # Step 1: strip trailing whitespace, but preserve intentional 2-space breaks.
-    # A 2-space break is exactly two trailing spaces — not three or more.
+    # A 2-space break is exactly two trailing spaces; not three or more.
     lines = md.split("\n")
     cleaned: list[str] = []
     for line in lines:

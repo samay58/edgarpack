@@ -441,7 +441,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
 
     def _starts_with_paren_citation(title: str) -> bool:
         """Reject titles that start with a parenthesized regulation citation
-        like '(b)(32)(ii)' — these are exhibit footnote fragments, not
+        like '(b)(32)(ii)'; these are exhibit footnote fragments, not
         real section headings."""
         return bool(re.match(r"^\(\s*[a-z0-9]", title, re.IGNORECASE))
 
@@ -665,9 +665,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if is_table:
                 cells = _split_table_cells(line_stripped)
                 for idx, cell in enumerate(cells):
-                    cell_match_8k = _match_item_in_cell(
-                        cell, ITEM_PATTERN_8K, r"ITEM\s+\d+\.\d+\b"
-                    )
+                    cell_match_8k = _match_item_in_cell(cell, ITEM_PATTERN_8K, r"ITEM\s+\d+\.\d+\b")
                     if not cell_match_8k:
                         continue
                     item = cell_match_8k.group("item")

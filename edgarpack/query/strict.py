@@ -17,8 +17,8 @@ def is_strict_allowed(value: CitedValue) -> bool:
 
     Only values with source='hardcoded' (the default for METRIC_MAP
     resolutions that hit canonical XBRL concepts) are allowed. Anything
-    else — learned:fuzzy, learned:llm, learned:kpi-*, text-scan, any
-    future non-deterministic source tag — is rejected.
+    else (learned:fuzzy, learned:llm, learned:kpi-*, text-scan, any
+    future non-deterministic source tag) is rejected.
     """
     return getattr(value, "source", "hardcoded") == "hardcoded"
 

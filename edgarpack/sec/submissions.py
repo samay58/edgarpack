@@ -176,7 +176,7 @@ async def _fetch_submissions_page(name: str, force: bool = False) -> dict[str, A
     re-fetching on every historical lookup.
 
     Returns the flat columnar structure (accessionNumber, form, filingDate,
-    etc. at the top level — not nested under a `filings.recent` key).
+    etc. at the top level; not nested under a `filings.recent` key).
     """
     url = f"{SEC_DATA_BASE}/submissions/{name}"
     cache = DiskCache(CACHE_DIR)
@@ -233,7 +233,8 @@ async def _iter_submission_pages(
             continue
         try:
             page = await _fetch_submissions_page(name, force=force)
-        except Exception as exc:  # noqa: BLE001 — log + continue on any fetch fault
+        # Log and continue on any fetch fault.
+        except Exception as exc:  # noqa: BLE001
             logger.warning(
                 "Failed to fetch older submissions page %s: %s. "
                 "Older filings in that range will not be discoverable.",

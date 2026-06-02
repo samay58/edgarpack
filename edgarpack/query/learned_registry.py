@@ -484,9 +484,7 @@ class LearnedRegistry:
         conn.commit()
         return cur.rowcount or 0
 
-    # ------------------------------------------------------------------
     # company_kpis DAO (`edgarpack which`)
-    # ------------------------------------------------------------------
 
     def company_kpi_has_accession(self, cik: str, accession: str) -> bool:
         """True when any company_kpis row exists for this (cik, accession).
@@ -662,9 +660,7 @@ class LearnedRegistry:
         conn.commit()
         return cur.rowcount or 0
 
-    # ------------------------------------------------------------------
     # Staged discovery cache DAO (`edgarpack which`)
-    # ------------------------------------------------------------------
 
     def company_kpi_discovery_run_is_complete(
         self,

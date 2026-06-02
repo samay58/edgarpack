@@ -20,7 +20,7 @@ def load_manifest_dict(
     Args:
         pack_dir: Pack directory containing manifest.json.
         on_missing: 'raise' (default) raises FileNotFoundError when the file
-            is absent. 'empty' returns {} — used by readers (like timeline)
+            is absent. 'empty' returns {}; used by readers (like timeline)
             that want to skip incomplete packs silently.
 
     Returns:

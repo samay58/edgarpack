@@ -1123,9 +1123,7 @@ def try_extract_kpi(
             pack_registry.close()
 
 
-# ---------------------------------------------------------------------------
 # Per-company KPI discovery (`edgarpack which`)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -1206,8 +1204,7 @@ class KpiDiscoveryRejection:
 class KpiModelClient(Protocol):
     """Pure text-in/text-out JSON completion interface for KPI extraction."""
 
-    def complete_json(self, prompt: str, *, timeout: int) -> str | None:
-        ...
+    def complete_json(self, prompt: str, *, timeout: int) -> str | None: ...
 
 
 _DISCOVERY_MAX_ITEMS = 40  # sane bound; real filings rarely list more than 15
@@ -1648,8 +1645,7 @@ def locate_kpi_candidate_windows(
         for offset, signal_names in sorted(hit_offsets, key=lambda item: item[0]):
             start, end = _bounded_window(text, offset)
             if any(
-                start < prior_end and end > prior_start
-                for prior_start, prior_end in accepted_spans
+                start < prior_end and end > prior_start for prior_start, prior_end in accepted_spans
             ):
                 continue
             window_text = text[start:end].strip()
@@ -2002,11 +1998,14 @@ def extract_discoveries_detailed(
                 existing_set | set(best_by_slug),
             )
 
-            chunk_id = _lookup_chunk_id(
-                chunks,
-                cleaned.section_id or candidate.section_id,
-                cleaned.source_substring,
-            ) or candidate.chunk_id
+            chunk_id = (
+                _lookup_chunk_id(
+                    chunks,
+                    cleaned.section_id or candidate.section_id,
+                    cleaned.source_substring,
+                )
+                or candidate.chunk_id
+            )
 
             # Each row inherits the pack's period metadata. The model's own
             # period_end guess is kept only when populated and parseable.

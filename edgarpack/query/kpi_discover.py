@@ -252,9 +252,7 @@ class CompanyKpiAggregate:
         }
 
 
-# ---------------------------------------------------------------------------
 # Per-pack discovery cache management
-# ---------------------------------------------------------------------------
 
 
 def _period_label(form_type: str, fiscal_year: int, fiscal_period: str, period_end: str) -> str:
@@ -548,9 +546,7 @@ def _cached_row_to_discovered(row: CompanyKpiRow) -> DiscoveredKpi:
     )
 
 
-# ---------------------------------------------------------------------------
 # Catalog-hit enumeration (reads learned_concepts; does NOT run LLM)
-# ---------------------------------------------------------------------------
 
 
 def _catalog_points_for_cik(
@@ -603,9 +599,7 @@ def _catalog_points_for_cik(
     return by_metric
 
 
-# ---------------------------------------------------------------------------
 # Public entry point
-# ---------------------------------------------------------------------------
 
 
 def discover_kpis(
@@ -904,9 +898,7 @@ def lookup_company_kpi(
         learned_reg.close()
 
 
-# ---------------------------------------------------------------------------
 # Framing-metric extraction (TAM / market size / CAGR)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
