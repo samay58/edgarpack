@@ -24,6 +24,7 @@ ALLOWED: frozenset[str] = frozenset(
         "uv.lock",
         # docs / instructions
         "AGENTS.md",
+        "CLAUDE.md",
         "README.md",
         # source
         "edgarpack",
