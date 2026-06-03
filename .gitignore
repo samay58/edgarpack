@@ -54,6 +54,8 @@ test_packs/
 
 # Cache
 .edgarpack/
+.mypy_cache/
+.ruff_cache/
 
 # Session history
 .specstory/
@@ -76,7 +78,6 @@ NVIDIA_RESULTS.md
 subway-map.html
 tools/codebase-map/
 
-# Environment secrets
-.env
-
-.claude/
+# Local Claude Code overrides (shared settings.json and skills/ stay tracked)
+.claude/settings.local.json
+.claude/*.lock
