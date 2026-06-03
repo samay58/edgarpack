@@ -33,6 +33,10 @@ codex:
 ---
 # EdgarPack Symphony Workflow
 
+> Optional and not required. This is the Symphony + Linear unattended-orchestration contract.
+> The default day-to-day workflow is the lightweight one in `AGENTS.md`; you do not need Linear
+> or Symphony for normal work. Retained for reference if you opt into running that system.
+
 You are working on Linear issue `{{ issue.identifier }}`.
 
 Title: {{ issue.title }}

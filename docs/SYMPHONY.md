@@ -1,5 +1,9 @@
 # Symphony And Harness Engineering
 
+> Optional and not required. The default workflow is the lightweight one in `AGENTS.md`; Linear
+> and Symphony are not needed for normal work. This document is retained for reference if you
+> opt into unattended orchestration.
+
 This repo is moving from interactive agent management to issue-level orchestration with
 Symphony. The first rollout uses Linear as the canonical tracker and the reference
 Elixir implementation as an evaluation runner.

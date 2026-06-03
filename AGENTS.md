@@ -1,71 +1,53 @@
 # Agent Instructions
 
-Linear is the canonical work tracker for new agent work in this repo. `bd` is legacy
-migration/reference state only; do not update both systems for the same task. If an old
-bead ID appears in a Linear issue, preserve it in comments, branch names, and PR text.
+Lightweight by design. Work on a branch, keep diffs small, run the gate, commit, push.
+There is no mandatory issue tracker and no required PR or orchestration ceremony.
 
 ## Mission
 
-China Lens should produce citation-backed Packs from primary documents. Do not ship
-uncited claim-generation flows.
+EdgarPack and China Lens produce citation-backed packs from primary documents. Every
+generated finding must point to evidence chunk IDs. Do not ship uncited claims or invented
+facts.
 
-## Working Rules
+## Working rules
 
 - Keep diffs small and reviewable.
-- Run tests after code changes and report the result.
+- Run the quality gate after code changes and report the result:
+  `scripts/symphony_quality_gate.sh` runs ruff + pytest. Also run mypy strict:
+  `uv run --extra dev --extra china --extra sse mypy edgarpack`.
+- For HKEX, SSE/CNINFO, citation, FX, or China Lens work, also run the relevant China
+  golden lanes listed in `docs/TESTING.md`.
 - Avoid new dependencies unless they materially simplify the system.
 - Use fixtures for examples and tests. Do not invent facts.
-- Every generated finding must point to evidence chunk IDs.
 - Preserve keyboard access and reduced-motion support in UI work.
-- Treat repository-local docs, plans, scripts, and tests as the system of record for
-  agent behavior.
+- Treat repo-local docs, plans, scripts, and tests as the system of record for behavior.
 
-## Public Thread Visuals
+## Workflow
 
-For public tweet or LinkedIn thread visuals, consult `docs/THREAD_VISUALS.md`
-before drafting the final visual beats. The reference kit lives at
-`assets/thread-visual-reference/cerebras-filing-series-2026/` and should be the
-quality bar for future filing-analysis cards.
+Branch off `main`, commit in small steps, and push when the gate is green. Open a PR only if
+you want review; otherwise fast-forward `main`. Do not force-push shared branches. Leave a
+short note of what changed and the test results (commit messages or a summary are fine).
 
-## Linear
+## Task tracking
 
-- Work only from Linear issues in `Ready`, `In Progress`, or `Rework`.
-- Move a claimed `Ready` issue to `In Progress` before editing code.
-- Keep exactly one persistent Linear workpad comment named `## Codex Workpad`.
-- File follow-up Linear issues for unfinished or out-of-scope work.
-- Stop at `Human Review` after pushing a branch and opening/updating a PR. Do not merge.
+Optional. No tracker is required. Use whatever is lightest for the task: a short checklist,
+clear commit messages, or nothing for small changes. The `.beads/` setup and the Linear +
+Symphony orchestration are available but not required; see the optional docs below if you
+deliberately opt into them.
 
-## Symphony
+## Public thread visuals
 
-The repo-owned orchestration contract is `WORKFLOW.md`. The operational runbook is
-`docs/SYMPHONY.md`.
+For public tweet or LinkedIn thread visuals, consult `docs/THREAD_VISUALS.md`. The reference
+kit lives at `assets/thread-visual-reference/cerebras-filing-series-2026/` and is the quality
+bar for filing-analysis cards.
 
-For routine code changes, run:
+## Optional: Symphony + Linear orchestration
 
-```bash
-scripts/symphony_quality_gate.sh
-```
-
-Run narrower or broader gates when the issue demands it, especially China golden-harness
-checks for HKEX, SSE/CNINFO, citation, FX, or claim-generation work.
-
-## Session Completion
-
-Work is not complete until the branch is pushed and the Linear issue has a concise
-handoff with test results, PR link, and remaining risks.
-
-Required closeout:
-
-1. File follow-up Linear issues for unfinished work.
-2. Run quality gates when code changed.
-3. Push the branch and open/update the PR.
-4. Move the issue to `Human Review`.
-5. Hand off with test results and remaining work.
-
-Never stop with local-only commits. Resolve push failures and retry until the branch is
-up to date with `origin`.
+`WORKFLOW.md` and `docs/SYMPHONY.md` describe an optional unattended orchestration setup
+(Linear as the tracker, the Symphony runner). It is not required for normal work and is not
+the default. Use it only if you choose to run that system.
 
 ## learn-pack
 
-Run `/learn-pack` or invoke the learn-pack skill to regenerate `docs/learn/`. See
+Run `/learn-pack` or the learn-pack skill to regenerate `docs/learn/`. See
 `.learn-pack/SKILL.md`.
