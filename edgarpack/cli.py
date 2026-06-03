@@ -18,11 +18,20 @@ from . import __version__
 from .config import DEFAULT_PACKS_DIR, DEFAULT_REPORTS_DIR, DEFAULT_SITE_DIR
 from .errors import AmbiguousCompany, UnknownCompany
 
-# Re-exported so existing `from edgarpack.cli import ...` call sites (tests) keep working
-# after the render logic moved to query/render.py. `_render_query_table` is used here.
-from .query.render import _render_citation_lines as _render_citation_lines
-from .query.render import _render_query_table
-from .query.render import _source_badge_for as _source_badge_for
+# The single-period query renderers live in query/render.py. They are re-exported
+# lazily (via __getattr__) so `from edgarpack.cli import _render_query_table` keeps
+# working for tests WITHOUT importing the heavy query package at CLI startup.
+_LAZY_QUERY_RENDER_EXPORTS = frozenset(
+    {"_render_query_table", "_render_citation_lines", "_source_badge_for"}
+)
+
+
+def __getattr__(name: str) -> Any:
+    if name in _LAZY_QUERY_RENDER_EXPORTS:
+        from .query import render
+
+        return getattr(render, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 _EDGARPACK_HOME = r"""
               .------------------------------------------.
@@ -2390,6 +2399,8 @@ def _cmd_query(args: Any) -> int:
                 citations=citations_mode,
                 _strict_rejected_names=strict_rejected,
             )
+            from .query.render import _render_query_table
+
             print(_render_query_table(result, args_for_render))
             return 0
 
