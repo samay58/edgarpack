@@ -59,7 +59,6 @@ test_packs/
 
 # Session history
 .specstory/
-.beads/
 
 # Environment secrets
 .env

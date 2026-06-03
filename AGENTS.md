@@ -30,10 +30,8 @@ short note of what changed and the test results (commit messages or a summary ar
 
 ## Task tracking
 
-Optional. No tracker is required. Use whatever is lightest for the task: a short checklist,
-clear commit messages, or nothing for small changes. The `.beads/` setup and the Linear +
-Symphony orchestration are available but not required; see the optional docs below if you
-deliberately opt into them.
+Optional. No tracker is required. Use whatever is lightest for the task: `docs/BACKLOG.md`
+for genuine outstanding work, clear commit messages, or nothing for small changes.
 
 ## Public thread visuals
 
