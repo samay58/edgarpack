@@ -32,7 +32,7 @@ The covered family is S-1, S-1/A, F-1, F-1/A, 424B1-5, and FWP. One predicate, u
 You ran `edgarpack build` on the S-1 earlier. That run took a different parse path than a 10-K because `is_registration_form` returned True. The pack builder added one step before the standard pipeline.
 
 ```python
-# edgarpack/pack/build.py:74
+# edgarpack/pack/build.py:91
 preserve = is_registration_form(form_type)
 if preserve:
     html_stripped = inject_s1_headings(html_stripped)
@@ -72,7 +72,7 @@ The TOC has `<a href="#anchor_id">Section Title</a>`. The body has `<div id="anc
 
 The function is a no-op on filings that have no TOC links or no matching ids. That's why pack/build.py calls it unconditionally for any registration form without checking whether the specific filing needs it.
 
-**Code**: `edgarpack/pack/build.py:74` (the registration branch in `_process_html_files_for_form`), `edgarpack/parse/s1_headings.py:88` (`inject_s1_headings`), `edgarpack/parse/s1_headings.py:69` (`extract_toc_sections`)
+**Code**: `edgarpack/pack/build.py:91` (the registration branch in `_process_html_files_for_form`), `edgarpack/parse/s1_headings.py:88` (`inject_s1_headings`), `edgarpack/parse/s1_headings.py:69` (`extract_toc_sections`)
 
 ---
 
@@ -83,21 +83,19 @@ The CLI handler is the same `_cmd_query` from trail-0. Identity resolves through
 The first half of `financials()` runs unchanged from trail-0: companyfacts fetch, concept resolution, period selection, citation enrichment. For a pre-IPO filer, every cell it tries to fill comes back as None, because companyfacts is empty and the periodic-filer paths can't produce values.
 
 ```python
-# edgarpack/query/financials.py:703
+# edgarpack/query/financials.py:1109
 # Pre-IPO fallback: if any requested metric still has no value, try
 # pulling it from cached S-1 snapshots for this CIK.
-resolved_requested = [
-    resolve_alias((m or "").strip().lower()) for m in _requested_metrics_list(metrics)
-]
+requested_for_s1_aug = metric_list if metrics is None else _requested_metrics_list(metrics)
+resolved_requested = [resolve_alias((m or "").strip().lower()) for m in requested_for_s1_aug]
 any_empty = any(result.metrics.get(m) is None for m in resolved_requested)
 if any_empty or period == "pro-forma":
     from .s1_financials import augment_with_s1_snapshot
 
-    root = Path(pack_root) if pack_root is not None else Path("./packs")
     result = await augment_with_s1_snapshot(
         result=result, cik=cik,
         metrics=list(result.metrics.keys()),
-        period=period, pack_root=root,
+        period=period, pack_root=pack_root_path,
         company=company_name, form_type="S-1",
     )
 ```
@@ -106,7 +104,7 @@ Two details to notice. The empty-cell check normalizes the user's requested metr
 
 The other detail: the augmentation also fires when the user explicitly asks for `period == "pro-forma"`. That period is S-1-only. There's no XBRL fact for "pro-forma revenue assuming the offering closed." The user is signaling they want the S-1 path even if the cell happened to fill from somewhere else.
 
-**Code**: `edgarpack/query/financials.py:703-730` (the augmentation gate inside `financials()`)
+**Code**: `edgarpack/query/financials.py:1109-1134` (the augmentation gate inside `financials()`)
 
 ---
 
@@ -115,23 +113,21 @@ The other detail: the augmentation also fires when the user explicitly asks for 
 `augment_with_s1_snapshot` is the entry point for everything S-1-financial. Its job is to fill `result.metrics` cells that are still None.
 
 ```python
-# edgarpack/query/s1_financials.py:567
-facts = snapshots_for_cik(cik, pack_root=pack_root)
-
-if not facts:
-    latest_pack = _find_latest_registration_pack(cik, pack_root)
-    if latest_pack is not None:
-        extract_result = await extract_or_load_snapshot(latest_pack)
-        ...
-        facts = extract_result.facts
+# edgarpack/query/s1_financials.py:1318
+packs = _registration_packs_for_cik(cik, pack_root)
+latest_pack = packs[0]
+latest_result = await extract_or_load_snapshot(latest_pack.pack_dir)
 ```
 
-Three paths nest here. If any registration pack for this CIK already has a cached `s1_financials.json`, those facts get used directly. If none does, the function locates the most recent registration-class pack by filing date and lazily extracts a snapshot from it. If extraction can't run (no API key), the function injects placeholder `CitedValue` rows with `source="no_api_key"` so the CLI can print a helpful hint instead of leaving the user with bare N/A cells.
+The current path always starts from the newest registration pack for the CIK.
+If extraction cannot run because the Anthropic key is missing, the function
+injects placeholder `CitedValue` rows with `source="no_api_key"` so the CLI can
+print a useful hint instead of leaving bare N/A cells.
 
 `extract_or_load_snapshot` itself is the cache layer:
 
 ```python
-# edgarpack/query/s1_financials.py:321
+# edgarpack/query/s1_financials.py:720
 async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> SnapshotResult:
     pack_dir = Path(pack_dir)
     accession = _read_manifest_accession(pack_dir)
@@ -155,16 +151,16 @@ The cache is keyed on schema version and a SHA256 of the first 50KB of `filing.f
 
 The "first 50KB" cap matters for cost. The Selected Financial Data section is always near the top of an S-1. Hashing the entire 4MB markdown file would be a big disk read on every cache check, and the hash would change for unrelated edits to the back of the document.
 
-**Code**: `edgarpack/query/s1_financials.py:321` (`extract_or_load_snapshot`), `edgarpack/query/s1_financials.py:549` (`augment_with_s1_snapshot`)
+**Code**: `edgarpack/query/s1_financials.py:720` (`extract_or_load_snapshot`), `edgarpack/query/s1_financials.py:1318` (`augment_with_s1_snapshot`)
 
 ---
 
 ## 5. Finding and prompting the right section
 
-When the cache misses, `extract_or_load_snapshot` reads `filing.full.md`, locates the Selected or Summary Financial Data section, and tries the deterministic table parser first. If the section is present but the table shape is not recognized, it prompts Haiku 4.5.
+When the cache misses, `extract_or_load_snapshot` reads `filing.full.md`, locates the Selected or Summary Financial Data section, and tries the deterministic table parser first. If the section is present but the table shape is not recognized, it prompts Haiku.
 
 ```python
-# edgarpack/query/s1_financials.py:135
+# edgarpack/query/s1_financials.py:146
 def find_financial_data_section(markdown: str) -> str | None:
     if not markdown:
         return None
@@ -184,9 +180,9 @@ The regex matches five canonical phrasings: "Selected Consolidated Financial Dat
 
 If `find_financial_data_section` returns None, the snapshot is cached with `extraction_status="no_financial_data_found"` and zero facts. The cache write happens unconditionally. A future query reading that cache sees the empty result and skips the LLM call.
 
-The prompt itself is fixed in `s1_financials.py:163-201`. Two rules in it carry the most weight: scaling is the model's responsibility ("if the filing says '78,287' and the preamble says 'in thousands' then value_cents = 78,287 * 1000 * 100 = 7,828,700,000"), and pro-forma rows must mark themselves with `is_pro_forma=true` and quote the assumption verbatim. The downstream `pick_snapshot_fact` function uses the pro-forma flag to route facts to the right cells.
+The prompt itself is built by `build_extraction_prompt()` at `edgarpack/query/s1_financials.py:586`. Two rules carry the most weight: scaling is the model's responsibility, and pro-forma rows must mark themselves with `is_pro_forma=true` and quote the assumption verbatim. The downstream `pick_snapshot_fact()` function uses the pro-forma flag to route facts to the right cells.
 
-**Code**: `edgarpack/query/s1_financials.py:135` (`find_financial_data_section`), `edgarpack/query/s1_financials.py:163-201` (the prompt template)
+**Code**: `edgarpack/query/s1_financials.py:146` (`find_financial_data_section`), `edgarpack/query/s1_financials.py:586` (`build_extraction_prompt`)
 
 ---
 
@@ -197,7 +193,7 @@ The model returns a JSON array. `parse_llm_response` validates each row, drops a
 The CitedValue conversion is where the source provenance gets stamped.
 
 ```python
-# edgarpack/query/s1_financials.py:427
+# edgarpack/query/s1_financials.py:911
 def snapshot_fact_to_cited_value(...) -> CitedValue:
     unit, divisor = _UNIT_FOR_METRIC[fact.metric]
     if fact.currency != "USD":
@@ -214,9 +210,9 @@ def snapshot_fact_to_cited_value(...) -> CitedValue:
 
 The `source` field is the contract that propagates upward. Every renderer that touches CitedValue can ask "where did this number come from?" and get one of `sec`, `s1_snapshot`, `s1_pro_forma`, `hkex`, or `private`. The CLI table renderer reads it to attach an `[S-1, accn-short]` marker to S-1-sourced cells, and `[S-1 pro-forma, accn-short] *` to pro-forma cells with a footnote pointing at `pro_forma_note`. Same number, different provenance, marked clearly.
 
-`pick_snapshot_fact` is what handles `--period`. For `lfy` or `mrp` it returns the most recent audited non-pro-forma fact. For `lfy-N` it walks back N years. For `pro-forma` it returns the most recent pro-forma fact and nothing else. This is why `--period=pro-forma` can succeed even when audited cells are also available: pick_snapshot_fact filters to pro-forma rows first.
+`pick_snapshot_fact` is what handles `--period`. For `lfy` or `mrp` it returns the most recent audited non-pro-forma fact. For `lfy-N` it walks back N years. For `pro-forma` it returns the most recent pro-forma fact and nothing else. This is why `--period=pro-forma` can succeed even when audited cells are also available: `pick_snapshot_fact()` filters to pro-forma rows first.
 
-**Code**: `edgarpack/query/s1_financials.py:252` (`parse_llm_response`), `edgarpack/query/s1_financials.py:427` (`snapshot_fact_to_cited_value`), `edgarpack/query/s1_financials.py:468` (`pick_snapshot_fact`)
+**Code**: `edgarpack/query/s1_financials.py:641` (`parse_llm_response`), `edgarpack/query/s1_financials.py:911` (`snapshot_fact_to_cited_value`), `edgarpack/query/s1_financials.py:953` (`pick_snapshot_fact`)
 
 ---
 

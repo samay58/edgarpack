@@ -98,9 +98,9 @@ pairs = ", ".join(f"{c.ticker}={c.period}" for c in columns)
 return f"Period: {period_request}; fiscal years differ: {pairs}"
 ```
 
-When every column lands on the same fiscal year you get `Period: lfy (FY2024)`. When one company's `lfy` is FY2024 and another's is FY2025 (common for non-calendar fiscal years — Apple's FY ends in September), the header becomes `Period: lfy; fiscal years differ: AAPL=FY2024, MSFT=FY2024, GOOGL=FY2024`. That is the one-line alarm that a naive side-by-side read is wrong.
+When every column lands on the same fiscal year you get `Period: lfy (FY2024)`. When one company's `lfy` is FY2024 and another's is FY2025 (common for non-calendar fiscal years; Apple's FY ends in September), the header becomes `Period: lfy; fiscal years differ: AAPL=FY2024, MSFT=FY2024, GOOGL=FY2024`. That is the one-line alarm that a naive side-by-side read is wrong.
 
-The footer renders per-column context — company name, resolved period, reporting currency — and then the warnings block pulls `QueryResult.diagnostics` from each column into a flat list prefixed with `  ! TICKER.metric: message`. Most warnings here are LTM-mislabeling ones produced deep inside `periods.py`: if `lfy` returned a 9-month stub, the diagnostic surfaces here so it doesn't silently parade as a full-year value.
+The footer renders per-column context; company name, resolved period, reporting currency; and then the warnings block pulls `QueryResult.diagnostics` from each column into a flat list prefixed with `  ! TICKER.metric: message`. Most warnings here are LTM-mislabeling ones produced deep inside `periods.py`: if `lfy` returned a 9-month stub, the diagnostic surfaces here so it doesn't silently parade as a full-year value.
 
 **Code**: `edgarpack/compare.py:230` (`_period_header`), `edgarpack/compare.py:243` (`_diagnostics_lines`), `edgarpack/compare.py:256-278` (`_format_table`: header, body, per-column footer, warnings block).
 

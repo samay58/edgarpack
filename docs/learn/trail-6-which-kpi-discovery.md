@@ -77,7 +77,7 @@ existing_slugs = learned_reg.company_kpi_distinct_slugs(cik)
 extraction = extract_discoveries_detailed(pack_dir=..., existing_slugs=existing_slugs)
 ```
 
-Two critical behaviors here. First, cache lookup keys on `(cik, accession)`, not on pack path: if you rebuild a pack to the same accession number, the cached discoveries still apply. Second, when the LLM does run, it receives `existing_slugs` — every slug this company has ever disclosed across any filing — so it can reuse a canonical slug instead of reinventing `active_users` as `monthly_active_users` in a later filing. Naming drift is still tracked (as an alias) but the slug is stable.
+Two critical behaviors here. First, cache lookup keys on `(cik, accession)`, not on pack path: if you rebuild a pack to the same accession number, the cached discoveries still apply. Second, when the LLM does run, it receives `existing_slugs`; every slug this company has ever disclosed across any filing; so it can reuse a canonical slug instead of reinventing `active_users` as `monthly_active_users` in a later filing. Naming drift is still tracked (as an alias) but the slug is stable.
 
 Failure modes are deliberate, not exceptional:
 - `unreadable_manifest`: pack directory exists in the registry but can't be opened. Logged and skipped.
@@ -157,7 +157,7 @@ No LLM call on this path. The row must already be in the `company_kpis` cache, w
 
 ## 8. The handoff
 
-`_cmd_which` receives the aggregate list and renders it. Table mode calls `_render_which_table(aggregates, max_periods)` and prints the per-row period matrix capped at `max_periods` columns. JSON mode dumps `CompanyKpiAggregate.to_json()` for every aggregate — every period, no cap. Diagnostics print to stderr so they don't pollute a piped JSON response.
+`_cmd_which` receives the aggregate list and renders it. Table mode calls `_render_which_table(aggregates, max_periods)` and prints the per-row period matrix capped at `max_periods` columns. JSON mode dumps `CompanyKpiAggregate.to_json()` for every aggregate; every period, no cap. Diagnostics print to stderr so they don't pollute a piped JSON response.
 
 From here, the next `which` call replays from cache unless you pass `--no-cache`, and any `query` against a discovered slug uses `lookup_company_kpi` as the shortcut. The LLM cost is paid exactly once per (company, filing) pair.
 

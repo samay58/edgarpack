@@ -26,7 +26,7 @@ METRIC_ALIASES: dict[str, str] = {
 }
 ```
 
-Hand-curated typo-class map. Keys are lowercase informal shorthands; values are the canonical metric slugs the rest of the system knows. Adding an entry here is the right fix for any "user typed X, we meant Y" miss. Removing an entry is backwards-incompatible — users' shell history still has those flags.
+Hand-curated typo-class map. Keys are lowercase informal shorthands; values are the canonical metric slugs the rest of the system knows. Adding an entry here is the right fix for any "user typed X, we meant Y" miss. Removing an entry is backwards-incompatible; users' shell history still has those flags.
 
 ### `MetricNotFoundError` (layer_zero.py)
 
@@ -106,16 +106,16 @@ Raises `ValueError` for an unknown preset name (the message lists known presets)
 3. Walk `metrics_csv.split(",")`, stripping each entry, skipping blanks and already-seen slugs.
 4. Return `None` if the combined list is empty so callers can fall through to their default path.
 
-**Design notes**: Preset metrics come first intentionally — `--preset perf --metrics revenue_growth_yoy` should still render the preset's order with the explicit metric either slotted in its preset position (if it's in the preset) or appended at the end. Callers can depend on order.
+**Design notes**: Preset metrics come first intentionally; `--preset perf --metrics revenue_growth_yoy` should still render the preset's order with the explicit metric either slotted in its preset position (if it's in the preset) or appended at the end. Callers can depend on order.
 
 ---
 
 ## Invariants
 
-- `resolve_alias` never raises — enforced by `resolve_alias` (dict `.get` with fallback).
-- `expand_metrics` returns `None` only when both inputs are `None` or empty — enforced by the final `if not result: return None` check; this is what lets the caller distinguish "user said nothing" from "user said empty".
-- `PRESETS` values preserve intended output order — enforced by using `tuple` (not `set`) and walking with `in` checks.
-- Alias collisions don't happen silently — `METRIC_ALIASES` is a flat dict, so a duplicate key is a syntax error at import time.
+- `resolve_alias` never raises; enforced by `resolve_alias` (dict `.get` with fallback).
+- `expand_metrics` returns `None` only when both inputs are `None` or empty; enforced by the final `if not result: return None` check; this is what lets the caller distinguish "user said nothing" from "user said empty".
+- `PRESETS` values preserve intended output order; enforced by using `tuple` (not `set`) and walking with `in` checks.
+- Alias collisions don't happen silently; `METRIC_ALIASES` is a flat dict, so a duplicate key is a syntax error at import time.
 
 ---
 

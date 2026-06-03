@@ -99,15 +99,15 @@ The set must stay in sync with the query layer's public metrics and aliases. A s
 
 #### `build_extraction_prompt(section_text: str) -> str`
 
-`edgarpack/query/s1_financials.py:197`. Pure function that fills the prompt template (line 163) with the section text and appends a sorted list of allowed metric slugs. The system prompt (line 156) is separate and constant; together they instruct the model to return ONLY a JSON array, refuse fabrication, and apply the scaling rules verbatim.
+`edgarpack/query/s1_financials.py:586`. Pure function that fills the prompt template (line 163) with the section text and appends a sorted list of allowed metric slugs. The system prompt (line 156) is separate and constant; together they instruct the model to return ONLY a JSON array, refuse fabrication, and apply the scaling rules verbatim.
 
 #### `_call_haiku_extract(section_text: str) -> str`
 
-`edgarpack/query/s1_financials.py:230`. Awaitable. Constructs the system + user message pair and calls `claude-haiku-4-5-20251001` (`MODEL_ID`, line 226) with `max_tokens=4000`. Concatenates all text content blocks from the response. Raises `RuntimeError` with installation guidance if the `anthropic` package isn't available; that exception is caught by `extract_or_load_snapshot` and turned into `extraction_status="no_api_key"`.
+`edgarpack/query/s1_financials.py:619`. Awaitable. Constructs the system + user message pair and calls `claude-haiku-4-5-20251001` (`MODEL_ID`, line 226) with `max_tokens=4000`. Concatenates all text content blocks from the response. Raises `RuntimeError` with installation guidance if the `anthropic` package isn't available; that exception is caught by `extract_or_load_snapshot` and turned into `extraction_status="no_api_key"`.
 
 #### `parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]`
 
-`edgarpack/query/s1_financials.py:252`.
+`edgarpack/query/s1_financials.py:641`.
 
 **Purpose**: turn the model's JSON response into validated `SnapshotFact` records.
 
@@ -130,11 +130,11 @@ The set must stay in sync with the query layer's public metrics and aliases. A s
 
 #### `source_sha256_for_pack(pack_dir: Path) -> str`
 
-`edgarpack/query/s1_financials.py:302`. Returns the SHA256 hex digest of the first 50KB of `<pack_dir>/filing.full.md`. Returns the empty string if the file doesn't exist, which forces a re-extraction on next call (since the cached `source_sha256` will not match).
+`edgarpack/query/s1_financials.py:701`. Returns the SHA256 hex digest of the first 50KB of `<pack_dir>/filing.full.md`. Returns the empty string if the file doesn't exist, which forces a re-extraction on next call (since the cached `source_sha256` will not match).
 
 #### `extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> SnapshotResult`
 
-`edgarpack/query/s1_financials.py:321`. Awaitable. The cache-aware extraction entry point.
+`edgarpack/query/s1_financials.py:720`. Awaitable. The cache-aware extraction entry point.
 
 **Inputs**:
 - `pack_dir` (Path): a registration-class pack directory (must contain `manifest.json` and `filing.full.md`).
@@ -158,7 +158,7 @@ The set must stay in sync with the query layer's public metrics and aliases. A s
 
 #### `snapshot_fact_to_cited_value(fact, *, cik, company, form_type, filed, concept) -> CitedValue`
 
-`edgarpack/query/s1_financials.py:427`.
+`edgarpack/query/s1_financials.py:911`.
 
 **Purpose**: convert one `SnapshotFact` into a `CitedValue` that the rest of the query path can render.
 
@@ -174,7 +174,7 @@ The set must stay in sync with the query layer's public metrics and aliases. A s
 
 #### `pick_snapshot_fact(facts, *, metric, period) -> SnapshotFact | None`
 
-`edgarpack/query/s1_financials.py:468`.
+`edgarpack/query/s1_financials.py:953`.
 
 **Purpose**: select the single fact that matches a `(metric, period)` request.
 
@@ -193,17 +193,17 @@ The set must stay in sync with the query layer's public metrics and aliases. A s
 
 #### `snapshots_for_cik(cik: str, pack_root: Path) -> list[SnapshotFact]`
 
-`edgarpack/query/s1_financials.py:505`. Walks `pack_root` looking for manifests that match the CIK AND whose `form_type` passes `is_registration_form`. For each match, reads the colocated `s1_financials.json` cache and concatenates the facts. Returns a flat list across all of this CIK's registration packs.
+`edgarpack/query/s1_financials.py:1286`. Walks `pack_root` looking for manifests that match the CIK AND whose `form_type` passes `is_registration_form`. For each match, reads the colocated `s1_financials.json` cache and concatenates the facts. Returns a flat list across all of this CIK's registration packs.
 
 The CIK match is on the raw string (no normalization). Callers normalize before calling. Manifests with no cache file are skipped silently.
 
 #### `_find_latest_registration_pack(cik: str, pack_root: Path) -> Path | None`
 
-`edgarpack/query/s1_financials.py:529`. Same walk as `snapshots_for_cik`, but instead of reading caches, returns the pack directory of the registration filing with the most recent `filing_date`. Used by `augment_with_s1_snapshot` when no caches exist for the CIK and one needs to be built.
+`edgarpack/query/s1_financials.py:1310`. Same walk as `snapshots_for_cik`, but instead of reading caches, returns the pack directory of the registration filing with the most recent `filing_date`. Used by `augment_with_s1_snapshot` when no caches exist for the CIK and one needs to be built.
 
 #### `augment_with_s1_snapshot(*, result, cik, metrics, period, pack_root, company, form_type, filed) -> result`
 
-`edgarpack/query/s1_financials.py:549`. Awaitable. The single public entry point for the periodic-filer integration in `query/financials.py`.
+`edgarpack/query/s1_financials.py:1318`. Awaitable. The single public entry point for the periodic-filer integration in `query/financials.py`.
 
 **Inputs**:
 - `result`: the `QueryResult` whose `metrics` dict still has None cells.
@@ -217,18 +217,19 @@ The CIK match is on the raw string (no normalization). Callers normalize before 
 
 **How it works**:
 
-1. Calls `snapshots_for_cik` first. If any caches already exist, uses them directly.
-2. If no caches exist, calls `_find_latest_registration_pack` to find one to build, then `extract_or_load_snapshot`. The result is cached for the next caller.
+1. Walks registration-class packs for the CIK and takes the newest filing-date pack.
+2. Calls `extract_or_load_snapshot` on that newest pack. The cache is reused when schema and source hash match.
 3. If extraction returns `extraction_status="no_api_key"`, injects placeholder `CitedValue` rows with `source="no_api_key"` for every still-empty metric, then returns. The CLI scans for this source value and prints a hint.
-4. For each metric in `metrics`: if the cell is already non-None, skip. Otherwise calls `pick_snapshot_fact` and `snapshot_fact_to_cited_value`, writes the result into `result.metrics[metric]`.
+4. Builds candidate facts from the newest snapshot, then extends them with any current cached snapshots from older registration packs.
+5. For each metric in `metrics`: if the cell is already non-None, skip. Otherwise calls `pick_snapshot_fact` and `snapshot_fact_to_cited_value`, then writes the result into `result.metrics[metric]`.
 
-**Design notes**: the function never overwrites a non-None cell. This is what makes the periodic-filer fallback safe: a 10-K filer with a follow-on S-1 filed will get its 10-K cells filled by the normal path, and `augment_with_s1_snapshot` will only fill cells the periodic path couldn't. The `period == "pro-forma"` gate at the call site (`financials.py:718`) is what makes pro-forma queries explicit: without that gate, no cell would be empty for a periodic filer and the snapshot path would never run.
+**Design notes**: the function never overwrites a non-None cell. This is what makes the periodic-filer fallback safe: a 10-K filer with a follow-on S-1 filed will get its 10-K cells filled by the normal path, and `augment_with_s1_snapshot` will only fill cells the periodic path could not. The `period == "pro-forma"` gate at the call site (`financials.py:1123`) is what makes pro-forma queries explicit: without that gate, no cell would be empty for a periodic filer and the snapshot path would never run.
 
 ---
 
 ## Build-time companion: `parse/s1_headings.py`
 
-The 111-line module that makes S-1 sectionization possible. Lives in `edgarpack/parse/`, called from `pack/build.py:79` for any registration-class form. Out-of-line because it runs at pack build time, not at query time, but it's a hard prerequisite: without synthetic headings, `sectionize` produces a single mega-section and nothing in this ref would have a useful pack to read from.
+The 111-line module that makes S-1 sectionization possible. Lives in `edgarpack/parse/`, called from `pack/build.py:91` for any registration-class form. Out-of-line because it runs at pack build time, not at query time, but it's a hard prerequisite: without synthetic headings, `sectionize` produces a single mega-section and nothing in this ref would have a useful pack to read from.
 
 ### `extract_toc_sections(html: str) -> list[tuple[str, str]]`
 
@@ -246,25 +247,25 @@ The natural alternative is to detect headings by font-size or font-weight inspec
 
 ### Order in the parse pipeline
 
-`pack/build.py:74-79` runs `inject_s1_headings` after `strip_ixbrl` (no iXBRL in S-1s, so no-op anyway) but BEFORE `clean_html`. The order matters: `clean_html` strips most attributes, including `id=`. If injection ran after, the anchors would already be gone and there'd be nothing to match against.
+`pack/build.py:91-79` runs `inject_s1_headings` after `strip_ixbrl` (no iXBRL in S-1s, so no-op anyway) but BEFORE `clean_html`. The order matters: `clean_html` strips most attributes, including `id=`. If injection ran after, the anchors would already be gone and there'd be nothing to match against.
 
 ---
 
 ## Invariants
 
-- `value_cents` is always an integer in the smallest unit of the row's currency. Per-share metrics use cents-per-share. Share counts use `count * 100`. Enforced by the prompt rules at `s1_financials.py:178` and the type coercion in `parse_llm_response`.
+- `value_cents` is always an integer in the smallest unit of the row's currency. Per-share metrics use cents-per-share. Share counts use `count * 100`. Enforced by the prompt rules at `s1_financials.py:586` and the type coercion in `parse_llm_response`.
 - `SnapshotResult` is written to disk for every extraction outcome except `no_api_key`. A second call with the same source content does not re-prompt the model. Enforced by the cache check in `extract_or_load_snapshot:327`.
-- The cache is invalidated on either source content change (SHA256 mismatch on the first 50KB of `filing.full.md`) or schema bump. Enforced by the dual condition at `s1_financials.py:332-336`.
-- `pick_snapshot_fact` never falls back across the audited / pro-forma boundary. A `pro-forma` request returns a pro-forma row or nothing; an `lfy` request returns an audited row or nothing. Enforced by the two filter blocks at `s1_financials.py:478-489`.
-- `augment_with_s1_snapshot` never overwrites a cell that is already non-None. Enforced by the `if current is not None: continue` guard at line 602.
-- Every fact's `accession` is stamped by the caller (`parse_llm_response`), not by the model. The model can hallucinate values; it cannot hallucinate which filing those values came from. Enforced at `s1_financials.py:279`.
-- `inject_s1_headings` runs before `clean_html` in the build pipeline; the order cannot be reversed because `clean_html` strips the `id=` attributes the injection relies on. Enforced by the call order in `pack/build.py:74-79`.
+- The cache is invalidated on either source content change (SHA256 mismatch on the first 50KB of `filing.full.md`) or schema bump. Enforced by the dual condition at `s1_financials.py:731-735`.
+- `pick_snapshot_fact` never falls back across the audited / pro-forma boundary. A `pro-forma` request returns a pro-forma row or nothing; an `lfy` request returns an audited row or nothing. Enforced by the two filter blocks at `s1_financials.py:967-982`.
+- `augment_with_s1_snapshot` never overwrites a cell that is already non-None. Enforced by the `if current is not None: continue` guard at line 1379.
+- Every fact's `accession` is stamped by the caller (`parse_llm_response`), not by the model. The model can hallucinate values; it cannot hallucinate which filing those values came from. Enforced at `s1_financials.py:641`.
+- `inject_s1_headings` runs before `clean_html` in the build pipeline; the order cannot be reversed because `clean_html` strips the `id=` attributes the injection relies on. Enforced by the call order in `pack/build.py:91-79`.
 
 ---
 
 ## What this module does not do
 
-- **It does not render.** Producing the table marker (`[S-1, accn-short]` or `[S-1 pro-forma, accn-short] *`) is the renderer's job, driven off `CitedValue.source`. See `cli.py:1574-1586`.
+- **It does not render.** Producing the table marker (`[S-1, accn-short]` or `[S-1 pro-forma, accn-short] *`) is the renderer's job, driven off `CitedValue.source`. See `query/render.py:107-137`.
 - **It does not handle quarterly periods.** S-1 facts are annual or pro-forma; `pick_snapshot_fact` returns None for any quarterly period spec. The periodic-filer path covers those, and S-1s rarely include quarterly tables.
 - **It does not cross taxonomies.** Every fact assumes US-GAAP-equivalent concepts (the `_DEFAULT_CONCEPTS` map). Foreign filers using IFRS still extract correctly because the metric slugs are taxonomy-neutral, but the `concept` field on the `CitedValue` will be misleading for IFRS callers that read it.
 - **It does not deduplicate.** If two registration packs for the same CIK both extract a `revenue` row for fiscal 2024, both end up in the list returned by `snapshots_for_cik`. `pick_snapshot_fact` sorts by `(fiscal_year, period_end)` descending and takes the head, so the most-recently-period-ending row wins; ties resolve by sort stability (insertion order from `rglob`). If you ever need stricter dedup, the change goes here.

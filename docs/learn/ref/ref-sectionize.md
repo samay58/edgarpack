@@ -42,7 +42,7 @@ Intermediate result from `find_sections`. Position plus the parsed `(part, item,
 
 ### sectionize(markdown, form_type)
 
-`edgarpack/parse/sectionize.py:742`. The top-level entry point called from `pack/build.py`.
+`edgarpack/parse/sectionize.py:864`. The top-level entry point called from `pack/build.py`.
 
 **Flow:**
 
@@ -57,7 +57,7 @@ Returns the final list of `Section` objects in document order.
 
 ### find_sections(markdown, form_type)
 
-`edgarpack/parse/sectionize.py:216`. The regex-based section detector. Walks the markdown line by line (and also scans inline flattened text and markdown table cells), matches against form-specific patterns, maintains a "current Part" state so items inside Part I don't bleed into Part II, and returns a deduped list of `SectionMatch` objects.
+`edgarpack/parse/sectionize.py:235`. The regex-based section detector. Walks the markdown line by line (and also scans inline flattened text and markdown table cells), matches against form-specific patterns, maintains a "current Part" state so items inside Part I don't bleed into Part II, and returns a deduped list of `SectionMatch` objects.
 
 Three patterns drive it:
 
@@ -97,7 +97,7 @@ The canonical item titles map at line 73 (`_CANONICAL_ITEM_TITLES`) defines the 
 
 ### `_is_toc_stub(content)`
 
-`edgarpack/parse/sectionize.py:680`. Classifies a section as a TOC stub if its content is entirely markdown table rows plus the item heading itself, with no real prose.
+`edgarpack/parse/sectionize.py:802`. Classifies a section as a TOC stub if its content is entirely markdown table rows plus the item heading itself, with no real prose.
 
 **Rule**: walk the lines. Table rows (`|` prefix, at least two `|`) count as table lines. Lines that look like an item heading (`ITEM 1A.`, `PART I.`, etc. after heading-hash stripping) are ignored. Anything else counts as non-table content. If there's any non-table non-heading text, return `False` (real content). If it's all table lines, return `True` (stub).
 

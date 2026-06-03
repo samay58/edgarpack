@@ -80,25 +80,25 @@ The top-level result for one company and one period. `edgarpack/query/models.py:
 
 ### filing_url
 
-`edgarpack/query/models.py:48`. Returns `.../{cik}/{accession_nodash}/{accession}-index.htm`, the SEC index page for the filing. Always available; derived from `cik` and `accession` only.
+`edgarpack/query/models.py:82`. Returns `.../{cik}/{accession_nodash}/{accession}-index.htm`, the SEC index page for the filing. Always available; derived from `cik` and `accession` only.
 
 ### concept_url
 
-`edgarpack/query/models.py:53`. Returns the companyconcept API URL `.../api/xbrl/companyconcept/CIK{padded}/{taxonomy}/{concept}.json`. Returns `None` for derived metrics because their `concept` is a formula string (e.g. `"operating_income + depreciation_amortization"`), not a GAAP tag.
+`edgarpack/query/models.py:98`. Returns the companyconcept API URL `.../api/xbrl/companyconcept/CIK{padded}/{taxonomy}/{concept}.json`. Returns `None` for derived metrics because their `concept` is a formula string (e.g. `"operating_income + depreciation_amortization"`), not a GAAP tag.
 
 ### viewer_url
 
-`edgarpack/query/models.py:67`. Returns `https://www.sec.gov/ix?doc={doc_path}`, the SEC Inline XBRL Viewer URL. Returns `None` if `primary_document` is empty.
+`edgarpack/query/models.py:114`. Returns `https://www.sec.gov/ix?doc={doc_path}`, the SEC Inline XBRL Viewer URL. Returns `None` if `primary_document` is empty.
 
 ### document_url
 
-`edgarpack/query/models.py:80`. Returns `.../primary.htm#:~:text={concept_label}`, using a text-fragment URL that scrolls the browser to the first occurrence of the concept label. Works in Chrome/Edge, not in Safari. Falls back to `None` if `primary_document` is empty.
+`edgarpack/query/models.py:130`. Returns `.../primary.htm#:~:text={concept_label}`, using a text-fragment URL that scrolls the browser to the first occurrence of the concept label. Works in Chrome/Edge, not in Safari. Falls back to `None` if `primary_document` is empty.
 
 The label transform is in `_concept_to_label` at line 14: `"NetIncomeLoss"` -> `"Net Income Loss"` (space-separate on camelCase boundaries).
 
 ### anchor_url
 
-`edgarpack/query/models.py:95`. The preferred URL. Returns `.../primary.htm#{fact_id}` if both `fact_id` and `primary_document` are populated. Otherwise falls back to `document_url`. Produced by the enrichment pass in `financials.py` which parses inline XBRL and writes fact IDs into `CitedValue.fact_id`.
+`edgarpack/query/models.py:155`. The preferred URL. Returns `.../primary.htm#{fact_id}` if both `fact_id` and `primary_document` are populated. Otherwise falls back to `document_url`. Produced by the enrichment pass in `financials.py` which parses inline XBRL and writes fact IDs into `CitedValue.fact_id`.
 
 ### citation (property)
 

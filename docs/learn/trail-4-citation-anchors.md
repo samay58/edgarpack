@@ -4,7 +4,10 @@
 **Prereq**: [Trail 0](trail-0-full-loop.md). You should know how `financials()` calls `select_period` and returns a `QueryResult`.
 **Covers**: `query/financials.py` (enrichment pass), `query/periods.py` (fact_id parsing), `query/models.py` (URL builders)
 
-The README says citations are "the part that really matters." This trail unpacks what that means in practice. Every value in a query result carries not just the filing it came from, but a URL that scrolls a browser to the exact span of HTML where the number lives. Producing that URL takes two passes through the data and one tour of inline XBRL.
+Every value in a query result carries more than the filing it came from. When the
+source filing supports it, EdgarPack also builds a URL that lands on the exact
+inline XBRL fact in the HTML. Producing that URL takes two passes through the
+data and one tour of inline XBRL.
 
 ---
 
@@ -20,7 +23,7 @@ This is why EdgarPack goes to the trouble of parsing inline XBRL a second time a
 
 ## 2. The enrichment pass is separate from value resolution
 
-If you read `financials.financials()` at `edgarpack/query/financials.py:148` end to end, you'll notice that fact ID enrichment is the last thing it does, after the metrics loop, after the low-debt sanity check, after building the `QueryResult`:
+If you read `financials.financials()` at `edgarpack/query/financials.py:664` end to end, you'll notice that fact ID enrichment is the last thing it does, after the metrics loop, after the low-debt sanity check, after building the `QueryResult`:
 
 ```python
 result = QueryResult(company=company_name, cik=cik, period=period, metrics=result_metrics)
@@ -37,13 +40,13 @@ Three functions, all in `financials.py`: `_collect_accessions` gathers the set o
 
 The separation is a cost optimization. Doing enrichment inline with value resolution would mean a fetch per value. Batching it means a fetch per unique filing, usually 1-3 for a typical query. For an LTM query that touches three filings (MRP, LFY, MRP_prior), the enrichment pass is exactly three fetches no matter how many metrics you asked for.
 
-**Code**: `edgarpack/query/financials.py:250-253` (the three-line enrichment block)
+**Code**: `edgarpack/query/financials.py:1093-1107` (the three-line enrichment block)
 
 ---
 
 ## 3. Collect accessions
 
-`_collect_accessions` at `edgarpack/query/financials.py:106` walks the `QueryResult` and pulls every accession it finds:
+`_collect_accessions` at `edgarpack/query/financials.py:244` walks the `QueryResult` and pulls every accession it finds:
 
 ```python
 def _collect_accessions(result: QueryResult) -> set[str]:
@@ -73,7 +76,7 @@ The output is a set. Duplicate accessions are deduped here before any HTTP calls
 
 ## 4. Fetch and parse fact IDs
 
-`_fetch_fact_id_maps` at `edgarpack/query/financials.py:70` runs one async fetch per unique accession, in parallel:
+`_fetch_fact_id_maps` at `edgarpack/query/financials.py:208` runs one async fetch per unique accession, in parallel:
 
 ```python
 async def _fetch_one(accn: str) -> None:
@@ -107,7 +110,7 @@ If a fetch fails, the warning is logged and the failed accession is absent from 
 
 ## 5. The inline XBRL parser
 
-`parse_fact_ids_from_html` at `edgarpack/query/periods.py:67` is a regex-based parser that extracts `(concept, value) -> fact_id` mappings from inline XBRL HTML.
+`parse_fact_ids_from_html` at `edgarpack/query/periods.py:73` is a regex-based parser that extracts `(concept, value) -> fact_id` mappings from inline XBRL HTML.
 
 ```python
 _IX_NONFRACTION_TAG_RE = re.compile(
@@ -122,20 +125,20 @@ The pattern captures the attribute blob and the inner text of every `<ix:nonFrac
 2. Extracts `id="..."` -> fact_id (e.g. `f-47`)
 3. Extracts `scale="..."` and `sign="..."` attributes (both optional)
 4. Strips the taxonomy prefix from the concept: `us-gaap:Revenues` -> `Revenues`
-5. Parses the display text into a float via `_parse_display_value` at `edgarpack/query/periods.py:33`: strip commas, handle parentheses for negative numbers (then apply the `sign` attribute which is authoritative), apply the `scale` multiplier (XBRL reports numbers in units like thousands/millions via `scale="6"` meaning ×10⁶).
+5. Parses the display text into a float via `_parse_display_value` at `edgarpack/query/periods.py:39`: strip commas, handle parentheses for negative numbers (then apply the `sign` attribute which is authoritative), apply the `scale` multiplier (XBRL reports numbers in units like thousands/millions via `scale="6"` meaning x10^6).
 6. Stores the result: `{(concept_short, scaled_value): fact_id}`
 
 The composite key `(concept, value)` is what makes this work. Within a single filing, the same concept at different periods almost always has a different dollar value. Revenue for 9 months Q3 2024 is a different number from revenue for 3 months Q1 2024. The tuple is a reliable unique key in practice.
 
 The parser also handles a rare edge case: duplicate `(concept, value)` pairs from the notes section repeating values from the financial statements. First-occurrence-wins (line 104) means the financial statement element (which appears earlier in the HTML) keeps its fact_id.
 
-**Code**: `edgarpack/query/periods.py:33-64` (`_parse_display_value`), `edgarpack/query/periods.py:67-107` (`parse_fact_ids_from_html`)
+**Code**: `edgarpack/query/periods.py:39-64` (`_parse_display_value`), `edgarpack/query/periods.py:73-107` (`parse_fact_ids_from_html`)
 
 ---
 
 ## 6. Write the IDs back
 
-`_enrich_fact_ids` at `edgarpack/query/financials.py:123` walks the result one more time and writes each discovered fact_id into the corresponding `CitedValue`:
+`_enrich_fact_ids` at `edgarpack/query/financials.py:261` walks the result one more time and writes each discovered fact_id into the corresponding `CitedValue`:
 
 ```python
 def _enrich_one(cited: CitedValue) -> None:
@@ -146,7 +149,7 @@ def _enrich_one(cited: CitedValue) -> None:
         cited.fact_id = _lookup_fact_id(fmap, cited.concept, cited.value)
 ```
 
-`_lookup_fact_id` at `edgarpack/query/periods.py:110` strips the taxonomy prefix from the concept (same rule as the parser) and looks up `(concept_short, float(val))` in the map. If found, returns the fact_id string; if not, returns empty string.
+`_lookup_fact_id` at `edgarpack/query/periods.py:116` strips the taxonomy prefix from the concept (same rule as the parser) and looks up `(concept_short, float(val))` in the map. If found, returns the fact_id string; if not, returns empty string.
 
 The result is that `cited.fact_id` is now populated for every value the parser found. Any value not found (either because the parser missed it, or because it came from a filing whose HTML fetch failed) keeps its empty-string default, which is how the fallback path works.
 
@@ -154,7 +157,7 @@ The result is that `cited.fact_id` is now populated for every value the parser f
 
 ## 7. The URL builders on `CitedValue`
 
-With `fact_id` possibly populated, the `CitedValue.anchor_url` property at `edgarpack/query/models.py:95` can build the actual deep-link URL:
+With `fact_id` possibly populated, the `CitedValue.anchor_url` property at `edgarpack/query/models.py:155` can build the actual deep-link URL:
 
 ```python
 @property
@@ -169,7 +172,7 @@ def anchor_url(self) -> str | None:
 
 If `fact_id` is present, the URL is `.../primary.htm#f-47`, a plain HTML anchor that works in every browser.
 
-If `fact_id` is missing, `document_url` at `edgarpack/query/models.py:80` kicks in as fallback:
+If `fact_id` is missing, `document_url` at `edgarpack/query/models.py:130` kicks in as fallback:
 
 ```python
 @property
@@ -187,7 +190,7 @@ This builds a Chrome/Edge text-fragment URL (`#:~:text=...`) using the concept n
 
 If `primary_document` is also missing, the URL is `None`. The citation will only have the filing-level URL (`.../accession-index.htm`) which takes the reader to the filing landing page.
 
-**Code**: `edgarpack/query/models.py:48-107` (all URL builders)
+**Code**: `edgarpack/query/models.py:82-169` (all URL builders)
 
 ---
 
@@ -199,7 +202,7 @@ While we're here, the model exposes a few other URLs that downstream formatters 
 - `concept_url` (line 53): the SEC companyconcept API URL for the full historical series of this concept. Returns `None` for derived metrics (the "concept" for EBITDA is the formula string, not a GAAP tag).
 - `viewer_url` (line 67): the SEC Inline XBRL Viewer URL (`https://www.sec.gov/ix?doc=...`). This opens SEC's own viewer with XBRL facts highlighted. Requires `primary_document`.
 
-The CLI's `_render_query_table` at `edgarpack/cli.py:553` picks between these based on `--show-links` flag: `primary` uses `anchor_url` (fact_id or text-fragment), `all` shows filing + anchor + viewer, `none` shows the citation text without any URL.
+The CLI's `_render_query_table` at `edgarpack/query/render.py:140` picks between these based on `--show-links` flag: `primary` uses `anchor_url` (fact_id or text-fragment), `all` shows filing + anchor + viewer, `none` shows the citation text without any URL.
 
 ---
 

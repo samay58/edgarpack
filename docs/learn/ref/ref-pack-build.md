@@ -1,6 +1,6 @@
 # Reference: pack/build.py
 
-`edgarpack/pack/build.py` (273 lines)
+`edgarpack/pack/build.py` (974 lines)
 
 The pack orchestrator. A single `async def build_pack()` walks a 13-step pipeline from filing metadata to a deterministic directory on disk. [Trail 1](../trail-1-build-a-pack.md) walks it narratively; this ref is the lookup.
 
@@ -29,7 +29,7 @@ Return type for `build_pack`. `output_dir` is the final pack directory. `filing_
 
 ### build_pack(cik, accession, form_type, out_dir, with_chunks, with_xbrl, force)
 
-`edgarpack/pack/build.py:55`. The 13-step orchestrator.
+`edgarpack/pack/build.py:145`. The 13-step orchestrator.
 
 **Parameters:**
 
@@ -65,7 +65,7 @@ The function returns a `PackResult` with the final counts, warnings, and artifac
 
 ### build_company_llms(cik, out_dir)
 
-`edgarpack/pack/build.py:235`. Generates a company-level `llms.txt` by scanning the packs that already exist for a CIK. Called from `_cmd_company_llms`. Returns the path to the generated file. Raises `ValueError` if no pack directory exists for the CIK or if no processed filings are found.
+`edgarpack/pack/build.py:879`. Generates a company-level `llms.txt` by scanning the packs that already exist for a CIK. Called from `_cmd_company_llms`. Returns the path to the generated file. Raises `ValueError` if no pack directory exists for the CIK or if no processed filings are found.
 
 ---
 
@@ -73,11 +73,11 @@ The function returns a `PackResult` with the final counts, warnings, and artifac
 
 ### `_decode_html_blob(content)`
 
-`edgarpack/pack/build.py:38`. Decode SEC filing bytes using UTF-8, with Latin-1 fallback on `UnicodeDecodeError`. SEC filings are supposed to be UTF-8 but occasionally aren't. The fallback is good enough for ASCII-compatible content.
+`edgarpack/pack/build.py:83`. Decode SEC filing bytes using UTF-8, with Latin-1 fallback on `UnicodeDecodeError`. SEC filings are supposed to be UTF-8 but occasionally aren't. The fallback is good enough for ASCII-compatible content.
 
 ### `_process_html_files(html_files, base_url)`
 
-`edgarpack/pack/build.py:46`. Runs the parse pipeline on a list of `(filename, bytes)` tuples:
+`edgarpack/pack/build.py:91`. Runs the parse pipeline on a list of `(filename, bytes)` tuples:
 
 ```python
 combined_html = "\n".join(_decode_html_blob(content) for _, content in html_files)

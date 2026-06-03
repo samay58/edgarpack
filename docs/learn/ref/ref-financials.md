@@ -1,6 +1,6 @@
 # Reference: query/financials.py
 
-`edgarpack/query/financials.py` (502 lines)
+`edgarpack/query/financials.py` (2,395 lines)
 
 The top-level query orchestrator for single-company metric queries. Wraps everything: ticker resolution, companyfacts fetch, concept resolution, period selection, derived-metric computation, staleness guards, the low-debt sanity check, and the fact_id enrichment pass. Called from the CLI's `_cmd_query` and from `query/comps.py` for multi-company comparisons.
 
@@ -12,7 +12,7 @@ Trails that walk this module: [Trail 0](../trail-0-full-loop.md) (full loop), [T
 
 ### financials(company, metrics, period, force)
 
-`edgarpack/query/financials.py:148`. Run a financial metrics query for one company.
+`edgarpack/query/financials.py:664`. Run a financial metrics query for one company.
 
 **Parameters:**
 
@@ -60,19 +60,19 @@ A stale value becomes `None` in the final `QueryResult.metrics`.
 
 ### _build_doc_map(cik, force)
 
-`edgarpack/query/financials.py:46`. Fetches the submissions JSON and builds `{accession: primary_document}` for every filing in `filings.recent`. On failure (network, HTTP, malformed JSON), returns an empty dict and logs a warning. The empty-dict fallback means downstream fact_id lookups degrade gracefully: `anchor_url` falls back to `document_url` when no primary document is available.
+`edgarpack/query/financials.py:184`. Fetches the submissions JSON and builds `{accession: primary_document}` for every filing in `filings.recent`. On failure (network, HTTP, malformed JSON), returns an empty dict and logs a warning. The empty-dict fallback means downstream fact_id lookups degrade gracefully: `anchor_url` falls back to `document_url` when no primary document is available.
 
 ### _fetch_fact_id_maps(cik, doc_map, accessions)
 
-`edgarpack/query/financials.py:70`. For each accession in the set, fetches the filing's primary HTML once (cached), parses the inline XBRL via `parse_fact_ids_from_html`, and returns `{accession: {(concept, value): fact_id}}`. Runs fetches in parallel via `asyncio.gather`. Per-accession failures are logged but don't abort the enrichment.
+`edgarpack/query/financials.py:208`. For each accession in the set, fetches the filing's primary HTML once (cached), parses the inline XBRL via `parse_fact_ids_from_html`, and returns `{accession: {(concept, value): fact_id}}`. Runs fetches in parallel via `asyncio.gather`. Per-accession failures are logged but don't abort the enrichment.
 
 ### _collect_accessions(result) / _enrich_fact_ids(result, maps)
 
-`edgarpack/query/financials.py:106, 123`. Walk the `QueryResult` and gather every accession, or walk again and write fact_ids back into `CitedValue.fact_id` fields. Both functions handle scalar, list, and `DerivedValue` (with components) shapes via `isinstance` dispatch.
+`edgarpack/query/financials.py:244, 123`. Walk the `QueryResult` and gather every accession, or walk again and write fact_ids back into `CitedValue.fact_id` fields. Both functions handle scalar, list, and `DerivedValue` (with components) shapes via `isinstance` dispatch.
 
 ### _compute_derived(facts, metric, meta, company, cik, period, doc_map, cache, in_progress)
 
-`edgarpack/query/financials.py:310`. Compute a derived metric (EBITDA, margins, ratios) from its components.
+`edgarpack/query/financials.py:1448`. Compute a derived metric (EBITDA, margins, ratios) from its components.
 
 **Cycle protection**: `in_progress` is a set of metric names currently being resolved. If a metric depends on itself transitively, the recursive call sees it in `in_progress`, caches `None`, and returns. This prevents infinite recursion for any formula that contains a loop (shouldn't happen in `METRIC_MAP`, but defensive).
 
@@ -84,7 +84,7 @@ A stale value becomes `None` in the final `QueryResult.metrics`.
 
 ### _eval_formula(formula, components)
 
-`edgarpack/query/financials.py:446`. A small arithmetic evaluator for formulas stored in `MetricMeta.formula`. Supports two shapes:
+`edgarpack/query/financials.py:1622`. A small arithmetic evaluator for formulas stored in `MetricMeta.formula`. Supports two shapes:
 
 - 3 tokens: `"a op b"` where op is `+`, `-`, `*`, `/`. Division by zero returns `None`.
 - 5 tokens: `"a op1 b op2 c"` where both ops are `+` or `-`. Used for `ebitda = operating_income + depreciation_amortization` style formulas (actually 3 tokens) and more complex chains.
@@ -93,7 +93,7 @@ Any formula shape not matching returns `None`. Returning `None` lets the caller 
 
 ### _check_low_debt(result_metrics, facts, company_name, cik, period, doc_map)
 
-`edgarpack/query/financials.py:258`. Post-resolution sanity check. If the query returned a `total_debt` value and it's less than 2% of `total_liabilities` for the same period, attach a warning pointing out that the value may be missing captive finance or financial-services subsidiary debt.
+`edgarpack/query/financials.py:1172`. Post-resolution sanity check. If the query returned a `total_debt` value and it's less than 2% of `total_liabilities` for the same period, attach a warning pointing out that the value may be missing captive finance or financial-services subsidiary debt.
 
 This is the Ford case: companies that stop tagging consolidated debt in standard XBRL while total liabilities stay correctly reported. The check resolves `total_liabilities` itself (calls `resolve_concept` + `select_period` inline) rather than relying on whether the user asked for it.
 

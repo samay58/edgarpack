@@ -2,7 +2,7 @@
 
 `edgarpack/query/periods.py` (961 lines)
 
-The hairiest module in the codebase. Period selection, LTM math, anchor quarter resolution, segment filtering, inline XBRL fact ID parsing. Most reasoning bugs in financial code live here. [Trail 3](../trail-3-period-selection.md) walks the core LTM path narratively; this ref is the lookup.
+The most fragile module in the codebase. Period selection, LTM math, anchor quarter resolution, segment filtering, inline XBRL fact ID parsing. Most reasoning bugs in financial code live here. [Trail 3](../trail-3-period-selection.md) walks the core LTM path narratively; this ref is the lookup.
 
 ---
 
@@ -52,7 +52,7 @@ def select_X(
 
 ### select_period
 
-`edgarpack/query/periods.py:901`. The dispatcher. Routes to one of the above based on the normalized `period` string. Raises `ValueError` for unknown selectors.
+`edgarpack/query/periods.py:1160`. The dispatcher. Routes to one of the above based on the normalized `period` string. Raises `ValueError` for unknown selectors.
 
 ---
 
@@ -113,7 +113,7 @@ Without this filter, a query for NVIDIA's revenue would risk returning a segment
 
 ### parse_fact_ids_from_html(html)
 
-`edgarpack/query/periods.py:67`. Parses inline XBRL HTML and returns `{(concept, value): fact_id}`.
+`edgarpack/query/periods.py:73`. Parses inline XBRL HTML and returns `{(concept, value): fact_id}`.
 
 **Strategy**: regex-match every `<ix:nonFraction name="..." id="..." scale="..." sign="...">{text}</ix:nonFraction>`. For each match, extract the concept name (strip taxonomy prefix), the fact ID, the scale, and the sign. Parse the display text via `_parse_display_value` to get the final numeric value. Store `{(concept_short, value): fact_id}`.
 
@@ -123,7 +123,7 @@ First-occurrence-wins (line 104): if duplicates exist (rare, and typically the r
 
 ### _parse_display_value(text, scale, sign)
 
-`edgarpack/query/periods.py:33`. Parse a displayed inline XBRL value:
+`edgarpack/query/periods.py:39`. Parse a displayed inline XBRL value:
 
 1. Strip non-breaking spaces, leading/trailing whitespace.
 2. Handle parentheses as display-only formatting (negative numbers); the `sign` attribute is the authoritative sign indicator.
@@ -136,7 +136,7 @@ Returns `None` on any parse failure (bad number, empty text, etc.).
 
 ### _lookup_fact_id(fact_id_map, concept, val)
 
-`edgarpack/query/periods.py:110`. Look up a fact_id by `(concept, value)`. Strips taxonomy prefix from the concept. Returns empty string if not found. Called from `financials._enrich_fact_ids`.
+`edgarpack/query/periods.py:116`. Look up a fact_id by `(concept, value)`. Strips taxonomy prefix from the concept. Returns empty string if not found. Called from `financials._enrich_fact_ids`.
 
 ---
 

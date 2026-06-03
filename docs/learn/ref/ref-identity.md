@@ -2,7 +2,7 @@
 
 `edgarpack/identity.py`
 
-The routing seam. Every multi-company command (`compare`, `comps`, `query` when given a name rather than a ticker) first resolves user input into a `ResolvedCompany`, which tells the rest of the system where to look for facts: SEC EDGAR over HTTP, a prebuilt HKEX pack's `facts.json`, or a private-company exit. Identity is purely in-memory and config-driven; the index builds from `universe.toml` at load time and never touches the network.
+The routing path. Every multi-company command (`compare`, `comps`, `query` when given a name rather than a ticker) first resolves user input into a `ResolvedCompany`, which tells the rest of the system where to look for facts: SEC EDGAR over HTTP, a prebuilt HKEX pack's `facts.json`, or a private-company exit. Identity is purely in-memory and config-driven; the index builds from `universe.toml` at load time and never touches the network.
 
 ---
 
@@ -55,13 +55,13 @@ Two maps and a sorted tuple. `by_ticker` handles short-symbol lookups (including
 **Inputs**:
 - `path` (`Path`): path to a universe TOML, typically `./universe.toml`.
 
-**Returns**: an `IdentityIndex`. On alias collision, raises `AmbiguousCompany` immediately (config error — fix before any query runs).
+**Returns**: an `IdentityIndex`. On alias collision, raises `AmbiguousCompany` immediately (config error; fix before any query runs).
 
 **How it works**:
 
 1. Calls `harvest.universe.load_universe(path)` to parse TOML into `CompanySpec` objects.
 2. For each spec, builds one primary `ResolvedCompany` keyed by `spec.ticker.upper()`.
-3. For every entry in `spec.alt_tickers`, builds a secondary `ResolvedCompany` — if the alt ends in `.HK` it is forced to `source="HKEX"` regardless of the primary's listing, which is how a dual-listed company surfaces a SEC ticker and an HKEX ticker from one spec.
+3. For every entry in `spec.alt_tickers`, builds a secondary `ResolvedCompany`; if the alt ends in `.HK` it is forced to `source="HKEX"` regardless of the primary's listing, which is how a dual-listed company surfaces a SEC ticker and an HKEX ticker from one spec.
 4. Walks `spec.aliases` into `by_alias`, lowercased and stripped; on collision with a different ticker, raises `AmbiguousCompany`.
 
 **Design notes**: Ambiguity is caught at load time, not query time. The universe is small and config-owned; a query-time ambiguity check would mean every call paid for a check that only ever fails when the config is broken. `.HK` suffix detection on alt tickers is the one place identity routing leaks knowledge about exchange conventions.
@@ -85,17 +85,17 @@ Exactly one must be provided. The CLI's pattern is to try both in sequence (`res
 2. Ticker path: uppercase the input, look in `by_ticker`. On miss, compute up to three close matches from `all_tickers` and raise `UnknownCompany` with the list baked into the message.
 3. Company path: lowercase-and-strip, look in `by_alias`. On miss, compute close matches from `by_alias.keys()` and render them as `alias (TICKER)` pairs in the error.
 
-**Design notes**: Suggestions always appear. If no close match is found, the error falls back to the first three sorted keys so the user at least sees valid examples. This matters most for HKEX tickers where `.HK` suffix is non-obvious. No partial matching — this is strict equality after case normalization. Partial matching would create ambiguity between, say, "Apple" and "Applied Materials".
+**Design notes**: Suggestions always appear. If no close match is found, the error falls back to the first three sorted keys so the user at least sees valid examples. This matters most for HKEX tickers where `.HK` suffix is non-obvious. No partial matching; this is strict equality after case normalization. Partial matching would create ambiguity between, say, "Apple" and "Applied Materials".
 
 ---
 
 ## Invariants
 
-- `by_ticker` keys are uppercase — enforced by `_resolved_for` and `load_identity`.
-- `by_alias` keys are lowercase and whitespace-stripped — enforced by `load_identity` at insert time and `resolve` at lookup time.
-- Every primary ticker also has an entry in `by_ticker` for itself — enforced by `load_identity` (`by_ticker[spec.ticker.upper()] = primary`).
-- No two different tickers claim the same alias — enforced by `load_identity` (raises `AmbiguousCompany`).
-- `.HK`-suffixed tickers always have `source="HKEX"` — enforced by `_source_for` and `load_identity`.
+- `by_ticker` keys are uppercase; enforced by `_resolved_for` and `load_identity`.
+- `by_alias` keys are lowercase and whitespace-stripped; enforced by `load_identity` at insert time and `resolve` at lookup time.
+- Every primary ticker also has an entry in `by_ticker` for itself; enforced by `load_identity` (`by_ticker[spec.ticker.upper()] = primary`).
+- No two different tickers claim the same alias; enforced by `load_identity` (raises `AmbiguousCompany`).
+- `.HK`-suffixed tickers always have `source="HKEX"`; enforced by `_source_for` and `load_identity`.
 
 ---
 

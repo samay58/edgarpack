@@ -2,7 +2,7 @@
 
 `edgarpack/sec/client.py` (215 lines)
 
-The SEC HTTP seam. Every network call in EdgarPack goes through a `SECClient` instance. The module defines a rate limiter, an error type, the client class, a gzip helper, a Retry-After parser, and a per-event-loop singleton getter. See [Trail 2](../trail-2-rate-limited-fetch.md) for a walkthrough of how a single fetch flows through all of it.
+The SEC HTTP path. Every network call in EdgarPack goes through a `SECClient` instance. The module defines a rate limiter, an error type, the client class, a gzip helper, a Retry-After parser, and a per-event-loop singleton getter. See [Trail 2](../trail-2-rate-limited-fetch.md) for a walkthrough of how a single fetch flows through all of it.
 
 ---
 

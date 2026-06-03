@@ -4,7 +4,7 @@
 **Prereq**: none, but [Trail 0](trail-0-full-loop.md) introduces where this fits in the big picture.
 **Covers**: `sec/client.py`, `sec/cache.py`, `config.py`
 
-Every path through EdgarPack that touches the SEC goes through one function: `SECClient.fetch`. The client enforces the rate limit, retries on throttles, caches responses atomically, and hands bytes back to the caller. This trail walks a single fetch from call to return so you understand the seam every higher-level module depends on.
+Every path through EdgarPack that touches the SEC goes through one function: `SECClient.fetch`. The client enforces the rate limit, retries on throttles, caches responses atomically, and hands bytes back to the caller. This trail walks a single fetch from call to return so you understand the path every higher-level module depends on.
 
 ---
 
@@ -170,4 +170,4 @@ The call site gets `(content, headers)`, returns whatever it was building (parse
 
 ## Recap
 
-The SEC fetch seam is four short files. `client.py` holds the token-bucket rate limiter and the retry loop around stdlib urllib. `cache.py` holds a SHA256-keyed on-disk cache with atomic writes and per-key locks. `config.py` holds the constants (`RATE_LIMIT`, timeouts, cache directory). Every higher-level module calls `get_client()`, optionally consults a `DiskCache`, and otherwise doesn't know or care that any of this exists. The three design choices that shape the whole seam: use stdlib to keep deployment predictable, cache atomically so concurrent processes don't corrupt each other, and release the rate limiter lock before sleeping so the limit is a ceiling rather than a chokepoint. If you're going to modify anything in this area, read these three files in full. They're small, and each line is carrying weight.
+The SEC fetch path is four short files. `client.py` holds the token-bucket rate limiter and the retry loop around stdlib urllib. `cache.py` holds a SHA256-keyed on-disk cache with atomic writes and per-key locks. `config.py` holds the constants (`RATE_LIMIT`, timeouts, cache directory). Every higher-level module calls `get_client()`, optionally consults a `DiskCache`, and otherwise doesn't know or care that any of this exists. The three design choices that shape the whole path: use stdlib to keep deployment predictable, cache atomically so concurrent processes don't corrupt each other, and release the rate limiter lock before sleeping so the limit is a ceiling rather than a chokepoint. If you're going to modify anything in this area, read these three files in full. They're small, and each line is carrying weight.

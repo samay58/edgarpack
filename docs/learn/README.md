@@ -1,115 +1,138 @@
 # Learn EdgarPack
 
-How the system works, traced through what actually happens.
+Read this when you want to change the code without guessing.
 
-This is the internals map. If you are trying EdgarPack for the first time, start with [`../GETTING_STARTED.md`](../GETTING_STARTED.md) and [`../WORKFLOWS.md`](../WORKFLOWS.md). Come back here when you want to understand the code path behind a command or hand a focused implementation task to an agent.
+User docs explain how to run the product. This pack explains where the work
+happens in the repo. It is intentionally plain: command, code path, evidence,
+output.
 
-## The napkin sketch
+## The Short Map
 
 ```
-You run a CLI command (build, query, comps, compare, which, list, diff, timeline).
-  The CLI parses your args and dispatches to a subcommand.
-    v
-  Resolve identity: name/ticker/CIK -> ResolvedCompany (source = sec | hkex | private)
-    v
-  Route by source:
-    sec   -> submissions / archives / companyfacts / filing HTML over SECClient
-            (no-burst request pacer, SHA256 disk cache, atomic writes)
-    hkex  -> read prebuilt pack's facts.json (HKEX extractor ran at pack time)
-    v
-  Parse (build only):  strip iXBRL -> clean HTML -> semantic normalize -> render markdown -> sectionize
-                       (S-1 path injects synthetic headings before sectionize when the form has none)
-  Pack  (build only):  write full.md, sections/*.md, llms.txt, facts.json, manifest.json (hashes)
-  Period (query):      alias -> metric (layer_zero, presets), pick ltm/lfy/lfy-N/mrq facts, run formulas
-                       pre-IPO filers: lazy LLM-extract a snapshot from the latest S-1 pack and merge
-  Discover (which):    LLM-scan MD&A + cached catalog -> DiscoveredKpi rows across periods
-                       (S-1 packs go through extract_s1_metrics_from_pack instead of MD&A scan)
-  Compare:             fan out query(company, period) per input, USD-convert, mismatch-guard
-  Diff:                compare two local packs, anchor changed paragraphs, render static HTML
-  Timeline:            walk an S-1 / S-1-A / 424B chain and render pair reports
-    v
-  Cite:                every value or changed paragraph carries source provenance
-    v
-  Render:              table / json / markdown / pack directory / static HTML report
+CLI command
+  |
+  +-- query / comps / compare
+  |     resolve company -> fetch or load facts -> pick metric -> pick period
+  |     -> attach citation records -> render table/json
+  |
+  +-- build
+  |     resolve filing -> fetch primary document -> clean HTML -> markdown
+  |     -> section files -> optional chunks/facts -> manifest hashes
+  |
+  +-- which
+  |     read built packs -> scan disclosed KPIs -> cache company KPI rows
+  |     -> later query can reuse those rows without another scan
+  |
+  +-- diff / timeline
+  |     compare local packs -> anchor changed paragraphs -> static HTML report
+  |
+  +-- distill
+        read one existing pack -> extract cited rows -> write a small bundle
+        -> check that every row points back to evidence
 ```
 
-That is the entire lifecycle. Everything below fills in the details. For the higher-level "what is this and why" answer, read [`ARCHITECTURE.md`](../ARCHITECTURE.md) in docs/. This learn pack picks up where ARCHITECTURE.md leaves off and walks the actual code.
+The rule under all of it: do not produce an unsupported claim. Numbers and
+findings travel with citation data. Gaps stay gaps.
 
-## Trails
+## Where To Start
 
-Trails trace a concrete action through the code. Each one starts with something you do and follows the chain of what happens next.
+| If you need to change... | Read first | Then read |
+| --- | --- | --- |
+| a single-company query | [Trail 0](trail-0-full-loop.md) | [ref-financials](ref/ref-financials.md), [ref-query-models](ref/ref-query-models.md) |
+| period math or LTM | [Trail 3](trail-3-period-selection.md) | [ref-periods](ref/ref-periods.md), `tests/test_periods.py` |
+| filing pack output | [Trail 1](trail-1-build-a-pack.md) | [ref-pack-build](ref/ref-pack-build.md), [ref-sectionize](ref/ref-sectionize.md) |
+| citation links | [Trail 4](trail-4-citation-anchors.md) | [ref-query-models](ref/ref-query-models.md), `tests/test_query_links.py` |
+| multi-company tables | [Trail 5](trail-5-compare-companies.md) | `edgarpack/compare.py`, `edgarpack/query/comps.py` |
+| discovered KPIs | [Trail 6](trail-6-which-kpi-discovery.md) | `edgarpack/query/kpi_discover.py`, `tests/test_kpi_discover.py` |
+| S-1 or pre-IPO filings | [Trail 7](trail-7-s1-pre-ipo.md) | [ref-s1-financials](ref/ref-s1-financials.md), [docs/S1.md](../S1.md) |
+| filing redlines | [Trail 8](trail-8-static-diff-report.md) | [ref-diff-reports](ref/ref-diff-reports.md) |
+| small cited research bundles | [Trail 9](trail-9-distill-bundle.md) | [ref-distill](ref/ref-distill.md), [docs/DISTILL.md](../DISTILL.md) |
 
-**Start here:**
+## The Product Surfaces
 
-- [Trail 0: From `edgarpack query NVDA revenue` to a cited number](trail-0-full-loop.md) (~18 min)
-  The most common command, walked end to end. Ticker resolution, companyfacts fetch, concept resolution, period selection, citation enrichment, table render. Touches every load-bearing module in the query path.
+| Surface | Command | Source of truth | Output |
+| --- | --- | --- | --- |
+| cited metric query | `edgarpack query NVDA revenue --period ltm` | SEC companyfacts or pack-local China facts | table/json with citation records |
+| filing pack | `edgarpack build NVDA --form 10-K --with-chunks` | SEC archive primary filing | `filing.full.md`, `sections/`, `manifest.json`, optional chunks |
+| KPI discovery | `edgarpack which FIG` | built packs for the company | disclosed KPI matrix plus cached rows |
+| company comparison | `edgarpack compare NVDA BIDU BABA --metrics revenue --currency usd` | SEC facts plus HKEX/SSE pack facts | side-by-side table with native and USD context |
+| filing diff | `edgarpack diff --format html ...` | two local packs | static HTML with paragraph anchors |
+| registration timeline | `edgarpack timeline ...` | local S-1 / S-1/A / 424B packs | index plus pair reports |
+| distill bundle | `edgarpack distill run lime-s1 --pack packs/...` | one existing pack | small cited bundle under `reports/<slug>/` |
+| China Lens API | `edgarpack api` | China storage service and fixtures/imports | evidence search, pack jobs, citation resolution |
 
-**Then go deeper:**
+China Lens is not fully documented in this pack yet. The current learn pack
+shows where query routing touches HKEX/SSE facts, then leaves the larger China
+service in `docs/china-lens/` and `docs/TESTING.md`.
 
-- [Trail 1: How `edgarpack build` turns a filing into deterministic markdown](trail-1-build-a-pack.md) (~14 min)
-  The other half of the system. The 13-step pack orchestrator and the strict-order parse pipeline. What "deterministic" means in practice.
+## What Changed Since The Old Pack
 
-- [Trail 2: What happens during a single SEC HTTP call](trail-2-rate-limited-fetch.md) (~8 min)
-  The seam everything else depends on. Token-bucket rate limiting, retry-with-backoff, atomic disk caching, gzip handling.
+- `query` rendering moved out of the CLI into `edgarpack/query/render.py`.
+- formula evaluation is shared by SEC and S-1 paths in `edgarpack/query/formula.py`.
+- `distill` is now a first-class command for producing small cited bundles from
+  existing packs.
+- China Lens has its own service, storage, API routes, and golden test lanes.
+- The quality gate now expects the repo wrapper plus strict mypy:
 
-- [Trail 3: How `--period ltm` becomes three filings and one formula](trail-3-period-selection.md) (~16 min)
-  The single subtlest part of the system. LTM math, anchor selection, fiscal-year matching, staleness rejection, segment filtering. Most reasoning bugs in financial code live here.
+```bash
+scripts/symphony_quality_gate.sh
+uv run --extra dev --extra china --extra sse mypy edgarpack
+```
 
-- [Trail 4: How a number gets a deep-link URL back to the filing](trail-4-citation-anchors.md) (~10 min)
-  The part the README says "really matters". Inline XBRL fact_id parsing, the (concept, value) compound key, the URL fallback chain.
+For HKEX, SSE, China Lens, citation, FX, or diff work, also use the lane named in
+[`docs/TESTING.md`](../TESTING.md).
 
-- [Trail 5: How `edgarpack compare AAPL MSFT GOOGL --period lfy` builds a side-by-side table](trail-5-compare-companies.md) (~12 min)
-  Fan-out over `financials()`. Identity routing (SEC vs HKEX vs private), sequential resolution, spot-vs-average currency conversion, and the fiscal-year mismatch guard that keeps a multi-company table honest.
+## Visual Mental Model
 
-- [Trail 6: How `edgarpack which FIG` finds the KPIs a company actually discloses](trail-6-which-kpi-discovery.md) (~14 min)
-  The qualitative counterpart to `query`. Per-pack LLM scans over MD&A, cached catalog merge, per-slug aggregation across filings, and the `lookup_company_kpi` side door that lets `query` hit discovered metrics without a second LLM call.
+```
+                 primary filing HTML
+                         |
+                         v
+                build creates a pack
+                         |
+        +----------------+----------------+
+        |                                 |
+        v                                 v
+   query can cite                    diff can anchor
+   values and formulas               paragraph changes
+        |
+        v
+   distill can shrink one pack into rows
+   where each row points to evidence
+```
 
-- [Trail 7: How `edgarpack query CRBRS revenue` works for a company that has never filed a 10-K](trail-7-s1-pre-ipo.md) (~14 min)
-  The pre-IPO path. Synthetic heading injection at build time, lazy Haiku snapshot extraction at query time, the `s1_snapshot` / `s1_pro_forma` source tags on `CitedValue`, and the `--series=registration` redline timeline. Read this before assuming every cited value comes from XBRL.
+The pack is the shared object. Query does not need a pack for ordinary SEC
+companyfacts metrics, but everything that reads text, sections, disclosed KPIs,
+diffs, timelines, and distill bundles depends on built packs.
 
-- [Trail 8: How `edgarpack diff --format html` turns two packs into a static report](trail-8-static-diff-report.md) (~12 min)
-  The document-review surface. Pair report models, paragraph anchors, token spans, collapsed context, safe SEC and local pack links, and the registration-timeline HTML index.
+## References
 
-## Reference
+Use refs when you already know which module you are changing.
 
-When you need to look up a specific function or module, use the reference docs. They cover every exported function with purpose, inputs, outputs, design choices, and invariants.
+- [SEC client](ref/ref-sec-client.md): request pacing, retry, cache use.
+- [cache](ref/ref-cache.md): SHA256 disk cache and atomic writes.
+- [pack build](ref/ref-pack-build.md): pack orchestration and artifact order.
+- [sectionize](ref/ref-sectionize.md): form-aware section IDs.
+- [financials](ref/ref-financials.md): single-company query orchestration.
+- [periods](ref/ref-periods.md): LFY, MRQ, LTM, series selectors.
+- [query models](ref/ref-query-models.md): citation and calculation contract.
+- [identity](ref/ref-identity.md): SEC, HKEX, SSE, and private-company routing.
+- [layer zero](ref/ref-query-layer-zero.md): aliases, presets, suggestions.
+- [S-1 financials](ref/ref-s1-financials.md): registration filing extraction.
+- [diff reports](ref/ref-diff-reports.md): static report model and HTML output.
+- [distill](ref/ref-distill.md): cited bundle rows and validation.
 
-Trails tell you the story. Reference is the dictionary.
+## Current Omissions
 
-- [`ref/ref-sec-client.md`](ref/ref-sec-client.md) covers `edgarpack/sec/client.py`. The SEC HTTP seam. Token bucket, retry, gzip, per-loop singleton.
-- [`ref/ref-cache.md`](ref/ref-cache.md) covers `edgarpack/sec/cache.py`. SHA256-keyed disk cache with atomic writes. Encodes the determinism guarantee.
-- [`ref/ref-pack-build.md`](ref/ref-pack-build.md) covers `edgarpack/pack/build.py`. The 13-step pack orchestrator. Order matters; this ref says why.
-- [`ref/ref-sectionize.md`](ref/ref-sectionize.md) covers `edgarpack/parse/sectionize.py`. Form-aware section detection. Slug stability, TOC stub filtering, the section_id contract.
-- [`ref/ref-financials.md`](ref/ref-financials.md) covers `edgarpack/query/financials.py`. The query orchestrator. Derived metrics with cycle protection, staleness, the low-debt sanity check.
-- [`ref/ref-periods.md`](ref/ref-periods.md) covers `edgarpack/query/periods.py`. The hairiest module in the codebase. Period semantics, LTM math, anchor selection, ix:nonFraction parsing.
-- [`ref/ref-query-models.md`](ref/ref-query-models.md) covers `edgarpack/query/models.py`. The citation contract. CitedValue, DerivedValue, QueryResult.
-- [`ref/ref-identity.md`](ref/ref-identity.md) covers `edgarpack/identity.py`. The routing seam. `IdentityIndex`, `ResolvedCompany`, SEC vs HKEX routing, ambiguity caught at load time.
-- [`ref/ref-query-layer-zero.md`](ref/ref-query-layer-zero.md) covers `edgarpack/query/layer_zero.py` + `edgarpack/query/presets.py`. Metric alias resolution, `suggest_metrics` for "did you mean", and preset expansion.
-- [`ref/ref-s1-financials.md`](ref/ref-s1-financials.md) covers `edgarpack/query/s1_financials.py` (and the small `parse/s1_headings.py` companion). The pre-IPO snapshot extractor: `SnapshotFact` / `SnapshotResult` contract, the SHA256-keyed cache, the Haiku prompt, the `s1_snapshot` / `s1_pro_forma` source tags, and the registration-pack walkers.
-- [`ref/ref-diff-reports.md`](ref/ref-diff-reports.md) covers `edgarpack/diff/report_models.py`, `edgarpack/diff/report_builder.py`, and `edgarpack/diff/html_report.py`. The static diff-report contract: report models, evidence anchors, token spans, context collapse, safe links, pair pages, and timeline indexes.
+The omissions are deliberate, not forgotten.
 
-## How to use this
+- `edgarpack/china/`: large enough for its own learn pack. Use
+  `docs/china-lens/IMPLEMENTATION_TRACKER.md` and `docs/TESTING.md` today.
+- `edgarpack/api/`: mostly route wiring over China Lens service objects.
+- `edgarpack/site/`: static rendering over built packs.
+- `edgarpack/harvest/`: batch planning over `build_pack`.
+- `edgarpack/index/` and `edgarpack/insights/`: useful layers over packs, not the
+  first path to learn.
 
-**Before a session**: glance at the napkin sketch. Orient yourself to where you'll be working.
-
-**During a session**: when something is unclear, ask "walk me through this" and reference the relevant trail.
-
-**After a session**: walk the trail for what you just built. The code references point you to the exact lines.
-
-## What's deliberately not covered (yet)
-
-This learn pack focuses on the core CLI lifecycle: `build`, `query`, `comps`, `compare`, `which`, `list`, `diff`, and `timeline`. The following are deliberately omitted from the first pass and will get their own learn packs (or extensions to this one) later:
-
-- `edgarpack/harvest/`: batch orchestrator on top of `build_pack`. Separate concern.
-- `edgarpack/index/`, `edgarpack/insights/`: analytical layers on top of built packs. Useful but not load-bearing for understanding the core lifecycle.
-- `edgarpack/china/`: China Lens is a separate sub-product with its own pipeline (acquire / extract / translate / synthesize / qa). Deserves its own learn pack.
-- `edgarpack/hk/`: HKEX extractor. Runs at pack time and populates `facts.json`; `identity.py` routing reads the output. Linked from Trail 5; promote to a ref if it grows.
-- `edgarpack/api/`, `edgarpack/site/`: rendering and serving layers. Once you understand the core CLI lifecycle these become straightforward wrappers.
-- `edgarpack/fx/`: USD conversion tables. Linked from Trail 5 as a pure data lookup.
-- `edgarpack/sse/`: server-sent events for the translation pipeline. Outside the core query/pack lifecycle.
-
-The current omissions are tracked in [`manifest.yml`](manifest.yml) under `omitted:`. Future runs will reconsider them.
-
-## Keeping it current
-
-These trails reference actual source files and line numbers. When the code changes, the trails should be updated in the same commit. If a trail reference is wrong, that is a bug.
+When code changes, update the trail or ref in the same commit. A stale learn
+pack is worse than no learn pack because it teaches the wrong path.
