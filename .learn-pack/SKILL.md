@@ -28,7 +28,7 @@ Goal: produce `docs/learn/manifest.yml` and stop. **You do not write trails or r
 
 Steps:
 
-1. **Read what's already there.** README.md, ARCHITECTURE.md, AGENTS.md, CLAUDE.md, any docs/ tree, any pyproject.toml / package.json. These tell you what the maintainers think the system is. You will treat them as input, not gospel.
+1. **Read what's already there.** README.md, docs/ARCHITECTURE.md, AGENTS.md, CLAUDE.md, any docs/ tree, any pyproject.toml / package.json. These tell you what the maintainers think the system is. You will treat them as input, not gospel.
 2. **Walk the source tree.** Identify entry points (CLIs, public modules, HTTP handlers, main functions). Identify the natural lifecycle of the system — the order data flows through it. Most systems have one or two dominant lifecycles. Find them.
 3. **Read 5-10 key files end-to-end.** Not skim — read. Pick the entry point and follow the call chain. If you can't trace what happens when a user runs the most common command, you're not ready to plan.
 4. **Draft the napkin sketch.** A short ascii diagram (8-12 lines) of the dominant lifecycle, in plain English verbs. This goes in `manifest.yml` and later in `README.md`. If you can't draw it, you don't understand the system yet — go back to step 3.

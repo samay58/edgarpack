@@ -43,7 +43,7 @@ Raw -> iXBRL-stripped -> clean. Same three filings:
 | TSLA   | 812,958    | 650,614 (20% cut) | 82.6% cut         | 113,333      |
 
 
-About a fifth of the total reduction comes from iXBRL tag removal. The remaining two-thirds comes from the downstream HTML cleaning, semantic reduction, markdown rendering, and polish passes described in `[ARCHITECTURE.md](../ARCHITECTURE.md)`. If you only strip iXBRL, you are leaving most of the compression on the table.
+About a fifth of the total reduction comes from iXBRL tag removal. The remaining two-thirds comes from the downstream HTML cleaning, semantic reduction, markdown rendering, and polish passes described in `[ARCHITECTURE.md](ARCHITECTURE.md)`. If you only strip iXBRL, you are leaving most of the compression on the table.
 
 ## Context-window fit
 

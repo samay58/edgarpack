@@ -39,12 +39,6 @@ For public tweet or LinkedIn thread visuals, consult `docs/THREAD_VISUALS.md`. T
 kit lives at `assets/thread-visual-reference/cerebras-filing-series-2026/` and is the quality
 bar for filing-analysis cards.
 
-## Optional: Symphony + Linear orchestration
-
-`WORKFLOW.md` and `docs/SYMPHONY.md` describe an optional unattended orchestration setup
-(Linear as the tracker, the Symphony runner). It is not required for normal work and is not
-the default. Use it only if you choose to run that system.
-
 ## learn-pack
 
 Run `/learn-pack` or the learn-pack skill to regenerate `docs/learn/`. See

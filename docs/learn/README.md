@@ -33,7 +33,7 @@ You run a CLI command (build, query, comps, compare, which, list, diff, timeline
   Render:              table / json / markdown / pack directory / static HTML report
 ```
 
-That is the entire lifecycle. Everything below fills in the details. For the higher-level "what is this and why" answer, read [`ARCHITECTURE.md`](../../ARCHITECTURE.md) at the repo root. This learn pack picks up where ARCHITECTURE.md leaves off and walks the actual code.
+That is the entire lifecycle. Everything below fills in the details. For the higher-level "what is this and why" answer, read [`ARCHITECTURE.md`](../ARCHITECTURE.md) in docs/. This learn pack picks up where ARCHITECTURE.md leaves off and walks the actual code.
 
 ## Trails
 
