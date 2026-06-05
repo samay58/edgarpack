@@ -4,7 +4,7 @@ The "why" behind the package shape. Read this if you're going to modify the skil
 
 ## What problem this solves
 
-Codebases of any real size accumulate tribal knowledge that doesn't live in the code or in the README. New contributors (human or agent) bounce off the surface for days before they understand the load-bearing files, the dominant lifecycle, the invariants that look optional but aren't. The fix isn't another README — it's a small set of narrative trails that follow concrete actions through the code, plus a function-level reference layer for lookups.
+Codebases of any real size accumulate tribal knowledge that doesn't live in the code or in the README. New contributors (human or agent) bounce off the surface for days before they understand the load-bearing files, the dominant lifecycle, the invariants that look optional but aren't. The fix isn't another README. It's a small set of narrative trails that follow concrete actions through the code, plus a function-level reference layer for lookups.
 
 This package generates that material. It does not replace the README or the architecture doc. Those answer "what is this?" Trails answer "what happens when I do X?" Refs answer "what does this function do exactly?"
 
@@ -24,15 +24,19 @@ Discovery and fill are two distinct turns of work, separated by user review of t
 
 The failure mode of one-shot generation is well-documented: the agent writes a wall of plausible prose, the user has nothing to react to but the wall, and the slop ships because reviewing it line by line is more work than the user budgeted. By forcing a manifest review in the middle, the user shapes the output before any prose exists. The plan is small enough to read in two minutes; the prose isn't.
 
-### Per-repo vendoring instead of a global install
+### Both a global install and per-repo vendoring
 
-The package lives at `.learn-pack/` inside the host repo. We considered a global install at `~/.claude/skills/learn-pack/` and `~/.codex/prompts/learn-pack/`. Rejected because: customization. Different repos want different principles, different templates, different examples. Vendoring lets a fork of the skill diverge without breaking other projects, and lets the skill version itself with the host repo's git history.
+There are two ways to run the skill, for two different needs.
 
-The install script still creates the per-tool symlinks the agents need to discover the skill. It just symlinks back into the vendored copy instead of holding the canonical version.
+The global install is for cold-start. A self-contained copy lives at `~/.agents/skills/learn-pack/`, with `~/.claude/skills/learn-pack` symlinked to it and a Codex stub at `~/.codex/prompts/learn-pack.md`. This is what makes `learn-pack` available in any repo you open, including one that has never seen the skill before. The global copy carries its own PRINCIPLES, templates, and examples, so it works with no host-repo support at all.
+
+Per-repo vendoring is for customization. The package also lives at `.learn-pack/` inside a host repo that wants to own its copy. Different repos want different principles, different templates, different examples; vendoring lets a fork diverge without touching the global copy, and lets the skill version itself with the host repo's git history. `scripts/install.sh` wires the vendored copy into that repo's `.claude/skills/`, and a Codex run prefers a repo-local `.learn-pack/` over the global copy when both exist.
+
+The honest tradeoff: the global copy is a snapshot. When you improve the in-repo copy, run `scripts/sync-global.sh` to push the change out to `~/.agents/skills/learn-pack/`. Until you do, the two can drift. We accept that over the alternative (global canonical, every repo symlinked back to it) because cold-start must not depend on any one repo being checked out.
 
 ### Free-form shape, not preset archetypes
 
-We considered shipping 3-4 archetype templates (CLI tool, library, web app, data pipeline) that the AI would pick from. Rejected because the archetypes always lie about a specific project. The discovery phase is cheap; let the AI invent the shape that fits. The marginalia learn pack is included as a worked example so the AI has something concrete to anchor on, but it's a reference, not a blueprint.
+We considered shipping 3-4 archetype templates (CLI tool, library, web app, data pipeline) that the AI would pick from. Rejected because the archetypes always lie about a specific project. The discovery phase is cheap; let the AI invent the shape that fits. Two learn packs ship as worked examples so the AI has something concrete to anchor on: `examples/edgarpack/` is the primary reference (run-first trails over a larger CLI), and `examples/marginalia/` is a smaller pack that proves the shape scales down. They are references, not blueprints.
 
 ## What's deliberately not in the package
 

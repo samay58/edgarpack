@@ -1,42 +1,32 @@
-# Trail {{N}}: {{TITLE}}
+# Trail {{N}}: {{SHORT_IMPERATIVE_TITLE}}
 
-**Time**: ~{{MINUTES}} minutes
-**Prereq**: {{PREREQ_OR_NONE}}
-**Covers**: {{MODULES_LIST}}
+Time: about {{MINUTES}} minutes.
 
-A one-paragraph hook. What concrete action does this trail follow? Why is this the right starting point for what it covers? Second person, present tense.
+A one-paragraph hook. What concrete action does this trail follow? Why is this the right starting point for what it covers? If it builds on another trail, say so in this sentence and link it, then move on. Second person, present tense.
 
----
+## Try it
 
-## 1. {{FIRST_STEP_TITLE}}
+Lead with the command the reader runs, then explain what came back.
 
-What happens, in plain language. The user does X. The system reacts.
-
-```{{LANGUAGE}}
-# Optional: a small code excerpt that earns its space.
-# No more than 8-10 lines per excerpt. If you need more, link to the file.
+```bash
+{{COMMAND}}
 ```
 
-Explain what the excerpt shows. Why it's interesting. What invariant or design choice it encodes.
+Describe the output the reader is now looking at: the value, the file, the table. Point them at what to notice in it. This is the spine of the trail, not decoration.
 
-**Code**: `path/to/file.ext:LINE` ({{FUNCTION_NAME}})
+## {{PLAIN_DESCRIPTIVE_STEP_HEADER}}
 
----
+What happens, in plain language. The reader did X; the system reacts. Describe what the code does and cite the line. Do not paste the function body. The citation is the way in.
 
-## 2. {{NEXT_STEP_TITLE}}
+A short command or a few lines of representative output earn their space here. Implementation source does not. If you feel the urge to paste a function, write one sentence about what it does instead and trust the line reference.
 
-Same shape. One concrete thing happening. What it leads to.
+## {{NEXT_PLAIN_DESCRIPTIVE_STEP_HEADER}}
 
-**Code**: `path/to/file.ext:LINE`
+Same shape. One concrete thing happening, and what it leads to. If this step needs context another trail already covered, link to that trail rather than restating it.
 
----
+## In the code
 
-## N. The handoff
+Every claim above that came from the source points here. One list, at the end, with real line numbers. No `**Code**:` labels scattered through the prose.
 
-How this trail ends. What state the system is in. What other trail picks up from here, if any.
-
----
-
-## Recap
-
-A short paragraph (3-5 sentences) that names the load-bearing files and the one design choice this trail teaches. Not a list. A paragraph the reader can actually internalize.
+- `path/to/file.ext:LINE` defines {{WHAT_LIVES_THERE}}.
+- `path/to/file.ext:LINE` runs {{WHAT_HAPPENS_THERE}}.

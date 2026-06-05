@@ -4,25 +4,31 @@ The difference between a learn pack and AI slop. Read this before you write a si
 
 ## 1. Story before reference
 
-Trails come first. A reader who lands in `docs/learn/` and reads only the README and trail-0 should walk away knowing what the system does and how it does it. Refs are dictionaries — useful, but only after you have the story.
+Trails come first. A reader who lands in `docs/learn/` and reads only the README and trail-0 should walk away knowing what the system does and how it does it. Refs are dictionaries: useful, but only after you have the story.
 
-If you find yourself writing "the foo module exposes a bar function which takes a baz parameter" — stop. That belongs in a ref. A trail says "you call `foo.bar(baz)`, here's what happens next."
+If you find yourself writing "the foo module exposes a bar function which takes a baz parameter", stop. That belongs in a ref. A trail says "you call `foo.bar(baz)`, here's what happens next."
 
 ## 2. Concrete actions, not abstract systems
 
 Every trail starts with something a person does. "You save a draft file." "You run `edgarpack query NVDA`." "An HTTP request arrives at /pack/build." Never "the system handles requests" or "the architecture supports multiple flows."
 
-If the trail can't be triggered by a single concrete action, it's not a trail — it's a survey. Surveys are fine in the README, not in trails.
+If the trail can't be triggered by a single concrete action, it's not a trail. It's a survey, and surveys belong in the README, not in trails.
 
-## 3. Cite the code
+Lead with the command, then explain. Open the trail, and each step that has one, with the thing the reader runs and the output that comes back, then put the explanation underneath. The reader runs it, looks at real output, and only then reads why. A trail should be followable start to finish without the reader ever opening the source. The citations are how they go deeper when they want to, not a toll they pay to follow along.
 
-Every non-obvious claim ends with a reference: `path/to/file.py:LINE`. Line numbers must be real. If the code moves, the trail moves with it. A learn pack with stale references is worse than no learn pack — it teaches the wrong thing.
+## 3. Cite the code, don't paste it
+
+Every non-obvious claim ends with a reference: `path/to/file.py:LINE`. Line numbers must be real. If the code moves, the trail moves with it. A learn pack with stale references is worse than no learn pack. It teaches the wrong thing.
 
 When you cite a function, name it: `edgarpack/sec/client.py:fetch_filing()`. When you cite a section, give the line range: `edgarpack/parse/sectionize.py:120-180`.
 
+Describe what the code does; do not reproduce its body. A trail is not a second copy of the source. Pasting function bodies is the most common way a learn pack turns into slop: the paste goes stale the moment the code moves, and the reader skims it instead of opening the real thing. Say what the code does in plain prose and cite the line.
+
+Runnable commands and a few lines of representative output are a different thing, and they are welcome. Show the reader what to type and what comes back. That is the trail's spine, not implementation source. When several claims in a section came from the code, collect their references into one list at the end of the trail instead of tagging every paragraph.
+
 ## 4. Plain text projection > raw structure
 
-Diff what the user sees, not what the parser sees. Same applies to docs. Describe what the code does in the situations the reader will encounter, not all the situations the code could theoretically encounter. Edge cases belong in refs, behavior contracts, or tests — not in trails.
+Diff what the user sees, not what the parser sees. Same applies to docs. Describe what the code does in the situations the reader will encounter, not all the situations the code could theoretically encounter. Edge cases belong in refs, behavior contracts, or tests, not in trails.
 
 ## 5. Voice rules (the anti-slop kill list)
 
@@ -38,6 +44,10 @@ These are not stylistic preferences. Every one of these is an AI tell that destr
 - **No "key insight:" / "important note:" / "TL;DR:".** If it's important, the prose carries it.
 - **No three-beat parallel structure where every paragraph is the same length.** Vary deliberately. Short sentence. Then a longer one that earns its length by carrying information the short one couldn't. Then back to short.
 - **No "it's worth noting" / "as we'll see" / "as mentioned earlier".** Self-referential filler.
+- **No numbered section headers.** `## The rate limiter`, not `## 4. The rate limiter`. Numbers imply an order the reader has to follow; descriptive headers let them skim straight to what they need.
+- **Sentence case in headers, not Title Case.** `## How to use this`, not `## How To Use This`.
+- **No metadata chrome at the top of a trail.** A bold `**Time**` / `**Prereq**` / `**Covers**` block reads as a generated form. One plain line, `Time: about N minutes`, is enough. Fold any prerequisite into the opening sentence and leave the module list in the manifest.
+- **No recap or quiz sections.** A closing `## Recap` that restates the trail, or a `## Check your understanding` question block, is textbook scaffolding. If a trail needs a recap to make sense, it was structured wrong. End on the consolidated citation list instead.
 
 ## 6. Second-person, present tense, active voice
 
@@ -57,7 +67,7 @@ The napkin sketch is the first thing a reader sees. It's also the artifact that 
 
 ## 8. Link, don't restate
 
-If trail-2 needs context that trail-0 already covered, link to trail-0. Don't recap. Recapping is how learn packs rot — the recap drifts from the original and now there are two slightly-different versions of the same explanation.
+If trail-2 needs context that trail-0 already covered, link to trail-0. Don't recap. Recapping is how learn packs rot: the recap drifts from the original and now there are two slightly-different versions of the same explanation.
 
 ## 9. Omissions are part of the design
 

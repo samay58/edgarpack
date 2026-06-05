@@ -1,6 +1,6 @@
 # Learn {{PROJECT_NAME}}
 
-How the system works, traced through what actually happens.
+This pack explains {{PROJECT_NAME}} by running it. Run the command at the top of a trail, look at the file or output it points to, then read the short explanation underneath. The trails stand on their own; the line references are there for when you want to drop into the source.
 
 ## The napkin sketch
 
@@ -12,14 +12,11 @@ That is the entire lifecycle. Everything below fills in the details.
 
 ## Trails
 
-Trails trace a concrete action through the code. Each one starts with something you do and follows the chain of what happens next.
+Trails trace a concrete action through the code. Each one starts with something you run and follows the chain of what happens next.
 
-**Start here:**
+Start with [Trail 0: {{TRAIL_0_TITLE}}](trail-0-{{TRAIL_0_SLUG}}.md) (~{{TRAIL_0_MIN}} min). {{TRAIL_0_DESCRIPTION}}
 
-- [Trail 0: {{TRAIL_0_TITLE}}](trail-0-{{TRAIL_0_SLUG}}.md) (~{{TRAIL_0_MIN}} min)
-  {{TRAIL_0_DESCRIPTION}}
-
-**Then go deeper:**
+After that, pick the trail closest to the thing you want to learn or change.
 
 {{OTHER_TRAILS}}
 
@@ -31,14 +28,6 @@ Trails tell you the story. Reference is the dictionary.
 
 {{REFS}}
 
-## How to use this
-
-**Before a session**: glance at the napkin sketch. Orient yourself to where you'll be working.
-
-**During a session**: when something is unclear, ask "walk me through this" and reference the relevant trail.
-
-**After a session**: walk the trail for what you just built. The code references point you to the exact lines.
-
 ## Keeping it current
 
-These trails reference actual source files and line numbers. When the code changes, the trails should be updated in the same commit. If a trail reference is wrong, that is a bug.
+These trails reference actual source files and line numbers. When the code changes, update the trail or ref in the same commit. A stale reference is a bug, because it teaches the wrong path with confidence.
