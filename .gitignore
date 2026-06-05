@@ -47,6 +47,15 @@ test_packs/
 /demo/generated/
 /reports/local/
 /reports/*.html
+# Regenerable raw pack/filing data under any report (re-fetchable; keep local)
+reports/*/raw/
+# Report deliverables kept local, not published to the public repo
+/assets/cerebras-filing-series/
+/reports/axp-teardown/
+/reports/spacex-s1/
+/reports/threads/axp-business-teardown-thread.md
+/reports/threads/lime-s1-thread-v3.md
+/reports/threads/nvda-q1-fy27-earnings-thread.md
 /*.gif
 /*.mp4
 /edgarpack-hero-cover-*.png
