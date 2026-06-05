@@ -1,101 +1,77 @@
-# Trail 3: Turn `ltm` Into The Right Filings
+# Trail 3: Turn `ltm` into filings
 
 Time: about 14 minutes.
 
-Most query mistakes are period mistakes. The metric can be right and the concept
-can be right, but the value is still wrong if the period selector grabs the
-wrong filing window.
+A query can have the right metric and the right accounting concept and still be wrong. Period selection is usually where that happens.
 
-This trail follows:
+This trail follows the same command as [Trail 0](trail-0-full-loop.md):
 
 ```bash
 edgarpack query NVDA revenue --period ltm
 ```
 
-## The Visual
+## Try it
 
+Compare three period requests:
+
+```bash
+edgarpack query NVDA revenue --period lfy
+edgarpack query NVDA revenue --period mrq
+edgarpack query NVDA revenue --period ltm --audit
 ```
-all companyfacts values for Revenue
-  -> remove segment breakouts where consolidated facts exist
+
+`lfy` should read like one annual filing value. `mrq` should read like the most recent quarter. `ltm --audit` should show a calculation with components.
+
+Now ask for a small period grid:
+
+```bash
+edgarpack query NVDA revenue --period lfy,lfy-1,lfy-2
+```
+
+That output is useful for checking whether the selector is walking fiscal years in the order you expect.
+
+## The path
+
+```text
+all reported values for the revenue concept
+  -> prefer consolidated facts inside each filing context
   -> split annual and quarterly candidates
   -> pick the latest cumulative quarter
-  -> find latest full fiscal year
-  -> find matching prior-year cumulative quarter
+  -> find the latest full fiscal year
+  -> find the matching prior-year cumulative quarter
   -> compute MRP + LFY - MRP_prior
-  -> return DerivedValue with all three component citations
+  -> return a derived value with component citations
 ```
 
-## `select_period()` Is A Router
+`select_period()` routes period strings. It handles scalar selectors like `lfy`, `mrq`, `mrp`, `ltm`, `ltm-N`, and series selectors like `annual:N` and `quarterly:N`. The CLI parses comma-separated period lists before calling `financials()`, so the query function still receives one selector at a time.
 
-`financials()` passes one metric, one concept, and one period string into
-`select_period()`. The router lives at `edgarpack/query/periods.py:1160`.
-It accepts scalar selectors like `lfy`, `mrq`, `mrp`, `ltm`, `ltm-N`, and series
-selectors like `annual:N` and `quarterly:N`. The CLI parses comma-separated
-period lists before it calls `financials()`; that parser is
-`parse_period_spec()` at `edgarpack/query/periods.py:1323`.
-
-For `ltm`, the path is:
+For `ltm`, the route is:
 
 ```text
 select_period()
   -> select_ltm()
-    -> _select_ltm_like(years_back=0)
+  -> _select_ltm_like(years_back=0)
 ```
 
-`ltm-1` and `ltm-N` use the same helper with a shifted anchor year. See
-`edgarpack/query/periods.py:976`, `edgarpack/query/periods.py:1012`,
-`edgarpack/query/periods.py:1039`, and `edgarpack/query/periods.py:535`.
+`ltm-1` and `ltm-N` use the same helper with a shifted anchor year.
 
-## First, Pull The Candidate Facts
+## Segment facts are filtered before period math
 
-The selector starts by pulling every reported value for the concept with
-`_extract_values()` at `edgarpack/query/periods.py:176`. That function walks the
-companyfacts taxonomy and unit buckets, then returns raw SEC fact dicts.
-
-Before those facts are used, they pass through `_filter_segment_entries()` at
-`edgarpack/query/periods.py:138`.
-
-The problem is simple: SEC companyfacts can hold consolidated revenue and
-segment revenue in the same concept list. If you ask for revenue, you want the
-total company value, not the gaming segment or cloud segment.
-
-The filter groups facts by filing context:
+SEC companyfacts can put consolidated revenue and segment revenue in the same concept list. EdgarPack groups values by filing context:
 
 ```text
 accession + fiscal year + fiscal period + start date + end date
 ```
 
-When several facts share that context, a fact with an SEC `frame` wins. If no
-frame exists, the largest absolute value wins. That fallback is not magic; it is
-the practical rule that consolidated totals are usually larger than segment
-pieces.
+When a group has more than one value, facts with an SEC `frame` field are kept and unframed duplicates are dropped. If no fact in the group has `frame`, EdgarPack keeps the largest absolute value as a fallback. The fallback is practical, not perfect: consolidated totals are usually larger than segment pieces.
 
-## Then, Separate Annual And Quarterly Values
+Do not simplify this as "choose the headline number." The code is looking for XBRL `frame` period codes inside matching filing contexts.
 
-Duration metrics like revenue need both annual and quarterly values. Instant
-metrics like cash or total assets do not; `ltm` for those routes to the most
-recent period instead of fake four-quarter math.
+## Duration metrics need cumulative quarters
 
-For duration metrics, `_select_ltm_like()` builds a quarterly candidate list and
-sorts it by recency. The recency key uses period end, quarter length, fiscal
-year, and filed date. The picker then chooses the cumulative quarter when a
-filing reports both a three-month standalone value and a year-to-date value. The
-cumulative picker starts at `edgarpack/query/periods.py:430`.
+Revenue is a duration metric. It covers a span of time. Cash is an instant metric. It is a balance at one date.
 
-This is the critical distinction:
-
-| Filing row | Example | Use for LTM? |
-| --- | --- | --- |
-| standalone quarter | Q3 revenue for only three months | no |
-| cumulative quarter | Q3 year-to-date revenue for nine months | yes |
-| annual | FY revenue from the 10-K | yes |
-
-LTM math needs cumulative values because the formula subtracts one cumulative
-window from another.
-
-## The Formula Is Only Safe With Three Components
-
-For a Q3 anchor:
+For duration metrics, LTM needs a cumulative quarter. A standalone Q3 value covers three months. A Q3 year-to-date value covers nine months. Only the second form works in this formula:
 
 ```text
 MRP       = current fiscal year Q3 cumulative revenue
@@ -105,41 +81,23 @@ MRP_prior = prior fiscal year Q3 cumulative revenue
 LTM = MRP + LFY - MRP_prior
 ```
 
-`_assert_ltm_invariant()` at `edgarpack/query/periods.py:493` enforces the
-component shape. A non-null LTM derived value must carry the component citations
-that explain the number. If a component is missing, the code records a diagnostic
-or degrades to a reported value according to the selector path. It does not
-create an uncited LTM scalar.
+If the newest available quarter is really a full fiscal year, EdgarPack can return the annual value without doing arithmetic. Otherwise, a real LTM result must carry the three component roles.
 
-Derived arithmetic uses the shared formula evaluator in
-`edgarpack/query/formula.py:10` for named formula shapes elsewhere in the query
-layer. The LTM path is more specific because it needs date-window semantics, not
-just arithmetic.
+## Missing pieces stay missing
 
-## S-1 Pseudo-Periods Are Separate
+`_assert_ltm_invariant()` guards the output shape. A derived LTM value must have the component roles `mrp`, `lfy`, and `mrp_prior`. A plain cited value is allowed only when the anchor is already FY or Q4. Anything else is a bug, because it risks labeling a six-month or nine-month value as twelve months.
 
-Registration filings do not behave like mature public-company 10-K/10-Q history.
-S-1 snapshot periods are guarded with `is_snapshot_pseudo_period()` at
-`edgarpack/query/periods.py:1383` and handled by the S-1 path in
-`edgarpack/query/s1_financials.py`.
+If EdgarPack cannot compute the three-part value, it records a diagnostic and returns no scalar for that cell. That is the right failure mode. A neat number with no component proof is worse than an `N/A`.
 
-That separation matters. Do not let S-1 snapshot facts leak into ordinary LTM
-math. They are sourced differently, often extracted from prose or tables, and may
-carry pro-forma assumptions.
+## S-1 pseudo-periods stay out
 
-## The Failure Modes To Watch
+Registration filings do not behave like 10-K and 10-Q history. S-1 snapshot values come from a different extractor and may include pro-forma assumptions. EdgarPack keeps those pseudo-periods out of ordinary annual, quarterly, and LTM selection.
 
-| Symptom | Likely cause | First file to inspect |
-| --- | --- | --- |
-| LTM equals one quarter | standalone quarter picked instead of cumulative | `edgarpack/query/periods.py` |
-| revenue looks like a segment | segment filter failed or concept picked badly | `periods.py`, then `concepts.py` |
-| old annual value appears | staleness or fiscal-year alignment guard | `financials.py` |
-| S-1 value enters LTM | pseudo-period guard missing | `periods.py`, `s1_financials.py` |
-| derived value has no components | invariant regression | `periods.py`, `models.py` |
+That guard matters for follow-on filings too. A company can have normal 10-K history and later file an S-1. Registration-form values should not slip into `lfy` or `ltm` as if they were periodic annual or quarterly facts.
 
-## What To Run
+## What to run
 
-Use the normal gate, then focused period coverage:
+For period work:
 
 ```bash
 scripts/symphony_quality_gate.sh
@@ -147,5 +105,17 @@ uv run --extra dev --extra china --extra sse mypy edgarpack
 uv run pytest tests/test_periods.py tests/test_query_derivations.py tests/test_staleness_multi_period.py -q
 ```
 
-If you touched live SEC selection behavior, add the live smoke lane from
-`docs/TESTING.md`.
+If you changed live SEC selection behavior, add the live smoke lane from [docs/TESTING.md](../TESTING.md).
+
+## In the code
+
+- `edgarpack/query/periods.py:1160` is `select_period()`.
+- `edgarpack/query/periods.py:1323` parses comma-separated period specs for the CLI.
+- `edgarpack/query/periods.py:176` extracts raw values for one concept.
+- `edgarpack/query/periods.py:138` filters segment entries by filing context and XBRL `frame`.
+- `edgarpack/query/periods.py:430` picks cumulative quarter candidates.
+- `edgarpack/query/periods.py:535` is `_select_ltm_like()`.
+- `edgarpack/query/periods.py:493` enforces the LTM output shape.
+- `edgarpack/query/periods.py:976`, `edgarpack/query/periods.py:1012`, and `edgarpack/query/periods.py:1039` route `ltm`, `ltm-1`, and `ltm-N`.
+- `edgarpack/query/periods.py:267` and `edgarpack/query/periods.py:288` keep registration forms out of annual and quarter form checks.
+- `edgarpack/query/periods.py:1383` identifies S-1 pseudo-period selectors.

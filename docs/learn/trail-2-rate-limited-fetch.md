@@ -1,173 +1,109 @@
-# Trail 2: What happens during a single SEC HTTP call
+# Trail 2: A single SEC fetch
 
-**Time**: ~8 minutes
-**Prereq**: none, but [Trail 0](trail-0-full-loop.md) introduces where this fits in the big picture.
-**Covers**: `sec/client.py`, `sec/cache.py`, `config.py`
+Time: about 8 minutes.
 
-Every path through EdgarPack that touches the SEC goes through one function: `SECClient.fetch`. The client enforces the rate limit, retries on throttles, caches responses atomically, and hands bytes back to the caller. This trail walks a single fetch from call to return so you understand the path every higher-level module depends on.
+Every SEC request eventually goes through `SECClient`. The client does three jobs:
 
----
+- require a real user agent;
+- pace request starts so EdgarPack does not burst at the SEC;
+- retry the failures that can reasonably recover.
 
-## 1. The entry point
+Caching sits next to the call sites, not inside `SECClient`. That separation is easy to miss.
 
-A caller writes:
+## Try it
 
-```python
-client = await get_client()
-content, headers = await client.fetch(url)
+Run one normal SEC-backed query:
+
+```bash
+edgarpack query NVDA revenue --period lfy
 ```
 
-`get_client` at `edgarpack/sec/client.py:207` is a per-event-loop singleton. It looks up the current `asyncio` event loop and returns the `SECClient` registered against it, or creates one if there isn't one yet. The mapping is a `WeakKeyDictionary[EventLoop, SECClient]`, so when a loop gets garbage-collected its client goes with it.
+Run it again:
 
-Why per-loop? Because event loops can span threads in async code that mixes `asyncio.run()` calls with `asyncio.to_thread()`. A singleton keyed by loop avoids the two most common bugs: sharing a client across loops (breaks internal locks) and creating a new client per request (defeats the rate limiter).
-
-The constructor checks that `EDGARPACK_USER_AGENT` is set and raises `ValueError` immediately if not. SEC requires the header on every request; skipping this check would produce inscrutable 403s from the SEC later.
-
-**Code**: `edgarpack/sec/client.py:207` (`get_client`), `edgarpack/sec/client.py:71-87` (`SECClient.__init__`)
-
----
-
-## 2. The cache check happens outside the client
-
-`client.fetch` itself does **not** check the cache. Caching is a concern for each call site, not the client. The pattern you see across the codebase looks like:
-
-```python
-cache = DiskCache(CACHE_DIR)
-if not force:
-    cached = cache.get(url, max_age_seconds=86400)
-    if cached is not None:
-        return json.loads(cached)
-
-data, headers = await client.fetch_json(url)
-cache.put(url, json.dumps(data).encode(), headers)
+```bash
+edgarpack query NVDA revenue --period lfy
 ```
 
-See `edgarpack/sec/xbrl.py:24-43` for a concrete example. Every fetch path that cares about caching does this dance itself. Some paths (like `fetch_file` in `sec/archives.py`) wrap it in a helper; others call directly.
+The second run may be faster if the cache was cold before the first run. The important thing to notice is boring: the user-facing answer should be the same. Cache hits should change how much work EdgarPack does, not what the number means.
 
-Keeping the cache out of the client means two things:
+Now force a fresh fetch:
 
-1. Different endpoints can have different TTLs. Ticker maps cache for 24 hours, companyfacts for 24 hours, filing index for much longer, filing files indefinitely (they're immutable once SEC publishes them).
-2. A caller that needs to bypass cache can just skip the check and call the client directly. No flag to plumb through.
-
-**Code**: `edgarpack/sec/xbrl.py:24-43` (example call site)
-
----
-
-## 3. Inside `DiskCache.get`
-
-`DiskCache.get` at `edgarpack/sec/cache.py:81` looks up the cached bytes for a URL:
-
-1. Compute the SHA256 of the URL bytes -> hex string = cache key.
-2. Map the key to a path: `{cache_dir}/{key[:2]}/{key[2:4]}/{key}.bin`. The two-level prefix split keeps any single directory from holding too many files.
-3. If the file doesn't exist, return `None`.
-4. If `max_age_seconds` was passed, read the sibling `{key}.meta.json` file to get `cached_at`, compute age against `datetime.now(UTC)`, return `None` if too old.
-5. Otherwise return the raw bytes.
-
-Cache misses are silent: any error reading the file or parsing the metadata also returns `None`. The caller treats "not in cache" and "cache is corrupted" the same way. Go fetch.
-
-**Code**: `edgarpack/sec/cache.py:81` (`get`)
-
----
-
-## 4. The rate limiter
-
-If the cache was missed, control flows to `client.fetch` -> `_fetch_with_retry` at `edgarpack/sec/client.py:114`. The first thing it does every attempt is call `await self._rate_limiter.acquire()`.
-
-`RateLimiter` at `edgarpack/sec/client.py:42` is a no-burst pacer:
-
-```python
-async def acquire(self) -> None:
-    async with self._lock:
-        now = time.monotonic()
-        wait_time = max(0.0, self._next_available_at - now)
-        scheduled_at = max(now, self._next_available_at)
-        self._next_available_at = scheduled_at + self._interval
-
-    if wait_time > 0:
-        await asyncio.sleep(wait_time)
+```bash
+edgarpack query NVDA revenue --period lfy --force
 ```
 
-Walk through it at `rate=5`:
+That bypasses the cached SEC lookup for the companyfacts path. Use it when you are debugging fetch behavior, not as a normal habit.
 
-- The first caller can proceed immediately.
-- Each acquire reserves the next request slot.
-- The next caller waits until that slot, so startup bursts do not happen.
-- Sleeping happens outside the lock, so waiting callers do not block each other from reserving future slots.
+If the command complains about `EDGARPACK_USER_AGENT`, set it before trying SEC calls:
 
-10 requests per second is the SEC's published ceiling. EdgarPack defaults to 5 requests per second to leave headroom for other activity sharing the same outbound IP. If you bump the rate you risk getting a 429, which triggers the cooldown path and probably slows you down anyway.
-
-**Code**: `edgarpack/sec/client.py:42-62` (`RateLimiter`)
-
----
-
-## 5. The actual HTTP call
-
-After acquiring a token, `_fetch_with_retry` calls `_fetch_sync` inside `asyncio.to_thread`:
-
-```python
-content, headers, status = await asyncio.to_thread(self._fetch_sync, url)
+```bash
+export EDGARPACK_USER_AGENT="Your Name your.email@example.com"
 ```
 
-`_fetch_sync` at `edgarpack/sec/client.py:145` uses `urllib.request` from the stdlib. It constructs a GET request with two headers:
+## The caller checks the cache
 
-- `User-Agent`: the value from `EDGARPACK_USER_AGENT`
-- `Accept-Encoding: gzip`
+Companyfacts is a good example. The call site builds the SEC URL, opens a `DiskCache`, checks for cached bytes unless `force=True`, then calls the client only on a miss.
 
-Reads the response body, extracts status code and headers, returns `(content, headers, status)`. If the request raised `HTTPError`, it extracts whatever it can from the error object (status code, headers, body) and returns those instead of raising. `URLError` propagates up (it's a retryable network condition).
+That means different endpoints can use different freshness rules. Companyfacts can have a normal TTL. Filing files can be cached indefinitely because a published accession does not change. A caller that needs fresh bytes can skip the cache check and call the client directly.
 
-The gzip handling happens at `_maybe_gunzip` (line 174): if `Content-Encoding: gzip` is set, decompress, otherwise pass through. A decompression failure is silently ignored and the raw content is returned. Unusual for EdgarPack (usually errors are explicit), but it makes the client robust against servers that advertise gzip and lie.
+## The client is per event loop
 
-Why stdlib `urllib` instead of `httpx` or `requests`? The README says it: "stdlib HTTP keeps deployment predictable." No pinned transitive deps, no async-context pitfalls, no surprise version bumps. The rate-limit behavior is fully visible in EdgarPack's code, not buried in a third-party client's config. The cost is a slightly more verbose implementation that doesn't get async for free, hence the `asyncio.to_thread` wrapper.
+`get_client()` returns one client for the current asyncio event loop. The map is a weak dictionary keyed by event loop, so loops can be cleaned up without leaking clients.
 
-**Code**: `edgarpack/sec/client.py:145-171` (`_fetch_sync`), `edgarpack/sec/client.py:174-180` (`_maybe_gunzip`)
+That design avoids two bad outcomes:
 
----
+- sharing one client across event loops, which can break locks;
+- creating a new client for every request, which defeats the rate limiter.
 
-## 6. Retry logic
+The constructor refuses to run without `EDGARPACK_USER_AGENT`. The SEC requires callers to identify themselves. EdgarPack fails early instead of sending anonymous requests and leaving the user to interpret a 403.
 
-Back in `_fetch_with_retry`, the loop sorts failures into three categories and handles each differently.
+## Request pacing is no-burst
 
-Network errors (`TimeoutError`, `OSError`, `URLError`) retry up to `max_retries` times with exponential backoff. Backoff starts at 1s and doubles each failure, capped at 10s. On the final attempt, the function re-raises.
+The rate limiter reserves request slots under a lock, then sleeps outside the lock:
 
-SEC traffic-limit pages (status 429 with the threshold HTML) raise `SECRateLimitError` immediately with a 10-minute cooldown hint, because continuing requests can extend the timeout. Other 429/5xx responses get the `Retry-After` header treatment. `_parse_retry_after` handles both formats (a plain seconds integer and an HTTP-date) and clamps the result to `[0, 60]` seconds so a misbehaving server can't stall the client forever. The loop waits the larger of the current backoff or `retry_after`, then retries.
-
-Other 4xx responses raise `HTTPError` immediately with the url, status, headers, and content. No retry. A 404 or 403 isn't going to get better by waiting.
-
-On a successful response (2xx or 3xx that got followed), the function returns `(content, headers)` and control goes back to the caller.
-
-**Code**: `edgarpack/sec/client.py:114-143` (`_fetch_with_retry`), `edgarpack/sec/client.py:183-199` (`_parse_retry_after`)
-
----
-
-## 7. Store the response atomically
-
-If the call site that invoked `client.fetch` was caching, the next thing it does is:
-
-```python
-cache.put(url, content, headers)
+```text
+take the lock
+  -> compare now to the next available slot
+  -> reserve the slot after that
+release the lock
+sleep if this caller arrived early
 ```
 
-`DiskCache.put` at `edgarpack/sec/cache.py:112` does four things:
+The first request can go immediately. The next request waits for its slot. Waiting callers do not block each other from reserving later slots.
 
-1. Resolve the cache key path.
-2. Take a per-key `Lock` from `_key_locks` (class-level dict of locks, guarded by `_key_locks_guard`). Two threads writing the same URL serialize on this lock; different URLs don't contend.
-3. Write the content via `_atomic_write_bytes`: write to a tempfile named `.{key}.bin.{pid}.{tid}.tmp`, then `os.replace(tmp, path)`. `os.replace` is atomic on both POSIX and Windows.
-4. Write the metadata the same way, to a sibling file `{key}.meta.json` with `url`, `cached_at`, `size`, `headers`.
+EdgarPack defaults below the SEC ceiling. If you raise the rate, you may hit a 429 and spend more time in cooldown than you saved.
 
-The atomic write pattern matters because concurrent processes might try to cache the same URL. Without atomicity, a reader could see a half-written file. With it, a reader either sees the old content or the new content, never a partial write.
+## The HTTP call is stdlib
 
-**Code**: `edgarpack/sec/cache.py:55-79` (`_atomic_write_bytes`, `_atomic_write_text`), `edgarpack/sec/cache.py:112-140` (`put`)
+The client uses `urllib.request`, wrapped in `asyncio.to_thread()`. It sends `User-Agent` and `Accept-Encoding: gzip`, reads bytes and headers, and returns them to the async retry loop.
 
----
+There is no third-party HTTP dependency in this path. The cost is some plain plumbing. The benefit is that the rate limit and retry behavior live in EdgarPack code where you can inspect them.
 
-## 8. Return
+If the server says the response is gzip, EdgarPack tries to decompress it. If decompression fails, it returns the raw bytes. That is a narrow tolerance for bad headers, not a general "swallow errors" policy.
 
-The call site gets `(content, headers)`, returns whatever it was building (parsed JSON, HTML bytes, whatever), and the chain unwinds. The cache is now warmed for the next call with the same URL.
+## Retry rules
 
-**Code**: none. The return path is just Python going back up the stack.
+Network errors retry with exponential backoff, capped at ten seconds.
 
----
+Status 429 and 5xx responses retry too, with `Retry-After` honored when present. If the response is the SEC traffic-limit page, EdgarPack raises a specific rate-limit error with a cooldown hint.
 
-## Recap
+Other 4xx responses fail immediately. Waiting will not fix a missing accession or forbidden URL.
 
-The SEC fetch path is four short files. `client.py` holds the token-bucket rate limiter and the retry loop around stdlib urllib. `cache.py` holds a SHA256-keyed on-disk cache with atomic writes and per-key locks. `config.py` holds the constants (`RATE_LIMIT`, timeouts, cache directory). Every higher-level module calls `get_client()`, optionally consults a `DiskCache`, and otherwise doesn't know or care that any of this exists. The three design choices that shape the whole path: use stdlib to keep deployment predictable, cache atomically so concurrent processes don't corrupt each other, and release the rate limiter lock before sleeping so the limit is a ceiling rather than a chokepoint. If you're going to modify anything in this area, read these three files in full. They're small, and each line is carrying weight.
+## Cache writes are atomic
+
+When a call site caches a response, `DiskCache.put()` writes both the payload and metadata through temporary files and `os.replace()`. It also uses a per-key lock, so two threads writing the same URL serialize while unrelated URLs can proceed.
+
+A reader should never see a half-written cache file. It either sees the old content, the new content, or no cache hit.
+
+## In the code
+
+- `edgarpack/sec/xbrl.py:29` shows the companyfacts call site checking `DiskCache` before using the client.
+- `edgarpack/sec/client.py:241` is `get_client()`.
+- `edgarpack/sec/client.py:82` requires `EDGARPACK_USER_AGENT` in `SECClient.__init__()`.
+- `edgarpack/sec/client.py:56` defines the no-burst `RateLimiter`.
+- `edgarpack/sec/client.py:122` handles retry and rate-limit behavior.
+- `edgarpack/sec/client.py:171` performs the stdlib HTTP call.
+- `edgarpack/sec/client.py:200` handles gzip.
+- `edgarpack/sec/client.py:217` parses `Retry-After`.
+- `edgarpack/sec/cache.py:87` reads cached bytes; `edgarpack/sec/cache.py:118` writes cached bytes and metadata.
+- `edgarpack/sec/cache.py:62` and `edgarpack/sec/cache.py:75` are the atomic write helpers.

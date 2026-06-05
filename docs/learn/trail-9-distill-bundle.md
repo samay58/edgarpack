@@ -1,9 +1,8 @@
-# Trail 9: Shrink One Filing Pack Into Cited Rows
+# Trail 9: Distill one pack into cited rows
 
 Time: about 9 minutes.
 
-`distill` does not fetch filings. It reads one existing pack and writes a small
-bundle you can scan or hand to another tool.
+`distill` reads one existing pack and writes a smaller bundle under `reports/<slug>/`.
 
 Run:
 
@@ -12,73 +11,60 @@ edgarpack distill run lime-s1 --pack packs/0001699963/0001628280-26-032523
 edgarpack distill check reports/lime-s1
 ```
 
-## The Shape
+The output is not a memo. It is a compact evidence surface: findings, metrics, evidence records, gaps, a filing map, and a run log.
 
-```
-existing pack
-  -> load manifest
-  -> read registration profile
-  -> read S-1 financial cache when present
-  -> write evidence records
-  -> write finding and metric rows that reference evidence ids
-  -> write gaps for missing or unsafe areas
-  -> validate files and evidence references
+## Try it
+
+Start with a registration pack that already has S-1 financial extraction:
+
+```bash
+edgarpack distill run lime-s1 --pack packs/0001699963/0001628280-26-032523
 ```
 
-The output is intentionally boring. It is not a memo. It is a compact evidence
-surface.
+Then validate it:
 
-## The CLI Is A Small Wrapper
+```bash
+edgarpack distill check reports/lime-s1
+```
 
-The command is registered in `edgarpack/cli.py:462`; the handler starts at
-`edgarpack/cli.py:1279`.
+Open the output folder:
 
-`distill run` resolves the pack path, builds a `DistillBundle`, writes the bundle,
-and tells you to run the check. `distill check` validates an existing bundle and
-returns non-zero if required files or evidence references are broken. See
-`edgarpack/cli.py:1288` through `edgarpack/cli.py:1331`.
+```bash
+ls reports/lime-s1
+```
 
-## The Builder Reads Existing Evidence
+Read `index.md` first. Then open `findings.csv`, `metrics.csv`, `evidence.jsonl`, and `gaps.csv`. The exercise is simple: every finding or metric row should point to evidence, and every missing area should show up as a gap.
 
-The builder starts at `edgarpack/distill/builder.py:65`.
+## What it reads
 
-First it validates the slug and loads `manifest.json`. Then it builds a filing
-metadata dict from the manifest, initializes four row lists, and checks the form
-family. Version 1 only has first-class registration support. If you run it on a
-different form type, it records a gap instead of pretending the extraction is
-complete. See `edgarpack/distill/builder.py:72` through
-`edgarpack/distill/builder.py:113`.
+`distill run` resolves the pack path and loads `manifest.json`. Version 1 has first-class support for registration forms. If you point it at a different form family, it records a gap instead of pretending coverage is complete.
 
-Then two extractors run:
+Then it reads two sources:
 
-| Extractor | Code | What it adds |
-| --- | --- | --- |
-| registration findings | `edgarpack/distill/builder.py:171` | business, use-of-proceeds, dilution, lockup, holders, and related disclosure rows |
-| S-1 metrics | `edgarpack/distill/builder.py:250` | financial rows from `s1_financials.json` when the cache is current |
+- the registration profile, for business framing, use of proceeds, dilution, lockup terms, and principal holders;
+- `s1_financials.json`, for S-1 metric rows when the cache exists and matches the pack.
 
-Every finding row gets an `EvidenceRecord` first, then stores that evidence id.
-The same rule applies to metric rows. The row is never the proof; the evidence
-record is.
+Every supported row gets an evidence record first. The finding or metric row stores the evidence id. The row is not its own proof.
 
-## Gaps Are Part Of The Output
+## Gaps are part of the bundle
 
-The builder writes gaps when something is missing or unsafe:
+Distill writes gaps when source support is missing or unsafe. Common gaps include:
 
 - unsupported form type;
 - no registration profile;
 - no extracted findings;
-- missing, unreadable, stale, or hash-mismatched `s1_financials.json`;
-- metric rows outside the normal registration window;
-- metric cache entries without section or chunk locators;
-- partial S-1 extraction status.
+- missing or unreadable `s1_financials.json`;
+- stale S-1 financial cache schema;
+- hash mismatch against `filing.full.md`;
+- metric rows outside the normal S-1 annual or interim window;
+- metric cache rows with no section or chunk locator;
+- partial extraction status.
 
-That is the right failure mode. If the source cannot support a claim, the bundle
-should tell the reader where confidence stops.
+Query works the same way. Missing evidence should be visible, not smoothed away.
 
-## The Writer Produces Eight Files
+## The bundle files
 
-The data contracts are in `edgarpack/distill/models.py:23` through
-`edgarpack/distill/models.py:116`. The fixed output list is:
+The fixed output set is:
 
 ```text
 index.md
@@ -91,28 +77,30 @@ run-log.md
 bundle.json
 ```
 
-`write_distill_bundle()` writes those files in `edgarpack/distill/writers.py:13`.
-The human scan surface is `index.md`; the machine evidence surface is
-`evidence.jsonl`; `bundle.json` records counts and schema version. See
-`edgarpack/distill/writers.py:19` through `edgarpack/distill/writers.py:30`.
+`index.md` is the scan surface. `evidence.jsonl` is the proof surface. `bundle.json` records schema version, file list, counts, filing identity, and warnings.
 
-## The Checker Enforces Evidence References
+## The checker enforces references
 
-`check_distill_bundle()` starts at `edgarpack/distill/checks.py:24`.
+`distill check` validates an existing bundle. It verifies required files, reads `evidence.jsonl`, validates `bundle.json`, and checks that every `findings.csv` and `metrics.csv` row has evidence ids that exist.
 
-It verifies required files, reads `evidence.jsonl`, validates `bundle.json`, and
-checks that every `findings.csv` and `metrics.csv` row has evidence ids that
-exist. It also warns when `gaps.csv` has no rows. See
-`edgarpack/distill/checks.py:33` through `edgarpack/distill/checks.py:43` and
-`edgarpack/distill/checks.py:112` through `edgarpack/distill/checks.py:127`.
+A row without evidence fails. A row pointing to a missing evidence id fails. A bundle with no gaps gets a warning, because a perfectly complete source surface is unusual enough to deserve review.
 
-The important constraint is simple: every row needs evidence. A row without an
-evidence id fails validation. An evidence id that points nowhere fails
-validation. Missing source areas belong in `gaps.csv`.
+## In the code
 
-## What To Run
+- `edgarpack/cli.py:462` registers `distill`; `_cmd_distill()` starts at `edgarpack/cli.py:1279`.
+- `edgarpack/cli.py:1288` handles `distill check`; `edgarpack/cli.py:1303` through `edgarpack/cli.py:1331` handles `distill run`.
+- `edgarpack/distill/builder.py:65` builds a bundle from one pack.
+- `edgarpack/distill/builder.py:97` records an unsupported-form gap.
+- `edgarpack/distill/builder.py:171` adds registration findings.
+- `edgarpack/distill/builder.py:250` adds S-1 metrics.
+- `edgarpack/distill/builder.py:283` through `edgarpack/distill/builder.py:307` reject stale or hash-mismatched S-1 financial caches.
+- `edgarpack/distill/builder.py:318` through `edgarpack/distill/builder.py:370` create metric evidence records and metric rows.
+- `edgarpack/distill/models.py:23` through `edgarpack/distill/models.py:116` define the bundle rows and manifest.
+- `edgarpack/distill/writers.py:13` writes the eight output files.
+- `edgarpack/distill/checks.py:24` validates a bundle.
+- `edgarpack/distill/checks.py:112` rejects rows with missing or unknown evidence ids.
 
-For distill work:
+For distill work, run:
 
 ```bash
 scripts/symphony_quality_gate.sh
@@ -120,5 +108,4 @@ uv run --extra dev --extra china --extra sse mypy edgarpack
 uv run pytest tests/test_distill.py -q
 ```
 
-If you change S-1 extraction upstream, also run the S-1 tests listed in
-`docs/TESTING.md`.
+If you change S-1 extraction upstream, also run the S-1 tests listed in [docs/TESTING.md](../TESTING.md).

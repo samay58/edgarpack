@@ -1,122 +1,128 @@
-# Trail 1: Build A Deterministic Filing Pack
+# Trail 1: Build a filing pack
 
 Time: about 12 minutes.
-
-The query path answers questions from facts. The build path creates the local
-object that the rest of the product reads: a pack.
 
 Run:
 
 ```bash
-edgarpack build NVDA --form 10-K --with-chunks
+edgarpack build NVDA --form 10-K --with-chunks --out ./packs
 ```
 
-## The Pack Is The Shared Object
+This creates a local pack from one SEC filing. A pack is the folder that text-heavy features read later: `diff`, `timeline`, `which`, `distill`, the static site, fixtures, and any workflow that needs filing sections instead of only companyfacts values.
 
+For ordinary SEC metric queries, EdgarPack can often use companyfacts directly. For filing text, you need a pack.
+
+## Try it
+
+Build one pack:
+
+```bash
+edgarpack build NVDA --form 10-K --with-chunks --out ./packs
 ```
-SEC primary filing HTML
-  -> strip iXBRL tags
-  -> remove hidden/noisy HTML
-  -> keep semantic tags and real links
-  -> render markdown
-  -> split into stable sections
-  -> write pack files
-  -> hash artifacts in manifest.json
+
+Then list what was written:
+
+```bash
+find ./packs -type f | grep 0001045810 | sort | head -20
 ```
 
-`diff`, `timeline`, `which`, `distill`, `site`, and a lot of test fixtures all
-depend on this object being stable.
+Open the pack folder and look for these files:
 
-## The CLI Resolves What To Build
+- `filing.full.md`, the whole filing as markdown;
+- `sections/`, one file per detected section;
+- `manifest.json`, the filing identity and artifact hashes;
+- `optional/chunks.ndjson`, because you passed `--with-chunks`.
 
-The `build` parser accepts a company, form, accession, range flags, and optional
-artifact flags. It is registered in `edgarpack/cli.py:363`. The command handler
-starts at `edgarpack/cli.py:1334`.
+Now run the same build again:
 
-The handler validates that you are asking for one filing or a range, not both.
-It defaults range builds to `10-K` when you give date or count bounds without a
-form. It resolves company input before calling the pack builder. The real work
-then moves to `build_pack()` in `edgarpack/pack/build.py:145`.
+```bash
+edgarpack build NVDA --form 10-K --with-chunks --out ./packs
+```
 
-## `build_pack()` Has A Fixed Order
+If the pack already has `manifest.json`, EdgarPack should avoid rebuilding it unless you pass `--force`. That behavior is part of how packs stay stable.
 
-The order is the product contract. The main steps are visible in
-`edgarpack/pack/build.py:173` through `edgarpack/pack/build.py:329`:
+## What the pack contains
 
-| Step | Code | Why it exists |
-| --- | --- | --- |
-| resolve filing | `get_filing_by_accession()` or `get_latest_filing()` | choose one accession before doing IO |
-| choose output dir | `packs/<cik>/<accession>/` | make path stable and display-friendly |
-| early return | existing `manifest.json` without `--force` | avoid rebuilding a pure output |
-| fetch HTML | `fetch_primary_filing_html()` | keep the pack focused on the primary filing |
-| parse markdown | `_process_html_files_for_form()` | strip and normalize before sectioning |
-| add title | filing title prepended to markdown | give the document identity |
-| sectionize | `sectionize(markdown, form_type)` | create section-addressable files |
-| optional chunks | `generate_chunks()` | support RAG and evidence lookup |
-| optional XBRL | `fetch_xbrl_facts()` | include filing-local facts when requested |
-| write `llms.txt` | before manifest hashing | include it in artifact hashes |
-| hash artifacts | sorted paths, excluding manifest | keep manifest deterministic |
-| write manifest | `create_manifest()` | record source, sections, hashes, warnings |
+The main artifacts are:
 
-If you add a new artifact, put it before hashing if it belongs in the manifest.
-If it is diagnostic scratch output, do not let it pollute the pack contract.
+```text
+filing.full.md
+sections/<section-id>.md
+llms.txt
+manifest.json
+optional/chunks.ndjson        when --with-chunks is set
+optional/xbrl.json            when --with-xbrl is set
+```
 
-## The Parse Stack Is Small On Purpose
+`manifest.json` records filing identity, section metadata, warnings, token count, source URL, and artifact hashes. That makes the pack auditable. If parser output changes, the manifest changes too.
 
-The parser is not a general browser. It is a filing cleanup chain.
+## The build path
 
-| Pass | Function | Job |
-| --- | --- | --- |
-| iXBRL strip | `strip_ixbrl()` at `edgarpack/parse/ixbrl_strip.py:38` | remove tag markup while keeping visible text |
-| HTML clean | `clean_html()` at `edgarpack/parse/html_clean.py:106` | drop hidden blocks, scripts, event handlers, unsafe attrs |
-| semantic HTML | `reduce_to_semantic()` at `edgarpack/parse/semantic_html.py:42` | normalize tags and resolve filing links |
-| markdown render | `render_markdown()` at `edgarpack/parse/md_render.py:43` | convert tables, headings, lists, links, code, and prose |
-| sectionize | `sectionize()` at `edgarpack/parse/sectionize.py:864` | split by form-aware section rules |
+The CLI resolves the filing before the pack builder starts. You can ask for a specific accession, the latest form, or a range through date/count flags. Once one filing has been chosen, `build_pack()` follows a fixed order:
 
-Do not reorder these passes casually. The renderer assumes noisy HTML has already
-been stripped. The sectionizer assumes the markdown has already been normalized.
+```text
+choose the filing
+  -> choose packs/<cik>/<accession>/
+  -> skip if manifest.json already exists and --force is not set
+  -> fetch the primary filing HTML
+  -> clean and render markdown
+  -> prepend a filing title
+  -> split sections
+  -> write the full markdown and section files
+  -> optionally write chunks and filing-local XBRL
+  -> write llms.txt
+  -> hash artifacts
+  -> write manifest.json
+```
 
-## Registration Filings Get One Extra Gate
+The order is part of the contract. If you add a pack artifact that should be tracked, write it before manifest hashing. If it is scratch output, keep it out of the artifact list.
 
-`_process_html_files_for_form()` runs the parse pipeline for each filing form.
-For registration-class forms, it preserves and prepares enough structure for S-1
-heading injection and optional image description work. That gate lives in
-`edgarpack/pack/build.py:91` and is why `build_pack()` uses the resolved
-`meta.form_type` instead of blindly trusting the caller's form string. See
-`edgarpack/pack/build.py:232` through `edgarpack/pack/build.py:245`.
+## The parser is a cleanup chain, not a browser
 
-That matters for pre-IPO work. If an S-1 has weak headings, later code cannot
-find summary financial data or registration timeline sections unless the pack
-was built with the right form context.
+The HTML path is intentionally small:
 
-## Determinism Comes From The Manifest
+| Pass | What it does |
+| --- | --- |
+| `strip_ixbrl()` | removes inline XBRL tag markup while keeping visible text |
+| `clean_html()` | drops scripts, hidden blocks, event handlers, and unsafe attributes |
+| `reduce_to_semantic()` | normalizes the HTML shape and resolves filing links |
+| `render_markdown()` | turns headings, tables, lists, links, and prose into markdown |
+| `sectionize()` | splits the markdown into form-aware section files |
 
-The manifest is not just metadata. It is the checksum ledger for the pack.
-`build_pack()` computes SHA256 hashes for sorted artifact paths and then writes
-`manifest.json`. The hash helper is `compute_sha256()` in
-`edgarpack/pack/manifest.py:97`; manifest construction starts at
-`edgarpack/pack/manifest.py:111`.
+Do not reorder those passes casually. The renderer assumes noisy HTML has already been cleaned. The sectionizer assumes the markdown is already normalized.
 
-That is why pack changes should show up as meaningful diffs. If you change the
-parser, section IDs, chunking, or artifact order, rerun focused tests before
-trusting downstream features.
+## Registration filings take one extra step
 
-## What To Check After Editing
+S-1 and F-1 filings often have weak body headings. Some use table-of-contents links and body `id=` anchors instead of useful `<h1>` or `<h2>` tags. EdgarPack handles that before normal cleanup.
 
-For normal parser or pack changes:
+For registration forms, the build path injects headings from the TOC before `clean_html()` strips attributes. Then it runs the same render and sectionize path. That is why `build_pack()` uses the resolved filing form instead of trusting the form string the caller typed.
+
+This matters later. If the S-1 pack does not have usable sections, S-1 financial extraction, registration timelines, and distill bundles have much less to anchor on.
+
+## What to check when this changes
+
+Parser changes are easy to underestimate. A small cleanup rule can alter section IDs, chunk spans, manifest hashes, and every downstream fixture that reads a pack.
+
+For normal pack changes:
 
 ```bash
 scripts/symphony_quality_gate.sh
 uv run --extra dev --extra china --extra sse mypy edgarpack
 ```
 
-For riskier parse changes, use the live and determinism lanes in
-`docs/TESTING.md`:
+For riskier parser changes, add the live and determinism lanes from [docs/TESTING.md](../TESTING.md):
 
 ```bash
 uv run pytest tests/test_live_sec_integration.py -q --run-live-sec
 uv run pytest tests/test_determinism.py -q --run-live-sec --run-slow
 ```
 
-The second lane builds the same filing twice and checks that output does not
-drift.
+## In the code
+
+- `edgarpack/cli.py:363` registers `build`; `_cmd_build()` starts at `edgarpack/cli.py:1334`.
+- `edgarpack/pack/build.py:145` is `build_pack()`.
+- `edgarpack/pack/build.py:173` through `edgarpack/pack/build.py:329` show the fixed build order.
+- `edgarpack/pack/build.py:91` runs the form-aware HTML processing path.
+- `edgarpack/pack/build.py:232` through `edgarpack/pack/build.py:245` pass the resolved form type into that processing path.
+- Parse passes start at `edgarpack/parse/ixbrl_strip.py:38`, `edgarpack/parse/html_clean.py:106`, `edgarpack/parse/semantic_html.py:42`, `edgarpack/parse/md_render.py:43`, and `edgarpack/parse/sectionize.py:864`.
+- Manifest hashing and construction start at `edgarpack/pack/manifest.py:97` and `edgarpack/pack/manifest.py:111`.
