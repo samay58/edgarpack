@@ -39,6 +39,29 @@ npm --prefix web run build
 
 `EDGARPACK_USER_AGENT` (format `Name email@example.com`) is required for any live SEC call; the first network call fails with an actionable error if it is unset. SEC requests are paced (default 5 req/s) and cached on disk under `EDGARPACK_CACHE_DIR` (default `~/.edgarpack/cache`). For China A-share / HKEX work, add `--extra china --extra sse`.
 
+The query commands need no build for SEC filers (they read companyfacts directly); only S-1 / China paths require a pack on disk first. Full flag/period/citation reference is in `docs/QUERY.md`.
+
+```bash
+# Cited metrics for one company. Period selectors: lfy, mrq, ltm, mrp, lfy-N, ltm-N,
+# mrq-N, annual:N, quarterly:N, or a CSV grid (lfy,lfy-1,lfy-2).
+uv run edgarpack query NVDA revenue,net_income --period ltm
+uv run edgarpack query NVDA --period annual:3 --audit   # show LTM/derived calc blocks
+uv run edgarpack query NVDA gross_margin --strict       # reject self-heal/learned concepts
+uv run edgarpack query 0001045810 revenue --currency usd
+
+# Cross-company comps (--metrics required) and side-by-side compare
+uv run edgarpack comps NVDA AMD INTC --metrics revenue,gross_margin --period lfy
+uv run edgarpack compare NVDA AMD --metrics revenue --format markdown
+
+# Discover the qualitative / MD&A KPIs a filer discloses (one LLM call per pack, cached)
+uv run edgarpack which FIG
+
+# Diagnose pack health: manifest state, artifact inventory, KPI coverage.
+# Pass a pack dir for one report, or a ticker to sweep every pack for that filer.
+uv run edgarpack doctor ./packs/0000320193/0000320193-24-000001
+uv run edgarpack doctor AAPL --format json
+```
+
 ## Architecture
 
 The CLI (`edgarpack/cli.py`, plain `argparse`, no Click/Typer) dispatches every subcommand. There are two load-bearing pipelines, joined by a shared identity resolver and citation model.
@@ -67,7 +90,8 @@ The CLI (`edgarpack/cli.py`, plain `argparse`, no Click/Typer) dispatches every 
 - **No silent imputation.** Network/HTTP failures on the read path raise (`XBRLFetchError`) and surface as a per-metric diagnostic (`layer_a_fetch_error`); a real SEC 404 ("no XBRL") maps to `{}` and stays diagnostic-free. Don't collapse those two cases into an indistinguishable N/A.
 - **Citations live in the data model**, not in formatting. Don't add a value path that returns a bare number.
 - `diff/section_diff.py` and `diff/timeline.py` share `_compute_section_intensity()` (word-weighted, not paragraph-count). Keep them in sync.
-- **Output paths** use `DEFAULT_PACKS_DIR` / `DEFAULT_SITE_DIR` / `DEFAULT_REPORTS_DIR` in `edgarpack/config.py`. `universe.toml` and `data/` are root-pinned (read CWD- and package-relative); do not move them.
+- **CLI startup stays lazy.** `cli.py` must not import the `query` package (or `query/render.py`) at module top level; doing so ~2.4x's startup on every invocation including `--help`. The renderer names are re-exported lazily via `cli.__getattr__`, and `query.render` is imported at its call site inside `_cmd_query`. Keep new query imports inside the command functions that use them.
+- **Output paths** use `DEFAULT_PACKS_DIR` / `DEFAULT_SITE_DIR` / `DEFAULT_REPORTS_DIR` in `edgarpack/config.py`. `universe.toml`, `cerebras.toml`, and `data/` are root-pinned (read CWD- and package-relative); do not move them.
 
 ## Workflow
 
