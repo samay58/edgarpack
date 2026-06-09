@@ -43,6 +43,20 @@ Carried over from project notes / the retired beads backlog. Symptoms are confir
 
 ---
 
+## Diff engine precision findings (2026-06-09 ground-truth audit)
+
+Audited diff output against raw section markdown for three same-form pairs (FIG 10-Q, CRWV 10-Q, RDDT 10-K). No hidden changes found: in every case tested, changed text appeared in a visible delta, and section alignment was clean in all three pairs. The weak edge is precision of the per-paragraph labels:
+
+1. **`added` label overclaims on reordered/re-split text.** 10 of 11 CRWV "added" Risk Factors paragraphs had matching text present in the before filing. The DP alignment in `diff/text_diff.py` is order-preserving, so reordered paragraphs become added+removed pairs. Possible fix: an order-free rescue pass that re-matches leftover added/removed paragraphs by Jaccard before final labeling, relabeling matched pairs as `moved`.
+2. **Page-break artifacts leak into paragraph deltas.** Standalone "Table of Contents" lines and bare page numbers ("45") survive inside 10-Q section markdown (parse-pipeline issue, observed in CRWV and FIG packs) and then show up as "added" paragraphs and mid-paragraph noise. Degenerate table-header rows ("Three Months Ended March 31, / ..." repeated) also appear as added paragraphs in MD&A. Fix belongs upstream in html_clean/md_polish; any change bumps PARSER_VERSION and fixtures.
+3. **Forced-marriage pairings via the overlap rescue.** `match_score = max(sim, overlap * 0.8)` admits topically unrelated pairs whose reported Jaccard is below the 0.5 threshold (observed at 0.38-0.48: disaster-recovery paired with sustainability, tariffs with supplier concentration). Content is not lost, but the old/new presentation is misleading. Consider a floor on reported Jaccard for the `modified` label, or a distinct `replaced` label.
+
+Audit-method caveat worth keeping: an order-free Jaccard baseline used during the audit itself produced a false "novel" verdict on a paragraph that exists verbatim in the before filing (paragraph-granularity mismatch crushed the score). Similarity scoring at any granularity is a lead generator, not ground truth. The reliable arbiter for "is this language new" is a literal normalized substring search against the before pack's `filing.full.md` (not a single section file, since language migrates between sections).
+
+User-facing mitigation until fixed: before quoting an "added" paragraph as new language, grep the before `filing.full.md` for a distinctive phrase; zero hits means genuinely new.
+
+---
+
 ## Deferred cli.py decomposition (from the 2026-06-02 tech-debt pass)
 
 The single-period query renderer was already extracted to `query/render.py`. The remaining "cli.py is wiring, not logic" moves, each a self-contained, test-covered commit when wanted:

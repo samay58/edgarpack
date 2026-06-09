@@ -49,6 +49,9 @@ test_packs/
 /reports/*.html
 # Regenerable raw pack/filing data under any report (re-fetchable; keep local)
 reports/*/raw/
+# Local teaching workspace (see .teach/MISSION.md), not published
+/.teach/
+/reports/teach/
 # Report deliverables kept local, not published to the public repo
 /assets/cerebras-filing-series/
 /reports/axp-teardown/
