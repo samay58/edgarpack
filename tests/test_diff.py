@@ -813,3 +813,38 @@ def test_moved_paragraph_damps_interest_and_counts():
 def test_paragraphs_moved_counted():
     deltas = diff_paragraphs(_MOVED_OLD, _MOVED_NEW)
     assert sum(1 for d in deltas if d.change_type == ChangeType.MOVED) == 1
+
+
+def test_resplit_verbatim_fragment_is_moved_not_added():
+    intro = "Common intro paragraph that stays put in both filings with stable wording."
+    big = (
+        "Alpha sentence about supplier concentration in considerable detail. "
+        "Beta sentence about customer concentration in considerable detail."
+    )
+    old = "\n\n".join([intro, big])
+    new = "\n\n".join([
+        intro,
+        "Alpha sentence about supplier concentration in considerable detail.",
+        "Beta sentence about customer concentration in considerable detail.",
+    ])
+    deltas = diff_paragraphs(old, new)
+    by_type = {t: [d for d in deltas if d.change_type == t] for t in ChangeType}
+    # The DP pairs the big old paragraph with one fragment as modified; the other
+    # verbatim fragment must demote to moved, never added.
+    assert len(by_type[ChangeType.MODIFIED]) == 1
+    assert len(by_type[ChangeType.MOVED]) == 1
+    assert by_type[ChangeType.MOVED][0].similarity == 1.0
+    assert by_type[ChangeType.ADDED] == []
+
+
+def test_surplus_artifact_instance_is_moved_not_added():
+    filler_a = "Distinct risk paragraph alpha about regulatory exposure and audits."
+    filler_b = "Distinct risk paragraph beta about competitive pressure and pricing."
+    old = "\n\n".join([filler_a, "Table of Contents", filler_b])
+    new = "\n\n".join(["Table of Contents", filler_a, filler_b, "Table of Contents"])
+    deltas = diff_paragraphs(old, new)
+    added = [d for d in deltas if d.change_type == ChangeType.ADDED]
+    assert added == []
+    moved = [d for d in deltas if d.change_type == ChangeType.MOVED]
+    assert len(moved) == 1
+    assert moved[0].new_text == "Table of Contents"

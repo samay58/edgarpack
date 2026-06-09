@@ -193,6 +193,9 @@ def diff_paragraphs(
     df = _doc_frequencies(old_paras + new_paras)
     total_paras = len(old_paras) + len(new_paras)
 
+    norm_old_full = _normalize(old_text)
+    norm_new_full = _normalize(new_text)
+
     old_fps = [_fingerprint(p) for p in old_paras]
     new_fps = [_fingerprint(p) for p in new_paras]
 
@@ -337,27 +340,57 @@ def diff_paragraphs(
             )
         )
 
-    # Pass 4: remaining unmatched old = removed, unmatched new = added
+    # Pass 4: remaining unmatched old = removed, unmatched new = added.
+    # Before emitting REMOVED/ADDED, check whole-paragraph normalized containment in
+    # the opposite full text: verbatim content that still exists in the after filing
+    # (re-split or repositioned) is demoted to MOVED at similarity 1.0, contributing
+    # zero to interest and intensity by construction.
     for i in range(len(old_paras)):
-        if not old_matched[i]:
+        if old_matched[i]:
+            continue
+        if _normalize(old_paras[i]) in norm_new_full:
             deltas.append(
                 ParagraphDelta(
-                    change_type=ChangeType.REMOVED,
+                    change_type=ChangeType.MOVED,
                     old_text=old_paras[i],
-                    similarity=0.0,
+                    new_text=old_paras[i],
+                    similarity=1.0,
                     old_word_count=len(old_paras[i].split()),
+                    new_word_count=len(old_paras[i].split()),
                 )
             )
+            continue
+        deltas.append(
+            ParagraphDelta(
+                change_type=ChangeType.REMOVED,
+                old_text=old_paras[i],
+                similarity=0.0,
+                old_word_count=len(old_paras[i].split()),
+            )
+        )
 
     for j in range(len(new_paras)):
-        if not new_matched[j]:
+        if new_matched[j]:
+            continue
+        if _normalize(new_paras[j]) in norm_old_full:
             deltas.append(
                 ParagraphDelta(
-                    change_type=ChangeType.ADDED,
+                    change_type=ChangeType.MOVED,
+                    old_text=new_paras[j],
                     new_text=new_paras[j],
-                    similarity=0.0,
+                    similarity=1.0,
+                    old_word_count=len(new_paras[j].split()),
                     new_word_count=len(new_paras[j].split()),
                 )
             )
+            continue
+        deltas.append(
+            ParagraphDelta(
+                change_type=ChangeType.ADDED,
+                new_text=new_paras[j],
+                similarity=0.0,
+                new_word_count=len(new_paras[j].split()),
+            )
+        )
 
     return deltas
