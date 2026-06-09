@@ -103,6 +103,12 @@ def test_diff_paragraphs_high_overlap_expansion_is_modified():
     assert modified[0].similarity <= 0.5
 
 
+def test_moved_change_type_exists():
+    assert ChangeType.MOVED.value == "moved"
+    delta = SectionDelta(section_id="s", title="S", change_type=ChangeType.MODIFIED)
+    assert delta.paragraphs_moved == 0
+
+
 # --- section_diff tests ---
 
 

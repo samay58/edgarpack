@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class ChangeType(StrEnum):
     UNCHANGED = "unchanged"
     MODIFIED = "modified"
+    MOVED = "moved"
     ADDED = "added"
     REMOVED = "removed"
 
@@ -36,6 +37,7 @@ class SectionDelta(BaseModel):
     paragraphs_added: int = 0
     paragraphs_removed: int = 0
     paragraphs_modified: int = 0
+    paragraphs_moved: int = 0
     paragraphs_unchanged: int = 0
     change_intensity: float = 0.0
     interest_score: float = 0.0
