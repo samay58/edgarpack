@@ -10,6 +10,8 @@ from edgarpack.diff import section_diff as section_diff_module
 from edgarpack.diff.models import ChangeType, ParagraphDelta, SectionDelta
 from edgarpack.diff.section_diff import diff_filings
 from edgarpack.diff.text_diff import (
+    _distinctive_jaccard,
+    _doc_frequencies,
     _is_cross_reference,
     _is_toc_link,
     _jaccard,
@@ -37,6 +39,43 @@ def test_jaccard_partial():
 def test_jaccard_empty():
     assert _jaccard("", "") == 1.0
     assert _jaccard("hello", "") == 0.0
+
+
+_LEGAL_TAIL = (
+    "which could materially and adversely affect our business operating results "
+    "financial condition and prospects and the trading price of our common stock"
+)
+
+
+def _df_for(paragraphs):
+    return _doc_frequencies(paragraphs)
+
+
+def test_distinctive_jaccard_ignores_ambient_legal_tail():
+    # Ten paragraphs all share the legal tail; two have unrelated heads.
+    a = f"Failure to maintain effective disaster recovery plans {_LEGAL_TAIL}"
+    b = f"Our sustainability goals and commitments may prove costly {_LEGAL_TAIL}"
+    fillers = [f"Risk topic number {i} about something unique {_LEGAL_TAIL}" for i in range(8)]
+    paragraphs = [a, b, *fillers]
+    df = _df_for(paragraphs)
+    assert _distinctive_jaccard(a, b, df, len(paragraphs)) < 0.1
+
+
+def test_distinctive_jaccard_keeps_true_rewrites():
+    a = f"We rely on three suppliers for GPU components and networking equipment {_LEGAL_TAIL}"
+    b = f"We rely on five suppliers for GPU components and networking equipment {_LEGAL_TAIL}"
+    fillers = [f"Risk topic number {i} about something unique {_LEGAL_TAIL}" for i in range(8)]
+    paragraphs = [a, b, *fillers]
+    df = _df_for(paragraphs)
+    assert _distinctive_jaccard(a, b, df, len(paragraphs)) > 0.6
+
+
+def test_distinctive_jaccard_falls_back_on_small_sections():
+    a = "alpha beta gamma delta"
+    b = "alpha beta gamma epsilon"
+    df = _df_for([a, b])
+    # 2 paragraphs < _DISTINCTIVE_MIN_PARAS: must equal plain jaccard
+    assert _distinctive_jaccard(a, b, df, 2) == _jaccard(a, b)
 
 
 def test_split_paragraphs():

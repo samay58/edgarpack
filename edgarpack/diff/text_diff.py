@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 
 from .models import ChangeType, ParagraphDelta
@@ -40,6 +41,41 @@ def _overlap_ratio(a: str, b: str) -> float:
     if not words_a or not words_b:
         return 0.0
     return len(words_a & words_b) / min(len(words_a), len(words_b))
+
+
+_DISTINCTIVE_DF_RATIO = 0.25
+_DISTINCTIVE_MIN_PARAS = 8
+
+
+def _doc_frequencies(paragraphs: list[str]) -> dict[str, int]:
+    """Count, per token, how many paragraphs contain it."""
+    df: dict[str, int] = {}
+    for paragraph in paragraphs:
+        for word in set(_normalize(paragraph).split()):
+            df[word] = df.get(word, 0) + 1
+    return df
+
+
+def _distinctive_jaccard(a: str, b: str, df: dict[str, int], total_paras: int) -> float:
+    """Jaccard over tokens that are NOT ambient across the section's paragraphs.
+
+    Legal boilerplate ("could adversely affect our business...") appears in most
+    risk paragraphs and inflates plain Jaccard between unrelated topics. Tokens
+    present in >= _DISTINCTIVE_DF_RATIO of paragraphs are dropped before
+    comparing. Small sections fall back to plain Jaccard: DF over a handful of
+    paragraphs is noise.
+    """
+    if total_paras < _DISTINCTIVE_MIN_PARAS:
+        return _jaccard(a, b)
+    cutoff = max(2, math.ceil(total_paras * _DISTINCTIVE_DF_RATIO))
+    words_a = {w for w in set(_normalize(a).split()) if df.get(w, 0) < cutoff}
+    words_b = {w for w in set(_normalize(b).split()) if df.get(w, 0) < cutoff}
+    if not words_a and not words_b:
+        # Pure-ambient paragraphs carry no distinctive signal either way.
+        return _jaccard(a, b)
+    if not words_a or not words_b:
+        return 0.0
+    return len(words_a & words_b) / len(words_a | words_b)
 
 
 def _split_paragraphs(text: str) -> list[str]:
