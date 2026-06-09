@@ -43,6 +43,9 @@ def _overlap_ratio(a: str, b: str) -> float:
     return len(words_a & words_b) / min(len(words_a), len(words_b))
 
 
+_RESCUE_MIN_JACCARD = 0.6
+_RESCUE_MIN_DISTINCTIVE = 0.5
+
 _DISTINCTIVE_DF_RATIO = 0.25
 _DISTINCTIVE_MIN_PARAS = 8
 _DISTINCTIVE_FLOOR = 0.2
@@ -300,7 +303,41 @@ def diff_paragraphs(
             )
         )
 
-    # Pass 3: remaining unmatched old = removed, unmatched new = added
+    # Pass 3: order-free rescue. The DP is order-preserving, so a paragraph that
+    # moved across the section ends up unmatched on both sides. Near-verbatim
+    # leftovers pair here as MOVED; greedy best-first keeps it deterministic.
+    leftover_old = [i for i in range(len(old_paras)) if not old_matched[i]]
+    leftover_new = [j for j in range(len(new_paras)) if not new_matched[j]]
+    rescue_candidates: list[tuple[float, int, int]] = []
+    for i in leftover_old:
+        for j in leftover_new:
+            sim = _jaccard(old_paras[i], new_paras[j])
+            if sim < _RESCUE_MIN_JACCARD:
+                continue
+            if _distinctive_jaccard(old_paras[i], new_paras[j], df, total_paras) < (
+                _RESCUE_MIN_DISTINCTIVE
+            ):
+                continue
+            rescue_candidates.append((sim, i, j))
+    rescue_candidates.sort(key=lambda c: (-c[0], c[1], c[2]))
+    for sim, i, j in rescue_candidates:
+        if old_matched[i] or new_matched[j]:
+            continue
+        old_matched[i] = True
+        new_matched[j] = True
+        deltas.append(
+            ParagraphDelta(
+                change_type=ChangeType.MOVED,
+                old_text=old_paras[i],
+                new_text=new_paras[j],
+                similarity=sim,
+                old_word_count=len(old_paras[i].split()),
+                new_word_count=len(new_paras[j].split()),
+                is_boilerplate=_is_boilerplate_change(old_paras[i], new_paras[j], sim),
+            )
+        )
+
+    # Pass 4: remaining unmatched old = removed, unmatched new = added
     for i in range(len(old_paras)):
         if not old_matched[i]:
             deltas.append(

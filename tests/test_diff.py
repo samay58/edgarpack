@@ -727,6 +727,32 @@ def test_exhibit_index_not_suppressed():
         assert "10k_partiv_itemother_exhibit_index" in section_ids
 
 
+_MOVED_OLD = "\n\n".join(
+    [
+        "Xray risk about supplier concentration and component lead times in great detail today.",
+        "Yankee risk about customer concentration with two customers over half of total revenue.",
+    ]
+)
+_MOVED_NEW = "\n\n".join(
+    [
+        "Yankee risk about customer concentration with three customers over half of total revenue.",
+        "Xray risk about supplier concentration and component lead times in great detail tomorrow.",
+    ]
+)
+
+
+def test_crossed_near_verbatim_pairs_yield_moved_not_added():
+    # Old order X,Y; new order Y,X. The DP can take at most one of the two
+    # crossing diagonals; the other pair must come back via the rescue pass.
+    deltas = diff_paragraphs(_MOVED_OLD, _MOVED_NEW)
+    by_type = {t: [d for d in deltas if d.change_type == t] for t in ChangeType}
+    assert len(by_type[ChangeType.MOVED]) == 1
+    assert len(by_type[ChangeType.MODIFIED]) == 1
+    assert by_type[ChangeType.ADDED] == []
+    assert by_type[ChangeType.REMOVED] == []
+    assert by_type[ChangeType.MOVED][0].similarity > 0.7
+
+
 def test_boilerplate_invisible_in_paragraph_counts():
     with tempfile.TemporaryDirectory() as tmp:
         before_sections = {
