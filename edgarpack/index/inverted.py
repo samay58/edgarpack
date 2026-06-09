@@ -11,6 +11,12 @@ from pydantic import BaseModel
 from ..config import CACHE_DIR
 from .topic_extract import extract_topics
 
+
+def _quote_fts_query(query: str) -> str:
+    """Escape a free-text query into literal FTS5 phrase tokens."""
+    return " ".join('"' + token.replace('"', '""') + '"' for token in query.split())
+
+
 DEFAULT_INDEX_PATH = CACHE_DIR.parent / "search_index.db"
 
 _SCHEMA = """
@@ -206,7 +212,17 @@ class SearchIndex:
         sql += " ORDER BY rank LIMIT ?"
         params.append(limit)
 
-        rows = conn.execute(sql, params).fetchall()
+        try:
+            rows = conn.execute(sql, params).fetchall()
+        except sqlite3.OperationalError:
+            # Not valid FTS5 syntax (e.g. "U.S.-China"). Retry with every
+            # token quoted as a literal phrase; power-user syntax still
+            # works on the first attempt.
+            params[0] = _quote_fts_query(query)
+            try:
+                rows = conn.execute(sql, params).fetchall()
+            except sqlite3.OperationalError:
+                return []
         hits: list[SearchHit] = []
         for row in rows:
             d = dict(row)
@@ -305,9 +321,23 @@ class SearchIndex:
                         )
                     )
 
+        accession = str(filing.get("accession", ""))
+        if accession:
+            self.delete_pack(accession)
         if indexed:
             return self.index_chunks_batch(indexed)
         return 0
+
+    def delete_pack(self, accession: str) -> int:
+        """Remove all chunks for an accession.
+
+        Uses a plain DELETE so the FTS5 sync triggers fire; INSERT OR
+        REPLACE resolution does not fire them, which orphans postings.
+        """
+        conn = self._get_conn()
+        cur = conn.execute("DELETE FROM chunks WHERE accession = ?", (accession,))
+        conn.commit()
+        return cur.rowcount
 
     def close(self) -> None:
         if self._conn:

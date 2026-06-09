@@ -3132,7 +3132,7 @@ def _cmd_index(args: Any) -> int:
             return 0
         print(f"Incremental: {len(packs)} unindexed packs", file=sys.stderr)
     else:
-        packs = registry.list_packs()
+        packs = registry.list_packs(limit=None)
         if not packs:
             print("No packs in registry. Run harvest first.", file=sys.stderr)
             registry.close()

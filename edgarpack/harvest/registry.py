@@ -196,12 +196,12 @@ class PackRegistry:
         cik: str | None = None,
         ticker: str | None = None,
         form_type: str | None = None,
-        limit: int = 1000,
+        limit: int | None = 1000,
     ) -> list[PackRecord]:
-        """List packs matching optional filters."""
+        """List packs matching optional filters; limit=None returns everything."""
         conn = self._get_conn()
         conditions: list[str] = []
-        params: list[str] = []
+        params: list[object] = []
         if cik:
             conditions.append("cik = ?")
             params.append(cik)
@@ -213,8 +213,10 @@ class PackRegistry:
             params.append(form_type)
 
         where = " WHERE " + " AND ".join(conditions) if conditions else ""
-        query = f"SELECT * FROM packs{where} ORDER BY filing_date DESC LIMIT ?"
-        params.append(str(limit))
+        query = f"SELECT * FROM packs{where} ORDER BY filing_date DESC"
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
 
         rows = conn.execute(query, params).fetchall()
         return [PackRecord(**dict(r)) for r in rows]

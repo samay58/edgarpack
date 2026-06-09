@@ -161,7 +161,7 @@ def _make_router() -> Any:
         topic: str | None = Query(default=None),
         ticker: str | None = Query(default=None),
         form_type: str | None = Query(default=None),
-        limit: int = Query(default=20, le=100),
+        limit: int = Query(default=20, ge=1, le=100),
     ) -> dict[str, Any]:
         """Cross-corpus full-text search with topic facets."""
         index = _get_search_index()

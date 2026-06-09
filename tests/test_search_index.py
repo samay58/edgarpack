@@ -166,3 +166,49 @@ def test_topic_stats():
     assert stats["risk:china_risk"] == 1
 
     index.close()
+
+
+def _chunk(chunk_id: str, text: str, accession: str = "0001045810-25-000042") -> IndexedChunk:
+    return IndexedChunk(
+        chunk_id=chunk_id,
+        section_id="10k_parti_item1a_risk_factors",
+        accession=accession,
+        cik="0001045810",
+        ticker="NVDA",
+        company_name="NVIDIA CORP",
+        form_type="10-K",
+        filing_date="2025-02-26",
+        text=text,
+        topics=[],
+    )
+
+
+def test_search_survives_non_fts_syntax_queries():
+    index = _make_index()
+    index.index_chunk(_chunk("q-001", "Tariffs on U.S.-China trade affect supply chains."))
+
+    # None of these may raise; the hyphen/dot/quote forms are not valid
+    # FTS5 syntax and fall back to literal phrase tokens.
+    assert index.search("U.S.-China")
+    assert index.search("climate-change") == []
+    assert index.search('"unbalanced') == []
+
+    index.close()
+
+
+def test_reindex_purges_stale_fts_postings():
+    index = _make_index()
+    index.index_chunk(_chunk("r-001", "zebra crossings are mentioned here"))
+    assert index.search("zebra")
+
+    # Same accession re-indexed with different content: the old posting
+    # must not survive (INSERT OR REPLACE does not fire FTS triggers).
+    deleted = index.delete_pack("0001045810-25-000042")
+    assert deleted == 1
+    index.index_chunk(_chunk("r-001", "giraffe content replaces it"))
+
+    assert index.search("zebra") == []
+    assert index.search("giraffe")
+    assert index.count() == 1
+
+    index.close()
