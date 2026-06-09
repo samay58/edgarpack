@@ -45,6 +45,7 @@ def _overlap_ratio(a: str, b: str) -> float:
 
 _DISTINCTIVE_DF_RATIO = 0.25
 _DISTINCTIVE_MIN_PARAS = 8
+_DISTINCTIVE_FLOOR = 0.2
 
 
 def _doc_frequencies(paragraphs: list[str]) -> dict[str, int]:
@@ -186,6 +187,9 @@ def diff_paragraphs(
     old_paras = [p for p in _split_paragraphs(old_text) if not _is_toc_link(p)]
     new_paras = [p for p in _split_paragraphs(new_text) if not _is_toc_link(p)]
 
+    df = _doc_frequencies(old_paras + new_paras)
+    total_paras = len(old_paras) + len(new_paras)
+
     old_fps = [_fingerprint(p) for p in old_paras]
     new_fps = [_fingerprint(p) for p in new_paras]
 
@@ -222,13 +226,18 @@ def diff_paragraphs(
     n_new = len(unmatched_new)
     jaccard: list[list[float]] = [[0.0] * n_new for _ in range(n_old)]
     match_score: list[list[float]] = [[0.0] * n_new for _ in range(n_old)]
+    distinctive: list[list[float]] = [[0.0] * n_new for _ in range(n_old)]
     for oi, (_, op) in enumerate(unmatched_old):
         for nj, (_, np_) in enumerate(unmatched_new):
             sim = _jaccard(op, np_)
             overlap = _overlap_ratio(op, np_)
+            dist = _distinctive_jaccard(op, np_, df, total_paras)
             jaccard[oi][nj] = sim
-            # Overlap-based rescue score avoids false added/removed for contained rewrites.
-            match_score[oi][nj] = max(sim, overlap * 0.8)
+            distinctive[oi][nj] = dist
+            # Overlap-based rescue score avoids false added/removed for contained
+            # rewrites; the distinctive floor keeps boilerplate-tail pairs apart.
+            score = max(sim, overlap * 0.8)
+            match_score[oi][nj] = score if dist >= _DISTINCTIVE_FLOOR else 0.0
 
     # Dynamic programming alignment keeps pairings in order and avoids cross-matching
     # distant paragraphs that can happen with pure greedy global matching.

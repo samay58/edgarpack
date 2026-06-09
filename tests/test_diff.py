@@ -124,6 +124,35 @@ def test_diff_paragraphs_modified():
     assert modified[0].similarity > 0.4
 
 
+def test_boilerplate_tail_pair_is_not_married():
+    tail = (
+        "Any failure could materially and adversely affect our business, operating "
+        "results, financial condition, and prospects, and the trading price of our "
+        "Class A common stock could decline."
+    )
+    fillers_old = [f"Old standalone risk number {i} covering topic {i}. {tail}" for i in range(8)]
+    fillers_new = [f"Old standalone risk number {i} covering topic {i}. {tail}" for i in range(8)]
+    old = "\n\n".join(
+        [f"We depend on effective disaster recovery plans and backup systems. {tail}", *fillers_old]
+    )
+    new = "\n\n".join(
+        [f"Our sustainability commitments may be costly to achieve. {tail}", *fillers_new]
+    )
+    deltas = diff_paragraphs(old, new)
+    married = [
+        d
+        for d in deltas
+        if d.change_type == ChangeType.MODIFIED and d.old_text and "disaster recovery" in d.old_text
+    ]
+    assert married == []
+    assert any(
+        d.change_type == ChangeType.REMOVED and "disaster" in (d.old_text or "") for d in deltas
+    )
+    assert any(
+        d.change_type == ChangeType.ADDED and "sustainability" in (d.new_text or "") for d in deltas
+    )
+
+
 def test_diff_paragraphs_high_overlap_expansion_is_modified():
     old = "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu"
     new = (
