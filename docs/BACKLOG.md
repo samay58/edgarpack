@@ -55,6 +55,8 @@ Audit-method caveat worth keeping: an order-free Jaccard baseline used during th
 
 User-facing mitigation until fixed: before quoting an "added" paragraph as new language, grep the before `filing.full.md` for a distinctive phrase; zero hits means genuinely new.
 
+Shipped 2026-06-09 (display layer, `diff/html_report.py`): the HTML report now filters whole-artifact paragraphs (`---`, "Table of Contents", bare page numbers) at render time, renders modified pairs with reported Jaccard >= 0.5 as a single inline word-level redline (merged from the existing opcode spans), and renders sub-0.5 pairs stacked with a "rewritten · N% similar" badge so overlap-rescued marriages stop masquerading as redlines. Engine items 1-3 above remain open; the JSON output is unchanged.
+
 ---
 
 ## Deferred cli.py decomposition (from the 2026-06-02 tech-debt pass)

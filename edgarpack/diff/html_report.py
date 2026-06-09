@@ -14,21 +14,31 @@ from .report_models import (
     EvidenceAnchor,
     ParagraphGroup,
     ReportParagraphDelta,
+    ReportSectionDelta,
     TextSpan,
     TimelineReport,
 )
 
+# Below this paragraph-pair Jaccard similarity the old/new texts are effectively
+# different paragraphs (pairs under 0.5 were admitted by the overlap rescue, not
+# token overlap); render them stacked instead of as an inline word-level redline.
+_UNIFIED_VIEW_MIN_SIMILARITY = 0.5
+
 _CSS = """
 :root {
-  --paper: #f5f0e4;
+  --paper: #f7f3e8;
   --surface: #fffdf8;
   --ink: #1f1d18;
   --muted: #6d675c;
-  --rule: #d9cfb9;
-  --add-bg: #edf7ee;
+  --faint: #9a937f;
+  --rule: #ddd3bd;
+  --rule-soft: #eae2cf;
+  --add-bg: #eef6ee;
   --add-ink: #285d3d;
-  --del-bg: #f8e9e7;
-  --del-ink: #843c36;
+  --add-mark: #d7ecda;
+  --del-bg: #f9ecea;
+  --del-ink: #8a3d35;
+  --del-mark: #f3d8d3;
   --focus: #1c5d99;
   --serif: Georgia, "Times New Roman", serif;
   --code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -65,103 +75,180 @@ a:focus-visible, summary:focus-visible {
   font-weight: 700;
 }
 .pair-hero {
-  padding: 2.4rem 1.6rem 2rem;
+  padding: 2.2rem 1.6rem 1.8rem;
   border-bottom: 1px solid var(--rule);
   background: var(--surface);
 }
-.crumbs, .stats, .evidence-line, .footer-label {
+.crumbs, .footer-label {
   color: var(--muted);
   font-family: var(--code);
-  font-size: .82rem;
+  font-size: .8rem;
 }
 h1 {
-  margin: .7rem 0 1rem;
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  font-weight: 750;
+  margin: .35rem 0 .3rem;
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 650;
   letter-spacing: 0;
+}
+.pair-line {
+  margin: 0 0 .9rem;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.pair-line .arrow { color: var(--faint); padding: 0 .3rem; }
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .6rem;
+  color: var(--muted);
+  font-family: var(--code);
+  font-size: .8rem;
+}
+.stats span {
+  padding: .22rem .6rem;
+  border: 1px solid var(--rule-soft);
+  border-radius: 999px;
+  background: var(--paper);
 }
 .layout {
   display: grid;
-  grid-template-columns: 21rem minmax(0, 1fr);
+  grid-template-columns: 19rem minmax(0, 1fr);
   align-items: start;
 }
 .section-rail {
   position: sticky;
   top: 0;
-  min-height: 100vh;
-  padding: 1.5rem 1.25rem;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 1.4rem 1.15rem 2rem;
   border-right: 1px solid var(--rule);
   background: #fbf7ee;
 }
 .rail-title {
-  margin: 0 0 1rem;
+  margin: 0 0 .9rem;
   color: var(--muted);
-  font-weight: 700;
+  font-size: .8rem;
+  font-family: var(--code);
+  text-transform: uppercase;
+  letter-spacing: .06em;
 }
 .rail-row {
-  display: grid;
-  grid-template-columns: minmax(4.8rem, auto) 1fr auto auto;
-  gap: .65rem;
-  padding: .58rem 0;
-  border-bottom: 1px solid #e7dec9;
-  font-size: .9rem;
+  display: block;
+  padding: .55rem .1rem .6rem;
+  border-bottom: 1px solid var(--rule-soft);
+  color: var(--ink);
+  font-size: .88rem;
+  text-decoration: none;
 }
-.rail-id {
-  color: var(--muted);
+.rail-row:hover { background: #f4eedd; }
+.rail-row .rail-name { display: block; line-height: 1.3; }
+.rail-counts {
+  display: flex;
+  gap: .55rem;
+  margin-top: .25rem;
   font-family: var(--code);
-  overflow-wrap: anywhere;
+  font-size: .74rem;
 }
-.rail-added { color: var(--add-ink); font-family: var(--code); }
-.rail-removed { color: var(--del-ink); font-family: var(--code); }
+.rail-added { color: var(--add-ink); }
+.rail-removed { color: var(--del-ink); }
+.rail-modified { color: #725b16; }
+.rail-bar {
+  height: 3px;
+  margin-top: .35rem;
+  border-radius: 2px;
+  background: var(--rule-soft);
+  overflow: hidden;
+}
+.rail-bar i {
+  display: block;
+  height: 100%;
+  background: #b09a55;
+}
 .diff-pane { min-width: 0; }
 .section-hunk {
   border-bottom: 1px solid var(--rule);
-  scroll-margin-top: 1rem;
+  scroll-margin-top: 3.2rem;
 }
 .hunk-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 1rem;
-  padding: 1rem 1.6rem;
+  padding: .85rem 1.6rem;
   border-bottom: 1px solid var(--rule);
   background: #f0eadc;
 }
-.hunk-title { margin: 0; font-size: 1rem; }
+.hunk-title { margin: 0; font-family: var(--serif); font-size: 1.15rem; font-weight: 650; }
 .hunk-meta {
   color: var(--muted);
   font-family: var(--code);
-  font-size: .8rem;
+  font-size: .78rem;
   white-space: nowrap;
 }
+.hunk-meta .rail-added { color: var(--add-ink); }
+.hunk-meta .rail-removed { color: var(--del-ink); }
 .paragraph-row {
   display: grid;
-  grid-template-columns: 4.4rem 3rem minmax(0, 1fr);
-  border-bottom: 1px solid #e8dfca;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  border-bottom: 1px solid var(--rule-soft);
   background: var(--surface);
 }
 .gutter {
-  padding: 1rem .7rem;
-  border-right: 1px solid #e2d8c0;
-  color: var(--muted);
+  padding: 1rem .65rem 1rem .9rem;
+  border-right: 1px solid var(--rule-soft);
+  color: var(--faint);
   font-family: var(--code);
+  font-size: .78rem;
   text-align: right;
+  white-space: nowrap;
 }
-.marker {
-  padding: 1rem .7rem;
-  border-right: 1px solid #e2d8c0;
-  font-family: var(--code);
-  text-align: center;
-}
-.marker-added { color: var(--add-ink); }
-.marker-removed { color: var(--del-ink); }
-.marker-modified { color: #725b16; }
+.gutter .marker-added { color: var(--add-ink); font-weight: 700; }
+.gutter .marker-removed { color: var(--del-ink); font-weight: 700; }
+.gutter .marker-modified { color: #725b16; font-weight: 700; }
 .body { min-width: 0; }
 .prose {
-  padding: 1rem 1.6rem;
+  padding: .95rem 1.6rem .8rem;
   font-family: var(--serif);
-  font-size: 1.12rem;
-  line-height: 1.65;
+  font-size: 1.05rem;
+  line-height: 1.62;
   overflow-wrap: anywhere;
+}
+.prose.new { border-left: 3px solid var(--add-ink); background: var(--add-bg); }
+.prose.old {
+  border-left: 3px solid var(--del-ink);
+  background: var(--del-bg);
+  color: var(--muted);
+}
+.prose.context {
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .95rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.prose.unified { background: var(--surface); }
+.prose del {
+  background: var(--del-mark);
+  color: var(--del-ink);
+  text-decoration-line: line-through;
+  text-decoration-thickness: .07em;
+}
+.prose ins { background: var(--add-mark); text-decoration: none; }
+.rewrite-badge {
+  display: inline-block;
+  margin: .8rem 1.6rem 0;
+  padding: .1rem .55rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--code);
+  font-size: .72rem;
 }
 .financial-table-wrap {
   max-width: 100%;
@@ -202,31 +289,32 @@ h1 {
   font-size: .88rem;
   line-height: 1.45;
 }
-.old { background: var(--del-bg); color: var(--del-ink); }
-.new { background: var(--add-bg); color: var(--ink); }
-.context { background: var(--surface); color: var(--ink); }
+.old-span, .new-span { border-radius: 2px; }
 .op-delete, .op-replace.old-span {
-  background: #efd0cc;
+  background: var(--del-mark);
   text-decoration-line: line-through;
-  text-decoration-thickness: .08em;
+  text-decoration-thickness: .07em;
 }
-.op-insert, .op-replace.new-span { background: #d8eddc; }
+.op-insert, .op-replace.new-span { background: var(--add-mark); }
 .op-equal { background: transparent; }
 .evidence-line {
   display: flex;
   flex-wrap: wrap;
-  gap: .45rem 1rem;
-  padding: .65rem 1.6rem;
-  border-top: 1px solid #e8dfca;
-  background: #fbf7ee;
+  gap: .35rem .85rem;
+  padding: .3rem 1.6rem .7rem;
+  color: var(--faint);
+  font-family: var(--code);
+  font-size: .72rem;
 }
+.evidence-line a { color: var(--muted); }
 .evidence-line span { overflow-wrap: anywhere; }
 details.collapsed {
-  padding: .85rem 1.6rem;
-  border-bottom: 1px solid #e8dfca;
+  padding: .7rem 1.6rem;
+  border-bottom: 1px solid var(--rule-soft);
   background: #fbf7ee;
   color: var(--muted);
   font-family: var(--code);
+  font-size: .8rem;
 }
 details.collapsed summary { cursor: pointer; }
 .provenance-footer {
@@ -292,19 +380,20 @@ pre {
   .layout { grid-template-columns: 1fr; }
   .section-rail {
     position: static;
-    min-height: auto;
+    max-height: none;
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }
-  .paragraph-row { grid-template-columns: 3.5rem 2.6rem minmax(0, 1fr); }
-  .prose { padding: .95rem 1rem; }
+  .paragraph-row { grid-template-columns: 3.4rem minmax(0, 1fr); }
+  .prose { padding: .95rem 1rem .7rem; }
+  .evidence-line { padding: .3rem 1rem .65rem; }
   .provenance-footer { grid-template-columns: 1fr; }
   .timeline-row { grid-template-columns: 1fr; }
   .timeline-stats { white-space: normal; }
 }
 @media print {
   body { background: #fff; }
-  .topbar, .section-rail { position: static; }
+  .topbar, .section-rail, .hunk-header { position: static; }
   a { color: inherit; text-decoration: underline; }
   .section-hunk, .paragraph-row { break-inside: avoid; }
 }
@@ -312,6 +401,32 @@ pre {
   * { scroll-behavior: auto; }
 }
 """
+
+_BARE_PAGE_NUMBER_RE = re.compile(r"\d{1,4}")
+
+
+def _is_artifact_text(text: str) -> bool:
+    """True for page-break debris that should not render as a paragraph.
+
+    Standalone thematic breaks, "Table of Contents" page markers, and bare page
+    numbers survive in some packs (see docs/BACKLOG.md, diff precision findings).
+    Filtering here is display-only; JSON output and counts are untouched.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return True
+    if all(part == "---" for part in stripped.split()):
+        return True
+    if stripped.lower() == "table of contents":
+        return True
+    return _BARE_PAGE_NUMBER_RE.fullmatch(stripped) is not None
+
+
+def _paragraph_is_artifact(para: ReportParagraphDelta) -> bool:
+    texts = [text for text in (para.old_text, para.new_text) if text is not None]
+    if not texts:
+        return True
+    return all(_is_artifact_text(text) for text in texts)
 
 
 def _span_html(span: TextSpan) -> str:
@@ -323,6 +438,66 @@ def _span_html(span: TextSpan) -> str:
         "replace": "op-replace",
     }.get(span.op, "op-equal")
     return f'<span class="{op_class} {side_class}">{escape(span.text)}</span>'
+
+
+def _merge_spans(
+    old_spans: list[TextSpan],
+    new_spans: list[TextSpan],
+) -> list[tuple[str, str]]:
+    """Interleave parallel opcode-ordered spans into one (kind, text) stream.
+
+    Kinds: "equal", "del", "ins". Equal text is emitted once. The merge is total:
+    any leftover spans flush as del/ins, so output always covers both inputs.
+    """
+    merged: list[tuple[str, str]] = []
+    i = 0
+    j = 0
+    while i < len(old_spans) or j < len(new_spans):
+        old = old_spans[i] if i < len(old_spans) else None
+        new = new_spans[j] if j < len(new_spans) else None
+        if old is not None and old.op == "delete":
+            merged.append(("del", old.text))
+            i += 1
+            continue
+        if new is not None and new.op == "insert":
+            merged.append(("ins", new.text))
+            j += 1
+            continue
+        if old is not None and new is not None and old.op == "equal" and new.op == "equal":
+            merged.append(("equal", old.text))
+            i += 1
+            j += 1
+            continue
+        if old is not None and old.op == "replace":
+            merged.append(("del", old.text))
+            i += 1
+            if new is not None and new.op == "replace":
+                merged.append(("ins", new.text))
+                j += 1
+            continue
+        if new is not None and new.op == "replace":
+            merged.append(("ins", new.text))
+            j += 1
+            continue
+        if old is not None:
+            merged.append(("del", old.text))
+            i += 1
+        elif new is not None:
+            merged.append(("ins", new.text))
+            j += 1
+    return merged
+
+
+def _unified_html(para: ReportParagraphDelta) -> str:
+    pieces: list[str] = []
+    for kind, text in _merge_spans(para.old_spans, para.new_spans):
+        if kind == "equal":
+            pieces.append(escape(text))
+        elif kind == "del":
+            pieces.append(f"<del>{escape(text)}</del>")
+        else:
+            pieces.append(f"<ins>{escape(text)}</ins>")
+    return f'<div class="prose unified">{"".join(pieces)}</div>'
 
 
 def _is_numeric_cell(text: str) -> bool:
@@ -549,21 +724,21 @@ def _anchor_bits(
     if anchor is None:
         return [f"<span>{label} chunk missing</span>"]
     chunk_id = anchor.chunk_id or "missing"
-    bits = [
-        f"<span>{label} accession {escape(anchor.accession)}</span>",
-        f"<span>{label} section {escape(anchor.section_id)}</span>",
-        f"<span>{label} paragraph {anchor.paragraph_index}</span>",
-        f"<span>{label} offset {anchor.char_start}-{anchor.char_end}</span>",
-        f"<span>{label} chunk {escape(chunk_id)}</span>",
-    ]
+    detail = escape(
+        f"{label}: accession {anchor.accession} | section {anchor.section_id} | "
+        f"paragraph {anchor.paragraph_index} | offset {anchor.char_start}-{anchor.char_end} | "
+        f"chunk {chunk_id}",
+        quote=True,
+    )
+    bits = [f'<span title="{detail}">{label} ¶{anchor.paragraph_index}</span>']
     source_href = _safe_http_href(source_url)
     if source_href is not None:
-        bits.append(f'<a href="{source_href}">{label} source</a>')
+        bits.append(f'<a href="{source_href}" title="{detail}">{label} source</a>')
     else:
         bits.append(f"<span>{label} source missing</span>")
     pack_href = _safe_pack_file_href(pack_dir, anchor.section_path)
     if pack_href is not None:
-        bits.append(f'<a href="{pack_href}">{label} pack</a>')
+        bits.append(f'<a href="{pack_href}" title="{detail}">{label} pack</a>')
     else:
         bits.append(f"<span>{label} pack path omitted</span>")
     return bits
@@ -577,13 +752,22 @@ def _evidence_html(
     after_pack_dir: str,
 ) -> str:
     bits: list[str] = []
-    if para.change_type in {ChangeType.REMOVED, ChangeType.MODIFIED, ChangeType.UNCHANGED}:
+    if para.change_type in {ChangeType.REMOVED, ChangeType.MODIFIED}:
         bits.extend(_anchor_bits(para.old_anchor, "old", before_source_url, before_pack_dir))
     if para.change_type in {ChangeType.ADDED, ChangeType.MODIFIED}:
         bits.extend(_anchor_bits(para.new_anchor, "new", after_source_url, after_pack_dir))
     if not bits:
         bits.append("<span>chunk status missing</span>")
     return f'<div class="evidence-line">{"".join(bits)}</div>'
+
+
+def _marker_for(change_type: ChangeType) -> tuple[str, str]:
+    return {
+        ChangeType.ADDED: ("+", "marker-added"),
+        ChangeType.REMOVED: ("-", "marker-removed"),
+        ChangeType.MODIFIED: ("~", "marker-modified"),
+        ChangeType.UNCHANGED: ("", "marker-context"),
+    }[change_type]
 
 
 def _paragraph_html(
@@ -593,12 +777,7 @@ def _paragraph_html(
     before_pack_dir: str,
     after_pack_dir: str,
 ) -> str:
-    marker, marker_class = {
-        ChangeType.ADDED: ("+", "marker-added"),
-        ChangeType.REMOVED: ("-", "marker-removed"),
-        ChangeType.MODIFIED: ("~", "marker-modified"),
-        ChangeType.UNCHANGED: (".", "marker-context"),
-    }[para.change_type]
+    marker, marker_class = _marker_for(para.change_type)
     anchor = para.new_anchor or para.old_anchor
     para_index = anchor.paragraph_index if anchor else 0
     blocks: list[str] = []
@@ -609,21 +788,42 @@ def _paragraph_html(
     elif para.change_type == ChangeType.ADDED:
         blocks.append(_prose_html(para, "new", "new"))
     else:
-        blocks.append(_prose_html(para, "old", "old"))
-        blocks.append(_prose_html(para, "new", "new"))
-    blocks.append(
-        _evidence_html(
-            para,
-            before_source_url,
-            after_source_url,
-            before_pack_dir,
-            after_pack_dir,
+        raw_old = para.old_text or ""
+        raw_new = para.new_text or ""
+        structured = (
+            _is_gfm_table(raw_old)
+            or _is_gfm_table(raw_new)
+            or _is_flattened_financial_ledger(raw_old)
+            or _is_flattened_financial_ledger(raw_new)
         )
-    )
+        if (
+            not structured
+            and para.old_spans
+            and para.new_spans
+            and para.similarity >= _UNIFIED_VIEW_MIN_SIMILARITY
+        ):
+            blocks.append(_unified_html(para))
+        else:
+            if not structured:
+                blocks.append(
+                    f'<span class="rewrite-badge">rewritten · {para.similarity:.0%} similar</span>'
+                )
+            blocks.append(_prose_html(para, "old", "old"))
+            blocks.append(_prose_html(para, "new", "new"))
+    if para.change_type != ChangeType.UNCHANGED:
+        blocks.append(
+            _evidence_html(
+                para,
+                before_source_url,
+                after_source_url,
+                before_pack_dir,
+                after_pack_dir,
+            )
+        )
+    marker_html = f'<span class="{marker_class}">{marker}</span> ' if marker else ""
     return (
         '<div class="paragraph-row">'
-        f'<div class="gutter">p{para_index}</div>'
-        f'<div class="marker {marker_class}">{marker}</div>'
+        f'<div class="gutter">{marker_html}¶{para_index}</div>'
         f'<div class="body">{"".join(blocks)}</div>'
         "</div>"
     )
@@ -640,28 +840,28 @@ def _table_sequence_html(
     side = _single_side_for_paragraph(first)
     if side is None:
         return ""
-    marker, marker_class, css_class = {
-        ChangeType.ADDED: ("+", "marker-added", "new"),
-        ChangeType.REMOVED: ("-", "marker-removed", "old"),
-        ChangeType.UNCHANGED: (".", "marker-context", "context"),
+    marker, marker_class = _marker_for(first.change_type)
+    css_class = {
+        ChangeType.ADDED: "new",
+        ChangeType.REMOVED: "old",
+        ChangeType.UNCHANGED: "context",
     }[first.change_type]
     anchor = first.new_anchor or first.old_anchor
     para_index = anchor.paragraph_index if anchor else 0
     table_text = "\n".join(_side_text_and_spans(para, side)[0].strip() for para in paragraphs)
-    evidence = "".join(
-        _evidence_html(
-            para,
+    evidence = ""
+    if first.change_type != ChangeType.UNCHANGED:
+        evidence = _evidence_html(
+            first,
             before_source_url,
             after_source_url,
             before_pack_dir,
             after_pack_dir,
         )
-        for para in paragraphs
-    )
+    marker_html = f'<span class="{marker_class}">{marker}</span> ' if marker else ""
     return (
         '<div class="paragraph-row">'
-        f'<div class="gutter">p{para_index}</div>'
-        f'<div class="marker {marker_class}">{marker}</div>'
+        f'<div class="gutter">{marker_html}¶{para_index}</div>'
         f'<div class="body"><div class="prose {css_class}">'
         f"{_table_block_html(table_text)}</div>{evidence}</div>"
         "</div>"
@@ -685,6 +885,9 @@ def _group_html(
     html: list[str] = []
     index = 0
     while index < len(group.paragraphs):
+        if _paragraph_is_artifact(group.paragraphs[index]):
+            index += 1
+            continue
         table_end = _table_sequence_end(group.paragraphs, index)
         if table_end > index:
             html.append(
@@ -711,20 +914,30 @@ def _group_html(
     return "".join(html)
 
 
+def _ranked_changed_sections(report: DiffReport) -> list[ReportSectionDelta]:
+    changed = [
+        section for section in report.sections if section.change_type != ChangeType.UNCHANGED
+    ]
+    return sorted(changed, key=lambda section: (-section.interest_score, section.section_id))
+
+
 def _section_nav_html(report: DiffReport) -> str:
+    sections = _ranked_changed_sections(report)
+    max_score = max((section.interest_score for section in sections), default=0.0)
     rows = []
-    for section in report.sections:
-        if section.change_type == ChangeType.UNCHANGED:
-            continue
+    for section in sections:
         section_id = escape(section.section_id, quote=True)
-        section_id_text = escape(section.section_id)
         title = escape(section.title)
+        width = 0 if max_score <= 0 else round(100 * section.interest_score / max_score)
         rows.append(
             f'<a class="rail-row" href="#section-{section_id}">'
-            f'<span class="rail-id">{section_id_text}</span>'
-            f"<span>{title}</span>"
+            f'<span class="rail-name">{title}</span>'
+            '<span class="rail-counts">'
             f'<span class="rail-added">+{section.paragraphs_added}</span>'
             f'<span class="rail-removed">-{section.paragraphs_removed}</span>'
+            f'<span class="rail-modified">~{section.paragraphs_modified}</span>'
+            "</span>"
+            f'<span class="rail-bar"><i style="width:{width}%"></i></span>'
             "</a>"
         )
     if rows:
@@ -734,9 +947,7 @@ def _section_nav_html(report: DiffReport) -> str:
 
 def _section_html(report: DiffReport) -> str:
     sections = []
-    for section in report.sections:
-        if section.change_type == ChangeType.UNCHANGED:
-            continue
+    for section in _ranked_changed_sections(report):
         section_id = escape(section.section_id, quote=True)
         groups = "".join(
             _group_html(
@@ -753,8 +964,11 @@ def _section_html(report: DiffReport) -> str:
             f'<section class="section-hunk" id="section-{section_id}">'
             '<header class="hunk-header">'
             f'<h2 class="hunk-title">{title}</h2>'
-            f'<div class="hunk-meta">+{section.paragraphs_added} '
-            f"-{section.paragraphs_removed} ~{section.paragraphs_modified}</div>"
+            '<div class="hunk-meta">'
+            f'<span class="rail-added">+{section.paragraphs_added}</span> '
+            f'<span class="rail-removed">-{section.paragraphs_removed}</span> '
+            f"~{section.paragraphs_modified} · "
+            f"{section.change_intensity:.0%} intensity</div>"
             "</header>"
             f"{groups}"
             "</section>"
@@ -769,27 +983,41 @@ def _source_link(url: str | None) -> str:
     return f'<p><a href="{safe_url}">{escape(url or "")}</a></p>'
 
 
+def _filing_label(form_type: str, filing_date: str, accession: str) -> str:
+    bits = [bit for bit in (form_type, f"filed {filing_date}" if filing_date else "") if bit]
+    label = " ".join(bits)
+    return escape(label) if label else escape(accession)
+
+
 def render_pair_report_html(report: DiffReport, reproduce_command: str = "") -> str:
     """Render a static, script-free HTML report for one filing pair."""
-    changed_count = report.sections_added + report.sections_removed + report.sections_modified
-    before_accession = escape(report.before_source.accession)
-    after_accession = escape(report.after_source.accession)
-    company_name = escape(report.after_source.company_name or report.before_source.company_name)
+    before = report.before_source
+    after = report.after_source
+    before_accession = escape(before.accession)
+    after_accession = escape(after.accession)
+    company_name = escape(after.company_name or before.company_name) or before_accession
     sections_nav = _section_nav_html(report)
     section_html = _section_html(report)
-    hero_meta = f"pair report - {company_name} - chunk status {escape(report.chunk_status)}"
-    hero_stats = (
-        f"+{report.sections_added} sections - "
-        f"-{report.sections_removed} sections - "
-        f"~{report.sections_modified} modified - "
-        f"{report.overall_change_intensity:.1%} intensity"
+    changed_sections = _ranked_changed_sections(report)
+    total_added = sum(section.paragraphs_added for section in changed_sections)
+    total_removed = sum(section.paragraphs_removed for section in changed_sections)
+    total_modified = sum(section.paragraphs_modified for section in changed_sections)
+    pair_line = (
+        f"{_filing_label(before.form_type, before.filing_date, before.accession)}"
+        '<span class="arrow">&rarr;</span>'
+        f"{_filing_label(after.form_type, after.filing_date, after.accession)}"
+    )
+    stats_chips = (
+        f"<span>{len(changed_sections)} sections changed</span>"
+        f"<span>+{total_added} / -{total_removed} / ~{total_modified} paragraphs</span>"
+        f"<span>{report.overall_change_intensity:.0%} overall intensity</span>"
     )
     return f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{before_accession} -&gt; {after_accession}</title>
+  <title>{company_name}: {before_accession} -&gt; {after_accession}</title>
   <style>{_CSS}</style>
 </head>
 <body>
@@ -798,13 +1026,14 @@ def render_pair_report_html(report: DiffReport, reproduce_command: str = "") -> 
     <nav aria-label="Report"><a href="#provenance">provenance</a></nav>
   </header>
   <section class="pair-hero">
-    <div class="crumbs">{hero_meta}</div>
-    <h1>{before_accession} -&gt; {after_accession}</h1>
-    <div class="stats">{hero_stats}</div>
+    <div class="crumbs">{before_accession} &rarr; {after_accession}</div>
+    <h1>{company_name}</h1>
+    <p class="pair-line">{pair_line}</p>
+    <div class="stats">{stats_chips}</div>
   </section>
   <main class="layout">
     <aside class="section-rail" aria-label="Changed sections">
-      <p class="rail-title">{changed_count} changed sections</p>
+      <p class="rail-title">{len(changed_sections)} changed sections, most changed first</p>
       {sections_nav}
     </aside>
     <div class="diff-pane">{section_html}</div>
@@ -812,13 +1041,13 @@ def render_pair_report_html(report: DiffReport, reproduce_command: str = "") -> 
   <footer class="provenance-footer" id="provenance">
     <div>
       <div class="footer-label">SEC EDGAR</div>
-      {_source_link(report.before_source.source_url)}
-      {_source_link(report.after_source.source_url)}
+      {_source_link(before.source_url)}
+      {_source_link(after.source_url)}
     </div>
     <div>
-      <div class="footer-label">Local pack files</div>
-      <p>{escape(report.before_source.pack_dir)}</p>
-      <p>{escape(report.after_source.pack_dir)}</p>
+      <div class="footer-label">Local pack files - chunk status {escape(report.chunk_status)}</div>
+      <p>{escape(before.pack_dir)}</p>
+      <p>{escape(after.pack_dir)}</p>
     </div>
     <div>
       <div class="footer-label">Reproduce</div>
@@ -881,7 +1110,8 @@ def render_timeline_index_html(report: TimelineReport) -> str:
   <section class="pair-hero">
     <div class="crumbs">registration timeline</div>
     <h1>Registration timeline for CIK {cik}</h1>
-    <div class="stats">{filing_count} filings - {pair_count} filing pairs</div>
+    <div class="stats"><span>{filing_count} filings</span>
+      <span>{pair_count} filing pairs</span></div>
   </section>
   <main class="timeline-main">
     <ol class="timeline-list">
