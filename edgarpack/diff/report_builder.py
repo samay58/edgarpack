@@ -322,7 +322,11 @@ def _report_paragraphs(
     for delta in deltas:
         old_spans: list[TextSpan] = []
         new_spans: list[TextSpan] = []
-        if delta.change_type == ChangeType.MODIFIED and delta.old_text and delta.new_text:
+        if (
+            delta.change_type in {ChangeType.MODIFIED, ChangeType.MOVED}
+            and delta.old_text
+            and delta.new_text
+        ):
             old_spans, new_spans = build_text_spans(delta.old_text, delta.new_text)
 
         paragraphs.append(
@@ -471,6 +475,7 @@ def build_pair_report(
                 paragraphs_added=delta.paragraphs_added,
                 paragraphs_removed=delta.paragraphs_removed,
                 paragraphs_modified=delta.paragraphs_modified,
+                paragraphs_moved=delta.paragraphs_moved,
                 paragraphs_unchanged=delta.paragraphs_unchanged,
                 change_intensity=delta.change_intensity,
                 interest_score=delta.interest_score,

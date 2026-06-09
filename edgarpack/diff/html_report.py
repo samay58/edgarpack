@@ -250,6 +250,7 @@ h1 {
   font-family: var(--code);
   font-size: .72rem;
 }
+.moved-badge { color: #725b16; }
 .financial-table-wrap {
   max-width: 100%;
   margin: .35rem 0;
@@ -752,9 +753,9 @@ def _evidence_html(
     after_pack_dir: str,
 ) -> str:
     bits: list[str] = []
-    if para.change_type in {ChangeType.REMOVED, ChangeType.MODIFIED}:
+    if para.change_type in {ChangeType.REMOVED, ChangeType.MODIFIED, ChangeType.MOVED}:
         bits.extend(_anchor_bits(para.old_anchor, "old", before_source_url, before_pack_dir))
-    if para.change_type in {ChangeType.ADDED, ChangeType.MODIFIED}:
+    if para.change_type in {ChangeType.ADDED, ChangeType.MODIFIED, ChangeType.MOVED}:
         bits.extend(_anchor_bits(para.new_anchor, "new", after_source_url, after_pack_dir))
     if not bits:
         bits.append("<span>chunk status missing</span>")
@@ -766,6 +767,7 @@ def _marker_for(change_type: ChangeType) -> tuple[str, str]:
         ChangeType.ADDED: ("+", "marker-added"),
         ChangeType.REMOVED: ("-", "marker-removed"),
         ChangeType.MODIFIED: ("~", "marker-modified"),
+        ChangeType.MOVED: ("&#8645;", "marker-modified"),
         ChangeType.UNCHANGED: ("", "marker-context"),
     }[change_type]
 
@@ -788,6 +790,8 @@ def _paragraph_html(
     elif para.change_type == ChangeType.ADDED:
         blocks.append(_prose_html(para, "new", "new"))
     else:
+        if para.change_type == ChangeType.MOVED:
+            blocks.append('<span class="rewrite-badge moved-badge">moved</span>')
         raw_old = para.old_text or ""
         raw_new = para.new_text or ""
         structured = (
@@ -929,6 +933,11 @@ def _section_nav_html(report: DiffReport) -> str:
         section_id = escape(section.section_id, quote=True)
         title = escape(section.title)
         width = 0 if max_score <= 0 else round(100 * section.interest_score / max_score)
+        moved_rail = (
+            f'<span class="rail-modified">&#8645;{section.paragraphs_moved}</span>'
+            if section.paragraphs_moved
+            else ""
+        )
         rows.append(
             f'<a class="rail-row" href="#section-{section_id}">'
             f'<span class="rail-name">{title}</span>'
@@ -936,7 +945,7 @@ def _section_nav_html(report: DiffReport) -> str:
             f'<span class="rail-added">+{section.paragraphs_added}</span>'
             f'<span class="rail-removed">-{section.paragraphs_removed}</span>'
             f'<span class="rail-modified">~{section.paragraphs_modified}</span>'
-            "</span>"
+            f"{moved_rail}</span>"
             f'<span class="rail-bar"><i style="width:{width}%"></i></span>'
             "</a>"
         )
@@ -960,6 +969,7 @@ def _section_html(report: DiffReport) -> str:
             for group in section.groups
         )
         title = escape(section.title)
+        moved_meta = f"&#8645;{section.paragraphs_moved} · " if section.paragraphs_moved else ""
         sections.append(
             f'<section class="section-hunk" id="section-{section_id}">'
             '<header class="hunk-header">'
@@ -968,6 +978,7 @@ def _section_html(report: DiffReport) -> str:
             f'<span class="rail-added">+{section.paragraphs_added}</span> '
             f'<span class="rail-removed">-{section.paragraphs_removed}</span> '
             f"~{section.paragraphs_modified} · "
+            f"{moved_meta}"
             f"{section.change_intensity:.0%} intensity</div>"
             "</header>"
             f"{groups}"

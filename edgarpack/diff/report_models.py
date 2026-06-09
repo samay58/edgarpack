@@ -79,6 +79,7 @@ class ReportSectionDelta(BaseModel):
     paragraphs_added: int = 0
     paragraphs_removed: int = 0
     paragraphs_modified: int = 0
+    paragraphs_moved: int = 0
     paragraphs_unchanged: int = 0
     change_intensity: float = 0.0
     interest_score: float = 0.0

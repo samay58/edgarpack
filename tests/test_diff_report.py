@@ -786,6 +786,32 @@ def test_cli_diff_format_html_writes_static_report(tmp_path, capsys) -> None:
     assert "edgarpack diff --before" in html
 
 
+def test_moved_paragraph_renders_with_badge_and_spans(tmp_path) -> None:
+    old = "\n\n".join([
+        "Xray risk about supplier concentration and component lead times in great detail today.",
+        "Yankee risk about customer concentration with two customers over half of total revenue.",
+    ])
+    new = "\n\n".join([
+        "Yankee risk about customer concentration with three customers over half of total revenue.",
+        "Xray risk about supplier concentration and component lead times in great detail tomorrow.",
+    ])
+    before = _write_pack(tmp_path, "S1-001", old)
+    after = _write_pack(tmp_path, "S1A-002", new)
+    report = build_pair_report(before, after)
+    moved = [
+        paragraph
+        for section in report.sections
+        for group in section.groups
+        for paragraph in group.paragraphs
+        if paragraph.change_type == ChangeType.MOVED
+    ]
+    assert len(moved) == 1
+    assert moved[0].old_spans and moved[0].new_spans  # spans built for moved pairs
+    html = render_pair_report_html(report)
+    assert "moved-badge" in html
+    assert "<ins>" in html and "<del>" in html  # unified redline rendered
+
+
 def test_cli_diff_format_html_requires_out(tmp_path, capsys) -> None:
     before = _write_pack(tmp_path, "S1-001", "Old customer disclosure.")
     after = _write_pack(tmp_path, "S1A-002", "New customer disclosure.")

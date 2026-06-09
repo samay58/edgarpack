@@ -2728,6 +2728,10 @@ def _print_paragraph_delta(pd: Any) -> None:
         print(f"      [CHG sim={pd.similarity:.0%}]")
         print(f"        - {_truncate(pd.old_text or '')}")
         print(f"        + {_truncate(pd.new_text or '')}")
+    elif pd.change_type.value == "moved":
+        print(f"      [MOV sim={pd.similarity:.0%}]")
+        print(f"        - {_truncate(pd.old_text or '')}")
+        print(f"        + {_truncate(pd.new_text or '')}")
 
 
 def _cmd_diff(args: Any) -> int:
@@ -2999,6 +3003,7 @@ def _render_registration_timeline(args: Any) -> int:
                 "added": "+",
                 "removed": "-",
                 "modified": "~",
+                "moved": "~",
             }.get(delta.change_type.value, "?")
             print(
                 f"  {marker} {delta.title}  "
