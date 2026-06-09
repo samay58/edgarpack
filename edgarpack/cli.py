@@ -33,6 +33,7 @@ def __getattr__(name: str) -> Any:
         return getattr(render, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 _EDGARPACK_HOME = r"""
               .------------------------------------------.
              /  SOURCE FILINGS                         /|

@@ -130,9 +130,7 @@ class TestRenderQueryTable(unittest.TestCase):
 
         out = _render_query_table(qr, _args(citations="footer", show_links="none"))
 
-        source_lines = [
-            line for line in out.splitlines() if "0001045810-25-000001" in line
-        ]
+        source_lines = [line for line in out.splitlines() if "0001045810-25-000001" in line]
         self.assertEqual(len(source_lines), 1)
         self.assertIn("[C1, C2]", source_lines[0])
 

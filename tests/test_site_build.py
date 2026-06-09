@@ -115,10 +115,7 @@ class TestSiteBuild(unittest.TestCase):
             pack_dir = packs / cik / accession
             (pack_dir / "sections").mkdir(parents=True, exist_ok=True)
 
-            raw_title = (
-                "/ Form 10-K Summary / Form 10-K Summary / "
-                "Form 10-K Summary / 83 / 83 / 83"
-            )
+            raw_title = "/ Form 10-K Summary / Form 10-K Summary / Form 10-K Summary / 83 / 83 / 83"
             section_id = "10k_partiv_item16_form_10k_summary_form_10k"
             (pack_dir / "filing.full.md").write_text("# Filing\n", encoding="utf-8")
             (pack_dir / "sections" / f"{section_id}.md").write_text(

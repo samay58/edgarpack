@@ -204,9 +204,7 @@ class TestComps(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(results["AMD"].metrics["revenue"])
 
     @patch(f"{_COMPS_P}.financials")
-    async def test_missing_ltm_revenue_does_not_poison_comps_table(
-        self, mock_financials
-    ) -> None:
+    async def test_missing_ltm_revenue_does_not_poison_comps_table(self, mock_financials) -> None:
         from datetime import date
 
         async def _fake_financials(company, metrics, period, force=False):

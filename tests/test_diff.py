@@ -404,10 +404,7 @@ def test_canonical_title_fallback():
 
 
 def test_repeated_toc_title_falls_back_to_canonical_title():
-    md = (
-        "Item 1. Item 1. / Item 1. / Business / Business / Business / 4 / 4 / 4\n\n"
-        "Body text."
-    )
+    md = "Item 1. Item 1. / Item 1. / Business / Business / Business / 4 / 4 / 4\n\nBody text."
     matches = find_sections(md, "10-K")
     assert matches
     assert matches[0].item == "1"

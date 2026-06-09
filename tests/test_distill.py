@@ -54,8 +54,7 @@ def _write_s1_pack(root: Path, accession: str = "0001628280-26-032523") -> Path:
         encoding="utf-8",
     )
     (sections / "s1_itemother_underwriting.md").write_text(
-        "# Underwriting\n\n"
-        "The lock-up period will be 180 days from the date of this prospectus.\n",
+        "# Underwriting\n\nThe lock-up period will be 180 days from the date of this prospectus.\n",
         encoding="utf-8",
     )
     manifest = {

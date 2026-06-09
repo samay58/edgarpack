@@ -474,10 +474,7 @@ _HAWKEYE_2026_MDA_TABLES = "\n".join(
             "% Change / % Change / % Change"
         ),
         ">",
-        (
-            "> Revenue ... Revenue / Revenue / $ / 98,743 / $ / 49,835 / "
-            "$ / 48,908 / 98 / 98 / %"
-        ),
+        ("> Revenue ... Revenue / Revenue / $ / 98,743 / $ / 49,835 / $ / 48,908 / 98 / 98 / %"),
         (
             "> Revenue from related parties ... Revenue from related parties / "
             "Revenue from related parties / 18,917 / 18,917 / 17,724 / "

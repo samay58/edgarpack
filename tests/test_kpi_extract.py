@@ -742,8 +742,7 @@ class TestPromptSectionOrdering(unittest.TestCase):
                             "definition": None,
                             "section_id": "10k_partii_item7_managements_discussion",
                             "source_substring": (
-                                "Funded Customers increased by 1.8 million, 7%, "
-                                "to 27.0 million"
+                                "Funded Customers increased by 1.8 million, 7%, to 27.0 million"
                             ),
                             "confidence": 0.92,
                         }
