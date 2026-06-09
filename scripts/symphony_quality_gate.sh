@@ -7,6 +7,8 @@ export EDGARPACK_CACHE_DIR="$cache_dir"
 echo "Using EDGARPACK_CACHE_DIR=$EDGARPACK_CACHE_DIR"
 
 uv run --extra dev --extra china --extra sse ruff check .
+uv run --extra dev --extra china --extra sse ruff format --check .
+uv run --extra dev --extra china --extra sse mypy edgarpack
 uv run --extra dev --extra china --extra sse pytest -q
 
 if [[ "${SYMPHONY_WEB:-0}" == "1" || "${SYMPHONY_RELEASE:-0}" == "1" ]]; then

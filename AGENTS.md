@@ -13,8 +13,8 @@ facts.
 
 - Keep diffs small and reviewable.
 - Run the quality gate after code changes and report the result:
-  `scripts/symphony_quality_gate.sh` runs ruff + pytest. Also run mypy strict:
-  `uv run --extra dev --extra china --extra sse mypy edgarpack`.
+  `scripts/symphony_quality_gate.sh` runs ruff check, ruff format --check, mypy
+  strict, and the offline pytest lane (web lint/build with `SYMPHONY_WEB=1`).
 - For HKEX, SSE/CNINFO, citation, FX, or China Lens work, also run the relevant China
   golden lanes listed in `docs/TESTING.md`.
 - Avoid new dependencies unless they materially simplify the system.

@@ -26,7 +26,7 @@ uv run --extra dev pytest --run-slow          # @pytest.mark.slow (e.g. determin
 EDGARPACK_USER_AGENT="Name email@example.com" \
   uv run --extra dev pytest --run-live-sec     # @pytest.mark.live_sec (hits real SEC)
 
-# The repo quality gate (ruff + pytest; web build with SYMPHONY_WEB=1)
+# The repo quality gate (ruff check + format, mypy, pytest; web build with SYMPHONY_WEB=1)
 EDGARPACK_CACHE_DIR=/tmp/edgarpack-cache scripts/symphony_quality_gate.sh
 
 # Wipe regenerable clutter (caches, dist, stray test dirs); --corpus also clears packs/ + site/
