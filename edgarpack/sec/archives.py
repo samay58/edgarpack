@@ -30,10 +30,15 @@ async def fetch_filing_index(meta: FilingMeta, force: bool = False) -> dict[str,
         if cached is not None:
             import json
 
-            parsed = json.loads(cached)
-            if not isinstance(parsed, dict):
-                raise ValueError(f"Cached filing index for {meta.accession} was not an object")
-            return parsed
+            try:
+                parsed = json.loads(cached)
+                if not isinstance(parsed, dict):
+                    raise ValueError("cached filing index was not an object")
+            except (json.JSONDecodeError, ValueError):
+                # Corrupt cache entries refetch instead of erroring forever.
+                cache.clear(url)
+            else:
+                return parsed
 
     client = await get_client()
     data, headers = await client.fetch_json(url)

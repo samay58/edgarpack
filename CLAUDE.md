@@ -37,7 +37,7 @@ npm --prefix web run lint
 npm --prefix web run build
 ```
 
-`EDGARPACK_USER_AGENT` (format `Name email@example.com`) is required for any live SEC call; the first network call fails with an actionable error if it is unset. SEC requests are paced (default 5 req/s) and cached on disk under `EDGARPACK_CACHE_DIR` (default `~/.edgarpack/cache`). For China A-share / HKEX work, add `--extra china --extra sse`.
+`EDGARPACK_USER_AGENT` (format `Name email@example.com`) is required for any live SEC call; the first network call fails with an actionable error if it is unset. SEC requests are paced (default 5 req/s) and cached on disk under `EDGARPACK_CACHE_DIR` (default `~/.edgarpack/cache`). The cache has no eviction and grows unbounded (multi-GB on heavy use); everything in it is refetchable, so deleting the directory is always safe. For China A-share / HKEX work, add `--extra china --extra sse`.
 
 The query commands need no build for SEC filers (they read companyfacts directly); only S-1 / China paths require a pack on disk first. Full flag/period/citation reference is in `docs/QUERY.md`.
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import gzip
+import http.client
 import json
 import logging
 import time
@@ -126,7 +127,7 @@ class SECClient:
             await self._rate_limiter.acquire()
             try:
                 content, headers, status = await asyncio.to_thread(self._fetch_sync, url)
-            except (TimeoutError, OSError, urllib.error.URLError):
+            except (TimeoutError, OSError, urllib.error.URLError, http.client.HTTPException):
                 if attempt >= self._max_retries:
                     raise
                 await asyncio.sleep(backoff)
@@ -190,10 +191,6 @@ class SECClient:
             headers = {k: v for k, v in (e.headers.items() if e.headers else [])}
             content = e.read() or b""
             return _maybe_gunzip(content, headers), headers, status
-        except urllib.error.URLError as e:
-            # Treat as retryable network error.
-            raise e
-
         return _maybe_gunzip(content, headers), headers, status
 
 
@@ -202,8 +199,10 @@ def _maybe_gunzip(content: bytes, headers: dict[str, str]) -> bytes:
         return content
     try:
         return gzip.decompress(content)
-    except Exception:
-        return content
+    except Exception as e:
+        # Passing compressed bytes through would cache garbage as content;
+        # surface it as a retryable network-class failure instead.
+        raise OSError(f"gzip decompression failed: {e}") from e
 
 
 def _is_sec_traffic_limit_page(content: bytes) -> bool:

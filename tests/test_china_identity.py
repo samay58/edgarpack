@@ -239,3 +239,36 @@ def test_zhipu_alias_z_ai_resolves():
     index = load_identity(Path("universe.toml"))
     r = resolve(index, ticker=None, company="z.ai")
     assert r.ticker == "2513.HK"
+
+
+def test_duplicate_ticker_raises_at_load_time(tmp_path):
+    cfg = tmp_path / "u.toml"
+    cfg.write_text(
+        """
+[[companies]]
+ticker = "DUP"
+listing = "NYSE"
+cik = "0000000001"
+
+[[companies]]
+ticker = "DUP"
+listing = "NASDAQ"
+cik = "0000000002"
+"""
+    )
+    with pytest.raises(AmbiguousCompany, match="DUP"):
+        load_identity(cfg)
+
+
+def test_resolved_cik_is_zero_padded(tmp_path):
+    cfg = tmp_path / "u.toml"
+    cfg.write_text(
+        """
+[[companies]]
+ticker = "PAD"
+listing = "NYSE"
+cik = "320193"
+"""
+    )
+    index = load_identity(cfg)
+    assert index.by_ticker["PAD"].cik == "0000320193"

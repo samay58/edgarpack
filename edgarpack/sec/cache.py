@@ -3,13 +3,7 @@
 import hashlib
 import json
 import os
-
-try:
-    from datetime import UTC, datetime
-except ImportError:  # Python 3.9 fallback
-    from datetime import datetime, timezone
-
-    UTC = timezone.utc  # noqa: UP017 - fallback for runtimes without datetime.UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock, get_ident
 from typing import Any
@@ -100,15 +94,18 @@ class DiskCache:
         if not path.exists():
             return None
 
-        if max_age_seconds is not None and meta_path.exists():
+        if max_age_seconds is not None:
+            # An entry that cannot prove its age is expired, not fresh forever:
+            # a missing or unreadable meta file (e.g. a crash between the .bin
+            # and .meta writes) must not disable the TTL.
             try:
                 meta = json.loads(meta_path.read_text(encoding="utf-8"))
                 cached_at = datetime.fromisoformat(meta.get("cached_at", ""))
                 age = (datetime.now(UTC) - cached_at).total_seconds()
-                if age > max_age_seconds:
-                    return None
-            except (json.JSONDecodeError, OSError, ValueError):
-                pass
+            except (json.JSONDecodeError, OSError, ValueError, TypeError):
+                return None
+            if age > max_age_seconds:
+                return None
 
         try:
             return path.read_bytes()

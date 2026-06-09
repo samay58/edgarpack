@@ -53,12 +53,14 @@ async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
 
             try:
                 parsed = json.loads(cached)
-            except json.JSONDecodeError as e:
-                raise XBRLFetchError(cik, e) from e
-            if not isinstance(parsed, dict):
-                error = ValueError("cached companyfacts payload was not an object")
-                raise XBRLFetchError(cik, error)
-            return parsed
+                if not isinstance(parsed, dict):
+                    raise ValueError("cached companyfacts payload was not an object")
+            except (json.JSONDecodeError, ValueError):
+                # A corrupt local cache entry is not a fetch error; drop it
+                # and fall through to a real network fetch.
+                cache.clear(url)
+            else:
+                return parsed
 
     client = await get_client()
     try:

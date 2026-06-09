@@ -75,10 +75,24 @@ async def _fetch_raw(force: bool = False) -> dict[str, Any]:
     if not force:
         cached = cache.get(_TICKERS_URL, max_age_seconds=_TICKERS_CACHE_TTL)
         if cached is not None:
-            return json.loads(cached)  # type: ignore[no-any-return]
+            try:
+                return json.loads(cached)  # type: ignore[no-any-return]
+            except json.JSONDecodeError:
+                cache.clear(_TICKERS_URL)
 
     client = await get_client()
-    data, headers = await client.fetch_json(_TICKERS_URL)
+    try:
+        data, headers = await client.fetch_json(_TICKERS_URL)
+    except Exception:
+        # Offline or SEC unavailable: a stale ticker map still resolves
+        # correctly, so fall back to it before surfacing the failure.
+        stale = cache.get(_TICKERS_URL)
+        if stale is not None:
+            try:
+                return json.loads(stale)  # type: ignore[no-any-return]
+            except json.JSONDecodeError:
+                pass
+        raise
     cache.put(_TICKERS_URL, json.dumps(data).encode(), headers)
     return data
 

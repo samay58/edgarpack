@@ -84,11 +84,16 @@ def _source_for(spec: CompanySpec, ticker: str) -> Source:
 def _resolved_for(spec: CompanySpec, ticker: str) -> ResolvedCompany:
     display_names = [spec.name] if spec.name else []
     display_aliases = tuple(dict.fromkeys([*display_names, *spec.aliases]))
+    cik = spec.cik
+    if cik:
+        # Packs and the harvest registry store zero-padded CIKs; resolve to
+        # the same shape so exact-match consumers (doctor, registry) hit.
+        cik = cik.lstrip("0").zfill(10)
     return ResolvedCompany(
         ticker=ticker,
         listing=spec.listing,
         source=_source_for(spec, ticker),
-        cik=spec.cik,
+        cik=cik,
         hk_stock_code=spec.hk_stock_code,
         stock_code=spec.stock_code or spec.hk_stock_code,
         aliases=display_aliases,
@@ -111,11 +116,22 @@ def load_identity(path: Path) -> IdentityIndex:
             continue
 
         primary = _resolved_for(spec, primary_key)
+        ticker_inserts = []
         if spec.ticker:
-            by_ticker[spec.ticker.upper()] = primary
+            ticker_inserts.append((spec.ticker, primary))
         for alt in spec.alt_tickers:
-            alt_resolved = _resolved_for(spec, alt)
-            by_ticker[alt.upper()] = alt_resolved
+            ticker_inserts.append((alt, _resolved_for(spec, alt)))
+        for raw_ticker, resolved in ticker_inserts:
+            key = raw_ticker.upper()
+            existing = by_ticker.get(key)
+            if existing is not None and (existing.cik, existing.stock_code) != (
+                resolved.cik,
+                resolved.stock_code,
+            ):
+                raise AmbiguousCompany(
+                    f"Ticker {raw_ticker!r} is claimed by two different companies in universe.toml"
+                )
+            by_ticker[key] = resolved
 
         aliases = [*(spec.aliases or [])]
         if spec.name:

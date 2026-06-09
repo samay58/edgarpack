@@ -60,3 +60,26 @@ class TestDiskCache(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_ttl_expires_entry_with_missing_meta(self) -> None:
+        # An entry that cannot prove its age must be treated as expired,
+        # not fresh forever (crash between .bin and .meta writes).
+        with tempfile.TemporaryDirectory() as td:
+            cache = DiskCache(Path(td))
+            url = "https://example.test/ttl"
+            cache.put(url, b"payload")
+            meta_path = cache._meta_path(url)
+            meta_path.unlink()
+
+            self.assertIsNone(cache.get(url, max_age_seconds=3600))
+            # Without a TTL the raw bytes are still served.
+            self.assertEqual(cache.get(url), b"payload")
+
+    def test_ttl_expires_entry_with_corrupt_meta(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            cache = DiskCache(Path(td))
+            url = "https://example.test/ttl-corrupt"
+            cache.put(url, b"payload")
+            cache._meta_path(url).write_text("{not json", encoding="utf-8")
+
+            self.assertIsNone(cache.get(url, max_age_seconds=3600))
