@@ -796,11 +796,15 @@ def test_moved_paragraph_damps_interest_and_counts():
         new_word_count=200,
     )
     moved_section = SectionDelta(
-        section_id="s", title="S", change_type=ChangeType.MODIFIED,
+        section_id="s",
+        title="S",
+        change_type=ChangeType.MODIFIED,
         paragraph_deltas=[moved],
     )
     added_section = SectionDelta(
-        section_id="s", title="S", change_type=ChangeType.MODIFIED,
+        section_id="s",
+        title="S",
+        change_type=ChangeType.MODIFIED,
         paragraph_deltas=[added],
     )
     assert 0 < compute_interest_score(moved_section) < compute_interest_score(added_section) * 0.1
