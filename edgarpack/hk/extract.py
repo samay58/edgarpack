@@ -209,37 +209,74 @@ def _is_interleaved(text: str) -> bool:
     return bool(re.search(r"(?:US\$|HK\$|RMB)\s+%", text[:800]))
 
 
-def _find_fy_col(text: str, target_year: int) -> int:
-    years = [int(m) for m in re.findall(r"\b(20\d\d)\b", text[:500])]
-    if target_year in years:
-        return years.index(target_year)
-    return -1
+_MONTH_NAMES = (
+    "January|February|March|April|May|June|July|August|September|October|November|December"
+)
+
+# Dates embedded in row labels ("ended 31 December 2024", "December 31, 2024").
+# Stripped before column scanning so day/year tokens are not read as amounts.
+_LABEL_DATE_RE = re.compile(
+    rf"\b\d{{1,2}}\s+(?:{_MONTH_NAMES})(?:\s+20\d\d)?"
+    rf"|\b(?:{_MONTH_NAMES})\s+\d{{1,2}}(?:,\s*20\d\d)?",
+    re.IGNORECASE,
+)
+
+# Note-column references of the form "4(b)" / "21(a)". Bare-integer note
+# references ("Revenue 4 57,409 ...") are handled by the column-count check.
+_NOTE_REF_RE = re.compile(r"\b\d{1,3}\([a-z]+\)", re.IGNORECASE)
+
+_PLAIN_TOKEN_RE = re.compile(
+    r"(\((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\))(?!%)"
+    r"|(?<![A-Za-z])([–\-]{1,2})(?![\dA-Za-z])"
+    r"|((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?![,.\d%])"
+)
+
+_BARE_YEAR_RE = re.compile(r"(?:19|20)\d\d")
 
 
-def _count_years(text: str) -> int:
-    years = [int(m) for m in re.findall(r"\b(20\d\d)\b", text[:500])]
-    return len(years)
+def _to_number(raw: str) -> int | float:
+    raw = raw.replace(",", "")
+    return float(raw) if "." in raw else int(raw)
 
 
-def _parse_columns_plain(line: str) -> list[int | float | None]:
-    """Extract column values from a plain (amount-only) table row."""
+def _parse_columns_plain(line: str, n_years: int) -> list[int | float | None] | None:
+    """Extract column values from a plain (amount-only) table row.
+
+    Returns one value per detected year column, [] when the row carries no
+    numeric tokens at all (the caller may try inline parsing), or None when
+    a grid was found but its column count does not line up with the year
+    header. A misaligned grid must yield nothing: a wrong-year number with
+    a clean citation is worse than a gap.
+    """
     cleaned = _strip_filler(line)
+    cleaned = _LABEL_DATE_RE.sub(" ", cleaned)
+    cleaned = _NOTE_REF_RE.sub(" ", cleaned)
     cols: list[int | float | None] = []
-    pat = re.compile(
-        r"(\([\d,]+\.[\d]+\))"
-        r"|(\([\d,]+\))"
-        r"|([–\-]{1,2}(?!\d))"
-        r"|([\d]{1,3}(?:,[\d]{3})+(?![,\d]))"
-    )
-    for m in pat.finditer(cleaned):
+    bare_small_int: list[bool] = []
+    for m in _PLAIN_TOKEN_RE.finditer(cleaned):
         if m.group(1):
-            pass
+            cols.append(-_to_number(m.group(1)[1:-1]))
+            bare_small_int.append(False)
         elif m.group(2):
-            cols.append(-int(m.group(2)[1:-1].replace(",", "")))
-        elif m.group(3):
             cols.append(None)
-        elif m.group(4):
-            cols.append(int(m.group(4).replace(",", "")))
+            bare_small_int.append(False)
+        else:
+            tok = m.group(3)
+            plain_int = "," not in tok and "." not in tok
+            if plain_int and _BARE_YEAR_RE.fullmatch(tok):
+                # A year token in the row (e.g. a date in the label), not
+                # an amount.
+                continue
+            cols.append(_to_number(tok))
+            bare_small_int.append(plain_int and len(tok) <= 2)
+    if not cols:
+        return []
+    if len(cols) == n_years + 1 and bare_small_int[0]:
+        # Exactly one extra column and it leads with a 1-2 digit bare
+        # integer: the note-reference column, not a value.
+        cols = cols[1:]
+    if len(cols) != n_years:
+        return None
     return cols
 
 
@@ -316,14 +353,23 @@ def _extract_metric_from_section(
         pat = re.compile(rf"^\s*{re.escape(label)}\b", re.IGNORECASE)
         for line in lines:
             stripped = _strip_filler(line)
-            if not pat.match(stripped):
+            label_match = pat.match(stripped)
+            if not label_match:
                 continue
 
             if fy_col >= 0:
                 if interleaved:
                     cols = _parse_columns_interleaved(line, n_years)
                 else:
-                    cols = _parse_columns_plain(line)
+                    # Parse only past the matched label so hyphens and
+                    # dates inside the label text are not read as columns.
+                    plain_cols = _parse_columns_plain(stripped[label_match.end() :], n_years)
+                    if plain_cols is None:
+                        # Grid found but it does not line up with the year
+                        # header: skip the row instead of guessing which
+                        # year each value belongs to.
+                        continue
+                    cols = plain_cols
 
                 if cols:
                     # Column grid parsed: trust its answer (including None for

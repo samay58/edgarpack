@@ -3,6 +3,46 @@
   "company": "Zhipu (Knowledge Atlas Technology)",
   "facts": {
     "hkfrs": {
+      "TotalEquity": {
+        "label": "TotalEquity",
+        "units": {
+          "CNY": [
+            {
+              "start": "2022-01-01",
+              "end": "2022-12-31",
+              "val": -170648000,
+              "fy": 2022,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            },
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": -974767000,
+              "fy": 2023,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            },
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": -3870284000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "Annual Report",
+              "accn": "02513_2024",
+              "extraction_method": "regex",
+              "section_id": "hkex_balance_sheet"
+            }
+          ]
+        }
+      },
       "CashAndCashEquivalents": {
         "label": "CashAndCashEquivalents",
         "units": {
@@ -33,35 +73,6 @@
               "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 2269222000,
-              "fy": 2024,
-              "fp": "FY",
-              "form": "Annual Report",
-              "accn": "02513_2024",
-              "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
-            }
-          ]
-        }
-      },
-      "TotalEquity": {
-        "label": "TotalEquity",
-        "units": {
-          "CNY": [
-            {
-              "start": "2023-01-01",
-              "end": "2023-12-31",
-              "val": -170648000,
-              "fy": 2023,
-              "fp": "FY",
-              "form": "Annual Report",
-              "accn": "02513_2024",
-              "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
-            },
-            {
-              "start": "2024-01-01",
-              "end": "2024-12-31",
-              "val": -974767000,
               "fy": 2024,
               "fp": "FY",
               "form": "Annual Report",

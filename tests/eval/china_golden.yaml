@@ -220,14 +220,14 @@ companies:
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet (LTM proxy: annual-only filer, mirrors LFY)"
       total_equity:
         lfy:
-          native: -974767000
-          usd: -133542104
+          native: -3870284000
+          usd: -530225038
           fx_rate: 0.136999
           fx_convention: spot
-          source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet"
+          source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet (column-shift fix 2026-06-09: prior value was the FY2023 figure)"
         ltm:
-          native: -974767000
-          usd: -133542104
+          native: -3870284000
+          usd: -530225038
           fx_rate: 0.136999
           fx_convention: spot
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Balance Sheet (LTM proxy: annual-only filer, mirrors LFY)"
