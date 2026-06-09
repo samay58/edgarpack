@@ -136,7 +136,6 @@ def identify_html_files(index: dict[str, Any], primary_doc: str) -> list[str]:
                 r"^R\d+\.htm",  # XBRL rendering files
                 r"^ex\d+",  # Exhibits (unless primary)
                 r"FilingSummary\.html?$",
-                r"Financial_Report\.xlsx",
             ]
 
             should_skip = any(re.match(pattern, name, re.IGNORECASE) for pattern in skip_patterns)
