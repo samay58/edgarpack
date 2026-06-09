@@ -1297,10 +1297,6 @@ def _cmd_distill(args: Any) -> int:
         print(f"distill check ok: {result.path}")
         return 0
 
-    if args.distill_cmd != "run":
-        print("error: unknown distill command", file=sys.stderr)
-        return 2
-
     try:
         pack_dir = resolve_pack_path(
             pack=args.pack,

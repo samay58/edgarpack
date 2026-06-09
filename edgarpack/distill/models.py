@@ -46,7 +46,6 @@ class FindingRow:
     evidence_ids: tuple[str, ...]
     section: str = ""
     status: str = "supported"
-    confidence: str = "medium"
     notes: str = ""
 
 

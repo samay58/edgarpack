@@ -71,7 +71,12 @@ def build_distill_bundle(
 ) -> DistillBundle:
     validate_slug(slug)
     pack_dir = Path(pack_dir)
-    manifest = load_manifest_dict(pack_dir)
+    try:
+        manifest = load_manifest_dict(pack_dir)
+    except FileNotFoundError as exc:
+        raise DistillError(f"{pack_dir} is not a filing pack (no manifest.json)") from exc
+    except (OSError, json.JSONDecodeError) as exc:
+        raise DistillError(f"manifest.json at {pack_dir} could not be read: {exc}") from exc
     filing_raw = manifest.get("filing")
     if not isinstance(filing_raw, dict):
         raise DistillError(f"manifest.json at {pack_dir} has no filing object")
@@ -92,12 +97,13 @@ def build_distill_bundle(
     findings: list[FindingRow] = []
     metrics: list[MetricRow] = []
     gaps: list[GapRow] = []
-    warnings: list[str] = []
 
     if not is_registration_form(filing["form_type"]):
+        # One accurate gap; running the S-1 extractors would only add
+        # misleading "missing" diagnoses for artifacts the form never has.
         gaps.append(
             GapRow(
-                id="gap-001",
+                id=_next_id("gap", gaps),
                 area="form_support",
                 issue=(
                     "Distill v1 only has first-class registration support; "
@@ -110,48 +116,48 @@ def build_distill_bundle(
                 ),
             )
         )
-
-    _add_registration_findings(
-        pack_dir=pack_dir,
-        filing=filing,
-        findings=findings,
-        evidence=evidence,
-        gaps=gaps,
-    )
-    _add_s1_metrics(
-        pack_dir=pack_dir,
-        filing=filing,
-        metrics=metrics,
-        evidence=evidence,
-        gaps=gaps,
-    )
-
-    if not findings:
-        gaps.append(
-            GapRow(
-                id=_next_gap_id(gaps),
-                area="findings",
-                issue="No non-financial S-1 disclosures were extracted.",
-                status="empty",
-                action=(
-                    "Read the filing map and source sections directly; extraction "
-                    "may need a richer table or disclosure parser."
-                ),
-            )
+    else:
+        _add_registration_findings(
+            pack_dir=pack_dir,
+            filing=filing,
+            findings=findings,
+            evidence=evidence,
+            gaps=gaps,
         )
-    if not metrics:
-        gaps.append(
-            GapRow(
-                id=_next_gap_id(gaps),
-                area="metrics",
-                issue="No S-1 financial metrics were available from the cache.",
-                status="empty",
-                action=(
-                    "Run the existing S-1 financial extraction/query path for this "
-                    "pack, then rerun distill."
-                ),
-            )
+        _add_s1_metrics(
+            pack_dir=pack_dir,
+            filing=filing,
+            metrics=metrics,
+            evidence=evidence,
+            gaps=gaps,
         )
+
+        if not findings:
+            gaps.append(
+                GapRow(
+                    id=_next_id("gap", gaps),
+                    area="findings",
+                    issue="No non-financial S-1 disclosures were extracted.",
+                    status="empty",
+                    action=(
+                        "Read the filing map and source sections directly; extraction "
+                        "may need a richer table or disclosure parser."
+                    ),
+                )
+            )
+        if not metrics:
+            gaps.append(
+                GapRow(
+                    id=_next_id("gap", gaps),
+                    area="metrics",
+                    issue="No S-1 financial metrics were available from the cache.",
+                    status="empty",
+                    action=(
+                        "Run the existing S-1 financial extraction/query path for this "
+                        "pack, then rerun distill."
+                    ),
+                )
+            )
 
     return DistillBundle(
         slug=slug,
@@ -164,7 +170,6 @@ def build_distill_bundle(
         evidence=tuple(evidence),
         gaps=tuple(gaps),
         filing_map=tuple(_filing_map(manifest)),
-        warnings=tuple(warnings),
     )
 
 
@@ -180,7 +185,7 @@ def _add_registration_findings(
     if profile is None:
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="registration_profile",
                 issue="Registration profile could not be built from the pack.",
                 status="missing",
@@ -191,7 +196,7 @@ def _add_registration_findings(
     if not profile.has_content:
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="registration_profile",
                 issue=(
                     "Registration profile returned no content; source status was "
@@ -221,7 +226,7 @@ def _add_registration_findings(
     }
     for group in profile.disclosures:
         for claim in group.claims:
-            evidence_id = _next_evidence_id(evidence)
+            evidence_id = _next_id("ev", evidence)
             source_ref = f"{filing['accession']}:{group.label}"
             evidence.append(
                 EvidenceRecord(
@@ -237,7 +242,7 @@ def _add_registration_findings(
             )
             findings.append(
                 FindingRow(
-                    id=_next_finding_id(findings),
+                    id=_next_id("find", findings),
                     kind=kind_by_topic.get(group.label, "disclosure"),
                     topic=group.label,
                     statement=claim,
@@ -259,7 +264,7 @@ def _add_s1_metrics(
     if not cache.exists():
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="s1_financials",
                 issue="s1_financials.json is missing.",
                 status="missing",
@@ -272,7 +277,7 @@ def _add_s1_metrics(
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="s1_financials",
                 issue=f"s1_financials.json could not be read: {exc}",
                 status="unreadable",
@@ -283,7 +288,7 @@ def _add_s1_metrics(
     if snapshot.schema_version != S1_SCHEMA_VERSION:
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="s1_financials",
                 issue=(
                     f"S-1 financial cache schema {snapshot.schema_version} "
@@ -297,7 +302,7 @@ def _add_s1_metrics(
     if snapshot.source_sha256 != source_sha256_for_pack(pack_dir):
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="s1_financials",
                 issue="S-1 financial cache hash does not match filing.full.md.",
                 status="stale",
@@ -306,20 +311,27 @@ def _add_s1_metrics(
         )
         return
 
-    skipped_window = 0
+    anchor = _window_anchor(snapshot, filing["filing_date"])
+    skipped: list[str] = []
     for fact in snapshot.facts:
-        if _outside_registration_window(
+        period = _period_label(fact.fiscal_period, fact.fiscal_year)
+        if anchor is not None and _outside_registration_window(
             fact.fiscal_year,
             fact.fiscal_period,
-            filing["filing_date"],
+            anchor,
         ):
-            skipped_window += 1
+            skipped.append(f"{fact.metric} {period}")
             continue
-        evidence_id = _next_evidence_id(evidence)
+        evidence_id = _next_id("ev", evidence)
         value = fact.value_cents / 100
-        period = _period_label(fact.fiscal_period, fact.fiscal_year)
-        source_text = fact.source_text or f"{fact.metric} {period}: {value:g} {fact.currency}"
         has_locator = bool(fact.section_id or fact.chunk_id)
+        has_source_text = bool(fact.source_text)
+        # Evidence text must be filing language. When the cache captured no
+        # quote, say so explicitly instead of synthesizing one from the value.
+        source_text = fact.source_text or (
+            f"No source text captured for {fact.metric} {period}; "
+            "value taken from the S-1 financial cache, not quoted from the filing."
+        )
         evidence.append(
             EvidenceRecord(
                 id=evidence_id,
@@ -336,19 +348,22 @@ def _add_s1_metrics(
                     "period_end": fact.period_end,
                     "is_audited": fact.is_audited,
                     "is_pro_forma": fact.is_pro_forma,
+                    "quoted_from_filing": has_source_text,
                 },
             )
         )
         notes: list[str] = []
         if not has_locator:
             notes.append("metric cache has no section or chunk locator")
+        if not has_source_text:
+            notes.append("metric cache has no quoted source text")
         if fact.is_pro_forma:
             notes.append(fact.pro_forma_note or "pro forma")
         if not fact.is_audited:
             notes.append("not audited")
         metrics.append(
             MetricRow(
-                id=_next_metric_id(metrics),
+                id=_next_id("metric", metrics),
                 metric=fact.metric,
                 period=period,
                 fiscal_year=fact.fiscal_year,
@@ -360,7 +375,7 @@ def _add_s1_metrics(
                 section=fact.section_id or "",
                 status=(
                     "needs_review"
-                    if not has_locator
+                    if not (has_locator and has_source_text)
                     else "pro_forma"
                     if fact.is_pro_forma
                     else "supported"
@@ -368,14 +383,14 @@ def _add_s1_metrics(
                 notes="; ".join(notes),
             )
         )
-    if skipped_window:
+    if skipped:
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="metric_window",
                 issue=(
-                    f"Skipped {skipped_window} metric row(s) outside the normal "
-                    "S-1 annual/interim window."
+                    f"Skipped {len(skipped)} metric row(s) outside the normal "
+                    f"S-1 annual/interim window: {', '.join(skipped)}."
                 ),
                 status="filtered",
                 action=(
@@ -387,23 +402,22 @@ def _add_s1_metrics(
     if any(row.status == "needs_review" for row in metrics):
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="metric_locators",
                 issue=(
                     "One or more metric rows came from cache entries without "
-                    "section or chunk locators."
+                    "section/chunk locators or quoted source text."
                 ),
                 status="needs_review",
                 action=(
-                    "Use the evidence text and source filing before treating these "
-                    "metrics as final."
+                    "Verify these values against the source filing before treating them as final."
                 ),
             )
         )
     if snapshot.extraction_status != "ok":
         gaps.append(
             GapRow(
-                id=_next_gap_id(gaps),
+                id=_next_id("gap", gaps),
                 area="s1_financials",
                 issue=f"S-1 financial extraction status is {snapshot.extraction_status}.",
                 status=snapshot.extraction_status,
@@ -463,34 +477,37 @@ def _period_label(fiscal_period: str | None, fiscal_year: int) -> str:
     return f"{period} FY{fiscal_year}"
 
 
+def _window_anchor(snapshot: SnapshotResult, filing_date: str) -> int | None:
+    """Latest fiscal year the window is measured from.
+
+    Anchoring on the snapshot's own latest fiscal year (not the filing year)
+    keeps legitimate disclosures: an S-1 filed early in a calendar year carries
+    audited years and interim comparatives that all trail the filing year by
+    one. The filing year still caps the anchor so a typo'd far-future fiscal
+    year in the cache cannot drag the window away from the real data.
+    """
+    years = [fact.fiscal_year for fact in snapshot.facts if fact.fiscal_year]
+    if not years:
+        return None
+    anchor = max(years)
+    if filing_date and len(filing_date) >= 4:
+        try:
+            anchor = min(anchor, int(filing_date[:4]))
+        except ValueError:
+            pass
+    return anchor
+
+
 def _outside_registration_window(
     fiscal_year: int,
     fiscal_period: str | None,
-    filing_date: str,
+    anchor_year: int,
 ) -> bool:
-    if not filing_date or len(filing_date) < 4:
-        return False
-    try:
-        filing_year = int(filing_date[:4])
-    except ValueError:
-        return False
     period = (fiscal_period or "FY").upper()
     if period == "FY":
-        return fiscal_year < filing_year - 3 or fiscal_year > filing_year
-    return fiscal_year < filing_year - 1 or fiscal_year > filing_year
+        return fiscal_year < anchor_year - 3 or fiscal_year > anchor_year
+    return fiscal_year < anchor_year - 1 or fiscal_year > anchor_year
 
 
-def _next_evidence_id(rows: list[EvidenceRecord]) -> str:
-    return f"ev-{len(rows) + 1:04d}"
-
-
-def _next_finding_id(rows: list[FindingRow]) -> str:
-    return f"find-{len(rows) + 1:04d}"
-
-
-def _next_metric_id(rows: list[MetricRow]) -> str:
-    return f"metric-{len(rows) + 1:04d}"
-
-
-def _next_gap_id(rows: list[GapRow]) -> str:
-    return f"gap-{len(rows) + 1:04d}"
+def _next_id(prefix: str, rows: list[Any]) -> str:
+    return f"{prefix}-{len(rows) + 1:04d}"

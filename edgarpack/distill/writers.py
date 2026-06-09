@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from pathlib import Path
 
 from .models import OUTPUT_FILES, DistillBundle, FindingRow, GapRow, MetricRow
@@ -17,9 +17,9 @@ def write_distill_bundle(bundle: DistillBundle, *, force: bool = False) -> Path:
     out.mkdir(parents=True, exist_ok=True)
 
     _write_index(bundle, out / "index.md")
-    _write_csv(out / "findings.csv", bundle.findings)
-    _write_csv(out / "metrics.csv", bundle.metrics)
-    _write_csv(out / "gaps.csv", bundle.gaps)
+    _write_csv(out / "findings.csv", bundle.findings, FindingRow)
+    _write_csv(out / "metrics.csv", bundle.metrics, MetricRow)
+    _write_csv(out / "gaps.csv", bundle.gaps, GapRow)
     _write_evidence(bundle, out / "evidence.jsonl")
     _write_filing_map(bundle, out / "filing-map.md")
     _write_run_log(bundle, out / "run-log.md")
@@ -30,10 +30,11 @@ def write_distill_bundle(bundle: DistillBundle, *, force: bool = False) -> Path:
     return out
 
 
-def _write_csv(path: Path, rows: tuple[FindingRow | MetricRow | GapRow, ...]) -> None:
-    if not rows:
-        path.write_text("", encoding="utf-8")
-        return
+def _write_csv(
+    path: Path,
+    rows: tuple[FindingRow | MetricRow | GapRow, ...],
+    model: type[FindingRow] | type[MetricRow] | type[GapRow],
+) -> None:
     payload = []
     for row in rows:
         item = asdict(row)
@@ -43,7 +44,7 @@ def _write_csv(path: Path, rows: tuple[FindingRow | MetricRow | GapRow, ...]) ->
         payload.append(item)
 
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(payload[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=[f.name for f in fields(model)])
         writer.writeheader()
         writer.writerows(payload)
 
@@ -93,9 +94,8 @@ def _write_index(bundle: DistillBundle, path: Path) -> None:
             ]
         )
         for finding_row in bundle.findings:
-            statement = finding_row.statement.replace("\n", " ")
             lines.append(
-                f"| {finding_row.topic} | {statement} | "
+                f"| {_md_cell(finding_row.topic)} | {_md_cell(finding_row.statement)} | "
                 f"{'; '.join(finding_row.evidence_ids)} | {finding_row.status} |"
             )
     else:
@@ -105,11 +105,16 @@ def _write_index(bundle: DistillBundle, path: Path) -> None:
     if bundle.gaps:
         lines.extend(["| Area | Issue | Status |", "| --- | --- | --- |"])
         for gap_row in bundle.gaps:
-            lines.append(f"| {gap_row.area} | {gap_row.issue} | {gap_row.status} |")
+            lines.append(f"| {gap_row.area} | {_md_cell(gap_row.issue)} | {gap_row.status} |")
     else:
         lines.append("No gaps recorded.")
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _md_cell(text: str) -> str:
+    """Make free filing text safe inside a one-line markdown table cell."""
+    return text.replace("\n", " ").replace("|", "\\|")
 
 
 def _format_metric_value(value: float | None, unit: str) -> str:
@@ -133,7 +138,7 @@ def _write_filing_map(bundle: DistillBundle, path: Path) -> None:
     else:
         lines.extend(["| Section | Path | Why it matters |", "| --- | --- | --- |"])
         for section in bundle.filing_map:
-            label = section.title or section.id
+            label = _md_cell(section.title or section.id)
             lines.append(f"| {label} | `{section.path}` | {section.reason} |")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

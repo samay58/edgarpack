@@ -31,7 +31,34 @@ The lock-up period will be 180 days from the date of this prospectus.
 """
 
 
-def _write_s1_pack(root: Path, accession: str = "0001628280-26-032523") -> Path:
+def _default_facts(accession: str) -> list[dict[str, object]]:
+    return [
+        {
+            "accession": accession,
+            "fiscal_year": 2025,
+            "period_end": "2025-12-31",
+            "metric": "revenue",
+            "value_cents": 88_671_900_000,
+            "currency": "USD",
+            "is_audited": True,
+            "is_pro_forma": False,
+            "pro_forma_note": None,
+            "fiscal_period": "FY",
+            "source_text": "Revenue was $886.7 million in 2025.",
+            "section_id": "s1_itemother_summary_consolidated",
+            "chunk_id": "chunk-001",
+        }
+    ]
+
+
+def _write_s1_pack(
+    root: Path,
+    accession: str = "0001628280-26-032523",
+    *,
+    form_type: str = "S-1",
+    filing_date: str = "2026-05-08",
+    facts: list[dict[str, object]] | None = None,
+) -> Path:
     pack = root / "packs" / "0001699963" / accession
     sections = pack / "sections"
     sections.mkdir(parents=True)
@@ -62,8 +89,8 @@ def _write_s1_pack(root: Path, accession: str = "0001628280-26-032523") -> Path:
         "source": {"url": "https://www.sec.gov/example"},
         "filing": {
             "accession": accession,
-            "form_type": "S-1",
-            "filing_date": "2026-05-08",
+            "form_type": form_type,
+            "filing_date": filing_date,
             "cik": "0001699963",
             "company_name": "Neutron Holdings, Inc.",
         },
@@ -107,23 +134,7 @@ def _write_s1_pack(root: Path, accession: str = "0001628280-26-032523") -> Path:
                 "extraction_status": "ok",
                 "source_sha256": source_sha256_for_pack(pack),
                 "model": "deterministic-test",
-                "facts": [
-                    {
-                        "accession": accession,
-                        "fiscal_year": 2025,
-                        "period_end": "2025-12-31",
-                        "metric": "revenue",
-                        "value_cents": 88_671_900_000,
-                        "currency": "USD",
-                        "is_audited": True,
-                        "is_pro_forma": False,
-                        "pro_forma_note": None,
-                        "fiscal_period": "FY",
-                        "source_text": "Revenue was $886.7 million in 2025.",
-                        "section_id": "s1_itemother_summary_consolidated",
-                        "chunk_id": "chunk-001",
-                    }
-                ],
+                "facts": facts if facts is not None else _default_facts(accession),
             }
         ),
         encoding="utf-8",
@@ -210,6 +221,101 @@ def test_distill_run_refuses_overwrite_without_force(tmp_path, monkeypatch):
     assert main(["distill", "run", "lime-s1", "--pack", str(pack)]) == 0
     assert main(["distill", "run", "lime-s1", "--pack", str(pack)]) == 2
     assert main(["distill", "run", "lime-s1", "--pack", str(pack), "--force"]) == 0
+
+
+def test_distill_non_registration_pack_gets_single_accurate_gap(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    pack = _write_s1_pack(tmp_path, form_type="10-K")
+
+    rc = main(["distill", "run", "tenk", "--pack", str(pack)])
+
+    assert rc == 0
+    out = tmp_path / "reports" / "tenk"
+    gaps = list(csv.DictReader((out / "gaps.csv").open(newline="", encoding="utf-8")))
+    assert [gap["status"] for gap in gaps] == ["unsupported_form"]
+    assert gaps[0]["id"] == "gap-0001"
+    # Empty row files still carry their schema header.
+    findings_header = (out / "findings.csv").read_text(encoding="utf-8").splitlines()[0]
+    assert "statement" in findings_header
+    result = check_distill_bundle(out)
+    assert result.ok, result.errors
+
+
+def test_distill_metric_without_source_text_is_needs_review(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    facts = _default_facts("0001628280-26-032523")
+    facts[0]["source_text"] = None
+    pack = _write_s1_pack(tmp_path, facts=facts)
+
+    rc = main(["distill", "run", "noquote", "--pack", str(pack)])
+
+    assert rc == 0
+    out = tmp_path / "reports" / "noquote"
+    metrics = list(csv.DictReader((out / "metrics.csv").open(newline="", encoding="utf-8")))
+    assert metrics[0]["status"] == "needs_review"
+    assert "no quoted source text" in metrics[0]["notes"]
+    records = [
+        json.loads(line)
+        for line in (out / "evidence.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    metric_record = next(r for r in records if r["kind"] == "metric")
+    assert metric_record["text"].startswith("No source text captured")
+    assert metric_record["metadata"]["quoted_from_filing"] is False
+    gaps = list(csv.DictReader((out / "gaps.csv").open(newline="", encoding="utf-8")))
+    assert any(gap["area"] == "metric_locators" for gap in gaps)
+
+
+def test_distill_window_anchors_on_snapshot_years_not_filing_year(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    accession = "0001628280-26-032523"
+    base = _default_facts(accession)[0]
+    facts: list[dict[str, object]] = []
+    for year in (2022, 2023, 2024):
+        fact = dict(base)
+        fact.update(fiscal_year=year, period_end=f"{year}-12-31")
+        facts.append(fact)
+    for year in (2024, 2025):
+        fact = dict(base)
+        fact.update(fiscal_year=year, period_end=f"{year}-09-30", fiscal_period="Q3")
+        facts.append(fact)
+    pack = _write_s1_pack(tmp_path, filing_date="2026-02-15", facts=facts)
+
+    rc = main(["distill", "run", "window", "--pack", str(pack)])
+
+    assert rc == 0
+    out = tmp_path / "reports" / "window"
+    metrics = list(csv.DictReader((out / "metrics.csv").open(newline="", encoding="utf-8")))
+    assert len(metrics) == 5
+    gaps = list(csv.DictReader((out / "gaps.csv").open(newline="", encoding="utf-8")))
+    assert not any(gap["area"] == "metric_window" for gap in gaps)
+
+
+def test_distill_run_rejects_non_pack_directory(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    not_a_pack = tmp_path / "notapack"
+    not_a_pack.mkdir()
+
+    rc = main(["distill", "run", "bad", "--pack", str(not_a_pack)])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "not a filing pack" in captured.err
+
+
+def test_distill_check_fails_counts_mismatch(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    pack = _write_s1_pack(tmp_path)
+    assert main(["distill", "run", "lime-s1", "--pack", str(pack)]) == 0
+    out = tmp_path / "reports" / "lime-s1"
+    bundle = json.loads((out / "bundle.json").read_text(encoding="utf-8"))
+    bundle["counts"]["metrics"] += 1
+    (out / "bundle.json").write_text(json.dumps(bundle), encoding="utf-8")
+
+    result = check_distill_bundle(out)
+
+    assert not result.ok
+    assert any("counts.metrics" in error for error in result.errors)
 
 
 def test_distill_check_fails_unknown_evidence_reference(tmp_path, monkeypatch):
