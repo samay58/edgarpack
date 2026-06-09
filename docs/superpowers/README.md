@@ -13,9 +13,9 @@ sessions. It is useful historical context, not the live issue tracker.
 
 ## How To Use
 
-Start with the current Linear issue and repo docs first. Use these files when
+Start with `docs/BACKLOG.md` and repo docs first. Use these files when
 you need to understand why a feature exists, what tradeoffs were accepted, or
 which older plan an issue references.
 
-Do not treat old plans as active work unless a current Linear issue explicitly
+Do not treat old plans as active work unless current work explicitly
 revives them.

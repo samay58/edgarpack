@@ -112,7 +112,7 @@ This is the Ford case: companies that stop tagging consolidated debt in standard
 
 ## What this module does not do
 
-- **It does not render citations.** `QueryResult` is a data model; formatting happens in `cli.py:_render_query_table` or in the various JSON dumpers on the model.
+- **It does not render citations.** `QueryResult` is a data model; formatting happens in `query/render.py:_render_query_table` or in the various JSON dumpers on the model.
 - **It does not compare companies.** That's `query/comps.py`, which calls `financials` N times in parallel and assembles a multi-company table.
 - **It does not know about the XBRL Viewer or SEC URL formats.** URL building is on the `CitedValue` model, not here. This module only enriches `fact_id`; the URL construction happens at property-access time.
 - **It does not enforce unit coherence across metrics in the result.** Each metric's unit is whatever its concept reports. A result with revenue in USD and stock_compensation in shares is returned as-is; consumers validate coherence if they care.

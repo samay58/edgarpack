@@ -48,8 +48,10 @@ echo "copied: ${AGENTS_DIR}"
 echo "copied: ${CODEX_SKILL}"
 
 mkdir -p "$(dirname "${CLAUDE_LINK}")"
-if [[ -L "${CLAUDE_LINK}" || -e "${CLAUDE_LINK}" ]]; then
-  echo "exists: ${CLAUDE_LINK}"
+if [[ -L "${CLAUDE_LINK}" ]]; then
+  echo "exists: ${CLAUDE_LINK} (symlink)"
+elif [[ -e "${CLAUDE_LINK}" ]]; then
+  echo "warning: ${CLAUDE_LINK} is a real directory, not a symlink; Claude Code will keep loading this stale copy. Remove it and re-run to relink." >&2
 else
   ln -s "../../.agents/skills/learn-pack" "${CLAUDE_LINK}"
   echo "linked: ${CLAUDE_LINK} -> ../../.agents/skills/learn-pack"

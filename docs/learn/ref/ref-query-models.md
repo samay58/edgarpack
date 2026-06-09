@@ -150,5 +150,5 @@ Overridden in `DerivedValue` for LTM values to produce `"LTM computed from: {sou
 
 - **It does not resolve concepts or periods.** That's `query/concepts.py` and `query/periods.py`. Models are the target of those resolvers, not the logic.
 - **It does not fetch anything.** Pure data models. No network calls in this file.
-- **It does not format for terminal output.** That's `cli.py:_render_query_table`. Models produce JSON-serializable dicts and formatters decide how to render them.
+- **It does not format for terminal output.** That's `query/render.py:_render_query_table`. Models produce JSON-serializable dicts and formatters decide how to render them.
 - **It does not enforce unit coherence.** If two `CitedValue`s in a single query report different units (e.g. USD and EUR), nothing in the model layer will catch it. Callers that care validate at the point where values are combined (`_compute_derived` in `financials.py` has `_derived_unit` for this).

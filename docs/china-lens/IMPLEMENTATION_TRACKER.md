@@ -4,7 +4,7 @@ Status log for the Chinese-filings pipeline.
 
 ## Status (2026-04-27): CLI path active; workspace parked
 
-The CLI is the active product. What is live: the HKEX query path (`query` / `comps` / `compare` route HKEX filers through `facts.json`), the SSE/CNINFO annual-report path (`identify` / `build-sse` / `translate-sse`), English translation with fail-closed validation, and USD-normalized query output with native-currency provenance. What is parked: the Evidence Explorer / FastAPI workspace (`edgarpack api`) and every item in the "Open" list below. The corresponding workspace beads were closed wontfix on 2026-04-20 (`edgarpack-lb1` epic plus `lb1.4`, `lb1.7`, `lb1.11`, `lb1.12`, `lb1.14`, `4o4`, `kax`); see `docs/superpowers/specs/2026-04-20-bead-backlog-trim-design.md`. Reopen those beads only if China Lens becomes a web product surface again.
+The CLI is the active product. What is live: the HKEX query path (`query` / `comps` / `compare` route HKEX filers through `facts.json`), the SSE/CNINFO annual-report path (`identify` / `build-sse` / `translate-sse`), English translation with fail-closed validation, and USD-normalized query output with native-currency provenance. What is parked: the Evidence Explorer / FastAPI workspace (`edgarpack api`) and every item in the "Open" list below. The corresponding workspace beads were closed wontfix on 2026-04-20 (`edgarpack-lb1` epic plus `lb1.4`, `lb1.7`, `lb1.11`, `lb1.12`, `lb1.14`, `4o4`, `kax`); see `docs/superpowers/specs/2026-04-20-bead-backlog-trim-design.md`. Revisit that parked work only if China Lens becomes a web product surface again (beads tracking is retired; carry items into docs/BACKLOG.md).
 
 ## Mission
 

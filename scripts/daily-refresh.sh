@@ -4,7 +4,7 @@ set -euo pipefail
 # EdgarPack daily refresh: harvest new filings + rebuild search index.
 # Intended to run via launchd (see scripts/com.edgarpack.refresh.plist).
 
-PROJECT_DIR="/Users/samaydhawan/Projects/active/edgarpack"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${HOME}/.edgarpack/logs"
 mkdir -p "$LOG_DIR"
 LOGFILE="$LOG_DIR/refresh-$(date +%Y%m%d).log"

@@ -97,7 +97,7 @@ Current behavior: unknown SEC issuer name.
 
 No public-listing evidence was verified through EdgarPack. Sofina's 2025 annual report lists `Shenzhen Shuye Innovative Technology (Laifen)` as a Sofina Direct level 2/3 investment with first investment year 2023, 403,752 shares, and 4.58% ownership. That supports the working assumption that Laifen is private, but this smoke did not perform an exhaustive exchange-listing search.
 
-## Follow-Up Beads
+## Follow-Ups (bead ids are historical; beads tracking is retired)
 
 - `edgarpack-49u`: route A-share stock codes away from SEC CIK fallback.
 - `edgarpack-z8b`: support SSE/CNINFO listed-company annual-report packs and query facts.
