@@ -9,8 +9,7 @@ from typing import Any
 
 from ..pack.manifest import load_manifest_dict
 from ..query.registration_profile import build_registration_profile
-from ..query.s1_financials import SCHEMA_VERSION as S1_SCHEMA_VERSION
-from ..query.s1_financials import SnapshotResult, source_sha256_for_pack
+from ..query.s1_financials import SnapshotResult, load_validated_snapshot
 from ..sec.submissions import is_registration_form
 from .models import (
     DistillBundle,
@@ -252,6 +251,20 @@ def _add_registration_findings(
             )
 
 
+_SNAPSHOT_GAPS = {
+    "not_extracted": ("s1_financials.json is missing.", "missing"),
+    "cache_unreadable": ("s1_financials.json could not be read.", "unreadable"),
+    "cache_stale_schema": (
+        "S-1 financial cache schema does not match the current extractor.",
+        "stale",
+    ),
+    "cache_stale_source": (
+        "S-1 financial cache hash does not match filing.full.md.",
+        "stale",
+    ),
+}
+
+
 def _add_s1_metrics(
     *,
     pack_dir: Path,
@@ -260,53 +273,22 @@ def _add_s1_metrics(
     evidence: list[EvidenceRecord],
     gaps: list[GapRow],
 ) -> None:
-    cache = pack_dir / "s1_financials.json"
-    if not cache.exists():
-        gaps.append(
-            GapRow(
-                id=_next_id("gap", gaps),
-                area="s1_financials",
-                issue="s1_financials.json is missing.",
-                status="missing",
-                action="Run a query path that extracts S-1 financials, then rerun distill.",
-            )
+    snapshot, status = load_validated_snapshot(pack_dir)
+    if snapshot is None:
+        issue, gap_status = _SNAPSHOT_GAPS.get(
+            status, (f"s1_financials.json was rejected: {status}.", "unreadable")
         )
-        return
-    try:
-        snapshot = SnapshotResult.from_json(cache.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         gaps.append(
             GapRow(
                 id=_next_id("gap", gaps),
                 area="s1_financials",
-                issue=f"s1_financials.json could not be read: {exc}",
-                status="unreadable",
-                action="Regenerate the S-1 financial cache.",
-            )
-        )
-        return
-    if snapshot.schema_version != S1_SCHEMA_VERSION:
-        gaps.append(
-            GapRow(
-                id=_next_id("gap", gaps),
-                area="s1_financials",
-                issue=(
-                    f"S-1 financial cache schema {snapshot.schema_version} "
-                    f"does not match {S1_SCHEMA_VERSION}."
+                issue=issue,
+                status=gap_status,
+                action=(
+                    "Run a query path that extracts S-1 financials, then rerun distill."
+                    if status == "not_extracted"
+                    else "Regenerate the S-1 financial cache."
                 ),
-                status="stale",
-                action="Regenerate the S-1 financial cache.",
-            )
-        )
-        return
-    if snapshot.source_sha256 != source_sha256_for_pack(pack_dir):
-        gaps.append(
-            GapRow(
-                id=_next_id("gap", gaps),
-                area="s1_financials",
-                issue="S-1 financial cache hash does not match filing.full.md.",
-                status="stale",
-                action="Regenerate the S-1 financial cache.",
             )
         )
         return

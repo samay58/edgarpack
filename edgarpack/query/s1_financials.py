@@ -706,6 +706,28 @@ def source_sha256_for_pack(pack_dir: Path) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+def load_validated_snapshot(pack_dir: Path) -> tuple[SnapshotResult | None, str]:
+    """Load s1_financials.json only when readable, schema-current, and fresh.
+
+    Returns (snapshot, extraction_status) on success, else (None, reason)
+    with reason in {"not_extracted", "cache_unreadable",
+    "cache_stale_schema", "cache_stale_source"}. The single gatekeeper for
+    every consumer of the cache (registration profile, distill).
+    """
+    cache = Path(pack_dir) / _CACHE_FILENAME
+    if not cache.exists():
+        return None, "not_extracted"
+    try:
+        snapshot = SnapshotResult.from_json(cache.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None, "cache_unreadable"
+    if snapshot.schema_version != SCHEMA_VERSION:
+        return None, "cache_stale_schema"
+    if snapshot.source_sha256 != source_sha256_for_pack(pack_dir):
+        return None, "cache_stale_source"
+    return snapshot, snapshot.extraction_status
+
+
 def _read_manifest_accession(pack_dir: Path) -> str:
     manifest = Path(pack_dir) / "manifest.json"
     if not manifest.exists():

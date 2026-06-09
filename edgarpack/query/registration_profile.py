@@ -9,7 +9,7 @@ from pathlib import Path
 
 from ..sec.submissions import is_registration_form
 from .kpi_discover import DisclosureHit, FramingHit, extract_s1_metrics_from_pack
-from .s1_financials import SCHEMA_VERSION, SnapshotResult, source_sha256_for_pack
+from .s1_financials import load_validated_snapshot
 
 PROFILE_SCHEMA_VERSION = 1
 
@@ -92,17 +92,9 @@ def _dedupe_claims(hits: list[FramingHit] | list[DisclosureHit]) -> tuple[str, .
 
 
 def _financial_metrics_from_cache(pack_dir: Path) -> tuple[tuple[str, ...], str]:
-    cache = pack_dir / "s1_financials.json"
-    if not cache.exists():
-        return (), "not_extracted"
-    try:
-        snapshot = SnapshotResult.from_json(cache.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, KeyError, TypeError):
-        return (), "cache_unreadable"
-    if snapshot.schema_version != SCHEMA_VERSION:
-        return (), "cache_stale"
-    if snapshot.source_sha256 != source_sha256_for_pack(pack_dir):
-        return (), "cache_stale"
+    snapshot, status = load_validated_snapshot(pack_dir)
+    if snapshot is None:
+        return (), "cache_stale" if status.startswith("cache_stale") else status
 
     raw_metrics = {
         fact.metric
