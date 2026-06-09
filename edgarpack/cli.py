@@ -12,7 +12,7 @@ import sys
 from collections import Counter
 from datetime import date
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from . import __version__
 from .config import DEFAULT_PACKS_DIR, DEFAULT_REPORTS_DIR, DEFAULT_SITE_DIR
@@ -21,17 +21,26 @@ from .errors import AmbiguousCompany, UnknownCompany
 # The single-period query renderers live in query/render.py. They are re-exported
 # lazily (via __getattr__) so `from edgarpack.cli import _render_query_table` keeps
 # working for tests WITHOUT importing the heavy query package at CLI startup.
+# mypy sees only the TYPE_CHECKING imports, never __getattr__, so it still
+# resolves these names statically instead of typing every attribute as Any.
 _LAZY_QUERY_RENDER_EXPORTS = frozenset(
     {"_render_query_table", "_render_citation_lines", "_source_badge_for"}
 )
 
+if TYPE_CHECKING:
+    from .query.render import (  # noqa: F401
+        _render_citation_lines,
+        _render_query_table,
+        _source_badge_for,
+    )
+else:
 
-def __getattr__(name: str) -> Any:
-    if name in _LAZY_QUERY_RENDER_EXPORTS:
-        from .query import render
+    def __getattr__(name: str) -> Any:
+        if name in _LAZY_QUERY_RENDER_EXPORTS:
+            from .query import render
 
-        return getattr(render, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+            return getattr(render, name)
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 _EDGARPACK_HOME = r"""
@@ -1717,8 +1726,10 @@ def _cmd_translate_sse(args: Any) -> int:
 
     manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    # Check if already translated
-    if not args.force and manifest_data.get("translation"):
+    # Skip only fully translated packs; a previous run with failed sections
+    # must resume by default (the translation cache absorbs the rework cost).
+    previous_translation = manifest_data.get("translation")
+    if not args.force and previous_translation and not previous_translation.get("failed_sections"):
         print("Pack already translated. Use --force to re-translate.", file=sys.stderr)
         return 0
 
