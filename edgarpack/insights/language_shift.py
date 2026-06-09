@@ -63,6 +63,10 @@ def detect_language_shifts(
             words_total += w
             if pd.is_boilerplate:
                 continue
+            if pd.change_type == ChangeType.MOVED:
+                # Movement is not language shift; edits inside moved paragraphs
+                # are below the signal bar for this insight.
+                continue
             if pd.change_type in {ChangeType.ADDED, ChangeType.REMOVED}:
                 words_changed += w
             elif pd.change_type == ChangeType.MODIFIED:

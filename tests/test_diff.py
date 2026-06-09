@@ -8,7 +8,7 @@ import pytest
 
 from edgarpack.diff import section_diff as section_diff_module
 from edgarpack.diff.models import ChangeType, ParagraphDelta, SectionDelta
-from edgarpack.diff.section_diff import diff_filings
+from edgarpack.diff.section_diff import compute_interest_score, diff_filings
 from edgarpack.diff.text_diff import (
     _distinctive_jaccard,
     _doc_frequencies,
@@ -779,3 +779,33 @@ def test_boilerplate_invisible_in_paragraph_counts():
         assert all(not pd.is_boilerplate for pd in delta.paragraph_deltas)
         # Should have at least one visible modified paragraph
         assert delta.paragraphs_modified >= 1
+
+
+def test_moved_paragraph_damps_interest_and_counts():
+    moved = ParagraphDelta(
+        change_type=ChangeType.MOVED,
+        old_text="x " * 200,
+        new_text="x " * 199 + "y",
+        similarity=0.9,
+        old_word_count=200,
+        new_word_count=200,
+    )
+    added = ParagraphDelta(
+        change_type=ChangeType.ADDED,
+        new_text="x " * 200,
+        new_word_count=200,
+    )
+    moved_section = SectionDelta(
+        section_id="s", title="S", change_type=ChangeType.MODIFIED,
+        paragraph_deltas=[moved],
+    )
+    added_section = SectionDelta(
+        section_id="s", title="S", change_type=ChangeType.MODIFIED,
+        paragraph_deltas=[added],
+    )
+    assert 0 < compute_interest_score(moved_section) < compute_interest_score(added_section) * 0.1
+
+
+def test_paragraphs_moved_counted():
+    deltas = diff_paragraphs(_MOVED_OLD, _MOVED_NEW)
+    assert sum(1 for d in deltas if d.change_type == ChangeType.MOVED) == 1

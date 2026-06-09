@@ -14,9 +14,10 @@ from .models import ChangeType, DiffResult, SectionDelta
 from .text_diff import diff_paragraphs
 
 _DIFF_CACHE_DIR = CACHE_DIR.parent / "diff_cache"
-_DIFF_CACHE_VERSION = "v6"
+_DIFF_CACHE_VERSION = "v7"
 _FINANCIAL_SECTION_BASE_DAMPING = 0.4
 _FINANCIAL_TABLE_DAMPING = 0.35
+_MOVED_DAMPING = 0.3
 _INTEREST_SECTION_WEIGHTS = {
     "prose": 1.0,
     "financial_statement": 0.05,
@@ -244,6 +245,9 @@ def compute_interest_score(delta: SectionDelta) -> float:
             elif pd.change_type == ChangeType.MODIFIED:
                 similarity = max(0.0, min(1.0, pd.similarity))
                 score += words * (1.0 - similarity)
+            elif pd.change_type == ChangeType.MOVED:
+                similarity = max(0.0, min(1.0, pd.similarity))
+                score += words * (1.0 - similarity) * _MOVED_DAMPING
     else:
         # Added/removed whole-section deltas don't have paragraph details.
         words = delta.paragraphs_added + delta.paragraphs_removed
@@ -268,6 +272,7 @@ def _compute_section_intensity(delta: SectionDelta) -> float:
             + delta.paragraphs_modified
             + delta.paragraphs_added
             + delta.paragraphs_removed
+            + delta.paragraphs_moved
         )
         if total == 0:
             return 0.0
@@ -293,6 +298,9 @@ def _compute_section_intensity(delta: SectionDelta) -> float:
         elif pd.change_type == ChangeType.MODIFIED:
             similarity = max(0.0, min(1.0, pd.similarity))
             changed_words += words * (1.0 - similarity) * paragraph_weight
+        elif pd.change_type == ChangeType.MOVED:
+            similarity = max(0.0, min(1.0, pd.similarity))
+            changed_words += words * (1.0 - similarity) * paragraph_weight * _MOVED_DAMPING
 
     if total_words == 0:
         return 0.0
@@ -463,6 +471,7 @@ def diff_filings(
             paragraphs_added=sum(1 for d in para_deltas if d.change_type == ChangeType.ADDED),
             paragraphs_removed=sum(1 for d in para_deltas if d.change_type == ChangeType.REMOVED),
             paragraphs_modified=sum(1 for d in para_deltas if d.change_type == ChangeType.MODIFIED),
+            paragraphs_moved=sum(1 for d in para_deltas if d.change_type == ChangeType.MOVED),
             paragraphs_unchanged=sum(
                 1 for d in para_deltas if d.change_type == ChangeType.UNCHANGED
             ),
