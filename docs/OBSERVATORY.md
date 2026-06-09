@@ -140,6 +140,11 @@ The engine matches sections in three passes:
 
 Within matched sections, paragraphs align with a deterministic mix of exact fingerprints and fuzzy Jaccard matching. Modified paragraphs are scored by changed-word weight, not raw line count, so a three-word date update does not look as important as a full rewritten risk paragraph.
 
+Two guards keep the per-paragraph labels honest:
+
+- **Distinctive-token gating.** Risk-factor paragraphs share dense legal boilerplate ("could adversely affect our business...") that inflates plain Jaccard between unrelated topics. Before two paragraphs may pair as `modified`, they must also overlap on distinctive vocabulary, computed after dropping tokens that appear across a quarter or more of the section's paragraphs.
+- **The `moved` change type.** The in-order alignment loses paragraphs that were reordered or re-split, which used to surface as false `added`/`removed` pairs. Two recovery passes fix the verbatim cases: an order-free rescue that re-pairs near-verbatim leftovers across positions, and a containment check that demotes any leftover whose normalized text still exists verbatim in the other filing (re-split fragments, repeated page artifacts). Moved paragraphs carry a `paragraphs_moved` count on the section, render with a `moved` badge in the HTML report, and contribute almost nothing to interest and intensity (`words x (1 - similarity) x 0.3`, which is zero for verbatim moves). Known limitation: a fragment that was re-split *and* edited still reports as `added`; when quoting an added paragraph as new language, grep the prior filing's `filing.full.md` for a distinctive phrase first.
+
 ## Reading the report
 
 Use the section rail as triage. High-intensity sections are not automatically "important"; they are sections that changed a lot after noise filtering. MD&A often changes heavily because the underlying fiscal year changed. Risk factors, business description, legal proceedings, liquidity, and regulatory sections are usually more interesting.

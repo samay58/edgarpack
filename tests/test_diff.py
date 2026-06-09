@@ -729,14 +729,14 @@ def test_exhibit_index_not_suppressed():
 
 _MOVED_OLD = "\n\n".join(
     [
-        "Xray risk about supplier concentration and component lead times in great detail today.",
-        "Yankee risk about customer concentration with two customers over half of total revenue.",
+        "Xray risk about supplier concentration and component lead times today.",
+        "Yankee risk about customer concentration with two customers over half of revenue.",
     ]
 )
 _MOVED_NEW = "\n\n".join(
     [
-        "Yankee risk about customer concentration with three customers over half of total revenue.",
-        "Xray risk about supplier concentration and component lead times in great detail tomorrow.",
+        "Yankee risk about customer concentration with three customers over half of revenue.",
+        "Xray risk about supplier concentration and component lead times tomorrow.",
     ]
 )
 
@@ -822,11 +822,13 @@ def test_resplit_verbatim_fragment_is_moved_not_added():
         "Beta sentence about customer concentration in considerable detail."
     )
     old = "\n\n".join([intro, big])
-    new = "\n\n".join([
-        intro,
-        "Alpha sentence about supplier concentration in considerable detail.",
-        "Beta sentence about customer concentration in considerable detail.",
-    ])
+    new = "\n\n".join(
+        [
+            intro,
+            "Alpha sentence about supplier concentration in considerable detail.",
+            "Beta sentence about customer concentration in considerable detail.",
+        ]
+    )
     deltas = diff_paragraphs(old, new)
     by_type = {t: [d for d in deltas if d.change_type == t] for t in ChangeType}
     # The DP pairs the big old paragraph with one fragment as modified; the other
