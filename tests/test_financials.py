@@ -1225,7 +1225,7 @@ class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
                                     "val": 40_000_000_000,
                                     "start": "2023-01-30",
                                     "end": "2024-01-28",
-                                    "fy": 2023,
+                                    "fy": 2024,
                                     "fp": "FY",
                                     "form": "10-K",
                                     "accn": "0001045810-24-000001",
@@ -1245,7 +1245,7 @@ class TestLtmCitation(unittest.IsolatedAsyncioTestCase):
                                     "val": 8_000_000_000,
                                     "start": "2023-01-30",
                                     "end": "2023-04-30",
-                                    "fy": 2023,
+                                    "fy": 2024,
                                     "fp": "Q1",
                                     "form": "10-Q",
                                     "accn": "0001045810-24-000010",
@@ -1702,6 +1702,58 @@ class TestStalenessGuard(unittest.IsolatedAsyncioTestCase):
         }
         result = await financials("CAT", "gross_profit", period="lfy")
         self.assertIsNone(result.metrics["gross_profit"])
+        # Rejection is announced, not a silent N/A.
+        stale_diags = [d for d in result.diagnostics if d.kind == "stale_rejected"]
+        self.assertEqual(len(stale_diags), 1)
+        self.assertEqual(stale_diags[0].metric, "gross_profit")
+        self.assertIn("FY2020", stale_diags[0].message)
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
+    async def test_stale_derived_value_emits_diagnostic(
+        self, mock_resolve, mock_facts, _ms
+    ) -> None:
+        """The derived-metric staleness rejection (CAGR on old data) must also
+        be announced via a stale_rejected diagnostic, not flipped silently."""
+        mock_resolve.return_value = ("0000018230", "CATERPILLAR INC")
+
+        def _annual(val: float, year: int) -> dict:
+            return {
+                "val": val,
+                "start": f"{year}-01-01",
+                "end": f"{year}-12-31",
+                "fy": year,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": f"0000018230-{str(year + 1)[-2:]}-000001",
+                "filed": f"{year + 1}-02-17",
+            }
+
+        mock_facts.return_value = {
+            "cik": 18230,
+            "entityName": "CATERPILLAR INC",
+            "facts": {
+                "us-gaap": {
+                    "Revenues": {
+                        "label": "Revenues",
+                        "units": {
+                            "USD": [
+                                _annual(40_000_000_000, 2016),
+                                _annual(45_000_000_000, 2017),
+                                _annual(50_000_000_000, 2018),
+                                _annual(55_000_000_000, 2019),
+                            ]
+                        },
+                    },
+                }
+            },
+        }
+        result = await financials("CAT", "revenue_cagr_3y", period="lfy")
+        self.assertIsNone(result.metrics["revenue_cagr_3y"])
+        stale_diags = [d for d in result.diagnostics if d.kind == "stale_rejected"]
+        self.assertEqual(len(stale_diags), 1)
+        self.assertEqual(stale_diags[0].metric, "revenue_cagr_3y")
 
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")

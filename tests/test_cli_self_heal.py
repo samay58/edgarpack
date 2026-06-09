@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from edgarpack.cli import _render_query_table, main
-from edgarpack.query.models import CitedValue, QueryResult
+from edgarpack.query.models import CitedValue, DerivedValue, QueryResult
 
 
 def _cited(
@@ -301,6 +301,87 @@ class TestStrictHelperParity(unittest.TestCase):
         self.assertIsInstance(kept, list)
         self.assertEqual(len(kept), 1)
         self.assertEqual(kept[0].source, "hardcoded")
+
+    def test_apply_strict_rejects_derived_with_learned_component(self) -> None:
+        """A DerivedValue inherits source='hardcoded' by default, so the gate
+        must recurse into components; one learned input poisons the result."""
+        from edgarpack.query.strict import apply_strict, is_strict_allowed
+
+        revenue = _cited("revenue", "Revenues", 130e9, source="learned:fuzzy")
+        gross_profit = _cited("gross_profit", "GrossProfit", 90e9)
+        margin = DerivedValue(
+            value=0.69,
+            unit="pure",
+            metric="gross_margin",
+            concept="gross_profit / revenue",
+            period_end=date(2025, 1, 1),
+            fiscal_year=2025,
+            fiscal_period="FY",
+            form_type="10-K",
+            filed=date(2025, 2, 1),
+            accession="0001045810-25-000001",
+            cik="0001045810",
+            company="NVIDIA CORP",
+            derived=True,
+            components={"gross_profit": gross_profit, "revenue": revenue},
+        )
+        self.assertFalse(is_strict_allowed(margin))
+        qr = QueryResult(
+            company="NVIDIA CORP",
+            cik="0001045810",
+            period="lfy",
+            metrics={"gross_margin": margin},
+        )
+        rejected = apply_strict(qr)
+        self.assertEqual(rejected, ["gross_margin"])
+        self.assertIsNone(qr.metrics["gross_margin"])
+
+    def test_apply_strict_recurses_into_nested_derived_components(self) -> None:
+        """The learned input may be buried one level down (e.g. ebitda inside
+        ebitda_margin); the recursion must reach it."""
+        from edgarpack.query.strict import is_strict_allowed
+
+        def _derived(metric: str, components: dict[str, CitedValue]) -> DerivedValue:
+            return DerivedValue(
+                value=1.0,
+                unit="pure",
+                metric=metric,
+                concept=metric,
+                period_end=date(2025, 1, 1),
+                fiscal_year=2025,
+                fiscal_period="FY",
+                form_type="10-K",
+                filed=date(2025, 2, 1),
+                accession="0001045810-25-000001",
+                cik="0001045810",
+                company="NVIDIA CORP",
+                derived=True,
+                components=components,
+            )
+
+        learned = _cited("d_and_a", "DepreciationAndAmortization", 5e9, source="learned:llm")
+        inner = _derived(
+            "ebitda",
+            {"operating_income": _cited("operating_income", "OperatingIncomeLoss", 40e9)},
+        )
+        inner.components["d_and_a"] = learned
+        outer = _derived(
+            "ebitda_margin",
+            {"ebitda": inner, "revenue": _cited("revenue", "Revenues", 130e9)},
+        )
+        self.assertFalse(is_strict_allowed(outer))
+
+        all_hardcoded = _derived(
+            "ebitda_margin",
+            {
+                "ebitda": _derived(
+                    "ebitda",
+                    {"operating_income": _cited("operating_income", "OperatingIncomeLoss", 40e9)},
+                ),
+                "revenue": _cited("revenue", "Revenues", 130e9),
+            },
+        )
+        self.assertTrue(is_strict_allowed(all_hardcoded))
 
     def test_apply_strict_is_idempotent(self) -> None:
         """Second call returns empty rejections so cmd-level pre-filtering

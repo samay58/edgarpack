@@ -9,7 +9,7 @@ names so it can surface the rejection in output.
 
 from __future__ import annotations
 
-from .models import CitedValue, MetricValue, QueryResult
+from .models import CitedValue, DerivedValue, MetricValue, QueryResult
 
 
 def is_strict_allowed(value: CitedValue) -> bool:
@@ -19,8 +19,16 @@ def is_strict_allowed(value: CitedValue) -> bool:
     resolutions that hit canonical XBRL concepts) are allowed. Anything
     else (learned:fuzzy, learned:llm, learned:kpi-*, text-scan, any
     future non-deterministic source tag) is rejected.
+
+    A DerivedValue inherits source='hardcoded' from its default, so its
+    components (and their components, for nested derivations) must each
+    pass the same check; one learned input poisons the whole computation.
     """
-    return getattr(value, "source", "hardcoded") == "hardcoded"
+    if getattr(value, "source", "hardcoded") != "hardcoded":
+        return False
+    if isinstance(value, DerivedValue):
+        return all(is_strict_allowed(component) for component in value.components.values())
+    return True
 
 
 def _strict_value(value: MetricValue) -> MetricValue:
@@ -28,8 +36,7 @@ def _strict_value(value: MetricValue) -> MetricValue:
 
     Scalars become None, list values lose any non-hardcoded entries.
     Derived/LTM values are allowed through only if the derived result
-    itself is hardcoded (i.e. it was computed from fully-hardcoded
-    components via the deterministic _compute_derived path).
+    AND every component (recursively) is hardcoded.
     """
     if value is None:
         return None

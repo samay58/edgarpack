@@ -85,6 +85,18 @@ def _is_stale(cited: CitedValue, period: str) -> bool:
     return cited.fiscal_year < _date.today().year - limit
 
 
+def _stale_rejected_diagnostic(metric: str, cited: CitedValue, period: str) -> Diagnostic:
+    return Diagnostic(
+        metric=metric,
+        kind="stale_rejected",
+        message=(
+            f"{metric} resolved to FY{cited.fiscal_year}, more than "
+            f"{_staleness_limit(period)} years behind {_date.today().year}; "
+            f"rejected as stale for period '{period}'."
+        ),
+    )
+
+
 def _series_period(period: str) -> tuple[str, int] | None:
     """Return (kind, count) for annual:N / quarterly:N selectors."""
     match = _SERIES_PERIOD_RE.fullmatch(period.strip().lower())
@@ -629,7 +641,6 @@ def _resolve_direct_metric_value(
             facts=facts,
             cik=cik,
             company=company,
-            prior_year_cited=None,
             doc_map=doc_map,
             period=period,
             period_offset=period_offset,
@@ -933,6 +944,7 @@ async def financials(
                     diagnostics=diagnostics_list,
                 )
                 if cited is not None and _is_stale(cited, period):
+                    diagnostics_list.append(_stale_rejected_diagnostic(metric, cited, period))
                     cited = None
                 result_metrics[metric] = cited
         else:
@@ -951,6 +963,7 @@ async def financials(
                 continue
 
             if value is not None and _is_stale(value, period):
+                diagnostics_list.append(_stale_rejected_diagnostic(metric, value, period))
                 result_metrics[metric] = None
                 continue
             result_metrics[metric] = value
@@ -1134,39 +1147,6 @@ async def financials(
         )
 
     return result
-
-
-def _fetch_prior_year_for_self_heal(
-    facts: dict[str, Any],
-    concept: str,
-    metric: str,
-    company: str,
-    cik: str,
-    doc_map: dict[str, str] | None,
-) -> CitedValue | None:
-    """Try to get a prior-year ground truth for verifying a learned mapping.
-
-    Walks the annual history for the resolved concept and returns the second
-    most recent full-year entry (prior fiscal year). Returns None if fewer
-    than two annual entries exist. Used only as a sanity-check input for
-    the self-heal verifier, never for user-visible output.
-    """
-    from .periods import _annual_history, _extract_values, _unit_for_concept, _value_to_cited
-
-    values = _extract_values(facts, concept, taxonomy="us-gaap")
-    annual = _annual_history(values)
-    if len(annual) < 2:
-        return None
-    unit = _unit_for_concept(facts, concept, taxonomy="us-gaap")
-    return _value_to_cited(
-        annual[1],
-        metric,
-        concept,
-        unit,
-        company,
-        cik,
-        doc_map=doc_map,
-    )
 
 
 def _check_low_debt(

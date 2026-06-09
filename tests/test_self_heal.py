@@ -474,6 +474,159 @@ class TestTryLearn(unittest.TestCase):
         assert row is not None
         self.assertFalse(row.verified)
 
+    def test_no_prior_year_verifies_from_concepts_own_annual_history(self) -> None:
+        """The production resolve path never passes prior_year_cited; try_learn
+        must derive the ground truth from the proposed concept's own annual
+        history instead of always failing verification."""
+        facts = {
+            "us-gaap": {
+                "NetCashProvidedByUsedInOperatingActivities": {
+                    "units": {
+                        "USD": [
+                            {
+                                "val": 28_000_000_000,
+                                "start": "2024-01-01",
+                                "end": "2024-12-31",
+                                "fy": 2024,
+                                "fp": "FY",
+                                "form": "10-K",
+                                "accn": "0001045810-25-000001",
+                                "filed": "2025-02-20",
+                            },
+                            {
+                                "val": 25_000_000_000,
+                                "start": "2023-01-01",
+                                "end": "2023-12-31",
+                                "fy": 2023,
+                                "fp": "FY",
+                                "form": "10-K",
+                                "accn": "0001045810-24-000001",
+                                "filed": "2024-02-20",
+                            },
+                        ]
+                    },
+                },
+            }
+        }
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="operating_cash_flow",
+            meta=meta,
+            facts=facts,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            doc_map={},
+            registry_path=self.db_path,
+        )
+        self.assertIsNotNone(result)
+        assert result is not None and not isinstance(result, list)
+        self.assertEqual(result.source, "learned:fuzzy")
+        self.assertEqual(result.value, 28_000_000_000)
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "operating_cash_flow")
+        assert row is not None
+        self.assertTrue(row.verified)
+        self.assertEqual(row.verif_method, "order_of_magnitude")
+
+    def test_no_prior_year_and_single_annual_stays_unverified(self) -> None:
+        """One annual entry leaves nothing to verify against: the row persists
+        with verified=0 and the value is withheld."""
+        meta = MetricMeta(concepts=(), duration=True)
+        result = try_learn(
+            metric="operating_cash_flow",
+            meta=meta,
+            facts=_FAKE_FACTS,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            doc_map={},
+            registry_path=self.db_path,
+        )
+        self.assertIsNone(result)
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "operating_cash_flow")
+        assert row is not None
+        self.assertFalse(row.verified)
+
+    def test_unverified_cached_row_falls_through_to_rediscovery(self) -> None:
+        """An unverified cached row used to return None forever, even after the
+        company filed enough history to verify. It must retry discovery and
+        promote the row when verification now passes."""
+        from edgarpack.query.models import Diagnostic
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        reg.upsert(
+            cik="0001045810",
+            metric="operating_cash_flow",
+            concept="NetCashProvidedByUsedInOperatingActivities",
+            taxonomy="us-gaap",
+            source="fuzzy",
+            verified=False,
+            verif_method=None,
+            value_sample=28e9,
+        )
+        reg.close()
+
+        facts = {
+            "us-gaap": {
+                "NetCashProvidedByUsedInOperatingActivities": {
+                    "units": {
+                        "USD": [
+                            {
+                                "val": 28_000_000_000,
+                                "start": "2024-01-01",
+                                "end": "2024-12-31",
+                                "fy": 2024,
+                                "fp": "FY",
+                                "form": "10-K",
+                                "accn": "0001045810-25-000001",
+                                "filed": "2025-02-20",
+                            },
+                            {
+                                "val": 25_000_000_000,
+                                "start": "2023-01-01",
+                                "end": "2023-12-31",
+                                "fy": 2023,
+                                "fp": "FY",
+                                "form": "10-K",
+                                "accn": "0001045810-24-000001",
+                                "filed": "2024-02-20",
+                            },
+                        ]
+                    },
+                },
+            }
+        }
+        meta = MetricMeta(concepts=(), duration=True)
+        diagnostics: list[Diagnostic] = []
+        result = try_learn(
+            metric="operating_cash_flow",
+            meta=meta,
+            facts=facts,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            doc_map={},
+            registry_path=self.db_path,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNotNone(result)
+        assert result is not None and not isinstance(result, list)
+        self.assertEqual(result.source, "learned:fuzzy")
+        self.assertEqual(result.value, 28_000_000_000)
+        # The retry is announced, not silent.
+        self.assertTrue(
+            any(
+                d.kind == "learned_mapping_unverified" and "retrying discovery" in d.message
+                for d in diagnostics
+            )
+        )
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "operating_cash_flow")
+        assert row is not None
+        self.assertTrue(row.verified)
+
     def test_verified_cached_revenue_mapping_must_pass_shape_guard(self) -> None:
         reg = LearnedRegistry(db_path=self.db_path)
         reg.upsert(

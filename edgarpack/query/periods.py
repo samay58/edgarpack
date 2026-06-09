@@ -444,11 +444,15 @@ def _pick_anchor_quarter(
     quarterly: list[dict[str, Any]],
     newest: dict[str, Any],
     years_back: int,
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """Pick the quarter anchor for LTM-like windows.
 
     ``years_back=0`` anchors to the newest quarter (LTM).
     ``years_back=1`` anchors one fiscal year earlier (LTM-1).
+
+    Returns None when the exact same-quarter entry for the target fiscal
+    year is missing. Returning a nearer year here would mislabel a different
+    window as LTM-N, so the caller must fail closed.
     """
     newest_fp = str(newest.get("fp", "")).upper()
     newest_fy = int(newest.get("fy") or 0)
@@ -463,21 +467,7 @@ def _pick_anchor_quarter(
     ]
     target_fy = newest_fy - years_back
     target = [v for v in same_period if int(v.get("fy") or 0) == target_fy]
-    if target:
-        picked = _pick_cumulative_quarter(target)
-        if picked is not None:
-            return picked
-
-    # Graceful fallback for sparse histories: nearest prior fiscal year same quarter.
-    prior = [v for v in same_period if int(v.get("fy") or 0) < newest_fy]
-    if prior:
-        best_fy = max(int(v.get("fy") or 0) for v in prior)
-        best = [v for v in prior if int(v.get("fy") or 0) == best_fy]
-        picked = _pick_cumulative_quarter(best)
-        if picked is not None:
-            return picked
-
-    return newest
+    return _pick_cumulative_quarter(target)
 
 
 def _annual_for_fy(values: list[dict[str, Any]], fiscal_year: int) -> dict[str, Any] | None:
@@ -501,9 +491,11 @@ def _assert_ltm_invariant(
     - ``DerivedValue`` with fiscal_period in {LTM, LTM-1} and components
       carrying roles {mrp, lfy, mrp_prior}. This is a genuine trailing-twelve
       computation: MRP + LFY - MRP_prior.
-    - Plain ``CitedValue`` with fiscal_period in {FY, Q4}. MRP anchor was a
-      full fiscal year, so the 10-K/20-F annual value IS the LTM and no
-      math was needed.
+    - Plain ``CitedValue`` with fiscal_period FY, or Q4 spanning a full
+      fiscal year. MRP anchor was a full fiscal year, so the 10-K/20-F
+      annual value IS the LTM and no math was needed. A Q4 entry that does
+      NOT span a full year is a standalone 3-month stub and must go through
+      three-component math instead.
 
     Any other shape means the silent-fallback path reopened and is returning
     a 9-month or 6-month YTD mislabeled as LTM. Fail loudly.
@@ -524,10 +516,24 @@ def _assert_ltm_invariant(
                 f"expected LTM* (fiscal_period_label={fiscal_period_label})"
             )
         return
-    if result.fiscal_period.upper() not in ("FY", "Q4"):
+    fp = result.fiscal_period.upper()
+    if fp == "Q4":
+        days = (
+            (result.period_end - result.period_start).days
+            if result.period_start is not None
+            else None
+        )
+        if days is None or not (_FULL_YEAR_MIN_DAYS <= days <= _FULL_YEAR_MAX_DAYS):
+            raise RuntimeError(
+                f"LTM invariant: plain Q4 CitedValue spanning {days} days, "
+                f"expected a full fiscal year "
+                f"(fiscal_period_label={fiscal_period_label})"
+            )
+        return
+    if fp != "FY":
         raise RuntimeError(
             f"LTM invariant: plain CitedValue with fiscal_period={result.fiscal_period!r}, "
-            f"expected FY or Q4 (annual early-exit) "
+            f"expected FY or full-year Q4 (annual early-exit) "
             f"(fiscal_period_label={fiscal_period_label})"
         )
 
@@ -575,27 +581,64 @@ def _select_ltm_like(
         unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
         annual = _annual_history(values)
         if len(annual) <= years_back:
+            if diagnostics is not None:
+                diagnostics.append(
+                    Diagnostic(
+                        metric=metric,
+                        kind="ltm_incomputable",
+                        message=(
+                            f"LTM ({fiscal_period_label}) for per-share metric "
+                            f"{metric} not computable: insufficient annual history "
+                            f"(have {len(annual)}, need > {years_back})."
+                        ),
+                    )
+                )
             return _finalize(None)
-        return _finalize(
-            _value_to_cited(
-                annual[years_back],
-                metric,
-                concept,
-                unit,
-                company,
-                cik,
-                taxonomy=taxonomy,
-                doc_map=doc_map,
-            )
+        cited = _value_to_cited(
+            annual[years_back],
+            metric,
+            concept,
+            unit,
+            company,
+            cik,
+            taxonomy=taxonomy,
+            doc_map=doc_map,
         )
+        if diagnostics is not None:
+            diagnostics.append(
+                Diagnostic(
+                    metric=metric,
+                    kind="ltm_degraded",
+                    message=(
+                        f"LTM not computed for per-share metric '{metric}'; "
+                        f"per-share values are non-additive, showing the "
+                        f"FY{cited.fiscal_year} annual value instead."
+                    ),
+                )
+            )
+        return _finalize(cited)
 
     if not meta.duration:
-        # Balance sheet: just return the most recent value.
-        # Balance-sheet metrics are instants; the MRP balance is the LTM-end
+        # Balance sheet: return the latest period-end balance.
+        # Balance-sheet metrics are instants; the latest balance is the LTM-end
         # balance by definition, so we intentionally bypass the LTM invariant
-        # (fiscal_period will be Q1/Q2/Q3 for mid-year queries).
-        return select_mrp(
-            facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        # (fiscal_period will be Q1/Q2/Q3 for mid-year queries). Sort by
+        # (end, filed), not (filed, end): an amendment refiling an old balance
+        # must not displace the most recent period end.
+        values = _extract_values(facts, concept, taxonomy=taxonomy)
+        unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+        valid = [v for v in values if v.get("val") is not None]
+        if not valid:
+            return None
+        valid.sort(
+            key=lambda v: (
+                _parse_date(v.get("end", "")) or date.min,
+                _parse_date(v.get("filed", "")) or date.min,
+            ),
+            reverse=True,
+        )
+        return _value_to_cited(
+            valid[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )
 
     values = _extract_values(facts, concept, taxonomy=taxonomy)
@@ -659,14 +702,23 @@ def _select_ltm_like(
         == newest_key
     ]
     newest_mrp = _pick_cumulative_quarter(newest_candidates) or newest
-    mrp = _pick_anchor_quarter(quarterly, newest_mrp, years_back)
+    anchor = _pick_anchor_quarter(quarterly, newest_mrp, years_back)
+    if anchor is None:
+        newest_fp = str(newest_mrp.get("fp", "")).upper()
+        target_fy = int(newest_mrp.get("fy") or 0) - years_back
+        _record_incomputable(
+            f"no {newest_fp} anchor for FY{target_fy}; refusing to anchor "
+            f"{fiscal_period_label} to a different fiscal year"
+        )
+        return _finalize(None)
+    mrp = anchor
 
     mrp_fp = str(mrp.get("fp", "")).upper()
     mrp_fy = int(mrp.get("fy") or 0)
 
-    if years_back == 0 and mrp_fp in ("FY", "Q4"):
+    if years_back == 0 and mrp_fp == "Q4":
         annual_mrp = _annual_for_fy(values, mrp_fy)
-        if annual_mrp is not None:
+        if annual_mrp is not None and _is_full_fiscal_year(annual_mrp):
             return _finalize(
                 _value_to_cited(
                     annual_mrp,
@@ -679,11 +731,14 @@ def _select_ltm_like(
                     doc_map=doc_map,
                 )
             )
-        return _finalize(
-            _value_to_cited(
-                mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        if _is_full_fiscal_year(mrp):
+            return _finalize(
+                _value_to_cited(
+                    mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+                )
             )
-        )
+        # Standalone Q4 stub (~3 months): not a full-year value, so fall
+        # through to three-component math instead of mislabeling it as LTM.
 
     annual = _annual_history(values)
     if not annual:
@@ -693,11 +748,11 @@ def _select_ltm_like(
     lfy_target_fy = mrp_fy - 1
     lfy = next((v for v in annual if int(v.get("fy") or 0) == lfy_target_fy), None)
     if lfy is None:
-        lfy = next((v for v in annual if int(v.get("fy") or 0) < mrp_fy), None)
-    if lfy is None:
+        # An older annual would double-count the gap years in
+        # MRP + LFY - MRP_prior; LTM requires exactly the prior FY.
         _record_incomputable(
-            f"no prior FY annual (looking for FY{lfy_target_fy} or earlier; "
-            f"MRP={mrp_fp} FY{mrp_fy})"
+            f"no FY{lfy_target_fy} annual (MRP={mrp_fp} FY{mrp_fy} requires "
+            f"the immediately prior fiscal year)"
         )
         return _finalize(None)
 
@@ -709,6 +764,10 @@ def _select_ltm_like(
         and int(v.get("fy") or 0) == lfy_fy
         and v.get("val") is not None
     ]
+    if _is_standalone_quarter(mrp):
+        # The anchor is a standalone ~3-month window; the subtrahend must
+        # match that shape or MRP + LFY - MRP_prior subtracts the wrong span.
+        prior_year = [v for v in prior_year if _is_standalone_quarter(v)]
     mrp_prior = _pick_cumulative_quarter(prior_year)
     if mrp_prior is None:
         _record_incomputable(
@@ -730,16 +789,6 @@ def _select_ltm_like(
     prior_cited = _value_to_cited(
         mrp_prior, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
     )
-
-    # Stock split contamination check for per-share metrics
-    split_warnings: list[str] = []
-    if _is_per_share_metric(metric) and lfy_cited.value and lfy_cited.value != 0:
-        ratio = abs(ltm_val / lfy_cited.value)
-        if ratio > 5.0 or ratio < 0.2:
-            split_warnings.append(
-                f"Possible stock split contamination: LTM-derived value differs "
-                f"from annual by {ratio:.1f}x"
-            )
 
     return _finalize(
         DerivedValue(
@@ -764,7 +813,6 @@ def _select_ltm_like(
                 "lfy": lfy_cited,
                 "mrp_prior": prior_cited,
             },
-            warnings=split_warnings,
         )
     )
 
@@ -817,10 +865,21 @@ def select_lfy(
         if not annual:
             return None
         annual.sort(key=lambda v: (int(v.get("fy") or 0), v.get("end", "")), reverse=True)
-        if target_idx >= len(annual):
+        # Comparative balances reappear under newer filings with the same
+        # period end; dedup by end date so walking back by index steps
+        # through distinct fiscal year-ends, not refilings of the same one.
+        deduped: list[dict[str, Any]] = []
+        seen_ends: set[str] = set()
+        for v in annual:
+            end = str(v.get("end", ""))
+            if end in seen_ends:
+                continue
+            seen_ends.add(end)
+            deduped.append(v)
+        if target_idx >= len(deduped):
             return None
         return _value_to_cited(
-            annual[target_idx],
+            deduped[target_idx],
             metric,
             concept,
             unit,
@@ -862,16 +921,34 @@ def select_mrq_n(
     taxonomy: str = "us-gaap",
     doc_map: dict[str, str] | None = None,
     years_back: int = 0,
+    diagnostics: list[Diagnostic] | None = None,
 ) -> CitedValue | None:
     """Select the MRQ anchored N fiscal years back.
 
     For ``years_back=0`` reduces to current MRQ (latest standalone quarter).
     For ``years_back>=1`` returns the same fiscal quarter (``fp``) N fiscal
-    years before the latest quarter. Degrades to the nearest prior FY that has
-    an entry for the same ``fp`` when the exact target is missing.
+    years before the latest quarter. Fails closed (None plus a
+    ``period_mismatch`` diagnostic) when the exact target fiscal year has no
+    matching quarter, instead of returning a nearer year under the requested
+    label.
     """
     values = _extract_values(facts, concept, taxonomy=taxonomy)
     unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+
+    def _record_mismatch(newest_fp: str, target_fy: int) -> None:
+        if diagnostics is None:
+            return
+        diagnostics.append(
+            Diagnostic(
+                metric=metric,
+                kind="period_mismatch",
+                message=(
+                    f"mrq-{years_back} for {metric}: no {newest_fp} entry for "
+                    f"FY{target_fy}; refusing to return a nearer fiscal year "
+                    f"under the requested label."
+                ),
+            )
+        )
 
     if meta.duration:
         # Duration concepts: want standalone 3-month values, not YTD cumulative.
@@ -913,38 +990,40 @@ def select_mrq_n(
                 exact[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
             )
 
-        # Degrade: nearest prior FY with a matching fp.
-        prior = [v for v in same_fp if int(v.get("fy") or 0) < newest_fy]
-        if prior:
-            best_fy = max(int(v.get("fy") or 0) for v in prior)
-            candidates = [v for v in prior if int(v.get("fy") or 0) == best_fy]
-            candidates.sort(
-                key=lambda v: (v.get("end", ""), _parse_date(v.get("filed", "")) or date.min),
-                reverse=True,
-            )
-            return _value_to_cited(
-                candidates[0],
-                metric,
-                concept,
-                unit,
-                company,
-                cik,
-                taxonomy=taxonomy,
-                doc_map=doc_map,
-            )
+        _record_mismatch(newest_fp, target_fy)
         return None
     else:
-        # Instant concepts: most recent quarterly snapshot, years_back ignored
-        # because a balance sheet has one point per period, and mrq-N for a
-        # balance sheet is conceptually indistinguishable from the most recent
-        # reported value (same semantics as select_ltm_n on instant metrics).
+        # Instant concepts: latest quarterly snapshot for years_back=0, the
+        # same fiscal quarter's balance N years back otherwise.
         quarterly = [v for v in values if _is_quarterly(v) and v.get("val") is not None]
         if not quarterly:
             return None
-        quarterly.sort(key=lambda v: v.get("end", ""), reverse=True)
-        return _value_to_cited(
-            quarterly[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+        quarterly.sort(
+            key=lambda v: (
+                _parse_date(v.get("end", "")) or date.min,
+                _parse_date(v.get("filed", "")) or date.min,
+            ),
+            reverse=True,
         )
+        newest = quarterly[0]
+        if years_back <= 0:
+            return _value_to_cited(
+                newest, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+
+        newest_fp = str(newest.get("fp", "")).upper()
+        target_fy = int(newest.get("fy") or 0) - years_back
+        exact = [
+            v
+            for v in quarterly
+            if str(v.get("fp", "")).upper() == newest_fp and int(v.get("fy") or 0) == target_fy
+        ]
+        if exact:
+            return _value_to_cited(
+                exact[0], metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+        _record_mismatch(newest_fp, target_fy)
+        return None
 
 
 def select_mrp(
@@ -973,69 +1052,6 @@ def select_mrp(
     )
 
 
-def select_ltm(
-    facts: dict[str, Any],
-    concept: str,
-    metric: str,
-    meta: MetricMeta,
-    company: str,
-    cik: str,
-    taxonomy: str = "us-gaap",
-    doc_map: dict[str, str] | None = None,
-    diagnostics: list[Diagnostic] | None = None,
-) -> CitedValue | DerivedValue | None:
-    """Compute trailing twelve months for a metric.
-
-    Duration metrics use ``MRP + LFY - same-quarter-prior-year`` with cumulative
-    quarter matching based on duration (Q2+ entries >100 days). Instant metrics
-    degrade to the latest reported value.
-
-    When the three-filing citation contract cannot be satisfied, returns
-    ``None`` and appends a ``Diagnostic(kind="ltm_incomputable")`` to the
-    ``diagnostics`` collector if one is provided.
-    """
-    return _select_ltm_like(
-        facts,
-        concept,
-        metric,
-        meta,
-        company,
-        cik,
-        years_back=0,
-        fiscal_period_label="LTM",
-        taxonomy=taxonomy,
-        doc_map=doc_map,
-        diagnostics=diagnostics,
-    )
-
-
-def select_ltm_minus_1(
-    facts: dict[str, Any],
-    concept: str,
-    metric: str,
-    meta: MetricMeta,
-    company: str,
-    cik: str,
-    taxonomy: str = "us-gaap",
-    doc_map: dict[str, str] | None = None,
-    diagnostics: list[Diagnostic] | None = None,
-) -> CitedValue | DerivedValue | None:
-    """Compute prior-year trailing twelve months (LTM-1)."""
-    return _select_ltm_like(
-        facts,
-        concept,
-        metric,
-        meta,
-        company,
-        cik,
-        years_back=1,
-        fiscal_period_label="LTM-1",
-        taxonomy=taxonomy,
-        doc_map=doc_map,
-        diagnostics=diagnostics,
-    )
-
-
 def select_ltm_n(
     facts: dict[str, Any],
     concept: str,
@@ -1050,9 +1066,14 @@ def select_ltm_n(
 ) -> CitedValue | DerivedValue | None:
     """Compute a trailing twelve months window N fiscal years back.
 
-    ``years_back=0`` matches ``select_ltm``. ``years_back=1`` matches
-    ``select_ltm_minus_1``. Higher values walk further back using the same
-    ``MRP + LFY - MRP_prior_year`` formula with a shifted anchor.
+    ``years_back=0`` is the current LTM (``MRP + LFY - same-quarter-prior-
+    year`` with cumulative quarter matching; instant metrics return the
+    latest balance). ``years_back>=1`` walks back using the same formula
+    with a shifted anchor.
+
+    When the three-filing citation contract cannot be satisfied, returns
+    ``None`` and appends a ``Diagnostic(kind="ltm_incomputable")`` to the
+    ``diagnostics`` collector if one is provided.
     """
     yrs = max(0, years_back)
     label = "LTM" if yrs == 0 else f"LTM-{yrs}"
@@ -1256,6 +1277,7 @@ def select_period(
             taxonomy=taxonomy,
             doc_map=doc_map,
             years_back=_effective_years_back(int(mrq_back_match.group(1))),
+            diagnostics=diagnostics,
         )
 
     if period == "lfy":
@@ -1281,8 +1303,25 @@ def select_period(
             taxonomy=taxonomy,
             doc_map=doc_map,
             years_back=_effective_years_back(0),
+            diagnostics=diagnostics,
         )
     elif period == "mrp":
+        if period_offset != 0:
+            # "One year before whatever was filed last" has no canonical
+            # filing, so an offset component would resolve to the same MRP
+            # value and self-compare. Collapse to the FY-anchored equivalent,
+            # the same way the CAGR path collapses mrp to lfy.
+            return select_lfy(
+                facts,
+                concept,
+                metric,
+                meta,
+                company,
+                cik,
+                taxonomy=taxonomy,
+                doc_map=doc_map,
+                period_offset=-_effective_years_back(0),
+            )
         return select_mrp(
             facts, concept, metric, meta, company, cik, taxonomy=taxonomy, doc_map=doc_map
         )

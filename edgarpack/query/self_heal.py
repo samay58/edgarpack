@@ -516,7 +516,7 @@ def try_learn(
     facts: dict[str, Any],
     cik: str,
     company: str,
-    prior_year_cited: CitedValue | None,
+    prior_year_cited: CitedValue | None = None,
     doc_map: dict[str, str] | None = None,
     registry_path: Path | None = None,
     period: str = "lfy",
@@ -531,9 +531,15 @@ def try_learn(
       - 'learned:llm' on successful LLM resolution
     or None if no mechanism could produce a value.
 
-    On unverified mappings (order-of-magnitude check failed because no prior
-    year was available, or the proposed value was out of range), the registry
-    row is still persisted with verified=0, but the value is not returned.
+    Verification compares the proposed value against a prior-year ground
+    truth. Callers rarely have one on hand, so when ``prior_year_cited`` is
+    None it is derived from the proposed concept's own annual history.
+
+    On unverified mappings (no prior year available, or the proposed value
+    was out of range), the registry row is still persisted with verified=0,
+    but the value is not returned. An unverified cached row does not block:
+    it falls through to re-discovery so a later run with usable history can
+    promote the mapping.
     """
     reg = LearnedRegistry(db_path=registry_path)
     try:
@@ -560,35 +566,36 @@ def try_learn(
                         )
                     )
                 return None
-            if not cached.verified:
-                if diagnostics is not None:
-                    diagnostics.append(
-                        Diagnostic(
-                            metric=metric,
-                            kind="learned_mapping_unverified",
-                            message=(
-                                f"Rejected cached learned mapping {cached.concept} "
-                                f"for '{metric}' because it is not verified."
-                            ),
-                        )
+            if cached.verified:
+                cited = _build_cited_from_learned(
+                    cached,
+                    facts,
+                    metric,
+                    meta,
+                    company,
+                    cik,
+                    doc_map,
+                    period,
+                    period_offset,
+                    diagnostics,
+                )
+                if cited is not None:
+                    reg.bump_hit_count(cik, metric)
+                    _set_source(cited, "learned:cached")
+                    return cited
+            elif diagnostics is not None:
+                diagnostics.append(
+                    Diagnostic(
+                        metric=metric,
+                        kind="learned_mapping_unverified",
+                        message=(
+                            f"Cached learned mapping {cached.concept} for "
+                            f"'{metric}' is unverified; retrying discovery."
+                        ),
                     )
-                return None
-            cited = _build_cited_from_learned(
-                cached,
-                facts,
-                metric,
-                meta,
-                company,
-                cik,
-                doc_map,
-                period,
-                period_offset,
-                diagnostics,
-            )
-            if cited is not None:
-                reg.bump_hit_count(cik, metric)
-                _set_source(cited, "learned:cached")
-                return cited
+                )
+            # Unverified row, or verified row with no value for this period:
+            # fall through to re-discovery.
 
         # 2. Build candidate list
         candidates = [
@@ -632,7 +639,20 @@ def try_learn(
         if cited is None:
             return None
 
-        # 6. Verify
+        # 6. Verify against a prior-year ground truth. The production resolve
+        # path has no prior-year value on hand, so derive one from the
+        # proposed concept's own annual history when the caller did not
+        # supply an explicit one.
+        if prior_year_cited is None:
+            prior_year_cited = _prior_year_ground_truth(
+                facts,
+                concept=concept,
+                taxonomy=taxonomy,
+                metric=metric,
+                company=company,
+                cik=cik,
+                doc_map=doc_map,
+            )
         prior_value = prior_year_cited.value if prior_year_cited else None
         cited_value = _numeric_sample(cited)
         prior_numeric = prior_value if isinstance(prior_value, (int, float)) else None
@@ -667,6 +687,42 @@ def try_learn(
         return cited
     finally:
         reg.close()
+
+
+def _prior_year_ground_truth(
+    facts: dict[str, Any],
+    *,
+    concept: str,
+    taxonomy: str,
+    metric: str,
+    company: str,
+    cik: str,
+    doc_map: dict[str, str] | None,
+) -> CitedValue | None:
+    """Prior-year ground truth for verifying a proposed concept mapping.
+
+    Walks the concept's annual history and returns the second most recent
+    full-year entry (prior fiscal year). Returns None if fewer than two
+    annual entries exist. Verification input only, never user-visible
+    output.
+    """
+    from .periods import _annual_history, _extract_values, _unit_for_concept, _value_to_cited
+
+    values = _extract_values(facts, concept, taxonomy=taxonomy)
+    annual = _annual_history(values)
+    if len(annual) < 2:
+        return None
+    unit = _unit_for_concept(facts, concept, taxonomy=taxonomy)
+    return _value_to_cited(
+        annual[1],
+        metric,
+        concept,
+        unit,
+        company,
+        cik,
+        taxonomy=taxonomy,
+        doc_map=doc_map,
+    )
 
 
 def _latest_entry_for_concept(

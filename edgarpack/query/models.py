@@ -446,6 +446,9 @@ class Diagnostic(BaseModel):
         cached discovery window is shorter than N.
       - 'period_mismatch': a concept had values, but not for the exact
         fiscal year requested by an FY-anchored selector.
+      - 'stale_rejected': a value resolved, but its fiscal year is too far
+        behind the current year for the requested period, so it was
+        replaced with None instead of being presented as current.
       - 'learned_mapping_rejected': a cached learned mapping failed
         shape validation and was not used.
       - 'learned_mapping_unverified': a learned mapping exists, but was
@@ -460,6 +463,7 @@ class Diagnostic(BaseModel):
         "ltm_degraded",
         "partial_coverage",
         "period_mismatch",
+        "stale_rejected",
         "learned_mapping_rejected",
         "learned_mapping_unverified",
     ]

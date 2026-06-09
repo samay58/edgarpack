@@ -90,6 +90,45 @@ FACTS_WITH_NOVEL_CONCEPT = {
 }
 
 
+# Same shape as FACTS_WITH_NOVEL_CONCEPT, but the novel operating-cash-flow
+# tag is close enough to the metric's token pool for the fuzzy matcher
+# (cash/provided/operating/activities), with two annual years so the
+# verifier has a prior-year ground truth to derive.
+FACTS_WITH_FUZZY_NOVEL_CONCEPT = {
+    "facts": {
+        "us-gaap": {
+            "Revenues": FACTS_WITH_NOVEL_CONCEPT["facts"]["us-gaap"]["Revenues"],
+            "CashProvidedByOperatingActivitiesNovel2026": {
+                "units": {
+                    "USD": [
+                        {
+                            "val": 28_000_000_000,
+                            "fy": 2025,
+                            "fp": "FY",
+                            "start": "2024-01-29",
+                            "end": "2025-01-26",
+                            "form": "10-K",
+                            "filed": "2025-02-21",
+                            "accn": "0001045810-25-000001",
+                        },
+                        {
+                            "val": 25_000_000_000,
+                            "fy": 2024,
+                            "fp": "FY",
+                            "start": "2023-01-30",
+                            "end": "2024-01-28",
+                            "form": "10-K",
+                            "filed": "2024-02-21",
+                            "accn": "0001045810-24-000001",
+                        },
+                    ]
+                }
+            },
+        }
+    }
+}
+
+
 class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -147,6 +186,42 @@ class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
         rev = result.metrics["revenue"]
         self.assertIsNotNone(rev)
         self.assertEqual(rev.source, "hardcoded")
+
+    async def test_fuzzy_discovery_verifies_without_explicit_prior_year(self) -> None:
+        """Regression for the masking pattern: financials() never passes a
+        prior_year_cited into try_learn, so verification used to fail on
+        every production self-heal and the value was withheld. The resolve
+        path must now verify against the proposed concept's own history."""
+        from edgarpack.query.financials import financials
+        from edgarpack.query.learned_registry import LearnedRegistry
+
+        with (
+            patch(
+                f"{_P}.resolve_ticker", new=AsyncMock(return_value=("0001045810", "NVIDIA CORP"))
+            ),
+            patch(
+                f"{_P}.fetch_company_facts",
+                new=AsyncMock(return_value=FACTS_WITH_FUZZY_NOVEL_CONCEPT),
+            ),
+            patch(f"{_P}._build_doc_map", new=AsyncMock(return_value={})),
+            patch("edgarpack.query.learned_registry.DEFAULT_REGISTRY_PATH", self.db_path),
+        ):
+            result = await financials("NVDA", metrics="operating_cash_flow", period="lfy")
+
+        ocf = result.metrics["operating_cash_flow"]
+        self.assertIsNotNone(ocf)
+        assert ocf is not None and not isinstance(ocf, list)
+        self.assertEqual(ocf.source, "learned:fuzzy")
+        self.assertEqual(ocf.value, 28_000_000_000)
+        self.assertEqual(ocf.concept, "CashProvidedByOperatingActivitiesNovel2026")
+        diag_kinds = [d.kind for d in result.diagnostics]
+        self.assertNotIn("learned_mapping_unverified", diag_kinds)
+
+        reg = LearnedRegistry(db_path=self.db_path)
+        row = reg.lookup("0001045810", "operating_cash_flow")
+        assert row is not None
+        self.assertTrue(row.verified)
+        self.assertEqual(row.verif_method, "order_of_magnitude")
 
     async def test_registry_hit_returns_learned_cached(self) -> None:
         """Pre-seeded registry row short-circuits self-heal and returns

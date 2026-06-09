@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import date
 
 from edgarpack.query.concepts import MetricMeta
 from edgarpack.query.models import CitedValue, DerivedValue, Diagnostic
@@ -11,8 +12,6 @@ from edgarpack.query.periods import (
     parse_period_spec,
     select_annual_series,
     select_lfy,
-    select_ltm,
-    select_ltm_minus_1,
     select_ltm_n,
     select_mrp,
     select_mrq,
@@ -330,7 +329,7 @@ class TestSelectLtm(unittest.TestCase):
         Wrong LTM = 40 + 100 - 28 = $112B (incorrect)
         """
         facts = _make_facts("Revenues", REVENUE_VALUES)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         self.assertAlmostEqual(result.value, 130_000_000_000)
@@ -347,7 +346,7 @@ class TestSelectLtm(unittest.TestCase):
     def test_ltm_instant_returns_latest(self) -> None:
         """Balance sheet items should just return the most recent value."""
         facts = _make_facts("Assets", ASSETS_VALUES)
-        result = select_ltm(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 650_000_000_000)
 
@@ -355,7 +354,7 @@ class TestSelectLtm(unittest.TestCase):
         """Company with only annual data should fall back to LFY."""
         annual_only = [v for v in REVENUE_VALUES if v["fp"] == "FY"]
         facts = _make_facts("Revenues", annual_only)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 100_000_000_000)
 
@@ -405,7 +404,9 @@ class TestSelectLtm(unittest.TestCase):
             },
         ]
         facts = _make_facts("EarningsPerShareDiluted", values)
-        result = select_ltm(facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
+        )
         self.assertIsNotNone(result)
         self.assertNotIsInstance(result, DerivedValue)
         self.assertEqual(result.value, 6.20)
@@ -456,7 +457,7 @@ class TestSelectLtm(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertNotIsInstance(result, DerivedValue)
         self.assertEqual(result.value, 120_000_000_000)
@@ -522,7 +523,7 @@ class TestSelectLtm(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         # LTM = 90 + 100 - 70 = 120
@@ -561,7 +562,7 @@ class TestSelectLtm(unittest.TestCase):
         ]
         facts = _make_facts("Revenues", values)
         diagnostics: list[Diagnostic] = []
-        result = select_ltm(
+        result = select_ltm_n(
             facts,
             "Revenues",
             "revenue",
@@ -603,7 +604,7 @@ class TestSelectLtm(unittest.TestCase):
         ]
         facts = _make_facts("Revenues", values)
         diagnostics: list[Diagnostic] = []
-        result = select_ltm(
+        result = select_ltm_n(
             facts,
             "Revenues",
             "revenue",
@@ -618,7 +619,7 @@ class TestSelectLtm(unittest.TestCase):
         self.assertIn("no annual history", diagnostics[0].message)
 
     def test_ltm_no_lfy_returns_none_plus_diagnostic(self) -> None:
-        """MRP present, Q3 prior present, but no annual at or before FY-1."""
+        """MRP present, Q3 prior present, but no annual at exactly FY-1."""
         values = [
             {
                 "val": 90_000_000_000,
@@ -653,7 +654,7 @@ class TestSelectLtm(unittest.TestCase):
         ]
         facts = _make_facts("Revenues", values)
         diagnostics: list[Diagnostic] = []
-        result = select_ltm(
+        result = select_ltm_n(
             facts,
             "Revenues",
             "revenue",
@@ -665,7 +666,7 @@ class TestSelectLtm(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(len(diagnostics), 1)
         self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
-        self.assertIn("no prior FY annual", diagnostics[0].message)
+        self.assertIn("no FY2023 annual", diagnostics[0].message)
 
 
 class TestSelectLtmMinus1(unittest.TestCase):
@@ -729,7 +730,9 @@ class TestSelectLtmMinus1(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         # LTM-1 = 75 + 80 - 60 = 95
@@ -742,7 +745,9 @@ class TestSelectLtmMinus1(unittest.TestCase):
     def test_ltm_minus_1_instant_returns_latest(self) -> None:
         """Balance sheet items should degrade to most recent value (same as LTM)."""
         facts = _make_facts("Assets", ASSETS_VALUES)
-        result = select_ltm_minus_1(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 650_000_000_000)
 
@@ -750,7 +755,9 @@ class TestSelectLtmMinus1(unittest.TestCase):
         """With only annual data, LTM-1 should return the second most recent annual (prior FY)."""
         annual_only = [v for v in REVENUE_VALUES if v["fp"] == "FY"]
         facts = _make_facts("Revenues", annual_only)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         # FY2023=$100B is most recent, FY2022=$80B is prior -> LTM-1 returns $80B
         self.assertEqual(result.value, 80_000_000_000)
@@ -806,13 +813,14 @@ class TestSelectLtmMinus1(unittest.TestCase):
         ]
         facts = _make_facts("Revenues", values)
         diagnostics: list[Diagnostic] = []
-        result = select_ltm_minus_1(
+        result = select_ltm_n(
             facts,
             "Revenues",
             "revenue",
             DURATION_META,
             COMPANY,
             CIK,
+            years_back=1,
             diagnostics=diagnostics,
         )
         self.assertIsNone(result)
@@ -885,7 +893,9 @@ class TestSelectLtmMinus1(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         # Anchor is Q4 FY2022 -> 80 + 70 - 70 = 80
@@ -928,7 +938,9 @@ class TestSelectLtmMinus1(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 320_000_000_000)
         self.assertEqual(result.fiscal_year, 2022)
@@ -959,8 +971,8 @@ class TestSelectLtmMinus1(unittest.TestCase):
             },
         ]
         facts = _make_facts("EarningsPerShareDiluted", values)
-        result = select_ltm_minus_1(
-            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
+        result = select_ltm_n(
+            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK, years_back=1
         )
         self.assertIsNotNone(result)
         self.assertNotIsInstance(result, DerivedValue)
@@ -1020,7 +1032,9 @@ class TestSelectLtmMinus1(unittest.TestCase):
         ]
         facts = _make_facts("Revenues", values)
 
-        direct = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        direct = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         routed = select_period(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "ltm-1")
         self.assertEqual(direct.value, routed.value)
         self.assertEqual(direct.fiscal_period, routed.fiscal_period)
@@ -1187,7 +1201,9 @@ class TestAnnualOnlyFilerGrowth(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 70_000_000_000)
         self.assertEqual(result.fiscal_year, 2023)
@@ -1207,7 +1223,9 @@ class TestAnnualOnlyFilerGrowth(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNone(result)
 
 
@@ -1250,7 +1268,9 @@ class TestStockSplitWarning(unittest.TestCase):
             },
         ]
         facts = _make_facts("EarningsPerShareDiluted", values)
-        result = select_ltm(facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "EarningsPerShareDiluted", "eps_diluted", eps_meta, COMPANY, CIK
+        )
         self.assertIsNotNone(result)
         self.assertNotIsInstance(result, DerivedValue)
         self.assertEqual(result.value, 50.0)
@@ -1259,7 +1279,7 @@ class TestStockSplitWarning(unittest.TestCase):
     def test_non_per_share_no_warning(self) -> None:
         """Revenue should never get a split warning regardless of value jumps."""
         facts = _make_facts("Revenues", REVENUE_VALUES)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         self.assertEqual(result.warnings, [])
@@ -1299,7 +1319,7 @@ class TestEdgeCaseBoundary(unittest.TestCase):
         ]
         facts = _make_facts("Revenues", values)
         diagnostics: list[Diagnostic] = []
-        result = select_ltm(
+        result = select_ltm_n(
             facts,
             "Revenues",
             "revenue",
@@ -1337,7 +1357,9 @@ class TestEdgeCaseBoundary(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm_minus_1(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         self.assertEqual(result.value, 50_000_000_000)
         self.assertEqual(result.fiscal_year, 2022)
@@ -1377,7 +1399,7 @@ class TestEdgeCaseBoundary(unittest.TestCase):
             },
         ]
         facts = _make_facts("Revenues", values)
-        result = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, DerivedValue)
         # LTM = 88 + 100 - 78 = 110
@@ -1386,7 +1408,9 @@ class TestEdgeCaseBoundary(unittest.TestCase):
     def test_instant_metric_ltm_minus_1(self) -> None:
         """Balance sheet metric should return latest value regardless of years_back."""
         facts = _make_facts("Assets", ASSETS_VALUES)
-        result = select_ltm_minus_1(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
+        result = select_ltm_n(
+            facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK, years_back=1
+        )
         self.assertIsNotNone(result)
         # Instant metrics always return the most recent value
         self.assertEqual(result.value, 650_000_000_000)
@@ -1563,16 +1587,16 @@ class TestLtmInvariant(unittest.TestCase):
         value: float = 100.0,
         fiscal_period: str = "LTM",
         fiscal_year: int = 2024,
+        period_start: date | None = None,
+        period_end: date | None = None,
     ) -> CitedValue:
-        from datetime import date
-
         return CitedValue(
             value=value,
             unit="USD",
             metric="revenue",
             concept="Revenues",
-            period_start=date(2023, 1, 1),
-            period_end=date(2024, 9, 30),
+            period_start=period_start or date(2023, 1, 1),
+            period_end=period_end or date(2024, 9, 30),
             fiscal_year=fiscal_year,
             fiscal_period=fiscal_period,
             form_type="10-Q",
@@ -1585,9 +1609,30 @@ class TestLtmInvariant(unittest.TestCase):
     def test_none_result_passes(self) -> None:
         _assert_ltm_invariant(None, "LTM")
 
-    def test_q4_plain_cited_value_passes(self) -> None:
+    def test_fy_and_full_year_q4_plain_cited_values_pass(self) -> None:
         _assert_ltm_invariant(self._cv(fiscal_period="FY"), "LTM")
-        _assert_ltm_invariant(self._cv(fiscal_period="Q4"), "LTM")
+        _assert_ltm_invariant(
+            self._cv(
+                fiscal_period="Q4",
+                period_start=date(2024, 1, 1),
+                period_end=date(2024, 12, 31),
+            ),
+            "LTM",
+        )
+
+    def test_standalone_q4_stub_raises(self) -> None:
+        """A 3-month Q4 stub is not a trailing-twelve value; the old invariant
+        accepted any Q4 unconditionally."""
+        with self.assertRaises(RuntimeError) as ctx:
+            _assert_ltm_invariant(
+                self._cv(
+                    fiscal_period="Q4",
+                    period_start=date(2024, 10, 1),
+                    period_end=date(2024, 12, 31),
+                ),
+                "LTM",
+            )
+        self.assertIn("full fiscal year", str(ctx.exception))
 
     def test_plain_q3_cited_value_raises(self) -> None:
         """A plain CitedValue with fiscal_period=Q3 is exactly the silent-fallback
@@ -1727,7 +1772,7 @@ class TestSelectLtmN(unittest.TestCase):
 
     def test_ltm_0_equals_ltm(self) -> None:
         facts = _make_facts("Revenues", self._build_values(3))
-        baseline = select_ltm(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        baseline = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
         zeroed = select_ltm_n(
             facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=0
         )
@@ -1761,8 +1806,13 @@ class TestSelectMrqN(unittest.TestCase):
         self.assertEqual(result.fiscal_period, "Q3")
         self.assertEqual(result.value, 28_000_000_000)
 
-    def test_mrq_n_degrades_when_prior_fp_missing(self) -> None:
-        """With only two years of quarterly history, mrq-5 should fall back to earliest prior fp."""
+    def test_mrq_n_fails_closed_when_target_fy_missing(self) -> None:
+        """mrq-5 with only two years of history must not return a nearer year.
+
+        Old behavior degraded to the earliest available same-fp quarter and
+        presented it under the requested label; the new contract is None
+        plus a period_mismatch diagnostic.
+        """
         # Strip everything except Q3 for FY2023 and FY2024.
         compact = [
             v
@@ -1770,13 +1820,64 @@ class TestSelectMrqN(unittest.TestCase):
             if v["fp"] == "Q3" and v.get("start") in ("2023-07-30", "2024-07-28")
         ]
         facts = _make_facts("Revenues", compact)
+        diagnostics: list[Diagnostic] = []
         result = select_mrq_n(
-            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=5
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            years_back=5,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "period_mismatch")
+        self.assertIn("FY2019", diagnostics[0].message)
+
+    def test_mrq_n_instant_picks_same_quarter_target_year(self) -> None:
+        """Instant mrq-N must return the same fiscal quarter N years back,
+        not the latest balance (the old behavior ignored years_back)."""
+        assets = ASSETS_VALUES + [
+            {
+                "val": 575_000_000_000,
+                "end": "2023-10-29",
+                "fy": 2023,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-23-000004",
+                "filed": "2023-12-01",
+            },
+        ]
+        facts = _make_facts("Assets", assets)
+        result = select_mrq_n(
+            facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK, years_back=1
         )
         self.assertIsNotNone(result)
-        # Degraded to earliest available Q3 (FY2023)
+        assert result is not None
         self.assertEqual(result.fiscal_year, 2023)
         self.assertEqual(result.fiscal_period, "Q3")
+        self.assertEqual(result.value, 575_000_000_000)
+
+    def test_mrq_n_instant_fails_closed_when_target_missing(self) -> None:
+        """Instant mrq-N with no same-quarter balance for the target year is
+        None plus a diagnostic, not the latest balance."""
+        facts = _make_facts("Assets", ASSETS_VALUES)
+        diagnostics: list[Diagnostic] = []
+        result = select_mrq_n(
+            facts,
+            "Assets",
+            "total_assets",
+            INSTANT_META,
+            COMPANY,
+            CIK,
+            years_back=1,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "period_mismatch")
 
 
 class TestSelectPeriodRouter(unittest.TestCase):
@@ -1840,6 +1941,395 @@ class TestSelectPeriodRouter(unittest.TestCase):
             self.assertIsNone(routed)
         else:
             self.assertEqual(routed.value, direct.value)
+
+
+class TestLtmExactPriorFy(unittest.TestCase):
+    """LTM math requires the annual to be exactly MRP's prior fiscal year."""
+
+    def test_ltm_rejects_older_annual_in_place_of_prior_fy(self) -> None:
+        """FY2023 annual is missing; FY2022 must NOT be substituted.
+
+        Old behavior fell back to the nearest earlier annual and computed
+        105 + 80 - 60 = 125, a window spanning a two-year gap mislabeled as
+        LTM. New contract: None plus an ltm_incomputable diagnostic.
+        """
+        values = [
+            {
+                "val": 80_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
+            },
+            {
+                "val": 60_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-09-30",
+                "fy": 2022,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-22-000004",
+                "filed": "2022-11-15",
+            },
+            {
+                "val": 105_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-09-30",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-11-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_n(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertIn("no FY2023 annual", diagnostics[0].message)
+
+
+class TestLtmQ4StubFallthrough(unittest.TestCase):
+    """A standalone Q4 stub anchor must use three-component math, not the early exit."""
+
+    _VALUES = [
+        {
+            "val": 100_000_000_000,
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-24-000001",
+            "filed": "2024-03-01",
+        },
+        # Standalone 3-month Q4 entries (the 10-K also tags the Q4 slice).
+        {
+            "val": 25_000_000_000,
+            "start": "2023-10-01",
+            "end": "2023-12-31",
+            "fy": 2023,
+            "fp": "Q4",
+            "form": "10-K",
+            "accn": "0000000001-24-000001",
+            "filed": "2024-03-01",
+        },
+        {
+            "val": 30_000_000_000,
+            "start": "2024-10-01",
+            "end": "2024-12-31",
+            "fy": 2024,
+            "fp": "Q4",
+            "form": "10-K",
+            "accn": "0000000001-25-000001",
+            "filed": "2025-03-01",
+        },
+    ]
+
+    def test_q4_stub_uses_three_component_math(self) -> None:
+        """Old behavior returned the 3-month Q4 stub (30B) labeled as LTM.
+        Correct LTM = Q4'24 + FY2023 - Q4'23 = 30 + 100 - 25 = 105."""
+        facts = _make_facts("Revenues", self._VALUES)
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertIsInstance(result, DerivedValue)
+        assert isinstance(result, DerivedValue)
+        self.assertEqual(result.value, 105_000_000_000)
+        self.assertEqual(result.fiscal_period, "LTM")
+        self.assertEqual(result.components["mrp"].value, 30_000_000_000)
+        self.assertEqual(result.components["mrp_prior"].value, 25_000_000_000)
+
+
+class TestLtmNExactAnchor(unittest.TestCase):
+    """ltm-N must anchor to the exact target fiscal year or fail closed."""
+
+    def test_ltm_1_fails_closed_when_target_anchor_missing(self) -> None:
+        """Q3 FY2023 is absent; the old graceful fallback anchored LTM-1 to
+        Q3 FY2022 and returned a different year's window under the label."""
+        values = [
+            {
+                "val": 70_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
+            },
+            {
+                "val": 85_000_000_000,
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "fy": 2023,
+                "fp": "FY",
+                "form": "10-K",
+                "accn": "0000000001-24-000001",
+                "filed": "2024-03-01",
+            },
+            {
+                "val": 55_000_000_000,
+                "start": "2022-01-01",
+                "end": "2022-09-30",
+                "fy": 2022,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-22-000004",
+                "filed": "2022-11-15",
+            },
+            {
+                "val": 90_000_000_000,
+                "start": "2024-01-01",
+                "end": "2024-09-30",
+                "fy": 2024,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": "0000000001-24-000004",
+                "filed": "2024-11-15",
+            },
+        ]
+        facts = _make_facts("Revenues", values)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_n(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            years_back=1,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertIn("no Q3 anchor for FY2023", diagnostics[0].message)
+
+
+class TestLtmInstantSort(unittest.TestCase):
+    """LTM-routed instants pick the latest period end, not the latest filing."""
+
+    def test_amended_old_balance_does_not_displace_latest(self) -> None:
+        assets = ASSETS_VALUES + [
+            # Amendment refiling the FY2022 balance AFTER the Q3 FY2024 10-Q.
+            {
+                "val": 500_000_000_000,
+                "end": "2023-01-29",
+                "fy": 2022,
+                "fp": "FY",
+                "form": "10-K/A",
+                "accn": "0000000001-25-000009",
+                "filed": "2025-01-15",
+            },
+        ]
+        facts = _make_facts("Assets", assets)
+        result = select_ltm_n(facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK)
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result.value, 650_000_000_000)
+        self.assertEqual(str(result.period_end), "2024-10-27")
+
+
+class TestLfyInstantDedup(unittest.TestCase):
+    """Walking back annual balances must step through distinct period ends."""
+
+    _ASSETS = [
+        {
+            "val": 600_000_000_000,
+            "end": "2024-12-31",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-25-000001",
+            "filed": "2025-02-15",
+        },
+        # Comparative prior-year balance restated inside the FY2024 10-K.
+        {
+            "val": 500_000_000_000,
+            "end": "2023-12-31",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-25-000001",
+            "filed": "2025-02-15",
+        },
+        {
+            "val": 500_000_000_000,
+            "end": "2023-12-31",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-24-000001",
+            "filed": "2024-02-15",
+        },
+        {
+            "val": 450_000_000_000,
+            "end": "2022-12-31",
+            "fy": 2022,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-23-000001",
+            "filed": "2023-02-15",
+        },
+    ]
+
+    def test_lfy_2_skips_duplicate_period_end(self) -> None:
+        """Without dedup, lfy-2 lands on the FY2023 filing's copy of the same
+        2023-12-31 balance that lfy-1 already returned."""
+        facts = _make_facts("Assets", self._ASSETS)
+        one_back = select_lfy(
+            facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK, period_offset=-1
+        )
+        two_back = select_lfy(
+            facts, "Assets", "total_assets", INSTANT_META, COMPANY, CIK, period_offset=-2
+        )
+        self.assertIsNotNone(one_back)
+        self.assertIsNotNone(two_back)
+        assert one_back is not None and two_back is not None
+        self.assertEqual(str(one_back.period_end), "2023-12-31")
+        self.assertEqual(str(two_back.period_end), "2022-12-31")
+        self.assertEqual(two_back.value, 450_000_000_000)
+
+
+class TestMrpOffsetRouting(unittest.TestCase):
+    """mrp with a component offset must not resolve to the same MRP value."""
+
+    _VALUES = [
+        {
+            "val": 80_000_000_000,
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-24-000001",
+            "filed": "2024-03-01",
+        },
+        {
+            "val": 100_000_000_000,
+            "start": "2024-01-01",
+            "end": "2024-12-31",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-25-000001",
+            "filed": "2025-03-01",
+        },
+        {
+            "val": 90_000_000_000,
+            "start": "2025-01-01",
+            "end": "2025-09-30",
+            "fy": 2025,
+            "fp": "Q3",
+            "form": "10-Q",
+            "accn": "0000000001-25-000004",
+            "filed": "2025-11-15",
+        },
+    ]
+
+    def test_offset_component_routes_to_fy_equivalent(self) -> None:
+        facts = _make_facts("Revenues", self._VALUES)
+        anchor = select_period(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, "mrp")
+        shifted = select_period(
+            facts,
+            "Revenues",
+            "revenue",
+            DURATION_META,
+            COMPANY,
+            CIK,
+            "mrp",
+            period_offset=-1,
+        )
+        self.assertIsNotNone(anchor)
+        self.assertIsNotNone(shifted)
+        assert anchor is not None and shifted is not None
+        assert not isinstance(anchor, list) and not isinstance(shifted, list)
+        # The anchor is the latest filed value (Q3 FY2025 YTD).
+        self.assertEqual(anchor.value, 90_000_000_000)
+        # The shifted component collapses to lfy-1, never the same MRP value.
+        self.assertEqual(shifted.value, 80_000_000_000)
+        self.assertEqual(shifted.fiscal_year, 2023)
+        self.assertNotEqual(anchor.value, shifted.value)
+
+
+class TestPerShareLtmDiagnostics(unittest.TestCase):
+    """Per-share LTM selectors must surface their annual degrade and gaps."""
+
+    _EPS_META = MetricMeta(concepts=("EarningsPerShareDiluted",), duration=True)
+
+    _EPS_VALUES = [
+        {
+            "val": 4.20,
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-24-000001",
+            "filed": "2024-03-01",
+        },
+        {
+            "val": 5.50,
+            "start": "2024-01-01",
+            "end": "2024-12-31",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "10-K",
+            "accn": "0000000001-25-000001",
+            "filed": "2025-03-01",
+        },
+    ]
+
+    def test_per_share_ltm_emits_ltm_degraded(self) -> None:
+        facts = _make_facts("EarningsPerShareDiluted", self._EPS_VALUES)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_n(
+            facts,
+            "EarningsPerShareDiluted",
+            "eps_diluted",
+            self._EPS_META,
+            COMPANY,
+            CIK,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result.value, 5.50)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_degraded")
+        self.assertIn("non-additive", diagnostics[0].message)
+
+    def test_per_share_insufficient_history_records_incomputable(self) -> None:
+        facts = _make_facts("EarningsPerShareDiluted", self._EPS_VALUES[:1])
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_n(
+            facts,
+            "EarningsPerShareDiluted",
+            "eps_diluted",
+            self._EPS_META,
+            COMPANY,
+            CIK,
+            years_back=1,
+            diagnostics=diagnostics,
+        )
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
+        self.assertIn("insufficient annual history", diagnostics[0].message)
 
 
 class TestParsePeriodSpec(unittest.TestCase):
