@@ -678,7 +678,8 @@ _PROMPT_USER_TEMPLATE = """Return a JSON array. Each element is one fact:
   "currency": "USD",
   "is_audited": true,
   "is_pro_forma": false,
-  "pro_forma_note": null
+  "pro_forma_note": null,
+  "source_text": "Total revenue ... $1,306,404 / $671,053 / $387,067"
 }}
 
 RULES:
@@ -691,6 +692,10 @@ RULES:
 - Capital expenditures should be stored as a positive cash outflow. If the filing
   prints purchases of property and equipment in parentheses, return the absolute
   value.
+- For net_income_loss, use the consolidated row labeled "Net income (loss)" or
+  "Net income". Do not use rows labeled "attributable to shareholders",
+  "attributable to controlling interests", or "attributable to non-controlling
+  interests" for this metric.
 - Share counts: shares_outstanding_basic uses value_cents for the count itself
   (scaled by 100). "240,123,456" shares becomes value_cents = 24,012,345,600.
 - Pro-forma rows MUST set is_pro_forma=true and record the assumption verbatim
@@ -698,6 +703,8 @@ RULES:
 - period_end must be ISO YYYY-MM-DD.
 - fiscal_period should be "FY" for annual rows and "Q1" / "Q2" / "Q3" for interim rows.
 - source_text should be the shortest verbatim row or sentence that contains the value.
+- Every object must include source_text. If you cannot identify the source row or sentence,
+  skip the fact.
 - Return [] when the text contains no extractable financial data.
 
 TEXT:
@@ -731,11 +738,32 @@ _REQUIRED_KEYS = (
     "currency",
     "is_audited",
     "is_pro_forma",
+    "source_text",
 )
 
 
+def _llm_row_has_period_context(row: dict[str, object]) -> bool:
+    fiscal_period = str(row.get("fiscal_period") or "FY").upper()
+    period_end = str(row.get("period_end") or "")
+    source_text = str(row.get("source_text") or "").lower()
+    if fiscal_period != "FY":
+        return True
+    if period_end.endswith("-12-31"):
+        return True
+    annual_markers = ("year ended", "fiscal year", "annual", "as of")
+    return any(marker in source_text for marker in annual_markers)
+
+
+def _llm_row_has_metric_context(row: dict[str, object]) -> bool:
+    metric = str(row.get("metric") or "")
+    source_text = str(row.get("source_text") or "").lower()
+    if metric == "net_income_loss" and "attributable to" in source_text:
+        return False
+    return True
+
+
 MODEL_ID = "claude-haiku-4-5-20251001"
-_MAX_OUTPUT_TOKENS = 4000
+_MAX_OUTPUT_TOKENS = 8000
 
 
 async def _call_haiku_extract(section_text: str) -> str:
@@ -756,7 +784,11 @@ async def _call_haiku_extract(section_text: str) -> str:
         system=PROMPT_SYSTEM,
         messages=[{"role": "user", "content": prompt}],
     )
-    text_blocks = [block.text for block in message.content if getattr(block, "type", "") == "text"]
+    text_blocks = [
+        str(getattr(block, "text", ""))
+        for block in message.content
+        if getattr(block, "type", "") == "text"
+    ]
     return "".join(text_blocks).strip()
 
 
@@ -784,6 +816,10 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
         if any(k not in row for k in _REQUIRED_KEYS):
             continue
         if row.get("metric") not in METRIC_SLUGS:
+            continue
+        if not _llm_row_has_period_context(row):
+            continue
+        if not _llm_row_has_metric_context(row):
             continue
         try:
             fact = SnapshotFact(
@@ -815,7 +851,7 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
     return facts
 
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 _CACHE_FILENAME = "s1_financials.json"
 _SOURCE_SCAN_CHARS = 50_000
 

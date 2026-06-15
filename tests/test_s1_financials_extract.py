@@ -238,7 +238,8 @@ def test_parse_llm_response_accepts_valid_array():
             "currency": "USD",
             "is_audited": true,
             "is_pro_forma": false,
-            "pro_forma_note": null
+            "pro_forma_note": null,
+            "source_text": "Revenue ... $78,287"
         }
     ]"""
     facts = parse_llm_response(raw, accession="0001628280-24-041596")
@@ -246,6 +247,7 @@ def test_parse_llm_response_accepts_valid_array():
     assert facts[0].metric == "revenue"
     assert facts[0].accession == "0001628280-24-041596"
     assert facts[0].value_cents == 7828700000
+    assert facts[0].source_text == "Revenue ... $78,287"
 
 
 def test_parse_llm_response_accepts_json_wrapped_in_code_block():
@@ -259,7 +261,8 @@ def test_parse_llm_response_accepts_json_wrapped_in_code_block():
         "currency": "USD",
         "is_audited": true,
         "is_pro_forma": false,
-        "pro_forma_note": null
+        "pro_forma_note": null,
+        "source_text": "Revenue ... $78,287"
     }
 ]
 ```"""
@@ -267,14 +270,102 @@ def test_parse_llm_response_accepts_json_wrapped_in_code_block():
     assert len(facts) == 1
 
 
+def test_parse_llm_response_drops_rows_missing_source_text():
+    raw = """[
+        {
+            "fiscal_year": 2024,
+            "period_end": "2024-12-31",
+            "metric": "revenue",
+            "value_cents": 7828700000,
+            "currency": "USD",
+            "is_audited": true,
+            "is_pro_forma": false,
+            "pro_forma_note": null
+        }
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+    assert facts == []
+
+
+def test_parse_llm_response_drops_non_december_fy_without_annual_context():
+    raw = """[
+        {
+            "fiscal_year": 2026,
+            "period_end": "2026-03-31",
+            "fiscal_period": "FY",
+            "metric": "revenue",
+            "value_cents": 60132100000,
+            "currency": "USD",
+            "is_audited": false,
+            "is_pro_forma": false,
+            "pro_forma_note": null,
+            "source_text": "Revenue / $ / 601,321"
+        }
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+    assert facts == []
+
+
+def test_parse_llm_response_keeps_non_december_fy_with_annual_context():
+    raw = """[
+        {
+            "fiscal_year": 2026,
+            "period_end": "2026-03-31",
+            "fiscal_period": "FY",
+            "metric": "revenue",
+            "value_cents": 60132100000,
+            "currency": "USD",
+            "is_audited": true,
+            "is_pro_forma": false,
+            "pro_forma_note": null,
+            "source_text": "Year ended March 31, 2026 / Revenue / $ / 601,321"
+        }
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+    assert len(facts) == 1
+
+
+def test_parse_llm_response_drops_shareholder_attributable_net_income():
+    raw = """[
+        {
+            "fiscal_year": 2025,
+            "period_end": "2025-12-31",
+            "fiscal_period": "FY",
+            "metric": "net_income_loss",
+            "value_cents": -13700000,
+            "currency": "USD",
+            "is_audited": true,
+            "is_pro_forma": false,
+            "pro_forma_note": null,
+            "source_text": "Net income attributable to shareholders / $ / (137)"
+        },
+        {
+            "fiscal_year": 2025,
+            "period_end": "2025-12-31",
+            "fiscal_period": "FY",
+            "metric": "net_income_loss",
+            "value_cents": -20400000,
+            "currency": "USD",
+            "is_audited": true,
+            "is_pro_forma": false,
+            "pro_forma_note": null,
+            "source_text": "Net income (loss) / $ / (204)"
+        }
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+
+    assert len(facts) == 1
+    assert facts[0].value_cents == -20400000
+
+
 def test_parse_llm_response_drops_rows_with_unknown_metric():
     raw = """[
         {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "bogus",
          "value_cents": 1, "currency": "USD", "is_audited": true,
-         "is_pro_forma": false, "pro_forma_note": null},
+         "is_pro_forma": false, "pro_forma_note": null, "source_text": "Bogus ... $1"},
         {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "revenue",
          "value_cents": 1, "currency": "USD", "is_audited": true,
-         "is_pro_forma": false, "pro_forma_note": null}
+         "is_pro_forma": false, "pro_forma_note": null, "source_text": "Revenue ... $1"}
     ]"""
     facts = parse_llm_response(raw, accession="x")
     assert len(facts) == 1
@@ -920,6 +1011,7 @@ async def test_extract_or_load_snapshot_writes_cache_on_first_call(tmp_path, mon
                     "is_audited": True,
                     "is_pro_forma": False,
                     "pro_forma_note": None,
+                    "source_text": "Revenue ... $78,287",
                 }
             ]
         )

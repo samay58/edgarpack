@@ -119,8 +119,8 @@ def format_number(value: float | None, unit: str) -> str:
 def format_citation_marker(cited: Any) -> str:  # noqa: ANN401 (duck-typed on CitedValue)
     """Inline citation marker for table renderings.
 
-    - S-1 snapshot rows:   [S-1, 24-041596]
-    - S-1 pro-forma rows:  [S-1 pro-forma, 26-025762] *
+    - Registration snapshot rows:   [S-1, 24-041596] or [F-1, 26-071170]
+    - Registration pro-forma rows:  [S-1 pro-forma, 26-025762] *
     - Everything else:     empty string (periodic filings already have
       their own citation machinery via cited.filing_url etc.).
 
@@ -133,9 +133,10 @@ def format_citation_marker(cited: Any) -> str:  # noqa: ANN401 (duck-typed on Ci
         return ""
     parts = accession.split("-", 1)
     short = parts[1] if len(parts) == 2 else accession
+    form_label = str(getattr(cited, "form_type", "") or "S-1").upper()
     if source == "s1_pro_forma":
-        return f"[S-1 pro-forma, {short}] *"
-    return f"[S-1, {short}]"
+        return f"[{form_label} pro-forma, {short}] *"
+    return f"[{form_label}, {short}]"
 
 
 __all__ = ["format_number", "format_citation_marker", "_CURRENCY_SYMBOLS"]

@@ -7,6 +7,7 @@ and comps renderers live in query/comps.py; this is their single-period sibling.
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import textwrap
 from typing import Any, cast
@@ -137,6 +138,20 @@ def _source_badge_for(v: Any) -> str:
     return f" [{src} {mark}]"
 
 
+def _is_no_api_key_placeholder(v: Any) -> bool:
+    return getattr(v, "source", "") == "no_api_key" and getattr(v, "value", None) is None
+
+
+def _reproduce_command(permalink: str, args: Any) -> str:
+    pack_root = getattr(args, "packs", None)
+    if pack_root is None or "--packs " in permalink:
+        return permalink
+    pack_root_text = str(pack_root)
+    if pack_root_text in {"", "packs", "./packs"}:
+        return permalink
+    return f"{permalink} --packs {shlex.quote(pack_root_text)}"
+
+
 def _render_query_table(result: Any, args: Any) -> str:
     """Render single-company query output with inline citation/audit ergonomics."""
     from .currency import CurrencyMode, format_cited_currency
@@ -234,7 +249,7 @@ def _render_query_table(result: Any, args: Any) -> str:
         marker = ""
         calc_id = payload.get("calculation_id")
         citation_ids = payload.get("citation_ids", [])
-        if args.citations != "off":
+        if args.citations != "off" and not _is_no_api_key_placeholder(raw_value):
             if isinstance(calc_id, str):
                 marker = f" [{calc_id}]"
             elif isinstance(citation_ids, list) and citation_ids:
@@ -266,7 +281,7 @@ def _render_query_table(result: Any, args: Any) -> str:
                     )
                 )
 
-        if args.citations == "inline":
+        if args.citations == "inline" and not _is_no_api_key_placeholder(raw_value):
             if isinstance(calc_id, str):
                 calc = calculations.get(calc_id, {})
                 formula = calc.get("formula", "")
@@ -405,6 +420,7 @@ def _render_query_table(result: Any, args: Any) -> str:
 
     if isinstance(permalink, str) and permalink:
         lines.append("")
-        lines.extend(_wrap_cli_text(f"Reproduce: {permalink}", width, indent="           "))
+        reproduce = _reproduce_command(permalink, args)
+        lines.extend(_wrap_cli_text(f"Reproduce: {reproduce}", width, indent="           "))
 
     return "\n".join(lines)

@@ -2,9 +2,10 @@
 source/accession/is_pro_forma passthrough in the JSON renderer."""
 
 from datetime import date
+from types import SimpleNamespace
 
 from edgarpack.query.formatting import format_citation_marker
-from edgarpack.query.models import CitedValue
+from edgarpack.query.models import CitedValue, QueryResult
 
 
 def _snapshot_cv(is_pro_forma: bool = False) -> CitedValue:
@@ -36,6 +37,13 @@ def test_format_citation_marker_snapshot():
 def test_format_citation_marker_pro_forma():
     marker = format_citation_marker(_snapshot_cv(is_pro_forma=True))
     assert "*" in marker or "pro-forma" in marker.lower()
+
+
+def test_format_citation_marker_uses_registration_form_type():
+    cv = _snapshot_cv(is_pro_forma=False)
+    cv.form_type = "F-1"
+    marker = format_citation_marker(cv)
+    assert marker == "[F-1, 24-041596]"
 
 
 def test_format_citation_marker_10k_returns_empty():
@@ -130,3 +138,43 @@ def test_no_api_key_placeholder_filing_url_is_empty():
         source="no_api_key",
     )
     assert placeholder.filing_url == ""
+
+
+def test_render_query_table_no_api_key_placeholder_has_no_citation_marker():
+    from edgarpack.cli import _render_query_table
+
+    placeholder = CitedValue(
+        value=None,
+        unit="USD",
+        metric="revenue",
+        concept="Revenues",
+        period_end=date(2026, 6, 8),
+        fiscal_year=0,
+        fiscal_period="FY",
+        form_type="F-1",
+        filed=date(2026, 6, 8),
+        accession="",
+        cik="0002004711",
+        company="Bending Spoons S.p.A.",
+        source="no_api_key",
+    )
+    result = QueryResult(
+        company="Bending Spoons S.p.A.",
+        cik="0002004711",
+        period="lfy",
+        metrics={"revenue": placeholder},
+    )
+    args = SimpleNamespace(
+        currency="native",
+        strict=False,
+        citations="inline",
+        audit=False,
+        show_links="none",
+        packs="/tmp/bending-f1-test",
+    )
+
+    out = _render_query_table(result, args)
+
+    assert "Revenue: N/A" in out
+    assert "[C1]" not in out
+    assert "--packs /tmp/bending-f1-test" in out

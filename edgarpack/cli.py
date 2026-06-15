@@ -3291,9 +3291,10 @@ def _format_kpi_value(value: float | None, unit: str | None, magnitude: str | No
 
 def _render_query_no_api_key_hint() -> str:
     return (
-        "Note: registration financial extraction requires ANTHROPIC_API_KEY. "
-        "Install with `pip install edgarpack[vlm]` and export your key. "
-        "Disclosures available via `edgarpack which`."
+        "Note: registration financial extraction requires the `vlm` extra and "
+        "ANTHROPIC_API_KEY. From the repo use `uv run --extra dev --extra vlm ...`; "
+        "for an install use `pip install edgarpack[vlm]`. Disclosures available via "
+        "`edgarpack which`."
     )
 
 

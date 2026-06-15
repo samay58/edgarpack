@@ -16,6 +16,7 @@ import json
 import re
 import urllib.parse
 from pathlib import Path
+from typing import Any, cast
 
 from ..sec.client import get_client
 
@@ -113,10 +114,9 @@ async def _vlm_describe(image_path: Path) -> str:
         "webp": "image/webp",
     }.get(suffix, "image/jpeg")
 
-    msg = await client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=200,
-        messages=[
+    messages = cast(
+        Any,
+        [
             {
                 "role": "user",
                 "content": [
@@ -129,8 +129,15 @@ async def _vlm_describe(image_path: Path) -> str:
             }
         ],
     )
+    msg = await client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=200,
+        messages=messages,
+    )
     return "".join(
-        block.text for block in msg.content if getattr(block, "type", "") == "text"
+        str(getattr(block, "text", ""))
+        for block in msg.content
+        if getattr(block, "type", "") == "text"
     ).strip()
 
 
