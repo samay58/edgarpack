@@ -329,6 +329,162 @@ def test_summary_table_parser_fails_closed_on_interleaved_percent_value_rows():
     assert _extract_summary_table_facts(section, accession="0001193125-23-216983") == []
 
 
+def test_summary_table_parser_fails_closed_on_trailing_percent_change_rows():
+    section = """
+    Summary Financial Data
+
+    > 2023 / 2022
+    > (in thousands, except percentages)
+    > Revenues ... $ / 2,047,889 / $ / 1,345,145 / $ / 702,744 / 52.2 / %
+    > Gross profit ... $ / 1,023,299 / $ / 597,700 / $ / 425,599 / 71.2 / %
+    > Operating loss ... (133,157 / ) / (621,143 / ) / 487,986 / (78.6 / )%
+    """
+    assert _extract_summary_table_facts(section, accession="0001493152-24-035216") == []
+
+
+def test_summary_table_parser_does_not_apply_header_to_distant_rows():
+    filler = "\n".join(f"> Narrative line {index}" for index in range(180))
+    section = f"""
+    Summary Financial Data
+
+    > 2023 / 2022
+    > (in thousands)
+    {filler}
+    > Revenue ... 2,807,909 / 3,396,000
+    """
+    assert _extract_summary_table_facts(section, accession="0001493152-24-035216") == []
+
+
+def test_summary_table_parser_does_not_use_prose_year_mentions_as_headers():
+    section = """
+    Report of Independent Registered Public Accounting Firm
+
+    We have audited the consolidated statements of operations and cash flows for each
+    of the years in the two-year period ended September 30, 2023, and the related
+    notes for September 30, 2023 and 2022.
+
+    Revenues ................................ $ / 2,807,909 / $ / 3,396,000
+    """
+    assert _extract_summary_table_facts(section, accession="0001493152-24-035216") == []
+
+
+def test_summary_table_parser_does_not_use_plan_names_as_year_headers():
+    section = """
+    Share-based Compensation
+
+    > LTIP 2018 / LTIP 2018 / LTIP 2020 / LTIP 2020
+    > Gross profit ............................ 231,105 / 143,117
+    > Net loss ................................ (27,524 / ) / (1,473 / )
+    """
+    assert _extract_summary_table_facts(section, accession="0001193125-21-253415") == []
+
+
+def test_summary_table_parser_does_not_use_citation_years_as_headers():
+    section = """
+    Industry Data
+
+    > CustomerGauge, NPS Financial Services/27 Banking NPS Scores 2023, March 26, 2023;
+    > Total revenue ........................... 2,811 / 2,276
+    """
+    assert _extract_summary_table_facts(section, accession="0001628280-25-012824") == []
+
+
+def test_summary_table_parser_uses_later_table_header_for_later_rows():
+    section = """
+    Consolidated Balance Sheets
+
+    > September 30, 2023 / September 30, 2022 / September 30, 2022
+    > Cash and cash equivalents ............... $ / 130,201 / $ / 364,449
+
+    ## Consolidated Statements of Operations and Comprehensive Loss
+
+    > September 30, 2023 / September 30, 2022 / September 30, 2022
+    > Revenues ................................ $ / 2,807,909 / $ / 3,396,000
+    """
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-035216")
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+
+    assert by_key[("revenue", 2023)].value_cents == 280_790_900
+    assert by_key[("revenue", 2022)].value_cents == 339_600_000
+    assert ("revenue", 2021) not in by_key
+
+
+def test_summary_table_parser_drops_conflicting_duplicate_facts():
+    section = """
+    Summary Financial Data
+
+    > 2023 / 2022
+    > Revenue ... 100 / 90
+
+    Selected Financial Data
+
+    > 2023 / 2022
+    > Revenue ... 101 / 90
+    """
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-035216")
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+
+    assert ("revenue", 2023) not in by_key
+    assert by_key[("revenue", 2022)].value_cents == 9_000
+
+
+def test_summary_table_parser_does_not_label_six_month_rows_as_annual():
+    section = """
+    Summary Financial Data
+
+    > Six Months Ended March 31, / Six Months Ended March 31,
+    > 2024 / 2023
+    > Revenue ... 2,047,889 / 1,345,145
+    """
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-035216")
+    by_key = {(fact.metric, fact.fiscal_year, fact.fiscal_period): fact for fact in facts}
+
+    assert by_key[("revenue", 2024, "Q2")].period_end == "2024-03-31"
+    assert ("revenue", 2024, "FY") not in by_key
+
+
+def test_summary_table_parser_merges_split_interim_header_rows():
+    section = """
+    Summary Financial Data
+
+    > For the Six months Ended / For the Six months Ended
+    > March 31 / March 31
+    > 2024 / 2023
+    > Net cash used in operating activities ... $ / (301,203 / ) / $ / (184,620 / )
+    """
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-035216")
+    by_key = {(fact.metric, fact.fiscal_year, fact.fiscal_period): fact for fact in facts}
+
+    assert by_key[("operating_cash_flow", 2024, "Q2")].period_end == "2024-03-31"
+    assert ("operating_cash_flow", 2024, "FY") not in by_key
+
+
+def test_summary_table_parser_preserves_split_parenthetical_negatives():
+    section = """
+    Summary Financial Data
+
+    > 2023 / 2022
+    > Net cash used in operating activities ... $ / (301,203 / ) / $ / (184,620 / )
+    """
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-035216")
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+
+    assert by_key[("operating_cash_flow", 2023)].value_cents == -30_120_300
+    assert by_key[("operating_cash_flow", 2022)].value_cents == -18_462_000
+
+
+def test_summary_table_parser_fails_closed_on_variance_amount_columns():
+    section = """
+    Summary Financial Data
+
+    > Six Months Ended March 31, / Six Months Ended March 31, / Six Months Ended March 31
+    > 2024 / 2024 / 2023 / 2023 / Variance / Variance
+    > (US$) / (US$) / (US$) / (US$) / Amount / Amount
+    > Gross profit ............................ $ / 554,875 / $ / 324,551 / $ / 230,324
+    """
+    assert _extract_summary_table_facts(section, accession="0001493152-24-035216") == []
+
+
 def test_summary_table_parser_fails_closed_when_row_has_extra_amount_columns():
     section = """
     Summary Financial Data
@@ -570,15 +726,15 @@ _HAWKEYE_2026_MDA_TABLES = "\n".join(
 )
 
 
-def test_extract_summary_table_facts_parses_hawkeye_mda_comparison_rows():
+def test_extract_summary_table_facts_skips_hawkeye_mda_percent_comparison_rows():
     facts = _extract_summary_table_facts(
         _HAWKEYE_2026_MDA_TABLES,
         accession="0001628280-26-029373",
     )
     by_key = {(fact.metric, fact.fiscal_year, fact.fiscal_period): fact for fact in facts}
 
-    assert by_key[("revenue", 2025, "FY")].value_cents == 11_766_000_000
-    assert by_key[("revenue", 2024, "FY")].value_cents == 6_755_900_000
+    assert ("revenue", 2025, "FY") not in by_key
+    assert ("revenue", 2024, "FY") not in by_key
     assert by_key[("operating_cash_flow", 2025, "FY")].value_cents == -1_733_900_000
     assert by_key[("operating_cash_flow", 2024, "FY")].value_cents == 1_196_600_000
 

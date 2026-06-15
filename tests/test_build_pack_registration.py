@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from edgarpack.pack.build import _process_html_files_for_form
+from edgarpack.parse.sectionize import find_sections
 
 
 @pytest.mark.asyncio
@@ -44,3 +45,29 @@ async def test_periodic_form_still_strips_images(tmp_path):
     )
     assert "<img" not in md.lower()
     assert "assets/" not in md
+
+
+@pytest.mark.asyncio
+async def test_registration_legacy_name_anchor_becomes_section_heading(tmp_path):
+    html = """
+    <html><body>
+      <table>
+        <tr><td><a href="#rom393891_7"><font>PROSPECTUS SUMMARY</font></a></td></tr>
+        <tr><td><a href="#rom393891_10"><font>RISK FACTORS</font></a></td></tr>
+      </table>
+      <p align="center"><b><a name="rom393891_7"></a>PROSPECTUS SUMMARY</b></p>
+      <p>Summary body.</p>
+      <p align="center"><b><a name="rom393891_10"></a>RISK FACTORS</b></p>
+      <p>Risk body.</p>
+    </body></html>
+    """
+    md = await _process_html_files_for_form(
+        html_files=[("main.htm", html.encode("utf-8"))],
+        base_url="https://www.sec.gov/Archives/foo/",
+        form_type="F-1",
+        out_dir=tmp_path,
+        describe_images=False,
+    )
+
+    titles = [match.title for match in find_sections(md, "F-1")]
+    assert titles == ["PROSPECTUS SUMMARY", "RISK FACTORS"]

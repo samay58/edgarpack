@@ -232,6 +232,57 @@ _INTERLEAVED_PERCENT_VALUE_RE = re.compile(
     r"\d[\d,]*(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?\s*/\s*%\s*/\s*"
     r"\d[\d,]*(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?\s*/\s*%"
 )
+_SUMMARY_TABLE_MAX_SCAN_LINES = 160
+_PERIOD_END_LABELS = ("march 31", "june 30", "september 30", "december 31")
+
+
+def _has_comparison_header_cells(cells: list[str]) -> bool:
+    for cell in cells:
+        normalized = re.sub(r"\s+", " ", cell).strip().lower()
+        if not normalized:
+            continue
+        if "%" in normalized or "variance" in normalized or "change" in normalized:
+            return True
+        if normalized in {"amount", "$ amount", "us$ amount"}:
+            return True
+    return False
+
+
+def _has_non_period_year_cells(cells: list[str]) -> bool:
+    for cell in cells:
+        normalized = re.sub(r"\s+", " ", cell).strip().lower()
+        if not _YEAR_TOKEN_RE.search(normalized):
+            continue
+        if _YEAR_ROW_RE.fullmatch(normalized):
+            continue
+        allowed_markers = (
+            "as of",
+            "ended",
+            "amounts in",
+            "in thousands",
+            "in millions",
+            "note",
+            *_PERIOD_END_LABELS,
+        )
+        if not any(marker in normalized for marker in allowed_markers):
+            return True
+    return False
+
+
+def _merge_period_context_cells(
+    contexts: list[str] | None,
+    cells: list[str],
+) -> list[str] | None:
+    if not contexts or not cells:
+        return contexts
+    lowered_cells = [cell.lower() for cell in cells]
+    if not any(label in cell for cell in lowered_cells for label in _PERIOD_END_LABELS):
+        return contexts
+    merged: list[str] = []
+    for index, cell in enumerate(cells):
+        base = contexts[index] if index < len(contexts) else contexts[-1]
+        merged.append(f"{base} {cell}".strip())
+    return merged
 
 
 def _strip_summary_line(line: str) -> str:
@@ -260,17 +311,36 @@ def _split_summary_cells(line: str) -> list[str]:
 
 def _summary_period_from_context(year: int, context: str | None) -> tuple[str, str]:
     lowered = (context or "").lower()
-    if "three months ended" in lowered and "march 31" in lowered:
-        return "Q1", f"{year}-03-31"
-    if "six months ended" in lowered and "june 30" in lowered:
-        return "Q2", f"{year}-06-30"
-    if "nine months ended" in lowered and "september 30" in lowered:
-        return "Q3", f"{year}-09-30"
+    period_end_by_label = {
+        "march 31": f"{year}-03-31",
+        "june 30": f"{year}-06-30",
+        "september 30": f"{year}-09-30",
+        "december 31": f"{year}-12-31",
+    }
+    period_end = next(
+        (end for label, end in period_end_by_label.items() if label in lowered),
+        None,
+    )
+    if "three months ended" in lowered and period_end:
+        fiscal_period = {
+            "03-31": "Q1",
+            "06-30": "Q2",
+            "09-30": "Q3",
+            "12-31": "Q4",
+        }[period_end[-5:]]
+        return fiscal_period, period_end
+    if "six months ended" in lowered and period_end:
+        return "Q2", period_end
+    if "half-year ended" in lowered and period_end:
+        return "Q2", period_end
+    if "nine months ended" in lowered and period_end:
+        return "Q3", period_end
     return "FY", f"{year}-12-31"
 
 
-def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int]:
+def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int, int]:
     contexts: list[str] | None = None
+    context_header_index: int | None = None
     for index, line in enumerate(lines):
         lowered = line.lower()
         if any(
@@ -279,12 +349,18 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int]
                 "year ended",
                 "three months ended",
                 "six months ended",
+                "half-year ended",
                 "nine months ended",
             )
         ):
             cells = [cell for cell in _split_summary_cells(line) if cell]
+            if _has_comparison_header_cells(cells):
+                contexts = None
+                context_header_index = None
+                continue
             if cells:
                 contexts = cells
+                context_header_index = index
             header_columns: list[tuple[int, str, str]] = []
             for cell in cells:
                 year_match = _YEAR_TOKEN_RE.search(cell)
@@ -295,15 +371,29 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int]
                 header_columns.append((year, fiscal_period, period_end))
             unique_header_columns = list(dict.fromkeys(header_columns))
             if len(unique_header_columns) >= 2:
-                return unique_header_columns, index + 1
+                return unique_header_columns, index, index + 1
             continue
 
         year_tokens = [int(match.group(1)) for match in _YEAR_TOKEN_RE.finditer(line)]
         if not year_tokens:
+            contexts = _merge_period_context_cells(contexts, _split_summary_cells(line))
+            continue
+        cells = [cell for cell in _split_summary_cells(line) if cell]
+        if _has_comparison_header_cells(cells):
+            contexts = None
+            context_header_index = None
+            continue
+        if _has_non_period_year_cells(cells):
+            contexts = None
+            context_header_index = None
             continue
         if _INTERLEAVED_PERCENT_YEAR_RE.search(line):
-            return [], 0
-        if not _YEAR_ROW_RE.fullmatch(line.strip()) and len(year_tokens) < 2:
+            return [], 0, 0
+        if "..." in line:
+            prefix = line.split("...", 1)[0].strip()
+            if not prefix.startswith("("):
+                continue
+        if not _YEAR_ROW_RE.fullmatch(line.strip()) and ("/" not in line or len(year_tokens) < 2):
             continue
 
         columns: list[tuple[int, str, str]] = []
@@ -311,15 +401,16 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int]
             context = contexts[position] if contexts and position < len(contexts) else None
             fiscal_period, period_end = _summary_period_from_context(year, context)
             columns.append((year, fiscal_period, period_end))
-        return columns, index + 1
-    return [], 0
+        header_index = context_header_index if context_header_index is not None else index
+        return columns, header_index, index + 1
+    return [], 0, 0
 
 
 def _parse_summary_number(raw: str) -> Decimal | None:
     token = raw.strip()
     if token in {"", "-", "\u2014", "--"}:
         return None
-    is_negative = "(" in token and ")" in token
+    is_negative = token.startswith("(") or token.endswith(")") or ("(" in token and ")" in token)
     token = token.replace("$", "").replace(",", "").replace("(", "").replace(")", "")
     try:
         value = Decimal(token)
@@ -397,6 +488,8 @@ def _summary_label_for_line(line: str) -> str:
 
 
 def _summary_values_for_line(line: str, column_count: int) -> list[Decimal | None]:
+    if "%" in line:
+        return []
     if _INTERLEAVED_PERCENT_VALUE_RE.search(line):
         return []
     line = re.sub(r"\(\d+\)", "", line)
@@ -409,8 +502,6 @@ def _summary_values_for_line(line: str, column_count: int) -> list[Decimal | Non
     if len(parsed) == column_count:
         return parsed
     if len(parsed) > column_count:
-        if "%" in line and column_count in {2, 3}:
-            return parsed[:column_count]
         return []
     if 1 < len(parsed) < column_count:
         return parsed
@@ -453,70 +544,88 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
     tables. Ambiguous rows are skipped.
     """
     lines = [_strip_summary_line(line) for line in section_text.splitlines()]
-    columns, start_index = _summary_columns(lines)
-    if not columns:
-        return []
-
     money_multiplier = _summary_scale_multiplier(section_text)
-    context: str | None = None
-    facts_by_key: dict[tuple[str, int, str, str], SnapshotFact] = {}
-    for line in lines[start_index:]:
-        if not line:
-            continue
-        normalized_line = re.sub(r"\s+", " ", line).strip().lower()
-        if "net income" in normalized_line and "per share" in normalized_line:
-            context = "eps"
-            continue
-        if "net loss" in normalized_line and "per share" in normalized_line:
-            context = "eps"
-            continue
-        if "weighted average shares" in normalized_line:
-            context = "shares"
-            continue
-        if normalized_line.startswith("other financial information"):
-            context = None
+    facts_by_key: dict[tuple[str, int, str, str], SnapshotFact | None] = {}
+    search_index = 0
+    while search_index < len(lines):
+        columns, _local_header, local_start = _summary_columns(lines[search_index:])
+        if not columns:
+            break
+        start_index = search_index + local_start
+        next_columns, next_local_header, _next_local_start = _summary_columns(lines[start_index:])
+        if next_columns:
+            next_header_index = start_index + next_local_header
+        else:
+            next_header_index = len(lines)
+        end_index = min(start_index + _SUMMARY_TABLE_MAX_SCAN_LINES, next_header_index)
 
-        values = _summary_values_for_line(line, len(columns))
-        if not values:
-            continue
-        label = _summary_label_for_line(line)
-        metric = _summary_metric_for_label(label, context=context)
-        if metric is None:
-            continue
-        if metric == "eps_basic" and any(
-            value is not None and abs(value) > Decimal("10000") for value in values
-        ):
-            continue
-
-        row_columns = _compact_summary_columns(columns, len(values))
-        if len(row_columns) != len(values):
-            continue
-
-        row_values = zip(row_columns, values, strict=True)
-        for (fiscal_year, fiscal_period, period_end), value in row_values:
-            if value is None:
+        context: str | None = None
+        for line in lines[start_index:end_index]:
+            if not line:
                 continue
-            value_cents = _scaled_summary_cents(
-                value,
-                metric=metric,
-                money_multiplier=money_multiplier,
-            )
-            if metric == "capex":
-                value_cents = abs(value_cents)
-            facts_by_key[(metric, fiscal_year, fiscal_period, period_end)] = SnapshotFact(
-                accession=accession,
-                fiscal_year=fiscal_year,
-                period_end=period_end,
-                metric=metric,
-                value_cents=value_cents,
-                currency="USD",
-                is_audited=True,
-                is_pro_forma=False,
-                pro_forma_note=None,
-                fiscal_period=fiscal_period,
-                source_text=line,
-            )
-    return list(facts_by_key.values())
+            normalized_line = re.sub(r"\s+", " ", line).strip().lower()
+            if "net income" in normalized_line and "per share" in normalized_line:
+                context = "eps"
+                continue
+            if "net loss" in normalized_line and "per share" in normalized_line:
+                context = "eps"
+                continue
+            if "weighted average shares" in normalized_line:
+                context = "shares"
+                continue
+            if normalized_line.startswith("other financial information"):
+                context = None
+
+            values = _summary_values_for_line(line, len(columns))
+            if not values:
+                continue
+            label = _summary_label_for_line(line)
+            metric = _summary_metric_for_label(label, context=context)
+            if metric is None:
+                continue
+            if metric == "eps_basic" and any(
+                value is not None and abs(value) > Decimal("10000") for value in values
+            ):
+                continue
+
+            row_columns = _compact_summary_columns(columns, len(values))
+            if len(row_columns) != len(values):
+                continue
+
+            row_values = zip(row_columns, values, strict=True)
+            for (fiscal_year, fiscal_period, period_end), value in row_values:
+                if value is None:
+                    continue
+                value_cents = _scaled_summary_cents(
+                    value,
+                    metric=metric,
+                    money_multiplier=money_multiplier,
+                )
+                if metric == "capex":
+                    value_cents = abs(value_cents)
+                key = (metric, fiscal_year, fiscal_period, period_end)
+                fact = SnapshotFact(
+                    accession=accession,
+                    fiscal_year=fiscal_year,
+                    period_end=period_end,
+                    metric=metric,
+                    value_cents=value_cents,
+                    currency="USD",
+                    is_audited=True,
+                    is_pro_forma=False,
+                    pro_forma_note=None,
+                    fiscal_period=fiscal_period,
+                    source_text=line,
+                )
+                existing = facts_by_key.get(key)
+                if existing is None and key in facts_by_key:
+                    continue
+                if existing is not None and existing.value_cents != fact.value_cents:
+                    facts_by_key[key] = None
+                    continue
+                facts_by_key[key] = fact
+        search_index = max(end_index, start_index + 1)
+    return [fact for fact in facts_by_key.values() if fact is not None]
 
 
 def _supplement_cash_flow_facts_from_full_filing(
@@ -792,10 +901,17 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
     deterministic_facts: list[SnapshotFact] = []
     for section in financial_sections:
         deterministic_facts.extend(_extract_summary_table_facts(section, accession=accession))
-    deduped_facts: dict[tuple[str, int, str, str], SnapshotFact] = {}
+    deduped_facts: dict[tuple[str, int, str, str], SnapshotFact | None] = {}
     for fact in deterministic_facts:
-        deduped_facts[(fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)] = fact
-    deterministic_facts = list(deduped_facts.values())
+        key = (fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)
+        existing = deduped_facts.get(key)
+        if existing is None and key in deduped_facts:
+            continue
+        if existing is not None and existing.value_cents != fact.value_cents:
+            deduped_facts[key] = None
+            continue
+        deduped_facts[key] = fact
+    deterministic_facts = [fact for fact in deduped_facts.values() if fact is not None]
     deterministic_facts = _supplement_cash_flow_facts_from_full_filing(
         deterministic_facts,
         full_text=markdown,
