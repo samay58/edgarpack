@@ -44,6 +44,27 @@ def test_font_size_zero_with_height_zero_only_is_still_hidden():
     assert is_hidden_style("height:0")
 
 
+def test_border_width_zero_does_not_hide_visible_page_wrapper():
+    # eToro-style SEC page wrappers can contain border-width:0 while still
+    # carrying the entire visible filing body. The width detector must match
+    # the CSS property itself, not a suffix inside another property name.
+    wrapper = (
+        "position:relative;width:612pt;height:792pt;border-width:0;"
+        "background-color:#FFFFFF;overflow:hidden"
+    )
+    assert not is_hidden_style(wrapper)
+
+
+def test_border_width_zero_wrapper_preserves_inner_text():
+    html = """
+    <div style="position:relative;width:612pt;height:792pt;border-width:0">
+      <p>eToro Group Ltd. prospectus body survives.</p>
+    </div>
+    """
+    out = clean_html(html)
+    assert "eToro Group Ltd. prospectus body survives." in out
+
+
 def test_cerebras_style_wrapper_preserves_inner_text():
     html = FIXTURE.read_text(encoding="utf-8")
     out = clean_html(html)

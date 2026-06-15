@@ -268,8 +268,8 @@ async def test_pre_ipo_journey_end_to_end(tmp_path):
 
     # Timeline header.
     assert "Registration timeline for CIK" in out
-    # S-1 disclosures block surfaces framing + at least one other extractor.
-    assert "S-1 disclosures in latest filing" in out
+    # Registration disclosures block surfaces framing + at least one other extractor.
+    assert "Registration disclosures in latest filing" in out
     assert "framing claims" in out
     # Redline pair.
     assert "S1-001" in out and "S1A-002" in out

@@ -6,10 +6,11 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..config import SCHEMA_VERSION
 from ..harvest.registry import PackRecord, PackRegistry
+from ..sec.submissions import is_registration_form
 from .manifest import load_manifest_dict
 
 ManifestState = Literal[
@@ -36,6 +37,21 @@ _REMEDIATION: dict[str, str] = {
 _ARTIFACT_NAMES = ("sections", "chunks.ndjson", "xbrl.json", "llms.txt", "filing.full.md")
 
 _HEALTHY_COVERAGE_THRESHOLD = 0.5
+_REGISTRATION_BODY_TOKEN_FLOOR = 5_000
+_EXPECTED_REGISTRATION_SECTION_GROUPS: dict[str, frozenset[str]] = {
+    "summary": frozenset({"prospectus summary", "summary"}),
+    "risk factors": frozenset({"risk factors"}),
+    "use of proceeds": frozenset({"use of proceeds"}),
+    "business": frozenset({"business"}),
+    "mda_or_ofr": frozenset(
+        {
+            "management's discussion and analysis",
+            "management's discussion and analysis of financial condition and results of operations",
+            "operating and financial review",
+            "operating and financial review and prospects",
+        }
+    ),
+}
 
 
 class PackDiagnosis(BaseModel):
@@ -55,8 +71,81 @@ class PackDiagnosis(BaseModel):
     catalog_concepts_resolved: int = 0
     catalog_concepts_missing: list[str] = []
     discovered_kpi_count: int = 0
+    health_model: str = "catalog"
+    registration_health_flags: list[str] = Field(default_factory=list)
+    expected_registration_sections_missing: list[str] = Field(default_factory=list)
     healthy: bool = False
     remediation: str | None = None
+
+
+def _section_title_key(raw: object) -> str:
+    if not isinstance(raw, str):
+        return ""
+    normalized = raw.replace("\u2019", "'").strip().lower()
+    return " ".join(normalized.split())
+
+
+def _registration_health(
+    pack_dir: Path,
+    sections: list[Any],
+    tokens_total: int,
+) -> tuple[list[str], list[str], bool, str | None]:
+    flags: list[str] = []
+    if tokens_total < _REGISTRATION_BODY_TOKEN_FLOOR:
+        flags.append("body_collapse")
+
+    titles = [
+        _section_title_key(section.get("title"))
+        for section in sections
+        if isinstance(section, dict)
+    ]
+    nonempty_titles = [title for title in titles if title]
+    if nonempty_titles and all(title.startswith("unknown") for title in nonempty_titles):
+        flags.append("unknown_only_sections")
+
+    missing_expected = sorted(
+        group_name
+        for group_name, aliases in _EXPECTED_REGISTRATION_SECTION_GROUPS.items()
+        if not any(
+            title == alias or title.startswith(alias)
+            for title in nonempty_titles
+            for alias in aliases
+        )
+    )
+    if len(missing_expected) >= len(_EXPECTED_REGISTRATION_SECTION_GROUPS) - 1:
+        flags.append("missing_expected_registration_sections")
+
+    cache = pack_dir / "s1_financials.json"
+    if cache.exists():
+        from ..query.s1_financials import load_validated_snapshot
+
+        snapshot, status = load_validated_snapshot(pack_dir)
+        if status in {"cache_stale_schema", "cache_stale_source"}:
+            flags.append("stale_financial_cache")
+        elif snapshot is not None and snapshot.extraction_status in {
+            "llm_parse_failed",
+            "no_financial_data_found",
+        }:
+            flags.append("low_table_confidence")
+
+    healthy = not flags
+    remediation: str | None = None
+    if flags:
+        pieces: list[str] = []
+        if "body_collapse" in flags:
+            pieces.append("body collapse suspected; rebuild after fixing HTML hidden-style parsing")
+        if "unknown_only_sections" in flags:
+            pieces.append("section map is Unknown-only; inspect TOC anchor reconstruction")
+        if "missing_expected_registration_sections" in flags:
+            pieces.append(
+                "missing expected registration sections: " + ", ".join(missing_expected[:4])
+            )
+        if "stale_financial_cache" in flags:
+            pieces.append("delete stale s1_financials.json or rebuild the pack")
+        if "low_table_confidence" in flags:
+            pieces.append("financial extraction did not produce confident table-backed facts")
+        remediation = "; ".join(pieces)
+    return flags, missing_expected, healthy, remediation
 
 
 def _classify_manifest(
@@ -174,11 +263,26 @@ def diagnose_pack(pack_dir: Path, registry: PackRegistry | None) -> PackDiagnosi
             built_at="",
         )
 
+    form_type = filing.get("form_type", "") if isinstance(filing, dict) else ""
+    is_registration = is_registration_form(str(form_type))
+    health_model = "registration" if is_registration else "catalog"
+    registration_flags: list[str] = []
+    expected_missing: list[str] = []
+
     total, resolved, missing, discovered = _coverage(manifest, pack_record)
 
     healthy = total > 0 and resolved / total >= _HEALTHY_COVERAGE_THRESHOLD
     remediation: str | None = None
-    if not healthy and total > 0:
+    if is_registration and isinstance(sections, list):
+        registration_flags, expected_missing, healthy, remediation = _registration_health(
+            pack_dir,
+            sections,
+            int(tokens_total) if isinstance(tokens_total, int) else 0,
+        )
+        total = 0
+        resolved = 0
+        missing = []
+    elif not healthy and total > 0:
         remediation = (
             f"catalog coverage {resolved}/{total} below "
             f"{int(_HEALTHY_COVERAGE_THRESHOLD * 100)}% threshold; "
@@ -201,6 +305,9 @@ def diagnose_pack(pack_dir: Path, registry: PackRegistry | None) -> PackDiagnosi
         catalog_concepts_resolved=resolved,
         catalog_concepts_missing=missing,
         discovered_kpi_count=discovered,
+        health_model=health_model,
+        registration_health_flags=registration_flags,
+        expected_registration_sections_missing=expected_missing,
         healthy=healthy,
         remediation=remediation,
     )

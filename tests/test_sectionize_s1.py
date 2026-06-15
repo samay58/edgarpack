@@ -39,3 +39,53 @@ def test_s1_anchor_detected(anchor: str):
 def test_s1a_normalizes_like_s1():
     # `/A` amendments normalize to the base form, so they share anchors.
     assert _titles("S-1") == _titles("S-1/A")
+
+
+def test_f1_anchor_detected_with_curly_apostrophe():
+    title = "Management’s Discussion and Analysis of Financial Condition and Results of Operations"
+    md = f"# {title}\n\nBody text.\n"
+    assert [m.title for m in find_sections(md, "F-1")] == [title]
+
+
+@pytest.mark.parametrize(
+    "anchor",
+    [
+        "Summary",
+        "The Offering",
+        "Summary Financial and Other Information",
+        "Cautionary Statement Regarding Forward-Looking Statements",
+        "Special Note Regarding Forward-Looking Statements",
+        "Presentation of Financial and Other Information",
+        "Non-GAAP Financial Measures",
+        "Industry and Market Data",
+        "Glossary of Certain Terms",
+        "Exchange Rate Information",
+        "Enforcement of Civil Liabilities",
+        "Enforcement of Judgments",
+        "Dividend Policy",
+        "Corporate Reorganization",
+        "Operating and Financial Review and Prospects",
+        "Management",
+        "Management and Executive Remuneration",
+        "Related Party Transactions",
+        "Principal Shareholders",
+        "Principal and Selling Shareholders",
+        "Description of Share Capital",
+        "Description of Share Capital and Articles of Association",
+        "Comparison of Swiss Corporate Law and U.S. Corporate Law",
+        "Ordinary Shares Eligible for Future Sale",
+        "Taxation",
+        "Material Tax Considerations",
+        "Expenses of the Offering",
+        "Expenses Related to the Offering",
+        "Legal Matters",
+        "Experts",
+        "Where You Can Find More Information",
+        "Where You Can Find Additional Information",
+        "Index to Financial Statements",
+    ],
+)
+def test_f1_foreign_issuer_anchor_detected(anchor: str):
+    md = f"# {anchor}\n\nBody text for {anchor}.\n"
+    titles = [m.title for m in find_sections(md, "F-1")]
+    assert titles == [anchor]

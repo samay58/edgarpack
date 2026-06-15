@@ -61,6 +61,27 @@ def test_extract_dedupes_by_anchor():
     assert extract_toc_sections(html) == [("s_risk", "Risk Factors")]
 
 
+def test_extract_toc_sections_reads_nested_anchor_text():
+    html = """
+    <div>Table of Contents</div>
+    <a HREF="#summary"><font>Prospectus</font> <font>Summary</font></a>
+    <a HREF="#mda"><span>Operating and Financial Review</span></a>
+    """
+    assert extract_toc_sections(html) == [
+        ("summary", "Prospectus Summary"),
+        ("mda", "Operating and Financial Review"),
+    ]
+
+
+def test_extract_toc_sections_rejects_financial_statement_page_links():
+    html = """
+    <a href="#fINF">F-1</a>
+    <a href="#tCBS1">F-3</a>
+    <a href="#summary"><font>Prospectus Summary</font></a>
+    """
+    assert extract_toc_sections(html) == [("summary", "Prospectus Summary")]
+
+
 def test_inject_adds_h2_before_target_id():
     html = """
     <a href="#sum">Prospectus Summary</a>
@@ -81,6 +102,27 @@ def test_inject_handles_multiple_sections():
     assert out.count("<h2>") == 2
     assert "<h2>Prospectus Summary</h2>" in out
     assert "<h2>Risk Factors</h2>" in out
+
+
+def test_inject_resolves_legacy_name_anchor_case_insensitively():
+    html = """
+    <A HREF="#TOC001"><FONT>Prospectus Summary</FONT></A>
+    <A NAME="TOC001"></A>
+    <DIV><P>On Holding AG body text.</P></DIV>
+    """
+    out = inject_s1_headings(html)
+    assert '<h2>Prospectus Summary</h2><A NAME="TOC001">' in out
+
+
+def test_inject_lifts_heading_before_enclosing_paragraph_for_legacy_targets():
+    html = """
+    <A HREF="#rom393891_7"><FONT>PROSPECTUS SUMMARY</FONT></A>
+    <P ALIGN="center"><B><A NAME="rom393891_7"></A>PROSPECTUS SUMMARY</B></P>
+    <P>Arm body text.</P>
+    """
+    out = inject_s1_headings(html)
+    assert '<h2>PROSPECTUS SUMMARY</h2><P ALIGN="center">' in out
+    assert "<B><h2>" not in out
 
 
 def test_inject_escapes_html_entities_in_title():

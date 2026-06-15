@@ -73,19 +73,67 @@ BOLD_HEADING_PATTERN = re.compile(r"\*\*(?P<title>[A-Z0-9][A-Z0-9 &/().,'\-â€“â€
 S1_ANCHOR_TITLES = frozenset(
     {
         "prospectus summary",
+        "summary",
+        "the offering",
+        "summary financial data",
+        "summary financial and other data",
+        "summary financial and other information",
+        "summary consolidated financial information",
+        "summary consolidated financial and other data",
+        "cautionary statement regarding forward-looking statements",
+        "special note regarding forward-looking statements",
+        "presentation of financial and other information",
+        "non-gaap financial measures",
+        "industry and market data",
+        "glossary of certain terms",
+        "exchange rate information",
+        "enforcement of civil liabilities",
+        "enforcement of judgments",
         "risk factors",
         "use of proceeds",
+        "dividend policy",
+        "corporate reorganization",
         "capitalization",
         "dilution",
+        "management",
+        "management and executive remuneration",
         "management's discussion and analysis",
         "management's discussion and analysis of financial condition and results of operations",
+        "operating and financial review",
+        "operating and financial review and prospects",
         "business",
+        "related party transactions",
         "principal stockholders",
+        "principal shareholders",
+        "principal and selling shareholder",
+        "principal and selling shareholders",
         "underwriting",
         "selling stockholders",
+        "selling shareholders",
         "description of capital stock",
+        "description of share capital",
+        "description of share capital and articles of association",
+        "comparison of swiss corporate law and u.s. corporate law",
+        "ordinary shares eligible for future sale",
+        "ordinary shares and adss eligible for future sale",
+        "taxation",
+        "material tax considerations",
+        "expenses of the offering",
+        "expenses related to the offering",
+        "legal matters",
+        "experts",
+        "where you can find more information",
+        "where you can find additional information",
+        "index to financial statements",
+        "part ii",
+        "exhibits",
     }
 )
+
+
+def _registration_title_key(title: str) -> str:
+    return re.sub(r"\s+", " ", title.replace("\u2019", "'").strip().lower())
+
 
 _CANONICAL_ITEM_TITLES = {
     "1": "Business",
@@ -640,7 +688,7 @@ def find_sections(markdown: str, form_type: str) -> list[SectionMatch]:
             if line_stripped.startswith("#"):
                 title = line_stripped.lstrip("#").strip()
                 key = _title_key(title)
-                if title.strip().lower() in S1_ANCHOR_TITLES:
+                if _registration_title_key(title) in S1_ANCHOR_TITLES:
                     if key not in seen_titles:
                         seen_titles.add(key)
                         _add_item_match(

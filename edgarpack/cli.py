@@ -324,7 +324,7 @@ def _local_pack_hint(records: list[Any], *, command_label: str, form_type: str =
         return (
             f"Run `edgarpack build {command_label} --form {form_type}` for a periodic "
             f"filing, or `edgarpack build {command_label} --form S-1 --with-chunks` "
-            "for a new filer."
+            "or `--form F-1` for a registration filing."
         )
     first_path = records[0].pack_dir
     count = len(records)
@@ -332,8 +332,9 @@ def _local_pack_hint(records: list[Any], *, command_label: str, form_type: str =
     return (
         f"Found {count} pack {noun} on disk but none in the registry. "
         f"Inspect one with `edgarpack doctor {first_path}` or rebuild/register with "
-        f"`edgarpack build {command_label} --form {form_type}`. For a new filer, use "
-        f"`edgarpack build {command_label} --form S-1 --with-chunks`."
+        f"`edgarpack build {command_label} --form {form_type}`. For a registration "
+        f"filing, use `edgarpack build {command_label} --form S-1 --with-chunks` "
+        "or `--form F-1`."
     )
 
 
@@ -400,7 +401,7 @@ def main(argv: list[str] | None = None) -> int:
         "--form",
         "-f",
         help=(
-            "Form type: 10-K, 10-Q, 8-K, S-1, S-1/A. "
+            "Form type: 10-K, 10-Q, 8-K, S-1, S-1/A, F-1, F-1/A. "
             "Defaults to 10-K when combined with --last/--after/--before; "
             "fetches latest when used alone."
         ),
@@ -645,6 +646,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_query.add_argument("--force", action="store_true", help="Bypass cache")
     p_query.add_argument(
+        "--packs",
+        type=Path,
+        default=DEFAULT_PACKS_DIR,
+        help=(
+            "Pack root for registration snapshot fallback and local fact stores (default: ./packs)"
+        ),
+    )
+    p_query.add_argument(
         "--strict",
         action="store_true",
         help="Reject values resolved via the self-heal path (learned mappings). "
@@ -765,8 +774,7 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "Which filing series to build the timeline over. "
             "'annual' (default) is the existing 10-K / 10-Q run. "
-            "'registration' is the S-1 / S-1-A / 424B / FWP redline chain "
-            "for pre-IPO filers."
+            "'registration' is the S-1 / F-1 / amendment / 424B / FWP redline chain."
         ),
     )
     p_timeline.add_argument(
@@ -2306,6 +2314,7 @@ def _cmd_query(args: Any) -> int:
                 metrics=metric_input,
                 period=period,
                 force=bool(args.force),
+                pack_root=getattr(args, "packs", DEFAULT_PACKS_DIR),
                 display_token=args.company,
             )
 
@@ -2367,7 +2376,7 @@ def _cmd_query(args: Any) -> int:
                             seen.add(name)
                             strict_rejected.append(name)
 
-        # Emit a one-line hint when S-1 extraction couldn't run due to a
+        # Emit a one-line hint when registration extraction couldn't run due to a
         # missing API key so the user knows why cells show N/A. Scan every
         # period's result (not just the first) so --period lfy,pro-forma
         # surfaces the hint even when only the pro-forma call hit no_api_key.
@@ -2948,12 +2957,14 @@ def _render_registration_timeline(args: Any) -> int:
 
     print(f"Registration timeline for CIK {args.cik} ({len(entries)} filings)\n")
 
-    # S-1 metrics snapshot for the most recent filing: framing + disclosures
-    # the filer states in their latest draft. Cheap, reads only that pack.
+    # Registration metrics snapshot for the most recent filing: framing +
+    # disclosures the filer states in their latest draft. Cheap, reads only that pack.
     latest = entries[-1]
     bundle = extract_s1_metrics_from_pack(latest.pack_dir)
     if bundle and bundle.total_hits:
-        print(f"S-1 disclosures in latest filing ({latest.accession}, {latest.form_type}):")
+        print(
+            f"Registration disclosures in latest filing ({latest.accession}, {latest.form_type}):"
+        )
         if bundle.framing:
             print(f"  framing claims: {len(bundle.framing)}")
             for hit in bundle.framing[:3]:
@@ -3280,7 +3291,7 @@ def _format_kpi_value(value: float | None, unit: str | None, magnitude: str | No
 
 def _render_query_no_api_key_hint() -> str:
     return (
-        "Note: S-1 financial extraction requires ANTHROPIC_API_KEY. "
+        "Note: registration financial extraction requires ANTHROPIC_API_KEY. "
         "Install with `pip install edgarpack[vlm]` and export your key. "
         "Disclosures available via `edgarpack which`."
     )
@@ -3299,16 +3310,16 @@ def _render_which_empty_state(
         return (
             f"No registered packs found for {display_name} (CIK: {cik}).\n"
             f"Build a periodic pack with `edgarpack build {command_label} --form 10-K`, "
-            f"or build an S-1 pack with `edgarpack build {command_label} --form S-1 "
-            "--with-chunks`."
+            f"or build a registration pack with `edgarpack build {command_label} "
+            "--form S-1 --with-chunks` or `--form F-1`."
         )
     if diagnostics.unreadable_manifest_packs >= diagnostics.eligible_packs > 0:
         return (
             f"No KPIs shown for {display_name} because all {diagnostics.eligible_packs} "
             "candidate filing packs were unreadable on disk.\n"
             f"Rebuild a fresh periodic pack with `edgarpack build {command_label} "
-            f"--form 10-K --force`, or a fresh S-1 pack with `edgarpack build "
-            f"{command_label} --form S-1 --with-chunks --force`."
+            f"--form 10-K --force`, or a fresh registration pack with `edgarpack build "
+            f"{command_label} --form S-1 --with-chunks --force` or `--form F-1`."
         )
     if diagnostics.llm_failed_packs > 0 and diagnostics.discovered_packs == 0:
         return (
@@ -3329,13 +3340,13 @@ def _render_which_empty_state(
                     f"No recurring operating KPI rows were accepted for {name}, but "
                     f"registration discovery scanned {candidate_count} candidate window(s) "
                     f"({accepted} accepted, {rejected} rejected).\n"
-                    "Cached registration disclosures and S-1 financial metrics are shown below.\n"
+                    "Cached registration disclosures and financial metrics are shown below.\n"
                     f"Retry with `edgarpack which {command_label} --no-cache` after changing "
                     "the discovery backend or prompt."
                 )
             return (
                 f"No recurring operating KPI table was found for {name}.\n"
-                "Cached registration disclosures and S-1 financial metrics are shown below.\n"
+                "Cached registration disclosures and financial metrics are shown below.\n"
                 f"Try `edgarpack query {command_label} revenue,net_income,operating_cash_flow,"
                 "capex,free_cash_flow --period lfy,lfy-1` for the financial view."
             )
@@ -3362,7 +3373,7 @@ def _render_which_diagnostics(diagnostics: Any) -> str | None:
         fragments.append(
             f"{diagnostics.manifest_missing_packs} skipped "
             "(manifest missing; run `edgarpack build <ticker> --form 10-K` "
-            "or `edgarpack build <ticker> --form S-1 --with-chunks`)"
+            "or build a registration pack with `--form S-1 --with-chunks` or `--form F-1`)"
         )
     if diagnostics.manifest_invalid_json_packs:
         fragments.append(
@@ -3769,7 +3780,7 @@ def _cmd_which(args: Any) -> int:
 
 
 def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
-    """Return user-facing financial metrics available in a current S-1 cache."""
+    """Return user-facing financial metrics available in a current registration cache."""
     from .query.s1_financials import SCHEMA_VERSION, SnapshotResult, source_sha256_for_pack
 
     cache = pack_dir / "s1_financials.json"
@@ -3886,10 +3897,10 @@ def _render_which_s1_metrics(
         lines.append(header)
 
         if profile and profile.financial_metrics:
-            lines.append("  Queryable S-1 financial metrics:")
+            lines.append("  Queryable registration financial metrics:")
             lines.append(f"    {', '.join(profile.financial_metrics)}")
         elif profile and profile.financial_status not in {"not_extracted", "ok"}:
-            lines.append(f"  S-1 financial extraction: {profile.financial_status}")
+            lines.append(f"  Registration financial extraction: {profile.financial_status}")
 
         if status is not None and status.candidate_count:
             retryable = " retryable" if status.retryable else ""

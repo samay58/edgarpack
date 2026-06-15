@@ -32,6 +32,7 @@ def _seed_s1_pack(
     filing_date: str = "2024-09-30",
     fiscal_year: int = 2024,
     period_end: str = "2024-12-31",
+    form_type: str = "S-1",
     is_pro_forma: bool = False,
     extra_metric: str | None = None,
     extra_cents: int = 0,
@@ -44,7 +45,7 @@ def _seed_s1_pack(
             {
                 "filing": {
                     "accession": accession,
-                    "form_type": "S-1",
+                    "form_type": form_type,
                     "filing_date": filing_date,
                     "cik": cik,
                     "company_name": "Cerebras Systems Inc",
@@ -437,6 +438,72 @@ async def test_financials_prefers_10k_over_s1_for_overlapping_period(tmp_path):
     assert row is not None
     assert row.source != "s1_snapshot"
     assert row.value == 80000000
+
+
+@pytest.mark.asyncio
+async def test_financials_does_not_mix_current_20f_with_stale_registration_metric(tmp_path):
+    _seed_s1_pack(
+        tmp_path,
+        cik="0001858985",
+        accession="0001193125-21-253415",
+        form_type="F-1",
+        filing_date="2021-08-23",
+        fiscal_year=2020,
+        period_end="2020-12-31",
+        revenue_cents=42_500_000_000,
+        extra_metric="adjusted_ebitda",
+        extra_cents=5_100_000_000,
+    )
+
+    import sys
+
+    fin_module = sys.modules["edgarpack.query.financials"]
+
+    async def fake_fetch(cik, force=False):  # noqa: ARG001
+        return {
+            "facts": {
+                "us-gaap": {
+                    "Revenues": {
+                        "units": {
+                            "USD": [
+                                {
+                                    "val": 2_900_000_000,
+                                    "form": "20-F",
+                                    "fy": 2025,
+                                    "fp": "FY",
+                                    "start": "2025-01-01",
+                                    "end": "2025-12-31",
+                                    "filed": "2026-03-18",
+                                    "accn": "0001858985-26-000001",
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+
+    async def fake_resolve_ticker(company, force=False):  # noqa: ARG001
+        return "0001858985", "On Holding AG"
+
+    async def fake_doc_map(cik, force=False):  # noqa: ARG001
+        return {}
+
+    with patch.object(fin_module, "fetch_company_facts", side_effect=fake_fetch):
+        with patch.object(fin_module, "resolve_ticker", side_effect=fake_resolve_ticker):
+            with patch.object(fin_module, "_build_doc_map", side_effect=fake_doc_map):
+                result = await financials(
+                    company="ONON",
+                    metrics=["revenue", "adjusted_ebitda"],
+                    period="lfy",
+                    pack_root=tmp_path,
+                )
+
+    revenue = result.metrics.get("revenue")
+    assert revenue is not None
+    assert revenue.form_type == "20-F"
+    assert revenue.fiscal_year == 2025
+    assert result.metrics.get("adjusted_ebitda") is None
 
 
 @pytest.mark.asyncio

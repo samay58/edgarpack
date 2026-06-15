@@ -266,7 +266,7 @@ def test_cmd_which_shows_progress_and_summary(capsys):
     assert (
         "Discovery summary: 1 analyzed, 1 skipped "
         "(manifest missing; run `edgarpack build <ticker> --form 10-K` "
-        "or `edgarpack build <ticker> --form S-1 --with-chunks`)"
+        "or build a registration pack with `--form S-1 --with-chunks` or `--form F-1`)"
     ) in captured.err
     assert "Rendering KPI table" in captured.err
     assert "paid_seats" in captured.out
@@ -579,7 +579,7 @@ def test_cmd_which_s1_empty_state_surfaces_registration_context(tmp_path, capsys
     assert "No recurring operating KPI table was found" in captured.out
     assert "registration disclosures" in captured.out
     assert "10-K or 10-Q" not in captured.out
-    assert "Queryable S-1 financial metrics" in captured.out
+    assert "Queryable registration financial metrics" in captured.out
     assert "net_income" in captured.out
     assert "free_cash_flow" in captured.out
 
@@ -638,6 +638,44 @@ def test_cmd_query_multi_period_renders_alias_normalized_metric(capsys):
     assert "$382.7M" in out
     assert "$23.4M" in out
     assert "Capital Expenditures  N/A" not in out
+
+
+def test_cmd_query_passes_pack_root_to_financials(tmp_path, capsys):
+    args = _query_args(company="ONON", metrics="revenue")
+    args.packs = tmp_path
+    args.output_format = "json"
+    seen: dict[str, Path | None] = {"pack_root": None}
+
+    async def fake_financials(company, metrics, period, **kwargs):  # noqa: ARG001
+        seen["pack_root"] = kwargs.get("pack_root")
+        return QueryResult(
+            company="On Holding AG",
+            cik="0001858985",
+            period=period,
+            metrics={
+                "revenue": CitedValue(
+                    value=2_900_000_000,
+                    unit="USD",
+                    metric="revenue",
+                    concept="Revenues",
+                    period_end=date(2025, 12, 31),
+                    fiscal_year=2025,
+                    fiscal_period="FY",
+                    form_type="20-F",
+                    filed=date(2026, 3, 18),
+                    accession="0001858985-26-000001",
+                    cik="0001858985",
+                    company="On Holding AG",
+                )
+            },
+        )
+
+    with patch("edgarpack.query.financials.financials", new=AsyncMock(side_effect=fake_financials)):
+        rc = cli._cmd_query(args)
+
+    capsys.readouterr()
+    assert rc == 0
+    assert seen["pack_root"] == tmp_path
 
 
 class TestWhichDiagnosticsSplit(unittest.TestCase):

@@ -303,6 +303,72 @@ def test_prompt_system_forbids_fabrication():
     assert "not fabricate" in PROMPT_SYSTEM.lower() or "only" in PROMPT_SYSTEM.lower()
 
 
+def test_summary_table_parser_fails_closed_on_percent_columns():
+    section = """
+    Summary Consolidated Financial Data
+
+    > **Year Ended March 31, / Year Ended March 31, / Year Ended March 31,**
+    >
+    > 2024 / % / 2023 / % / 2022 / %
+    > (in millions, except percentages)
+    > Revenue ... $3,233 / 100 / % / $2,679 / 100 / % / $2,703 / 100 / %
+    > Gross profit ... 3,081 / 95 / % / 2,574 / 96 / % / 2,506 / 93 / %
+    """
+    assert _extract_summary_table_facts(section, accession="0001193125-23-216983") == []
+
+
+def test_summary_table_parser_fails_closed_on_interleaved_percent_value_rows():
+    section = """
+    Summary Financial Data
+
+    > 2023 / 2022 / 2021
+    > (in millions, except percentages)
+    > Total revenue ........................... 2,679 / 100 / % / 2,703 / 100 / % / 2,027 / 100 / %
+    > Gross profit ............................ 2,573 / 96 / % / 2,572 / 95 / % / 1,882 / 93 / %
+    """
+    assert _extract_summary_table_facts(section, accession="0001193125-23-216983") == []
+
+
+def test_summary_table_parser_fails_closed_when_row_has_extra_amount_columns():
+    section = """
+    Summary Financial Data
+
+    > 2021 / 2020
+    > (in thousands)
+    > Gross profit ............................ 187,179 / 96,004 / 231,105 / 143,117
+    > Adjusted EBITDA ......................... 47,299 / 15,975 / 49,762 / 29,869
+    """
+    assert _extract_summary_table_facts(section, accession="0001193125-21-253415") == []
+
+
+def test_summary_table_parser_fails_closed_on_annual_plus_unlabeled_interim_values():
+    section = "\n".join(
+        [
+            "Summary Financial Data",
+            "",
+            "> 2023 / 2022 / 2021",
+            "> (in millions)",
+            (
+                "> Total revenue ........................... $ / 2,679 / $ / 2,703 / "
+                "$ / 2,027 / $ / 675 / $ / 692"
+            ),
+        ]
+    )
+    assert _extract_summary_table_facts(section, accession="0001193125-23-216983") == []
+
+
+def test_summary_table_parser_does_not_label_share_count_row_as_eps():
+    section = """
+    Summary Financial Data
+
+    > 2023 / 2022 / 2021
+    > (in millions, except per share amounts)
+    > Net income per share:
+    > Basic ................................... 1,025,234,000 / 1,025,234,000 / 1,025,234,000
+    """
+    assert _extract_summary_table_facts(section, accession="0001193125-23-216983") == []
+
+
 _CEREBRAS_2026_SUMMARY_TABLE = """
  Summary Consolidated Financial Data
  The following tables set forth our summary consolidated financial data. The summary

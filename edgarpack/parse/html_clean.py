@@ -49,41 +49,54 @@ VOID_TAGS = {
     "wbr",
 }
 
-# Inline-CSS patterns that reliably hide an element on their own.
-# Any one of these firing is enough to discard the subtree.
-HIDDEN_STYLE_PATTERNS = [
-    re.compile(r"display\s*:\s*none", re.IGNORECASE),
-    re.compile(r"visibility\s*:\s*hidden", re.IGNORECASE),
-    re.compile(r"height\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
-    re.compile(r"width\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
-    re.compile(r"opacity\s*:\s*0(?:\.0+)?(?:\s|;|$)", re.IGNORECASE),
-    re.compile(
-        r"position\s*:\s*absolute.*?(?:left|top)\s*:\s*-\d+",
-        re.IGNORECASE | re.DOTALL,
-    ),
-]
+_ZERO_CSS_VALUE_RE = re.compile(r"^\s*0(?:\.0+)?(?:px|pt|em|rem|%)?\s*$", re.IGNORECASE)
+_NEGATIVE_CSS_VALUE_RE = re.compile(r"^\s*-\d", re.IGNORECASE)
 
-# `font-size:0` alone is NOT a hide signal. SEC S-1 renderers apply it as a
-# CSS reset on page wrappers (with real width/height) and let child <font>
-# runs override with explicit sizes. Treating it as hidden collapses the
-# whole filing. Only count it when it co-occurs with another zero-size cue.
-_FONT_SIZE_ZERO_PATTERN = re.compile(r"font-size\s*:\s*0(?:px|pt|em|rem)?(?:\s|;|$)", re.IGNORECASE)
-_COMPANION_ZERO_PATTERNS = [
-    re.compile(r"width\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
-    re.compile(r"height\s*:\s*0(?:px)?(?:\s|;|$)", re.IGNORECASE),
-    re.compile(r"opacity\s*:\s*0(?:\.0+)?(?:\s|;|$)", re.IGNORECASE),
-]
+
+def _style_declarations(style: str) -> dict[str, str]:
+    declarations: dict[str, str] = {}
+    for part in style.split(";"):
+        if ":" not in part:
+            continue
+        name, value = part.split(":", 1)
+        name = name.strip().lower()
+        if not name:
+            continue
+        declarations[name] = value.strip()
+    return declarations
+
+
+def _is_zero_css_value(value: str | None) -> bool:
+    return bool(value and _ZERO_CSS_VALUE_RE.match(value))
 
 
 def is_hidden_style(style: str) -> bool:
     """Return True when inline CSS likely hides the element visually."""
     if not style:
         return False
-    if any(pattern.search(style) for pattern in HIDDEN_STYLE_PATTERNS):
+    declarations = _style_declarations(style)
+    display = declarations.get("display", "").strip().lower()
+    if display == "none":
+        return True
+    visibility = declarations.get("visibility", "").strip().lower()
+    if visibility == "hidden":
+        return True
+    if _is_zero_css_value(declarations.get("width")):
+        return True
+    if _is_zero_css_value(declarations.get("height")):
+        return True
+    if _is_zero_css_value(declarations.get("opacity")):
+        return True
+    if declarations.get("position", "").strip().lower() == "absolute" and (
+        _NEGATIVE_CSS_VALUE_RE.match(declarations.get("left", ""))
+        or _NEGATIVE_CSS_VALUE_RE.match(declarations.get("top", ""))
+    ):
         return True
     # font-size:0 is only a hide signal when paired with another zero-size cue.
-    if _FONT_SIZE_ZERO_PATTERN.search(style):
-        return any(p.search(style) for p in _COMPANION_ZERO_PATTERNS)
+    if _is_zero_css_value(declarations.get("font-size")):
+        return any(
+            _is_zero_css_value(declarations.get(prop)) for prop in ("width", "height", "opacity")
+        )
     return False
 
 

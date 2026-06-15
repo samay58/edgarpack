@@ -222,11 +222,16 @@ def _financial_section_texts(pack_dir: Path, markdown: str) -> list[str]:
 _DETERMINISTIC_TABLE_MODEL = "deterministic-summary-table"
 _YEAR_ROW_RE = re.compile(r"^((?:19|20)\d{2})(?:\s*/\s*((?:19|20)\d{2}))*$")
 _YEAR_TOKEN_RE = re.compile(r"\b((?:19|20)\d{2})\b")
+_INTERLEAVED_PERCENT_YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b\s*/\s*%")
 _SUMMARY_VALUE_TOKEN_RE = r"(?:\$?\(?\$?\d[\d,]*(?:\.\d+)?\)?|[\u2014-])"
 _SUMMARY_ROW_VALUE_RE = re.compile(
     rf"(?P<left>{_SUMMARY_VALUE_TOKEN_RE})\s*/\s*(?P<right>{_SUMMARY_VALUE_TOKEN_RE})\s*$"
 )
 _SUMMARY_ANY_VALUE_RE = re.compile(rf"(?<![A-Za-z0-9]){_SUMMARY_VALUE_TOKEN_RE}(?![A-Za-z0-9])")
+_INTERLEAVED_PERCENT_VALUE_RE = re.compile(
+    r"\d[\d,]*(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?\s*/\s*%\s*/\s*"
+    r"\d[\d,]*(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?\s*/\s*%"
+)
 
 
 def _strip_summary_line(line: str) -> str:
@@ -296,6 +301,8 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int]
         year_tokens = [int(match.group(1)) for match in _YEAR_TOKEN_RE.finditer(line)]
         if not year_tokens:
             continue
+        if _INTERLEAVED_PERCENT_YEAR_RE.search(line):
+            return [], 0
         if not _YEAR_ROW_RE.fullmatch(line.strip()) and len(year_tokens) < 2:
             continue
 
@@ -390,6 +397,8 @@ def _summary_label_for_line(line: str) -> str:
 
 
 def _summary_values_for_line(line: str, column_count: int) -> list[Decimal | None]:
+    if _INTERLEAVED_PERCENT_VALUE_RE.search(line):
+        return []
     line = re.sub(r"\(\d+\)", "", line)
     matches = [match.group(0) for match in _SUMMARY_ANY_VALUE_RE.finditer(line)]
     parsed = [_parse_summary_number(match) for match in matches]
@@ -402,7 +411,7 @@ def _summary_values_for_line(line: str, column_count: int) -> list[Decimal | Non
     if len(parsed) > column_count:
         if "%" in line and column_count in {2, 3}:
             return parsed[:column_count]
-        return parsed[-column_count:]
+        return []
     if 1 < len(parsed) < column_count:
         return parsed
     return []
@@ -473,6 +482,10 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
         label = _summary_label_for_line(line)
         metric = _summary_metric_for_label(label, context=context)
         if metric is None:
+            continue
+        if metric == "eps_basic" and any(
+            value is not None and abs(value) > Decimal("10000") for value in values
+        ):
             continue
 
         row_columns = _compact_summary_columns(columns, len(values))
@@ -1305,6 +1318,24 @@ def _s1_value_from_candidates(
     )
 
 
+_REGISTRATION_VALUE_SOURCES = {"s1_snapshot", "s1_pro_forma", "no_api_key"}
+
+
+def _periodic_context_fiscal_years(result: Any) -> set[int]:
+    years: set[int] = set()
+    for value in getattr(result, "metrics", {}).values():
+        values = value if isinstance(value, list) else [value]
+        for item in values:
+            if item is None:
+                continue
+            if getattr(item, "source", "") in _REGISTRATION_VALUE_SOURCES:
+                continue
+            fiscal_year = getattr(item, "fiscal_year", 0)
+            if isinstance(fiscal_year, int) and fiscal_year > 0:
+                years.add(fiscal_year)
+    return years
+
+
 def snapshots_for_cik(cik: str, pack_root: Path) -> list[SnapshotFact]:
     pack_root = Path(pack_root)
     out: list[SnapshotFact] = []
@@ -1359,9 +1390,14 @@ async def augment_with_s1_snapshot(
     if not packs:
         return result
 
+    periodic_context_years = (
+        set() if period == "pro-forma" else _periodic_context_fiscal_years(result)
+    )
     latest_pack = packs[0]
     latest_result = await extract_or_load_snapshot(latest_pack.pack_dir)
     if latest_result.extraction_status == "no_api_key":
+        if periodic_context_years:
+            return result
         if latest_pack.filing_date != _date_cls.min:
             placeholder_date = latest_pack.filing_date
         else:
@@ -1395,6 +1431,15 @@ async def augment_with_s1_snapshot(
         cached = _current_cached_snapshot(pack)
         if cached is not None:
             candidates.extend(_snapshot_candidates(cached, pack))
+
+    if periodic_context_years:
+        candidates = [
+            candidate
+            for candidate in candidates
+            if candidate.fact.fiscal_year in periodic_context_years
+        ]
+        if not candidates:
+            return result
 
     for metric in metrics:
         current = result.metrics.get(metric)

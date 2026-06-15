@@ -19,13 +19,10 @@ from __future__ import annotations
 
 import html as _html_mod
 import re
+from dataclasses import dataclass
+from html.parser import HTMLParser
 
 __all__ = ["extract_toc_sections", "inject_s1_headings"]
-
-_TOC_LINK_RE = re.compile(
-    r'<a\s+[^>]*href="#([^"]+)"[^>]*>([^<]+)</a>',
-    re.IGNORECASE,
-)
 
 # Titles that appear as links but are not section headings: TOC self-links,
 # pagination markers, generic cross-references.
@@ -46,6 +43,42 @@ _TITLE_BLACKLIST = frozenset(
 # come through as the entire link text.
 _LEADER_DOTS_RE = re.compile(r"\s*\.{3,}\s*")
 _ROMAN_NUMERAL_RE = re.compile(r"^[ivxlcdm]+$", re.IGNORECASE)
+_FINANCIAL_STATEMENT_PAGE_RE = re.compile(r"^[Ff]-\d+$")
+
+
+@dataclass(frozen=True)
+class _TocLink:
+    anchor: str
+    title: str
+
+
+class _TocAnchorParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.links: list[_TocLink] = []
+        self._anchor: str | None = None
+        self._text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() != "a" or self._anchor is not None:
+            return
+        attr_dict = {name.lower(): value or "" for name, value in attrs}
+        href = attr_dict.get("href", "").strip()
+        if not href.startswith("#") or len(href) <= 1:
+            return
+        self._anchor = href[1:]
+        self._text = []
+
+    def handle_data(self, data: str) -> None:
+        if self._anchor is not None:
+            self._text.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() != "a" or self._anchor is None:
+            return
+        self.links.append(_TocLink(anchor=self._anchor, title="".join(self._text)))
+        self._anchor = None
+        self._text = []
 
 
 def _clean_title(title: str) -> str:
@@ -60,6 +93,8 @@ def _is_section_title(title: str) -> bool:
         return False
     if title.lower() in _TITLE_BLACKLIST:
         return False
+    if _FINANCIAL_STATEMENT_PAGE_RE.fullmatch(title):
+        return False
     # Pure numeric page numbers (1, 23, 178) or roman-numeral page refs.
     if title.isdigit() or _ROMAN_NUMERAL_RE.match(title):
         return False
@@ -72,17 +107,54 @@ def extract_toc_sections(html: str) -> list[tuple[str, str]]:
     One (anchor_id, title) pair per unique anchor; the first occurrence wins
     so repeated body cross-references don't override the TOC mapping.
     """
+    parser = _TocAnchorParser()
+    try:
+        parser.feed(html)
+        parser.close()
+    except (AssertionError, UnicodeDecodeError):
+        return []
+
     seen_anchors: set[str] = set()
     pairs: list[tuple[str, str]] = []
-    for anchor, raw_title in _TOC_LINK_RE.findall(html):
-        title = _clean_title(raw_title)
+    for link in parser.links:
+        title = _clean_title(link.title)
         if not _is_section_title(title):
             continue
-        if anchor in seen_anchors:
+        if link.anchor in seen_anchors:
             continue
-        seen_anchors.add(anchor)
-        pairs.append((anchor, title))
+        seen_anchors.add(link.anchor)
+        pairs.append((link.anchor, title))
     return pairs
+
+
+def _target_pattern(anchor: str) -> re.Pattern[str]:
+    quoted = re.escape(anchor)
+    attr_value = rf'(?:="{quoted}"|=\'{quoted}\'|={quoted})(?=\s|/?>)'
+    return re.compile(
+        rf"(<[a-z][a-z0-9]*\b(?=[^>]*\b(?:id|name)\s*{attr_value})[^>]*>)",
+        re.IGNORECASE,
+    )
+
+
+def _insertion_index_before_target(html: str, target_start: int) -> int:
+    prefix = html[:target_start]
+    last_p: re.Match[str] | None = None
+    for match in re.finditer(r"<p\b[^>]*>", prefix, flags=re.IGNORECASE):
+        last_p = match
+    if last_p is None:
+        return target_start
+    last_close = prefix.rfind("</p>")
+    if last_close > last_p.start():
+        return target_start
+    return last_p.start()
+
+
+def _inject_heading_once(html: str, pattern: re.Pattern[str], heading_html: str) -> str:
+    match = pattern.search(html)
+    if match is None:
+        return html
+    insert_at = _insertion_index_before_target(html, match.start(1))
+    return html[:insert_at] + heading_html + html[insert_at:]
 
 
 def inject_s1_headings(html: str) -> str:
@@ -102,10 +174,6 @@ def inject_s1_headings(html: str) -> str:
         # Find the first element carrying id="anchor" and inject <h2> before it.
         # Escaping the title for HTML context so entities like & render safely.
         safe_title = _html_mod.escape(title, quote=False)
-        pattern = re.compile(
-            rf'(<[a-z][a-z0-9]*\s+[^>]*\bid="{re.escape(anchor)}"[^>]*>)',
-            re.IGNORECASE,
-        )
-        replacement = rf"<h2>{safe_title}</h2>\1"
-        result = pattern.sub(replacement, result, count=1)
+        pattern = _target_pattern(anchor)
+        result = _inject_heading_once(result, pattern, f"<h2>{safe_title}</h2>")
     return result
