@@ -143,6 +143,25 @@ def _is_no_api_key_placeholder(v: Any) -> bool:
 
 
 def _reproduce_command(permalink: str, args: Any) -> str:
+    shortcut = getattr(args, "cmd", "")
+    if shortcut in {"f1", "s1"}:
+        parts = ["edgarpack", shortcut, shlex.quote(str(getattr(args, "company", "")))]
+        metrics = getattr(args, "metrics", None)
+        if metrics:
+            parts.append(shlex.quote(str(metrics)))
+        accession = getattr(args, "accession", None)
+        if accession:
+            parts.extend(["--accession", shlex.quote(str(accession))])
+        period = getattr(args, "period", "lfy")
+        if period != "lfy":
+            parts.extend(["--period", shlex.quote(str(period))])
+        pack_root = getattr(args, "packs", None)
+        if pack_root is not None:
+            pack_root_text = str(pack_root)
+            if pack_root_text not in {"", "packs", "./packs"}:
+                parts.extend(["--packs", shlex.quote(pack_root_text)])
+        return " ".join(parts)
+
     pack_root = getattr(args, "packs", None)
     if pack_root is None or "--packs " in permalink:
         return permalink

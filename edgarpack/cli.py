@@ -669,6 +669,82 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
 
+    def _add_registration_shortcut(name: str, form_type: str, help_text: str) -> None:
+        p_reg = sub.add_parser(
+            name,
+            help=help_text,
+            description=(
+                f"Build the latest {form_type} pack if needed, then query cited "
+                "registration financials. Example: "
+                f"`edgarpack {name} 0002004711 revenue,net_income`."
+            ),
+        )
+        p_reg.add_argument("company", help="CIK, ticker, or company name")
+        p_reg.add_argument(
+            "metrics",
+            nargs="?",
+            default=None,
+            help="Comma-separated metric names. Omit for the default registration set.",
+        )
+        p_reg.add_argument(
+            "--accession",
+            "-a",
+            help="Pin an exact accession instead of the latest matching filing.",
+        )
+        p_reg.add_argument(
+            "--period",
+            "-p",
+            default="lfy",
+            help="Period selector. Default: lfy.",
+        )
+        p_reg.add_argument(
+            "--format",
+            dest="output_format",
+            choices=["table", "json", "json-full"],
+            default="table",
+            help="Output format. Default: table.",
+        )
+        p_reg.add_argument(
+            "--packs",
+            type=Path,
+            default=DEFAULT_PACKS_DIR,
+            help="Pack root for advanced or isolated testing.",
+        )
+        p_reg.add_argument("--force", action="store_true", help="Rebuild the pack first.")
+        p_reg.add_argument("--audit", action="store_true", help="Show audit blocks.")
+        p_reg.add_argument(
+            "--show-links",
+            choices=["primary", "all", "none"],
+            default="primary",
+            help="Link verbosity in table output.",
+        )
+        p_reg.add_argument(
+            "--citations",
+            choices=["inline", "footer", "off"],
+            default=None,
+            help="Citation placement in table output.",
+        )
+        p_reg.add_argument(
+            "--currency",
+            choices=["native", "usd", "both"],
+            default="both",
+            help="Currency output. Default: both.",
+        )
+        p_reg.add_argument(
+            "--preset",
+            choices=["perf"],
+            help="Expand to a curated metric list. Combines with --metrics.",
+        )
+        p_reg.add_argument(
+            "--strict",
+            action="store_true",
+            help="Reject values resolved via the self-heal path.",
+        )
+        p_reg.set_defaults(registration_form=form_type)
+
+    _add_registration_shortcut("f1", "F-1", "Build/query an F-1 registration filing")
+    _add_registration_shortcut("s1", "S-1", "Build/query an S-1 registration filing")
+
     p_harvest = sub.add_parser(
         "harvest",
         help="Bulk-download and build filing packs from a universe definition",
@@ -1108,6 +1184,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_api(args)
     if args.cmd == "query":
         return _cmd_query(args)
+    if args.cmd in {"f1", "s1"}:
+        return _cmd_registration_shortcut(args)
     if args.cmd == "comps":
         return _cmd_comps(args)
     if args.cmd == "harvest":
@@ -1486,6 +1564,85 @@ def _cmd_build(args: Any) -> int:
         return 0
 
     return asyncio.run(_run())
+
+
+def _registration_shortcut_pack_exists(
+    *,
+    cik: str,
+    pack_root: Path,
+    form_type: str,
+    accession: str | None,
+) -> bool:
+    from .query.s1_financials import _registration_packs_for_cik
+    from .sec.submissions import normalize_form_type
+
+    target_form = normalize_form_type(form_type)
+    target_accession = accession.replace("-", "") if accession else None
+    for pack in _registration_packs_for_cik(cik, pack_root):
+        if normalize_form_type(pack.form_type) != target_form:
+            continue
+        if target_accession is not None and pack.accession.replace("-", "") != target_accession:
+            continue
+        return True
+    return False
+
+
+def _cmd_registration_shortcut(args: Any) -> int:
+    """Build a registration pack when needed, then reuse the normal query command."""
+    form_type = str(getattr(args, "registration_form", "") or "").upper()
+    if form_type not in {"F-1", "S-1"}:
+        print(f"Error: unsupported registration shortcut form {form_type!r}", file=sys.stderr)
+        return 2
+
+    async def _ensure_pack() -> int:
+        from .pack.build import build_pack
+        from .sec.client import SECRateLimitError
+
+        rc, cik = await _cik_from_company_args(args)
+        if rc != 0 or cik is None:
+            return rc
+
+        pack_root = Path(getattr(args, "packs", DEFAULT_PACKS_DIR))
+        accession = getattr(args, "accession", None)
+        force = bool(getattr(args, "force", False))
+        if not force and _registration_shortcut_pack_exists(
+            cik=cik,
+            pack_root=pack_root,
+            form_type=form_type,
+            accession=accession,
+        ):
+            return 0
+
+        target = accession or f"latest {form_type}"
+        print(f"Building {target} pack for {args.company}...", file=sys.stderr)
+        try:
+            result = await build_pack(
+                cik=cik,
+                accession=accession,
+                form_type=form_type,
+                out_dir=pack_root,
+                with_chunks=True,
+                with_xbrl=False,
+                force=force,
+            )
+        except SECRateLimitError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            print("SEC rate limit cooldown: wait 10 minutes before retrying.", file=sys.stderr)
+            return 1
+        except Exception as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+
+        _register_pack_result(result, ticker=None)
+        built_accession = result.filing_meta.get("accession", "?")
+        built_form = result.filing_meta.get("form_type", form_type)
+        print(f"Ready: {built_form} {built_accession}", file=sys.stderr)
+        return 0
+
+    rc = asyncio.run(_ensure_pack())
+    if rc != 0:
+        return rc
+    return _cmd_query(args)
 
 
 def _cmd_identify(args: Any) -> int:
