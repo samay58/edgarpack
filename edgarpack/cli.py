@@ -1573,18 +1573,26 @@ def _registration_shortcut_pack_exists(
     form_type: str,
     accession: str | None,
 ) -> bool:
-    from .query.s1_financials import _registration_packs_for_cik
-    from .sec.submissions import normalize_form_type
+    from .query.s1_financials import has_registration_pack_for_cik
 
-    target_form = normalize_form_type(form_type)
-    target_accession = accession.replace("-", "") if accession else None
-    for pack in _registration_packs_for_cik(cik, pack_root):
-        if normalize_form_type(pack.form_type) != target_form:
-            continue
-        if target_accession is not None and pack.accession.replace("-", "") != target_accession:
-            continue
-        return True
-    return False
+    return has_registration_pack_for_cik(
+        cik,
+        pack_root,
+        form_type=form_type,
+        accession=accession,
+    )
+
+
+async def _registration_shortcut_ticker(args: Any) -> str | None:
+    company = getattr(args, "company", None)
+    if not isinstance(company, str) or not company.strip():
+        return None
+    try:
+        resolved = await _resolve_cli_company(company)
+    except (UnknownCompany, AmbiguousCompany):
+        return None
+    ticker = getattr(resolved, "ticker", None)
+    return ticker.strip().upper() if isinstance(ticker, str) and ticker.strip() else None
 
 
 def _cmd_registration_shortcut(args: Any) -> int:
@@ -1598,6 +1606,7 @@ def _cmd_registration_shortcut(args: Any) -> int:
         from .pack.build import build_pack
         from .sec.client import SECRateLimitError
 
+        resolved_ticker = await _registration_shortcut_ticker(args)
         rc, cik = await _cik_from_company_args(args)
         if rc != 0 or cik is None:
             return rc
@@ -1633,7 +1642,7 @@ def _cmd_registration_shortcut(args: Any) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
 
-        _register_pack_result(result, ticker=None)
+        _register_pack_result(result, ticker=resolved_ticker)
         built_accession = result.filing_meta.get("accession", "?")
         built_form = result.filing_meta.get("form_type", form_type)
         print(f"Ready: {built_form} {built_accession}", file=sys.stderr)

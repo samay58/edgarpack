@@ -22,6 +22,7 @@ def test_snapshot_fact_to_cited_value_preserves_core_fields():
         is_audited=True,
         is_pro_forma=False,
         pro_forma_note=None,
+        source_text="Revenue ... $78,287",
     )
     cv = snapshot_fact_to_cited_value(
         fact,
@@ -42,6 +43,10 @@ def test_snapshot_fact_to_cited_value_preserves_core_fields():
     assert cv.cik == "0002021728"
     assert cv.source == "s1_snapshot"
     assert cv.is_pro_forma is False
+    assert cv.excerpt_text == "Revenue ... $78,287"
+    assert cv.to_lean_metric()["excerpt_text"] == "Revenue ... $78,287"
+    citation = cv.to_citation_record("C1")
+    assert citation["excerpt_text"] == "Revenue ... $78,287"
 
 
 def test_snapshot_fact_to_cited_value_marks_pro_forma_source():

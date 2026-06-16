@@ -750,7 +750,7 @@ def _llm_row_has_period_context(row: dict[str, object]) -> bool:
         return True
     if period_end.endswith("-12-31"):
         return True
-    annual_markers = ("year ended", "fiscal year", "annual", "as of")
+    annual_markers = ("year ended", "fiscal year", "annual")
     return any(marker in source_text for marker in annual_markers)
 
 
@@ -1134,6 +1134,7 @@ def snapshot_fact_to_cited_value(
         reporting_currency=fact.currency,
         is_pro_forma=fact.is_pro_forma,
         pro_forma_note=fact.pro_forma_note,
+        excerpt_text=fact.source_text or "",
     )
 
 
@@ -1215,8 +1216,24 @@ def _registration_packs_for_cik(cik: str, pack_root: Path) -> list[_Registration
     return packs
 
 
-def has_registration_pack_for_cik(cik: str, pack_root: Path) -> bool:
-    return bool(_registration_packs_for_cik(cik, pack_root))
+def has_registration_pack_for_cik(
+    cik: str,
+    pack_root: Path,
+    *,
+    form_type: str | None = None,
+    accession: str | None = None,
+) -> bool:
+    from ..sec.submissions import normalize_form_type
+
+    target_form = normalize_form_type(form_type) if form_type else None
+    target_accession = accession.replace("-", "") if accession else None
+    for pack in _registration_packs_for_cik(cik, pack_root):
+        if target_form is not None and normalize_form_type(pack.form_type) != target_form:
+            continue
+        if target_accession is not None and pack.accession.replace("-", "") != target_accession:
+            continue
+        return True
+    return False
 
 
 def default_registration_query_metrics() -> list[str]:

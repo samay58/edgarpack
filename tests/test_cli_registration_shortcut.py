@@ -39,6 +39,7 @@ def _result(period: str = "lfy") -> QueryResult:
 
 def test_f1_shortcut_builds_missing_pack_then_queries(tmp_path, monkeypatch, capsys):
     financials_module = importlib.import_module("edgarpack.query.financials")
+    resolved_company = SimpleNamespace(ticker="BEND", cik="0002004711", private=False)
     build_result = SimpleNamespace(
         output_dir=tmp_path / "0002004711" / "0001104659-26-071170",
         filing_meta={
@@ -52,7 +53,9 @@ def test_f1_shortcut_builds_missing_pack_then_queries(tmp_path, monkeypatch, cap
     financials = AsyncMock(return_value=_result())
 
     monkeypatch.setattr(cli, "_cik_from_company_args", AsyncMock(return_value=(0, "0002004711")))
-    monkeypatch.setattr(cli, "_register_pack_result", Mock())
+    monkeypatch.setattr(cli, "_resolve_cli_company", AsyncMock(return_value=resolved_company))
+    register_pack = Mock()
+    monkeypatch.setattr(cli, "_register_pack_result", register_pack)
     monkeypatch.setattr("edgarpack.pack.build.build_pack", build_pack)
     monkeypatch.setattr(financials_module, "financials", financials)
 
@@ -69,6 +72,7 @@ def test_f1_shortcut_builds_missing_pack_then_queries(tmp_path, monkeypatch, cap
     assert kwargs["form_type"] == "F-1"
     assert kwargs["out_dir"] == tmp_path
     assert kwargs["with_chunks"] is True
+    register_pack.assert_called_once_with(build_result, ticker="BEND")
     financials.assert_awaited_once()
     assert financials.await_args.kwargs["pack_root"] == tmp_path
 
@@ -95,6 +99,7 @@ def test_f1_shortcut_reuses_existing_pack(tmp_path, monkeypatch, capsys):
     financials = AsyncMock(return_value=_result())
 
     monkeypatch.setattr(cli, "_cik_from_company_args", AsyncMock(return_value=(0, "0002004711")))
+    monkeypatch.setattr(cli, "_resolve_cli_company", AsyncMock())
     monkeypatch.setattr("edgarpack.pack.build.build_pack", build_pack)
     monkeypatch.setattr(financials_module, "financials", financials)
 

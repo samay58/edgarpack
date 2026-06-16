@@ -268,6 +268,8 @@ class CitedValue(BaseModel):
             record["section_id"] = self.section_id
         if self.matched_label:
             record["matched_label"] = self.matched_label
+        if self.excerpt_text:
+            record["excerpt_text"] = self.excerpt_text
         if self.warnings:
             record["warnings"] = list(self.warnings)
         return record
@@ -340,6 +342,8 @@ class CitedValue(BaseModel):
             d["section_id"] = self.section_id
         if self.matched_label:
             d["matched_label"] = self.matched_label
+        if self.excerpt_text:
+            d["excerpt_text"] = self.excerpt_text
         return d
 
 

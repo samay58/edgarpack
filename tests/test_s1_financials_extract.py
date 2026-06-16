@@ -27,6 +27,7 @@ from edgarpack.query.s1_financials import (
     build_extraction_prompt,
     extract_or_load_snapshot,
     find_financial_data_section,
+    has_registration_pack_for_cik,
     parse_llm_response,
     source_sha256_for_pack,
 )
@@ -300,6 +301,25 @@ def test_parse_llm_response_drops_non_december_fy_without_annual_context():
             "is_pro_forma": false,
             "pro_forma_note": null,
             "source_text": "Revenue / $ / 601,321"
+        }
+    ]"""
+    facts = parse_llm_response(raw, accession="x")
+    assert facts == []
+
+
+def test_parse_llm_response_drops_non_december_fy_with_as_of_only_context():
+    raw = """[
+        {
+            "fiscal_year": 2026,
+            "period_end": "2026-03-31",
+            "fiscal_period": "FY",
+            "metric": "cash_and_equivalents",
+            "value_cents": 60132100000,
+            "currency": "USD",
+            "is_audited": false,
+            "is_pro_forma": false,
+            "pro_forma_note": null,
+            "source_text": "As of March 31, 2026 / Cash and cash equivalents / $ / 601,321"
         }
     ]"""
     facts = parse_llm_response(raw, accession="x")
@@ -977,6 +997,31 @@ def _write_pack(
         encoding="utf-8",
     )
     return pack
+
+
+def test_has_registration_pack_for_cik_filters_form_and_accession(tmp_path):
+    pack = _write_pack(
+        tmp_path,
+        accession="0001104659-26-071170",
+        form_type="F-1",
+    )
+
+    assert has_registration_pack_for_cik("0002021728", tmp_path)
+    assert has_registration_pack_for_cik("0002021728", tmp_path, form_type="F-1")
+    assert has_registration_pack_for_cik(
+        "0002021728",
+        tmp_path,
+        form_type="F-1",
+        accession="0001104659-26-071170",
+    )
+    assert not has_registration_pack_for_cik("0002021728", tmp_path, form_type="S-1")
+    assert not has_registration_pack_for_cik(
+        "0002021728",
+        tmp_path,
+        form_type="F-1",
+        accession="0000000000-00-000000",
+    )
+    assert pack.exists()
 
 
 def test_source_sha256_for_pack_is_stable(tmp_path):
