@@ -1,0 +1,2218 @@
+version: 1
+notes:
+  - "This corpus is proposed by Phase 0 discovery. It pins current behavior before vNext design."
+  - "Current implementation is the oracle, but known-bad behavior may be intentionally changed later."
+  - "Real identifiers are drawn from the discovery corpus real_examples and tests. Where a specific filing is needed but not pinned in-repo, accession is a placeholder and needs_selection is true."
+  - "User-facing __version__ is 0.1.0 (edgarpack/__init__.py:5); determinism keys off PARSER_VERSION 0.2.1 / SCHEMA_VERSION 1 (edgarpack/config.py:50-51). These are intentionally decoupled."
+  - "snapshot_policy levels: exact = byte-deterministic artifacts; normalized = strip timestamps/versions/paths; semantic = value+provenance equivalence; manual = LLM/VLM/translation non-determinism; known_bad = a pinned current defect; deprecated = parked surface."
+  - "command_vnext mirrors command_current unless a vNext rename is implied; the rewrite owns whether to keep argparse subcommand names."
+
+cases:
+
+  # =====================================================================
+  # REQUIRED PARITY  (active workflows the rewrite must reproduce)
+  # =====================================================================
+
+  - id: sec-build-latest-10k
+    status: required
+    source_family: sec
+    workflow: build
+    description: "Build a pack from the latest 10-K for an established SEC filer, default artifact set."
+    user_job: "Get a clean, section-addressable markdown pack of a company's most recent annual report."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build NVDA --form 10-K"
+      command_vnext:
+        - "uv run edgarpack build NVDA --form 10-K"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/<cik>/<accession>/filing.full.md"
+        - "packs/<cik>/<accession>/sections/*.md"
+        - "packs/<cik>/<accession>/manifest.json"
+        - "packs/<cik>/<accession>/llms.txt"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: exact
+      normalize:
+        - "manifest.json:generated_at"
+        - "manifest.json:built_at"
+        - "manifest.json:parser_version"
+        - "manifest.json:schema_version"
+        - "absolute output paths"
+    invariants:
+      - "Rebuild produces byte-identical filing.full.md / sections/*.md / llms.txt for a fixed PARSER_VERSION."
+      - "manifest.source.fetched_at is forced to filing_date midnight UTC, not real fetch time (manifest.py:151-157)."
+      - "Every section and artifact carries a SHA256; manifest.json excludes its own hash (build.py:312-318)."
+      - "filing.full.md is prepended with '# <company> | <form> | Filed <date>' before sectionize."
+    why_this_case_exists: "Primary write path; the determinism guarantee is the core of the product and only has a live+slow test today."
+    edge_cases_covered:
+      - "default form resolution"
+      - "title prepend participating in char offsets"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Determinism only verified live+slow against this exact filer (test_determinism.py); no offline byte-identity test exists."
+      - "Tokenizer fallback (len//4 when tiktoken cache cold) can change manifest tokens_total and chunk bytes across environments (BACKLOG item 4)."
+    needs_selection: true
+    confidence: high
+
+  - id: sec-build-exact-accession
+    status: required
+    source_family: sec
+    workflow: build
+    description: "Build a pack from a specific historical accession (exact filing identity)."
+    user_job: "Reproducibly build the exact filing a citation points to."
+    company: "Apple Inc."
+    ticker: AAPL
+    cik: "0000320193"
+    accession: "0000320193-24-000001"
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build AAPL --accession 0000320193-24-000001"
+      command_vnext:
+        - "uv run edgarpack build AAPL --accession 0000320193-24-000001"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/0000320193/0000320193-24-000001/manifest.json"
+        - "packs/0000320193/0000320193-24-000001/filing.full.md"
+        - "packs/0000320193/0000320193-24-000001/sections/*.md"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: exact
+      normalize:
+        - "manifest.json:generated_at"
+        - "manifest.json:parser_version"
+        - "manifest.json:schema_version"
+        - "absolute output paths"
+    invariants:
+      - "--accession and --last/--after/--before are mutually exclusive (cli.py:1433-1446)."
+      - "Existing pack with a manifest short-circuits to a cached PackResult unless --force (build.py:187-213)."
+      - "Legacy accession_nodash pack directory is read for backward compatibility (build.py:201-213)."
+    why_this_case_exists: "Pins exact-filing identity resolution and the pack directory layout consumers depend on."
+    edge_cases_covered:
+      - "accession-vs-form mutual exclusion"
+      - "idempotent rebuild short-circuit"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "0000320193-24-000001 is the illustrative accession used in docs/tests; confirm it is the intended AAPL 10-K before pinning bytes."
+    needs_selection: true
+    confidence: medium
+
+  - id: sec-query-direct-metric-lfy
+    status: required
+    source_family: sec
+    workflow: query
+    description: "Query one direct (hardcoded-concept) metric for the latest full fiscal year."
+    user_job: "Get a single cited revenue figure for the latest annual period."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA revenue --period lfy --format json"
+      command_vnext:
+        - "uv run edgarpack query NVDA revenue --period lfy --format json"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filings.*.url"
+        - "permalink"
+        - "primary_link (network-enriched)"
+        - "fact_id (network-enriched)"
+    invariants:
+      - "Returned value is a CitedValue with full provenance (cik/accession/form/filed/concept/period)."
+      - "Missing fact returns None plus a typed Diagnostic, never an uncited scalar."
+      - "Direct concept resolves source='hardcoded' (the only source --strict accepts)."
+      - "FY-anchored lfy rejects nearest-period substitutes; mismatch yields period_mismatch diagnostic."
+    why_this_case_exists: "Flagship command, simplest cited path; the single-period table render is intentionally kept byte-for-byte stable (cli.py:2559)."
+    edge_cases_covered:
+      - "hardcoded concept resolution"
+      - "exact fiscal-year matching"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Staleness uses date.today(); query output can drift across calendar years (financials.py:85)."
+    needs_selection: false
+    confidence: high
+
+  - id: sec-query-derived-metric
+    status: required
+    source_family: sec
+    workflow: query
+    description: "Query one derived metric (gross_margin) carrying component citations and a calculation block."
+    user_job: "Get a computed ratio with each component traceable to a filing."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA gross_margin --period lfy --format json"
+      command_vnext:
+        - "uv run edgarpack query NVDA gross_margin --period lfy --format json"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filings.*.url"
+        - "permalink"
+        - "primary_link"
+    invariants:
+      - "DerivedValue carries the full component CitedValue map; non-offset components must share fiscal_year/period/end (financials.py:1582)."
+      - "lean JSON exposes citations (C#/D#/L#) and calculations registries with the formula 'gross_profit / revenue'."
+      - "Provenance inherited from the first aligned component (financials.py:1843)."
+    why_this_case_exists: "Pins the derived-value + citation-registry contract that downstream tools and JSON consumers key off."
+    edge_cases_covered:
+      - "component-citation alignment"
+      - "calculation block emission"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "eval_formula has no operator precedence (5-token 'a + b * c' computes (a+b)*c); formula authors must decompose manually (formula.py)."
+    needs_selection: false
+    confidence: high
+
+  - id: sec-query-ltm
+    status: required
+    source_family: sec
+    workflow: query
+    description: "LTM (trailing-twelve-month) query enforcing the {mrp, lfy, mrp_prior} component-citation contract."
+    user_job: "Get a trailing-twelve-month figure that is mathematically and provenance-correct, not a mislabeled YTD."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "ltm"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA revenue,net_income --period ltm --audit"
+      command_vnext:
+        - "uv run edgarpack query NVDA revenue,net_income --period ltm --audit"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filings.*.url"
+        - "permalink"
+        - "primary_link"
+    invariants:
+      - "A non-null LTM DerivedValue MUST carry component roles {mrp, lfy, mrp_prior} (periods.py:483 _assert_ltm_invariant)."
+      - "The only non-DerivedValue LTM results allowed are a plain FY CitedValue or a full-fiscal-year (350-380 day) Q4 annual early-exit."
+      - "A missing component returns None + ltm_incomputable diagnostic, never an uncited scalar."
+      - "Per-share LTM degrades to annual with an ltm_degraded diagnostic (non-additive)."
+      - "Balance-sheet (instant) LTM returns the latest period-end balance and intentionally bypasses the three-component invariant."
+    why_this_case_exists: "The single load-bearing contract of the query slice; enforced suite-wide by the conftest autouse LTM harness."
+    edge_cases_covered:
+      - "three-component LTM math"
+      - "per-share degrade"
+      - "Q4 full-year early-exit"
+      - "instant balance-sheet bypass"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Three historical LTM bugs (per-share additive, annual-only LTM-1 stub, Q4 early-return) are FIXED and pinned by test_periods.py; rewrite must not regress them."
+    needs_selection: false
+    confidence: high
+
+  - id: sec-query-historical-annual-series
+    status: required
+    source_family: sec
+    workflow: query
+    description: "Multi-period annual series (annual:N) returning a list of cited values, newest-first."
+    user_job: "Pull a three-year revenue history with each year cited."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "annual:3"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA revenue --period annual:3 --format json"
+      command_vnext:
+        - "uv run edgarpack query NVDA revenue --period annual:3 --format json"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filings.*.url"
+        - "permalink"
+    invariants:
+      - "Series/offset selectors skip the staleness check (limit 999); bare selectors reject values >2 fiscal years behind (financials.py:64-77)."
+      - "lfy-N means N fiscal years before the latest FY; exact-year matching, no nearest substitute."
+    why_this_case_exists: "Pins the period-grid expansion and multi-period JSON shape."
+    edge_cases_covered:
+      - "annual:N series expansion"
+      - "staleness-skip for series"
+    required_for_vnext_parity: true
+    known_current_issues: []
+    needs_selection: false
+    confidence: high
+
+  - id: sec-comps-cross-company
+    status: required
+    source_family: sec
+    workflow: comps
+    description: "Cross-company comps over multiple metrics for one period (--metrics required)."
+    user_job: "Compare revenue and gross margin across a peer set in one table."
+    company: ""
+    ticker: "NVDA AMD INTC"
+    cik: ""
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack comps NVDA AMD INTC --metrics revenue,gross_margin --period lfy --format json"
+      command_vnext:
+        - "uv run edgarpack comps NVDA AMD INTC --metrics revenue,gross_margin --period lfy --format json"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filings.*.url"
+        - "permalink"
+    invariants:
+      - "--metrics is required for comps (unlike query)."
+      - "Non-strict JSON output stays byte-identical; only re-parsed to attach strict_rejected (cli.py:2762-2768)."
+      - "Parallel SEC fetches via asyncio.gather across periods/companies."
+    why_this_case_exists: "Pins the comps formatter and the required-metrics contract distinct from query and compare."
+    edge_cases_covered:
+      - "multi-company parallel fetch"
+      - "required --metrics"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "query/comps/compare are three overlapping surfaces with three different metric-arg contracts and formatters (intentional? open question)."
+    needs_selection: false
+    confidence: high
+
+  - id: sec-compare-side-by-side
+    status: required
+    source_family: sec
+    workflow: compare
+    description: "Side-by-side compare with the hardcoded default metric list and FX-aware currency handling."
+    user_job: "Put two filers next to each other with citation markers and a sources block."
+    company: ""
+    ticker: "NVDA AMD"
+    cik: ""
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack compare NVDA AMD --metrics revenue --format markdown"
+      command_vnext:
+        - "uv run edgarpack compare NVDA AMD --metrics revenue --format markdown"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "citation marker numbering"
+        - "source URLs"
+    invariants:
+      - "compare is the only command in a separate module (compare.py) and is dispatched FIRST in the if-chain (cli.py:1155)."
+      - "Missing value renders 'n/a', never a fabricated number."
+      - "--metrics is optional with a hardcoded default list (revenue,gross_profit,net_income,cash_and_equivalents)."
+      - "Period header flags fiscal-year mismatches between filers."
+    why_this_case_exists: "compare evolved separately and has a distinct contract surface; pins its formatter and FX behavior."
+    edge_cases_covered:
+      - "fiscal-year mismatch flagging"
+      - "n/a missing-value rendering"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "One bad ticker sinks the whole compare command (asyncio.gather, compare.py:175-192)."
+    needs_selection: false
+    confidence: high
+
+  - id: sec-which-kpi-discovery
+    status: required
+    source_family: sec
+    workflow: which
+    description: "Discover the qualitative / MD&A KPIs a filer discloses (one LLM call per pack, cached)."
+    user_job: "Find out what business metrics (ARR, NRR, GMV...) a company actually reports."
+    company: "Figma, Inc."
+    ticker: FIG
+    cik: "0001579878"
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack which FIG --format json"
+      command_vnext:
+        - "uv run edgarpack which FIG --format json"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: manual
+      normalize:
+        - "discovered KPI ordering"
+        - "LLM-derived labels"
+    invariants:
+      - "KPI discovery shells out to a local LLM CLI (codex/claude) unless cached; --no-cache re-runs."
+      - "discovered KPIs are tagged learned:kpi-* and rejected by --strict."
+      - "Registration packs add an S-1 profile block; SSE/HKEX route to a deterministic China branch (_cmd_which_china)."
+    why_this_case_exists: "The discoverability surface; the LLM call makes it manual-review, but the catalog/empty-state rendering is deterministic."
+    edge_cases_covered:
+      - "LLM KPI discovery"
+      - "catalog vs discovered split"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "LLM backend identity (codex vs claude vs none) is host-PATH-dependent at import time; non-reproducible across machines (self_heal.py:351-355)."
+    needs_selection: false
+    confidence: medium
+
+  - id: sec-diff-two-packs
+    status: required
+    source_family: local
+    workflow: diff
+    description: "Paragraph-level diff between two local SEC packs (10-K vs prior 10-K), JSON output."
+    user_job: "See what disclosure language changed year over year, with mechanical churn suppressed."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: "0001045810-24-000029 -> 0001045810-25-000023"
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack diff --before ./packs/0001045810/0001045810-24-000029 --after ./packs/0001045810/0001045810-25-000023 --format json"
+      command_vnext:
+        - "uv run edgarpack diff --before ./packs/0001045810/0001045810-24-000029 --after ./packs/0001045810/0001045810-25-000023 --format json"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "interest_score (float)"
+        - "change_intensity (float)"
+        - "overall_change_intensity (float)"
+        - "diff cache filename"
+    invariants:
+      - "Diff reads only local packs; no network for --before/--after."
+      - "_compute_section_intensity is word-weighted, not paragraph-count, and shared with timeline.py."
+      - "financial_statement and signature sections are suppressed entirely; MOVED@1.0 contributes zero interest/intensity."
+      - "Diff cache key includes both manifest fingerprints + _DIFF_CACHE_VERSION (v7); corrupt entries self-heal."
+    why_this_case_exists: "Observatory entry; pins the noise-suppression taxonomy and the word-weighted intensity invariant."
+    edge_cases_covered:
+      - "mechanical-change suppression"
+      - "MOVED detection"
+      - "section matching reduced-key fallback"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Numeric boilerplate class can suppress real dollar changes (BACKLOG item 12)."
+      - "Page-break artifacts present in JSON/counts (filtered only at HTML display time, BACKLOG item 3)."
+    needs_selection: true
+    confidence: medium
+
+  - id: registration-timeline-redline
+    status: required
+    source_family: sec
+    workflow: timeline
+    description: "S-1/F-1 amendment-chain redline timeline (text), CIK-scoped registration series."
+    user_job: "See how an IPO registration evolved across S-1 -> S-1/A -> 424B."
+    company: "Cerebras Systems Inc."
+    ticker: ""
+    cik: "0002021728"
+    accession: ""
+    form: "S-1"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack timeline --series registration --cik 0002021728 --packs ./packs"
+      command_vnext:
+        - "uv run edgarpack timeline --series registration --cik 0002021728 --packs ./packs"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "intensity floats"
+        - "absolute pack_dir strings"
+    invariants:
+      - "registration timeline requires --cik and reads packs locally (offline)."
+      - "Entries sorted by (filing_date, accession); CIK-scoped via exact normalize_cik match, no cross-CIK leakage."
+      - "--format html is only valid for --series registration; annual timeline html is a hard error."
+    why_this_case_exists: "Pins the registration redline chain and CIK-scoping that prevents cross-filer leakage."
+    edge_cases_covered:
+      - "CIK-scope rejection of empty/mismatched manifests"
+      - "consecutive-pair report generation"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Annual timeline counts raw deltas (no boilerplate strip), diverging from pair-diff (BACKLOG item 13)."
+    needs_selection: true
+    confidence: medium
+
+  - id: f1-registration-query-shortcut
+    status: required
+    source_family: sec
+    workflow: query
+    description: "F-1 registration shortcut: build the latest F-1 pack if missing, then query cited pre-IPO financials (active branch headline feature)."
+    user_job: "Get cited financials for a pre-IPO filer that has no SEC companyfacts."
+    company: "Bending Spoons S.p.A."
+    ticker: ""
+    cik: "0002004711"
+    accession: "0001104659-26-071170"
+    form: "F-1"
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack f1 0002004711 revenue,net_income"
+      command_vnext:
+        - "uv run edgarpack f1 0002004711 revenue,net_income"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+        - ANTHROPIC_API_KEY
+    outputs:
+      artifacts:
+        - "packs/<cik>/<accession>/ (registration pack with chunks)"
+        - "packs/<cik>/<accession>/s1_financials.json"
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filed date (may fall back to today() if manifest filing_date missing)"
+        - "extracted_at"
+        - "model tag"
+    invariants:
+      - "Only F-1 and S-1 registration form types are wired (cli.py:745-746); other forms hard-rejected."
+      - "Values are tagged s1_snapshot / s1_pro_forma with full provenance; N/A means no cited value, never an estimate."
+      - "augment_with_s1_snapshot fills only None cells; never overwrites a real periodic value."
+      - "Deterministic summary-table parse runs first; LLM (Haiku) fallback only when it yields zero facts."
+    why_this_case_exists: "The most-active area (all 5 most-recent commits are F-1/S-1); the build-then-query shortcut is the headline branch feature."
+    edge_cases_covered:
+      - "build-then-query sugar"
+      - "deterministic-first then LLM-fallback extraction"
+      - "fill-None-never-overwrite"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Deterministic table parser hardcodes currency='USD' and is_audited=True; foreign F-1 (non-USD) would be mislabeled (s1_financials.py:613)."
+      - "Any Anthropic exception maps to extraction_status='no_api_key', conflating outage with missing key (s1_financials.py:969)."
+    needs_selection: false
+    confidence: medium
+
+  - id: s1-pro-forma-query
+    status: required
+    source_family: sec
+    workflow: query
+    description: "Query S-1 pro-forma rows for a pre-IPO filer from a built registration pack."
+    user_job: "Read pro-forma figures distinctly from audited historical snapshots."
+    company: "Cerebras Systems Inc."
+    ticker: ""
+    cik: "0002021728"
+    accession: "0001628280-24-041596"
+    form: "S-1"
+    period: "pro-forma"
+    inputs:
+      command_current:
+        - "uv run edgarpack query 0002021728 revenue,net_income --period pro-forma --packs ./packs"
+      command_vnext:
+        - "uv run edgarpack query 0002021728 revenue,net_income --period pro-forma --packs ./packs"
+      fixtures: []
+      env_required:
+        - ANTHROPIC_API_KEY
+    outputs:
+      artifacts:
+        - "packs/0002021728/0001628280-24-041596/s1_financials.json"
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "extracted_at"
+        - "model tag"
+    invariants:
+      - "period=='pro-forma' fills all cells from the snapshot; pro-forma rows are tagged s1_pro_forma, never mixed with s1_snapshot."
+      - "S-1 derived metrics require all components to share fiscal_year AND period_end (s1_financials.py:1437)."
+      - "Snapshot cache invalidated on SCHEMA_VERSION change or first-50KB source_sha256 mismatch."
+    why_this_case_exists: "Pins the pro-forma vs audited-historical distinction and the snapshot cache validity gates."
+    edge_cases_covered:
+      - "pro-forma period routing"
+      - "source-hash cache invalidation"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "source_sha256 covers only first 50KB of filing.full.md; body changes past 50KB won't invalidate (s1_financials.py:856)."
+    needs_selection: true
+    confidence: medium
+
+  - id: hkex-facts-query
+    status: required
+    source_family: hkex
+    workflow: query
+    description: "Query HKEX facts for a Hong Kong filer, routed through facts.json instead of SEC companyfacts (offline against committed fixture pack)."
+    user_job: "Get cited financials for a HK-listed company, with HKFRS/IFRS metadata."
+    company: "MiniMax Group Inc."
+    ticker: "00100.HK"
+    cik: ""
+    accession: "00100_2024"
+    form: "Annual Report"
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query minimax revenue --period lfy --format json"
+      command_vnext:
+        - "uv run edgarpack query minimax revenue --period lfy --format json"
+      fixtures:
+        - "tests/fixtures/china_packs/minimax_2024/facts.json"
+        - "tests/fixtures/china_packs/minimax_2024/manifest.json"
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "source_path (absolute, machine-specific)"
+        - "source_document"
+    invariants:
+      - "Identity routing reads facts.json (taxonomy hkfrs) for source=HKEX, preserving the CitedValue model."
+      - "Citation resolves to the HKEX PDF, never sec.gov; accounting_standard set HKFRS/IFRS."
+      - "Column-count structural guard: a parsed grid whose column count != year-header count emits NO fact (the column-shift P0 fix)."
+      - "MiniMax FY2024 revenue native == usd == 30,523,000 (USD-reporting filer, golden-pinned)."
+    why_this_case_exists: "Proves cross-market identity routing and the HKEX provenance promise; offline via committed fixtures."
+    edge_cases_covered:
+      - "HKEX taxonomy routing"
+      - "USD-reporting HK filer"
+      - "column-shift guard"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Production query code hardcodes a lookup into tests/fixtures/china_packs/ (financials.py:1981) and assumes CWD is repo root."
+    needs_selection: false
+    confidence: high
+
+  - id: sse-cninfo-build
+    status: required
+    source_family: cninfo
+    workflow: build
+    description: "Build a Shanghai/A-share pack from a CNINFO PDF via build-sse --latest-annual."
+    user_job: "Turn a Chinese A-share annual report PDF into a section-addressable pack with deterministic facts.json."
+    company: "Chengdu XGIMI Technology Co., Ltd."
+    ticker: "688696"
+    cik: ""
+    accession: "688696_2025-04-22"
+    form: "annual-report"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build-sse 688696 --latest-annual --with-chunks"
+      command_vnext:
+        - "uv run edgarpack build-sse 688696 --latest-annual --with-chunks"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "packs/sse/688696/688696_<date>/filing.full.md"
+        - "packs/sse/688696/688696_<date>/sections/*.md"
+        - "packs/sse/688696/688696_<date>/manifest.json"
+        - "packs/sse/688696/688696_<date>/facts.json"
+        - "packs/sse/688696/688696_<date>/optional/source.pdf"
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: normalized
+      normalize:
+        - "manifest.json:generated_at"
+        - "pymupdf4llm extraction is not guaranteed byte-stable"
+        - "source.pdf binary (provenance pointer only)"
+    invariants:
+      - "Section detection keys off Chinese numerals (第X节); form-type auto-detected by marker scan, defaulting to IPO-PROSPECTUS."
+      - "facts.json (taxonomy cas) is only produced for detected ANNUAL-REPORT; 4 metrics extracted (revenue, net income attributable, operating cash flow, R&D intensity)."
+      - "facts.json source_document hardcoded to 'optional/source.pdf'."
+    why_this_case_exists: "Pins the China A-share build path and the SSE facts.json shape distinct from HKEX."
+    edge_cases_covered:
+      - "Chinese-numeral sectionization"
+      - "ANNUAL-REPORT vs IPO-PROSPECTUS detection"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "PDF->markdown via pymupdf4llm is not byte-deterministic; facts.json itself is deterministic."
+      - "Ambiguous form-type defaults to IPO-PROSPECTUS, which can suppress annual facts.json (build.py:80)."
+    needs_selection: true
+    confidence: medium
+
+  - id: distill-run-and-check
+    status: required
+    source_family: local
+    workflow: maintenance
+    description: "Compress one existing registration pack into the eight-file distill bundle, then validate it."
+    user_job: "Produce a small cited, machine-readable surface from a pack and confirm it is internally consistent."
+    company: "Neutron Holdings, Inc."
+    ticker: ""
+    cik: "0001699963"
+    accession: "0001628280-26-032523"
+    form: "S-1"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack distill run lime-s1 --pack ./packs/0001699963/0001628280-26-032523"
+        - "uv run edgarpack distill check ./reports/lime-s1"
+      command_vnext:
+        - "uv run edgarpack distill run lime-s1 --pack ./packs/0001699963/0001628280-26-032523"
+        - "uv run edgarpack distill check ./reports/lime-s1"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "reports/lime-s1/index.md"
+        - "reports/lime-s1/findings.csv"
+        - "reports/lime-s1/metrics.csv"
+        - "reports/lime-s1/evidence.jsonl"
+        - "reports/lime-s1/gaps.csv"
+        - "reports/lime-s1/filing-map.md"
+        - "reports/lime-s1/run-log.md"
+        - "reports/lime-s1/bundle.json"
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: normalized
+      normalize:
+        - "bundle.json:pack_dir (caller path leaks verbatim)"
+        - "index.md Pack cell"
+        - "run-log.md paths"
+    invariants:
+      - "Rows-need-evidence: every findings/metrics row has >=1 evidence_id resolving in evidence.jsonl."
+      - "Unsupported/missing/stale goes to gaps.csv, never confident prose; non-registration packs get one unsupported_form gap."
+      - "Evidence text is filing language; missing source_text writes an explicit sentinel and sets needs_review."
+      - "distill check: empty gaps.csv is a WARNING (a perfectly complete surface is suspicious)."
+      - "bundle.json counts must equal actual on-disk row counts."
+    why_this_case_exists: "Pins the evidence-or-gaps discipline and the eight-file contract; the only subsystem with a build/write/check triad."
+    edge_cases_covered:
+      - "registration-only first-class scope"
+      - "needs_review sentinel evidence"
+      - "metric window anchoring"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Output bytes depend on the caller-supplied --pack path string (builder.py:72), so cross-machine byte parity is not guaranteed."
+      - "MetricRow.unit is always set equal to currency; no real unit dimension yet."
+    needs_selection: true
+    confidence: medium
+
+  - id: doctor-pack-health
+    status: required
+    source_family: sec
+    workflow: maintenance
+    description: "Diagnose a single pack's health (manifest state, artifacts, coverage) from a pack dir, offline."
+    user_job: "Triage whether a built pack is healthy without rebuilding it."
+    company: "Apple Inc."
+    ticker: AAPL
+    cik: "0000320193"
+    accession: "0000320193-24-000001"
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack doctor ./packs/0000320193/0000320193-24-000001 --format json"
+      command_vnext:
+        - "uv run edgarpack doctor ./packs/0000320193/0000320193-24-000001 --format json"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: normalized
+      normalize:
+        - "artifact byte sizes"
+        - "absolute pack paths"
+    invariants:
+      - "Path target is fully offline; a ticker target may resolve via SEC."
+      - "doctor rejects any pack whose schema_version != SCHEMA_VERSION (doctor.py:164-169)."
+      - "Falls back from registry to disk packs (_local_pack_records) when registry is empty."
+    why_this_case_exists: "The health/triage surface and the only consumer enforcing SCHEMA_VERSION gating on packs."
+    edge_cases_covered:
+      - "path vs ticker target"
+      - "registry-to-disk fallback"
+    required_for_vnext_parity: true
+    known_current_issues: []
+    needs_selection: true
+    confidence: high
+
+  - id: identify-routing
+    status: required
+    source_family: mixed
+    workflow: identify
+    description: "Resolve a token to its market (SEC / HKEX / SSE A-share / private / unknown) and print a next-step hint."
+    user_job: "Find out which data path a ticker/CIK/name/stock-code resolves to."
+    company: ""
+    ticker: NVDA
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack identify NVDA"
+        - "uv run edgarpack identify 688696"
+        - "uv run edgarpack identify minimax"
+      command_vnext:
+        - "uv run edgarpack identify NVDA"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize: []
+    invariants:
+      - "Resolution order: universe.toml first, then SEC public map, then EDGAR name fallback; US issuers fall through to SEC for a CIK."
+      - "A 6-digit A-share-like token short-circuits SEC resolution and routes to the SSE/CNINFO path."
+      - "identify always returns 0 even for unknown (informational)."
+    why_this_case_exists: "The routing oracle; pins the cross-market resolution order and the A-share numeric heuristic."
+    edge_cases_covered:
+      - "China A-share code routing precedence"
+      - "private-company no-op routing"
+      - "pre-IPO EDGAR name fallback"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Docs disagree on whether bare 688696 routes to SSE or still hits SEC CIK 0000688696 -> 404 (research note vs China tracker); code is the arbiter."
+    needs_selection: false
+    confidence: medium
+
+  - id: site-static-generation
+    status: required
+    source_family: local
+    workflow: site
+    description: "Generate the dependency-free static reader site from packs on disk."
+    user_job: "Publish a browsable, offline corpus of reader pages."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack site --packs ./packs --out ./site"
+      command_vnext:
+        - "uv run edgarpack site --packs ./packs --out ./site"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "site/index.html"
+        - "site/<cik>/index.html"
+        - "site/<cik>/<accession>/index.html"
+        - "site/<cik>/<accession>/full.html"
+        - "site/<cik>/<accession>/sections/*.html"
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: normalized
+      normalize:
+        - "report dict out_dir (absolute)"
+        - "report dict total_bytes"
+    invariants:
+      - "Static site is dependency-free, offline, deterministic ordering (sort by cik then filing_date desc)."
+      - "Link safety: _safe_href rejects javascript:/data:/vbscript: URIs; markdown is escaped by default."
+      - "Handles both SEC 2-level and SSE 3-level pack layouts."
+      - "Destructive: rmtree's each {cik}/{accession} target before copytree."
+    why_this_case_exists: "The only fully-tested, offline, deterministic web surface; the 'publish a readable corpus' path."
+    edge_cases_covered:
+      - "SEC vs SSE layout handling"
+      - "HTML injection safety"
+      - "TOC breadcrumb normalization"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "_markdown_to_html is a partial CommonMark subset; nested lists/italics/complex tables can degrade."
+      - "--base-url flag accepted but unused (reserved)."
+    needs_selection: false
+    confidence: high
+
+  - id: search-corpus-fts
+    status: required
+    source_family: local
+    workflow: search
+    description: "Cross-corpus FTS5 keyword search with a topic facet filter over the prebuilt index."
+    user_job: "Find every filing that discusses a topic across the corpus."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack search \"export controls\" --topic risk:export_controls --limit 20"
+      command_vnext:
+        - "uv run edgarpack search \"export controls\" --topic risk:export_controls --limit 20"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "BM25 rank floats"
+        - "snippet highlight clipping"
+    invariants:
+      - "Search never raises on malformed free-text input; non-FTS5 syntax falls back to literal-phrase quoting (inverted.py:215-225)."
+      - "Each hit carries full filing provenance (accession/cik/form/date/section)."
+      - "Topic tagging is pattern-based (no LLM); risk topics require risk/threat context to avoid false positives."
+    why_this_case_exists: "Pins the FTS5 search behavior, the non-FTS fallback, and the deterministic topic taxonomy."
+    edge_cases_covered:
+      - "non-FTS-syntax query fallback (U.S.-China)"
+      - "topic facet filtering"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Snippet truncation can clip the >>><<< highlight markers (cli.py:3298)."
+    needs_selection: false
+    confidence: high
+
+  - id: harvest-plan-dry-run
+    status: required
+    source_family: sec
+    workflow: harvest
+    description: "Dry-run delta plan over the universe (NEW/SKIP per filing) without downloading."
+    user_job: "Preview what the bulk corpus harvest would build before committing to the fetch."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack harvest --universe universe.toml --out ./packs --plan"
+      command_vnext:
+        - "uv run edgarpack harvest --universe universe.toml --out ./packs --plan"
+      fixtures:
+        - "universe.toml"
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: false
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "plan ordering (concurrency-affected progress lines)"
+    invariants:
+      - "Already-built accessions are skipped via registry.has_accession unless --force."
+      - "Planner is resilient: a single ticker/form/filing failure logs and continues (PlanError list), never aborts."
+      - "Registration sentinel expands the S-1 family budget; pre-IPO filers default periodic forms to 0."
+      - "Missing universe file exits 2."
+    why_this_case_exists: "Pins the delta planner that populates the registry the whole Observatory reads from."
+    edge_cases_covered:
+      - "delta skip accounting"
+      - "registration sentinel expansion"
+      - "per-ticker failure isolation"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "--plan still hits SEC list_filings (network); not fully offline."
+      - "harvest_errors table grows unbounded; run-summary error histogram is not run-scoped (runner.py:154)."
+    needs_selection: false
+    confidence: high
+
+  - id: index-incremental
+    status: required
+    source_family: local
+    workflow: harvest
+    description: "Incrementally index only registry-unindexed packs into the FTS5 search index."
+    user_job: "Make newly built packs searchable without re-indexing the whole corpus."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack index --packs ./packs --incremental"
+      command_vnext:
+        - "uv run edgarpack index --packs ./packs --incremental"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "~/.edgarpack/search_index.db (chunks + chunks_fts)"
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "rowid"
+        - "db size"
+    invariants:
+      - "--incremental indexes only registry rows with indexed_at IS NULL."
+      - "index_pack does delete_pack(accession) before reinsert; FTS removal must go through a plain DELETE so triggers fire."
+      - "Empty registry exits 1; empty incremental exits 0."
+    why_this_case_exists: "Pins incremental indexing and the FTS5 trigger-integrity invariant on reindex."
+    edge_cases_covered:
+      - "reindex purges stale FTS postings"
+      - "registry-driven incremental selection"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "register() INSERT OR REPLACE resets indexed_at to NULL on force rebuild (implicit; correct-by-side-effect)."
+    needs_selection: false
+    confidence: medium
+
+  - id: learned-registry-inspect-verify
+    status: required
+    source_family: local
+    workflow: maintenance
+    description: "Inspect and manage the self-heal learned_concepts registry (list / verify)."
+    user_job: "Audit and bless the metric->concept mappings the self-heal path persisted."
+    company: ""
+    ticker: ""
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack learned list --source fuzzy"
+        - "uv run edgarpack learned verify 0001045810 some_metric"
+      command_vnext:
+        - "uv run edgarpack learned list --source fuzzy"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "~/.edgarpack/registry.db (learned_concepts table)"
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "learned_at"
+        - "hit_count"
+    invariants:
+      - "Only source=='hardcoded' survives --strict; learned:* and text-scan are rejected (one learned input poisons a DerivedValue)."
+      - "verify sets verified=1 verif_method='manual'; clear without filter requires --all."
+      - "Concept shape guards apply at both discovery AND cache-read time (a poisoned cache row is rejected on lookup)."
+    why_this_case_exists: "Pins the human-management surface for the self-heal cache that --strict gates on."
+    edge_cases_covered:
+      - "strict rejection of non-hardcoded sources"
+      - "cache-read shape guard"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "A read query (query) writes learned rows to the shared registry.db as a side effect (non-idempotent, race-prone)."
+    needs_selection: false
+    confidence: high
+
+  - id: cache-clear
+    status: required
+    source_family: sec
+    workflow: maintenance
+    description: "Report SEC disk cache size and clear it (destructive but always safe; everything refetchable)."
+    user_job: "Reclaim disk and force fresh SEC fetches."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack cache"
+        - "uv run edgarpack cache --clear"
+      command_vnext:
+        - "uv run edgarpack cache --clear"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "cache dir size MB"
+        - "file count"
+    invariants:
+      - "--clear does shutil.rmtree(CACHE_DIR); documented as always safe (refetchable)."
+      - "Cache is unbounded by design (no eviction); corrupt entries self-heal on read."
+    why_this_case_exists: "The only command that deletes state; pins the cache-honesty and delete-safe contract."
+    edge_cases_covered:
+      - "destructive clear safety"
+    required_for_vnext_parity: false
+    known_current_issues: []
+    needs_selection: false
+    confidence: high
+
+  # =====================================================================
+  # HIGH-RISK EDGE CASES  (scar-tissue behaviors a rewrite is likely to break)
+  # =====================================================================
+
+  - id: edge-issuer-revenue-axp
+    status: uncertain
+    source_family: sec
+    workflow: query
+    description: "Bank/issuer generic 'revenue' resolves to ASC-606 us-gaap:Revenues, NOT the headline 'total revenues net of interest expense'."
+    user_job: "Query an American Express revenue figure (and understand it is the contract-revenue line, not the headline top line)."
+    company: "American Express Company"
+    ticker: AXP
+    cik: "0000004962"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query AXP revenue --period lfy"
+      command_vnext:
+        - "uv run edgarpack query AXP revenue --period lfy"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: known_bad
+      normalize:
+        - "filings.*.url"
+        - "permalink"
+    invariants:
+      - "The value IS honestly cited to us-gaap:Revenues; the citation is correct, the metric label is the misleading part."
+      - "No issuer override exists in METRIC_MAP (concepts.py:67-78)."
+    why_this_case_exists: "Documented gotcha (MEMORY axp-revenue-metric-gotcha): provenance is correct but headline interpretation diverges (~$41.3B Revenues vs ~$72.2B reported FY2025)."
+    edge_cases_covered:
+      - "ASC-606 contract revenue vs headline top line for issuers"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Generic 'revenue' is economically wrong as a headline figure for banks/card issuers; rewrite must decide whether to add an issuer override."
+    needs_selection: false
+    confidence: high
+
+  - id: edge-hkex-column-shift-zhipu
+    status: required
+    source_family: hkex
+    workflow: query
+    description: "HKEX multi-year total_equity column alignment (the column-shift P0 regression case), CNY-reporting filer with FX to USD."
+    user_job: "Get the correct fiscal year's equity figure from a multi-year HK balance-sheet table."
+    company: "Zhipu (Knowledge Atlas Technology)"
+    ticker: "02513.HK"
+    cik: ""
+    accession: "02513_2024"
+    form: "Annual Report"
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query zhipu total_equity --period lfy --currency both"
+      command_vnext:
+        - "uv run edgarpack query zhipu total_equity --period lfy --currency both"
+      fixtures:
+        - "tests/fixtures/china_packs/zhipu_2024/facts.json"
+        - "tests/eval/china_golden.yaml"
+        - "data/fx_rates.csv"
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "usd value (FX rel_tol 0.02)"
+        - "source_path"
+    invariants:
+      - "Column-count structural guard prevents reading the FY2023 column under a FY2024 label (column-shift fix 2026-06-09)."
+      - "Native value exact; USD within 2% to absorb FX refresh drift."
+      - "Zhipu reports CNY; conversion uses data/fx_rates.csv."
+    why_this_case_exists: "The headline HKEX P0; pins that a parsed grid mismatched against the year header emits silence over misattribution."
+    edge_cases_covered:
+      - "multi-year column alignment"
+      - "comma-less/parenthesized/dash cell parsing"
+      - "CNY->USD FX round-trip"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "FX period-average applies one month's average to annual flows (BACKLOG item 9)."
+    needs_selection: false
+    confidence: high
+
+  - id: edge-name-resolution-cerebras
+    status: required
+    source_family: sec
+    workflow: identify
+    description: "Pre-IPO name->CIK resolution with the content-only-match rejection guard (the WhiteFiber-not-Cerebras regression)."
+    user_job: "Resolve a pre-IPO company by name to the correct issuer CIK, not a filer that merely mentions it."
+    company: "Cerebras Systems"
+    ticker: ""
+    cik: "0002021728"
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack identify Cerebras"
+      command_vnext:
+        - "uv run edgarpack identify Cerebras"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "display title casing"
+    invariants:
+      - "Pre-IPO name search hits the undocumented efts.sec.gov search backend using entityName (not q) to match the issuer."
+      - "A hit is rejected unless the query is a substring of the hit's own display_names (content-only-match guard)."
+      - "Forms list deliberately omits S-1/A and F-1/A (slash breaks the SEC forms parser)."
+    why_this_case_exists: "Pins the only programmatic pre-IPO name->CIK path and its content-match rejection (WhiteFiber CIK 0002042022 must not resolve 'Cerebras')."
+    edge_cases_covered:
+      - "content-only-match rejection"
+      - "undocumented EDGAR FTS endpoint dependency"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "resolve_company_by_name is the only SEC fetch in the slice that is NOT cached (tickers.py:233-247)."
+      - "Depends on an undocumented internal SEC endpoint whose response shape is not contractually guaranteed."
+    needs_selection: false
+    confidence: high
+
+  - id: edge-companyfacts-404-vs-fetcherror
+    status: required
+    source_family: sec
+    workflow: query
+    description: "The no-silent-imputation boundary: a real SEC 404 (no XBRL) maps to {} diagnostic-free, while a transport/parse failure raises XBRLFetchError -> layer_a_fetch_error diagnostic."
+    user_job: "Distinguish 'this filer has no XBRL' from 'the fetch failed' so neither becomes an indistinguishable N/A."
+    company: "Cerebras Systems"
+    ticker: ""
+    cik: "0002021728"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query 0002021728 revenue --period lfy"
+      command_vnext:
+        - "uv run edgarpack query 0002021728 revenue --period lfy"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize: []
+    invariants:
+      - "Real SEC 404 -> companyfacts {} -> diagnostic-free 'no XBRL' (pre-IPO filers route to s1 path)."
+      - "Timeout/5xx/TLS/parse -> XBRLFetchError -> per-metric layer_a_fetch_error diagnostic."
+      - "These two cases must never collapse into an indistinguishable N/A (xbrl.py:68-76)."
+    why_this_case_exists: "The load-bearing no-silent-imputation invariant; the single most important read-path distinction to preserve."
+    edge_cases_covered:
+      - "404 -> {} vs transport-error -> raise"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "No dedicated offline unit test for the 404-vs-error split; exercised only by live tests."
+      - "No negative caching for 404 companyfacts; S-1 query sessions re-hit SEC each time (BACKLOG item 14)."
+    needs_selection: false
+    confidence: high
+
+  - id: edge-strict-mode-rejection
+    status: required
+    source_family: sec
+    workflow: query
+    description: "--strict rejects any value whose source is not 'hardcoded' (self-heal/learned/text-scan drop out), recursing into derived components."
+    user_job: "Get only deterministic, hardcoded-concept values and a clear list of what was rejected."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA revenue --strict"
+      command_vnext:
+        - "uv run edgarpack query NVDA revenue --strict"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "filings.*.url"
+    invariants:
+      - "Only source=='hardcoded' survives; a DerivedValue is allowed only if it AND every recursive component is hardcoded (strict.py:15)."
+      - "Non-strict JSON output stays byte-identical; only re-parsed to attach strict_rejected."
+      - "apply_strict is idempotent."
+    why_this_case_exists: "Pins the deterministic-only contract shared identically across query/comps/compare."
+    edge_cases_covered:
+      - "derived-with-learned-component rejection"
+      - "strict_rejected reporting"
+    required_for_vnext_parity: true
+    known_current_issues: []
+    needs_selection: false
+    confidence: high
+
+  - id: edge-currency-modes
+    status: required
+    source_family: sec
+    workflow: query
+    description: "Currency mode handling (native|usd|both) for a non-USD-functional or FX-normalized value."
+    user_job: "See a value in native currency, USD, or both side by side."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA revenue --currency both"
+        - "uv run edgarpack query 0001045810 revenue --currency usd"
+      command_vnext:
+        - "uv run edgarpack query NVDA revenue --currency both"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "FX rate row"
+    invariants:
+      - "headcount unit never leaks into reporting_currency (set to '' so renderers do not mislabel)."
+      - "convert() only supports conversion TO usd and raises RateNotFound rather than guessing a missing month."
+      - "FX convention split (ASC-830): balance-sheet spot, income/cash-flow period-average."
+    why_this_case_exists: "Pins the currency-mode rendering and the FX convention split."
+    edge_cases_covered:
+      - "native/usd/both modes"
+      - "RateNotFound fail-closed"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "FX 'period average' applies one month's average to annual flows (BACKLOG item 9)."
+    needs_selection: false
+    confidence: medium
+
+  - id: edge-sectionizer-toc-determinism
+    status: required
+    source_family: sec
+    workflow: build
+    description: "Sectionizer determinism across known TOC pathologies (INDEX heading, repeated TOC header rows, cross-ref sentences, inline-flattened PART/ITEM)."
+    user_job: "Get stable, citation-addressable section IDs regardless of TOC layout quirks."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build NVDA --form 10-K"
+      command_vnext:
+        - "uv run edgarpack build NVDA --form 10-K"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/<cik>/<accession>/sections/*.md"
+        - "packs/<cik>/<accession>/manifest.json"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: exact
+      normalize:
+        - "manifest.json:generated_at"
+        - "manifest.json:parser_version"
+    invariants:
+      - "Section IDs are stable, slugified, form-namespaced keys; duplicates get a deterministic _N suffix + warning."
+      - "Cross-reference sentences are rejected as ITEM titles; TOC stubs are filtered before section dedup."
+      - "A filing with no headings yields a single unknown_01 section, never an empty pack."
+    why_this_case_exists: "Section IDs are the citation-addressable keys downstream consumers depend on; the sectionizer is the most complex parse surface."
+    edge_cases_covered:
+      - "INDEX-vs-Table-of-Contents arming"
+      - "TOC header-row disarm tolerance"
+      - "inline-flattened PART/ITEM recovery"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Multi-part TOC header rows can disarm the state machine and steal canonical IDs (BACKLOG item 1)."
+      - "## INDEX prefixed heading form never arms the TOC machine (BACKLOG item 2)."
+    needs_selection: true
+    confidence: medium
+
+  - id: edge-s1-font-size-zero-wrapper
+    status: required
+    source_family: sec
+    workflow: build
+    description: "Modern S-1 renderer with a font-size:0 page-wrapper div must NOT collapse the body to empty (the Cerebras-era hidden-detection scar)."
+    user_job: "Build a usable pack from a modern absolute-positioned-div S-1 whose only structural cue is TOC anchors."
+    company: "Cerebras Systems Inc."
+    ticker: ""
+    cik: "0002021728"
+    accession: ""
+    form: "S-1"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build Cerebras --form S-1"
+      command_vnext:
+        - "uv run edgarpack build Cerebras --form S-1"
+      fixtures:
+        - "tests/fixtures/s1_font_size_zero_wrapper.html"
+        - "tests/fixtures/cerebras_s1_sample.md"
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/<cik>/<accession>/filing.full.md"
+        - "packs/<cik>/<accession>/sections/*.md"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: exact
+      normalize:
+        - "manifest.json:generated_at"
+        - "manifest.json:parser_version"
+    invariants:
+      - "font-size:0 alone is NOT a hide signal; only when paired with width/height/opacity==0 (html_clean.py:95-99)."
+      - "inject_s1_headings runs BEFORE clean_html because clean_html strips the id/name attributes the injector targets."
+      - "Registration forms preserve images (preserve_images=True); periodic forms strip them."
+    why_this_case_exists: "Pins the hidden-element scar that, if regressed, silently empties modern S-1 packs."
+    edge_cases_covered:
+      - "font-size:0 wrapper not hidden"
+      - "border-width:0 not hidden"
+      - "TOC-anchor heading injection"
+    required_for_vnext_parity: true
+    known_current_issues: []
+    needs_selection: true
+    confidence: high
+
+  - id: edge-malformed-span-table-tsm
+    status: required
+    source_family: sec
+    workflow: build
+    description: "Malformed colspan=0 / mismatched-span financial table (real TSM 2006 20-F) must render without column shift."
+    user_job: "Render an older/foreign financial table so the right number sits under the right header."
+    company: "Taiwan Semiconductor (TSM)"
+    ticker: TSM
+    cik: ""
+    accession: ""
+    form: "20-F"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build TSM --form 20-F"
+      command_vnext:
+        - "uv run edgarpack build TSM --form 20-F"
+      fixtures:
+        - "tests/fixtures/tsm_2006_malformed_span_table.html"
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/<cik>/<accession>/filing.full.md"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: exact
+      normalize:
+        - "manifest.json:generated_at"
+        - "manifest.json:parser_version"
+    invariants:
+      - "_parse_span_attr clamps colspan/rowspan to max(1, int); the grid builder tolerates colspan='0'."
+      - "md_render block-vs-inline pass order is fixed (md_render.py:57-62)."
+    why_this_case_exists: "Pins table-render robustness against historical/foreign filer HTML quirks; the fixture is committed."
+    edge_cases_covered:
+      - "colspan=0 clamping"
+      - "currency-column alignment (NT$/US$)"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "_simplify_complex_tables converts wide tables to prose blockquotes (lossy for downstream numeric extraction, BACKLOG-adjacent)."
+    needs_selection: true
+    confidence: medium
+
+  - id: edge-historical-reach-pagination
+    status: optional
+    source_family: sec
+    workflow: build
+    description: "Build an aged-out filing that has rolled out of the SEC recent submissions window (deep pagination)."
+    user_job: "Build a historical filing for a high-volume filer whose accession is no longer in the recent window."
+    company: "Meta Platforms (META)"
+    ticker: META
+    cik: "0001326801"
+    accession: "0001326801-23-000013"
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build META --accession 0001326801-23-000013"
+      command_vnext:
+        - "uv run edgarpack build META --accession 0001326801-23-000013"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/0001326801/0001326801-23-000013/manifest.json"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: exact
+      normalize:
+        - "manifest.json:generated_at"
+        - "manifest.json:parser_version"
+    invariants:
+      - "Submissions transparently paginate across recent + older columnar files; older-page fetch faults are logged-and-skipped."
+      - "Exhausted iterator without match = not-found; callers must not assume every page was reachable."
+      - "get_latest_filing reads the recent window ONLY (no pagination)."
+    why_this_case_exists: "Pins deep-pagination reach for high-volume filers and the not-found-vs-assume-reachable distinction."
+    edge_cases_covered:
+      - "older-page columnar parse"
+      - "logged-and-skipped page faults"
+    required_for_vnext_parity: false
+    known_current_issues: []
+    needs_selection: false
+    confidence: medium
+
+  - id: edge-metric-directory-drift
+    status: required
+    source_family: local
+    workflow: maintenance
+    description: "Generated metric directory docs must equal generator output exactly (the only doc-vs-code byte-equality guard)."
+    user_job: "Trust the published metric registry as authoritative and current with the code."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run python scripts/generate_metric_directory.py"
+      command_vnext:
+        - "uv run python scripts/generate_metric_directory.py"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "docs/METRIC_DIRECTORY.json"
+        - "docs/METRIC_DIRECTORY.md"
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: exact
+      normalize: []
+    invariants:
+      - "Committed docs/METRIC_DIRECTORY.{json,md} must byte-equal the generator render (test_metric_directory_docs.py)."
+      - "Generated from METRIC_MAP + KPI_CATALOG + METRIC_ALIASES + presets; drift = test fail."
+    why_this_case_exists: "The strongest doc-vs-code drift guard and a clean parity anchor for the metric registry."
+    edge_cases_covered:
+      - "static/dynamic metric boundary"
+    required_for_vnext_parity: true
+    known_current_issues: []
+    needs_selection: false
+    confidence: high
+
+  - id: edge-cli-json-stdout-clean
+    status: required
+    source_family: hkex
+    workflow: query
+    description: "--format json must emit ONLY parseable JSON to stdout (offline via HK fixtures)."
+    user_job: "Pipe query/comps/which/compare JSON into a tool without stray log lines."
+    company: "Zhipu / MiniMax"
+    ticker: "02513.HK"
+    cik: ""
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "python -m edgarpack.cli query zhipu revenue --format json"
+        - "python -m edgarpack.cli comps minimax zhipu --metrics revenue --format json"
+      command_vnext:
+        - "python -m edgarpack.cli query zhipu revenue --format json"
+      fixtures:
+        - "tests/fixtures/china_packs/zhipu_2024/"
+        - "tests/fixtures/china_packs/minimax_2024/"
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize:
+        - "source_path"
+    invariants:
+      - "stdout.strip() must start with '{' and parse cleanly (test_cli_json_contract)."
+      - "Runs offline ONLY because production query code reads tests/fixtures/china_packs/ and CWD must be repo root."
+    why_this_case_exists: "Pins the machine-readable stdout contract; depends on the fixture-in-production-path scar."
+    edge_cases_covered:
+      - "clean JSON stdout for 4 commands"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Production query path depends on tests/fixtures/ existing and CWD == repo root (financials.py:1981)."
+    needs_selection: false
+    confidence: high
+
+  - id: edge-cli-lazy-startup
+    status: required
+    source_family: local
+    workflow: maintenance
+    description: "Importing edgarpack.cli must NOT load the query or distill packages at module top level (~2.4x startup penalty otherwise)."
+    user_job: "Keep CLI startup (including --help) fast."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "python -m edgarpack.cli --help"
+      command_vnext:
+        - "python -m edgarpack.cli --help"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: semantic
+      normalize: []
+    invariants:
+      - "query renderers are re-exported lazily via cli.__getattr__ and imported at call sites inside _cmd_* functions."
+      - "Pinned by test_cli_lazy_startup.py in a subprocess import trace."
+    why_this_case_exists: "A documented performance invariant in CLAUDE.md the rewrite must preserve."
+    edge_cases_covered:
+      - "lazy query/distill import"
+    required_for_vnext_parity: true
+    known_current_issues: []
+    needs_selection: false
+    confidence: high
+
+  # =====================================================================
+  # MANUAL REVIEW  (LLM / VLM / translation non-determinism)
+  # =====================================================================
+
+  - id: manual-translate-sse
+    status: optional
+    source_family: sse
+    workflow: translate
+    description: "Translate an existing SSE pack zh->en via DeepInfra/DeepSeek with deterministic number tagging and fail-closed validation."
+    user_job: "Produce an English-readable A-share filing without silent partial translations or magnitude errors."
+    company: "Hangzhou Unitree Technology"
+    ticker: "301536"
+    cik: ""
+    accession: ""
+    form: "ipo-prospectus"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack translate-sse --pack ./packs/sse/301536/301536_<date>"
+      command_vnext:
+        - "uv run edgarpack translate-sse --pack ./packs/sse/301536/301536_<date>"
+      fixtures: []
+      env_required:
+        - EDGARPACK_DEEPINFRA_KEY
+    outputs:
+      artifacts:
+        - "packs/sse/<code>/<id>/sections/*.en.md"
+        - "packs/sse/<code>/<id>/filing.full.en.md"
+        - "packs/sse/<code>/<id>/translation.failures.json"
+        - "manifest.json translation block"
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: manual
+      normalize:
+        - "LLM translation output"
+        - "translation block counts (cached/translated)"
+        - "strategy_fingerprint"
+    invariants:
+      - "Number magnitude (wan/yi = 10,000x) is NEVER delegated to the LLM; tagged deterministically before the call."
+      - "Translation fails closed: a failed section deletes its .en.md; filing.full.en.md only written when zero sections failed."
+      - "No residual Han in English output; markdown table shape preserved; literal tokens preserved or the paragraph is rejected."
+      - "Resumes packs with failed_sections by default (cache absorbs rework)."
+    why_this_case_exists: "The most scar-tissued LLM pipeline; the magnitude and fail-closed invariants are hard product guarantees even though the prose is non-deterministic."
+    edge_cases_covered:
+      - "wan/yi deterministic number conversion"
+      - "fail-closed partial translation"
+      - "resume by default"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "translate-sse is a ~400-line inline CLI orchestrator (cli.py:1888-2290), unreachable from the api/service path."
+    needs_selection: true
+    confidence: medium
+
+  - id: manual-vlm-describe-images
+    status: optional
+    source_family: sec
+    workflow: build
+    description: "Registration-pack image description via Anthropic Haiku vision (opt-in, build-time, cached by image hash)."
+    user_job: "Generate text descriptions for S-1 figures (org charts, market-size graphics)."
+    company: "Cerebras Systems Inc."
+    ticker: ""
+    cik: "0002021728"
+    accession: ""
+    form: "S-1"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build Cerebras --form S-1 --describe-images"
+      command_vnext:
+        - "uv run edgarpack build Cerebras --form S-1 --describe-images"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+        - ANTHROPIC_API_KEY
+    outputs:
+      artifacts:
+        - "packs/<cik>/<accession>/assets/<stem>.desc.txt"
+        - "packs/<cik>/<accession>/assets/.descriptions.json"
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: manual
+      normalize:
+        - "VLM description text"
+    invariants:
+      - "Descriptions are NOT wired into the query/citation path; they are loose .desc.txt sidecar files."
+      - "Descriptions cached by sha256(image_bytes) so re-harvests never re-bill; image bytes themselves are deterministic."
+      - "Only S-1/S-1-A/F-1/F-1-A/424B*/FWP forms."
+    why_this_case_exists: "The only true vision-model usage; opt-in and separate from the s1_financials text extraction."
+    edge_cases_covered:
+      - "hash-keyed description cache"
+      - "non-deterministic VLM output excluded from determinism contract"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - ".desc.txt output is a dead-end (nothing downstream consumes it); candidate for deprecation."
+    needs_selection: true
+    confidence: medium
+
+  - id: manual-self-heal-llm-concept
+    status: optional
+    source_family: sec
+    workflow: query
+    description: "Self-heal resolution of an unknown metric via deterministic fuzzy match, then a local LLM CLI proposal verified against prior-year ground truth."
+    user_job: "Query a metric not in METRIC_MAP and get a verified, learned mapping (or None)."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: "0001045810"
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA some_unmapped_metric --period lfy"
+      command_vnext:
+        - "uv run edgarpack query NVDA some_unmapped_metric --period lfy"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "~/.edgarpack/registry.db (learned_concepts row)"
+      stdout: true
+      stderr: false
+      cache_expected: true
+    snapshot_policy:
+      level: manual
+      normalize:
+        - "source tag (fuzzy vs llm depends on host PATH)"
+        - "learned_at"
+    invariants:
+      - "Order: registry cache -> deterministic fuzzy match -> LLM proposal -> order-of-magnitude verify -> persist."
+      - "LLM proposals must appear in the candidate set (hallucination guard); fuzzy is deterministic, LLM is not."
+      - "Unverified rows persist but the value is withheld (None); a later filing can promote the mapping."
+      - "verify_order_of_magnitude requires abs-ratio in [0.25, 4.0] vs prior year."
+    why_this_case_exists: "The only non-hardcoded resolution path for SEC facts; the fuzzy path is deterministic, the LLM path is manual-review."
+    edge_cases_covered:
+      - "fuzzy concept shape guards"
+      - "order-of-magnitude verification"
+      - "unverified-row rediscovery"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "verify_order_of_magnitude tolerates sign flips (abs ratio only)."
+      - "LLM backend identity is host-PATH-dependent; non-reproducible source column across machines."
+    needs_selection: false
+    confidence: medium
+
+  # =====================================================================
+  # PARKED / DEPRECATED  (inventory only; not active product surfaces)
+  # =====================================================================
+
+  - id: parked-api-china-lens
+    status: parked
+    source_family: hkex
+    workflow: api
+    description: "China Lens FastAPI Evidence Explorer server (in-memory seeded Tencent fixtures); explicitly PARKED per IMPLEMENTATION_TRACKER.md."
+    user_job: "Serve a citation-backed research API for the web Evidence Explorer (parked)."
+    company: "Tencent Holdings"
+    ticker: "0700.HK"
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack api --host 127.0.0.1 --port 8000"
+      command_vnext: []
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: false
+      stderr: true
+      cache_expected: false
+    snapshot_policy:
+      level: deprecated
+      normalize: []
+    invariants:
+      - "China-Lens routes run offline with deterministic seeded fixtures (cmp_tencent_0700)."
+      - "/ask returns not_found+guidance rather than fabricated answers; citations resolve or 404."
+      - "Observatory sub-routes read on-disk registry/index (data-backed, untested at HTTP level)."
+    why_this_case_exists: "Inventory of the parked FastAPI workspace (beads closed wontfix 2026-04-20); still imports and is gated, but not active product."
+    edge_cases_covered:
+      - "seeded-fixture offline mode"
+      - "pack-status GET side-effect (auto_tick)"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "Explicitly parked ('CLI path active; workspace parked'); /ask, /documents, and all /observatory routes are untested."
+      - "China API seeds fabricated Tencent evidence unless EDGARPACK_CHINA_SEED_FIXTURES=0 (BACKLOG)."
+    needs_selection: false
+    confidence: high
+
+  - id: parked-web-evidence-explorer
+    status: parked
+    source_family: mixed
+    workflow: api
+    description: "Next.js Evidence Explorer + Filing Observatory frontend (web/); parked, integration incomplete."
+    user_job: "Browse diffs, timelines, search, and citations in a web UI (parked)."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "npm --prefix web run build"
+      command_vnext: []
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts:
+        - "web/.next (gitignored build output)"
+      stdout: true
+      stderr: true
+      cache_expected: false
+    snapshot_policy:
+      level: deprecated
+      normalize: []
+    invariants:
+      - "China-Lens web client swallows fetch errors and falls back to demo fixtures; Observatory client throws an actionable error."
+      - "Build/lint only run behind the SYMPHONY_WEB=1 quality-gate flag."
+    why_this_case_exists: "Inventory of the parked frontend; tracked in test_repo_layout.py but untouched since 2026-04-30."
+    edge_cases_covered:
+      - "opposite error semantics between the two API clients"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "No JS tests; integration parked ('Evidence Explorer interactions still need plumbing past the first screen')."
+    needs_selection: false
+    confidence: high
+
+  - id: deprecated-cik-flag
+    status: deprecated
+    source_family: sec
+    workflow: build
+    description: "Deprecated --cik/-c flag on build/company-llms/list (positional company is the documented path)."
+    user_job: "Build/list by explicit CIK (legacy interface)."
+    company: "NVIDIA CORP"
+    ticker: ""
+    cik: "0001045810"
+    accession: ""
+    form: "10-K"
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack build --cik 0001045810 --form 10-K"
+      command_vnext: []
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts:
+        - "packs/0001045810/<accession>/"
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: deprecated
+      normalize: []
+    invariants:
+      - "Help text says '[deprecated] CIK number. Prefer the positional company argument.'; a Warning prints when used."
+      - "_cik_from_company_args refuses both-or-neither company+cik and refuses private companies."
+    why_this_case_exists: "Inventory of the deprecated CIK-keyed interface; some flows may rely on it to bypass resolution for unmapped CIKs."
+    edge_cases_covered:
+      - "deprecation warning path"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "Removal needs an audit of callers that pass a CIK absent from company_tickers.json and universe.toml."
+    needs_selection: false
+    confidence: medium
+
+  # =====================================================================
+  # UNCERTAIN  (behaviors that need a human selection or a docs-vs-code reconciliation)
+  # =====================================================================
+
+  - id: uncertain-bare-ashare-code-routing
+    status: uncertain
+    source_family: sse
+    workflow: query
+    description: "Bare 6-digit A-share code routing: docs disagree whether it routes to SSE or still hits SEC CIK 0000688696 -> 404 -> N/A."
+    user_job: "Query an A-share filer by its bare numeric code and reach the SSE pack, not a SEC dead end."
+    company: "Chengdu XGIMI Technology Co., Ltd."
+    ticker: "688696"
+    cik: ""
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query 688696 revenue --period lfy"
+      command_vnext:
+        - "uv run edgarpack query 688696 revenue --period lfy"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: true
+      cache_expected: false
+    snapshot_policy:
+      level: known_bad
+      normalize: []
+    invariants:
+      - "looks_like_china_a_share_code should short-circuit SEC resolution and route to the SSE/CNINFO path."
+      - "A _synthetic_sse_company is fabricated for A-share codes absent from universe.toml."
+    why_this_case_exists: "The 2026-04-27 XGIMI smoke note records 688696 -> SEC CIK 0000688696 -> 404 -> 'Revenue: N/A', but the China tracker claims raw codes route correctly. Code is the arbiter; needs human confirmation."
+    edge_cases_covered:
+      - "numeric-code-vs-CIK collision"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Docs-vs-docs contradiction on current behavior; pin the actual current output before trusting either doc."
+    needs_selection: true
+    confidence: low
+
+  - id: uncertain-version-string-divergence
+    status: uncertain
+    source_family: local
+    workflow: maintenance
+    description: "--version prints 'EdgarPack 0.1.0' (package __version__) while determinism keys off PARSER_VERSION 0.2.1 / SCHEMA_VERSION 1."
+    user_job: "Know which version is canonical for the user vs for pack-cache invalidation."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: ""
+    period: ""
+    inputs:
+      command_current:
+        - "uv run edgarpack --version"
+      command_vnext:
+        - "uv run edgarpack --version"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: normalized
+      normalize:
+        - "version string"
+    invariants:
+      - "__version__ (0.1.0) is the release/semver version; PARSER_VERSION (0.2.1) keys pack determinism; they intentionally track different things."
+      - "Unifying them would invalidate all on-disk pack caches or mislead about the parser generation."
+    why_this_case_exists: "A decoupling the rewrite must decide on; not a bug, but a canonical-version question."
+    edge_cases_covered:
+      - "user-version vs parser-version decoupling"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "The two version semantics are intentionally separate; rewrite needs to choose the canonical model."
+    needs_selection: true
+    confidence: high
+
+  - id: uncertain-universe-load-failure-inconsistency
+    status: uncertain
+    source_family: sec
+    workflow: query
+    description: "A broken universe.toml silently degrades to no-routing in _resolve_cli_company but hard-errors (exit 2) in _cmd_query."
+    user_job: "Get consistent behavior when universe.toml is malformed."
+    company: "NVIDIA CORP"
+    ticker: NVDA
+    cik: ""
+    accession: ""
+    form: ""
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query NVDA revenue --period lfy"
+      command_vnext:
+        - "uv run edgarpack query NVDA revenue --period lfy"
+      fixtures: []
+      env_required:
+        - EDGARPACK_USER_AGENT
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: true
+      cache_expected: true
+    snapshot_policy:
+      level: known_bad
+      normalize: []
+    invariants:
+      - "_resolve_cli_company degrades to index=None on any non-Ambiguous exception (cli.py:107-113)."
+      - "_cmd_query hard-errors with exit 2 on the same load failure (cli.py:2415-2424)."
+    why_this_case_exists: "The same corrupt file yields different behavior depending on which command/path loads it; a latent inconsistency to pin before fixing."
+    edge_cases_covered:
+      - "universe.toml load-failure handling divergence"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "Inconsistent: build/doctor/identify silently continue without universe routing while query fails (open question which is correct)."
+    needs_selection: true
+    confidence: medium
+
+  - id: uncertain-china-fabricated-filed-date
+    status: uncertain
+    source_family: hkex
+    workflow: query
+    description: "China facts with no filing date fabricate a 'filed' date of Dec 31, and an existing test enshrines it."
+    user_job: "Get an honest citation date for a HK/China fact (not a fabricated placeholder)."
+    company: "MiniMax Group Inc."
+    ticker: "00100.HK"
+    cik: ""
+    accession: "00100_2024"
+    form: "Annual Report"
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query minimax revenue --period lfy --format json"
+      command_vnext:
+        - "uv run edgarpack query minimax revenue --period lfy --format json"
+      fixtures:
+        - "tests/fixtures/china_packs/minimax_2024/manifest.json"
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: known_bad
+      normalize: []
+    invariants:
+      - "When a China fact lacks a filing date, code synthesizes Dec 31 (financials.py:2092-2098)."
+      - "A test asserts this fabricated date, locking the behavior in by coverage."
+    why_this_case_exists: "The fabricated date is a placeholder that a test enshrines, in tension with the None-not-guess promise; the rewrite must decide whether Dec-31 is acceptable or the date should be absent."
+    edge_cases_covered:
+      - "missing-filing-date fabrication"
+    required_for_vnext_parity: true
+    known_current_issues:
+      - "Test-enshrined placeholder; HK fixture manifest also carries a dead absolute file:///Users/... pdf_url (BACKLOG item 11)."
+    needs_selection: true
+    confidence: high
+
+  - id: uncertain-hk-llm-unit-scaling
+    status: uncertain
+    source_family: hkex
+    workflow: query
+    description: "HKEX LLM-fallback facts are persisted UNSCALED (1000x off) next to correctly-scaled regex facts in the same facts.json."
+    user_job: "Get a correctly-scaled HK metric even when it falls back to the LLM extraction path."
+    company: ""
+    ticker: ""
+    cik: ""
+    accession: ""
+    form: "Annual Report"
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query <hk-filer> <metric> --period lfy"
+      command_vnext:
+        - "uv run edgarpack query <hk-filer> <metric> --period lfy"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: known_bad
+      normalize: []
+    invariants:
+      - "The regex path scales by the detected '000/millions multiplier; the LLM-fallback path stores the raw model number (hk/llm_extract.py:102-115)."
+      - "In production the HK LLM fallback is inert (client=None), so this only triggers if a client is injected."
+    why_this_case_exists: "A live correctness defect on the cited-value promise for HKEX filers (BACKLOG item 7); the golden YAML must pin correct scaling and the rewrite must thread the multiplier."
+    edge_cases_covered:
+      - "LLM-path unit scaling vs regex-path scaling"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "1000x magnitude error beside correct facts; matched_label is also dropped on facts.json serialization (always empty downstream)."
+    needs_selection: true
+    confidence: medium
+
+  - id: uncertain-hk-nondec-fiscal-period
+    status: uncertain
+    source_family: hkex
+    workflow: query
+    description: "HKEX extractor synthesizes Jan-Dec fiscal periods for every filer; a March-FYE filer (Alibaba) gets December FX rates and wrong period dates."
+    user_job: "Get correct period dates and FX for a non-December-fiscal-year-end HK filer."
+    company: "Alibaba Group (HK)"
+    ticker: "09988.HK"
+    cik: ""
+    accession: ""
+    form: "Annual Report"
+    period: "lfy"
+    inputs:
+      command_current:
+        - "uv run edgarpack query 09988.HK revenue --period lfy --currency both"
+      command_vnext:
+        - "uv run edgarpack query 09988.HK revenue --period lfy --currency both"
+      fixtures: []
+      env_required: []
+    outputs:
+      artifacts: []
+      stdout: true
+      stderr: false
+      cache_expected: false
+    snapshot_policy:
+      level: known_bad
+      normalize: []
+    invariants:
+      - "Every HK fact gets synthesized Jan-Dec bounds (hk/extract.py:577-578)."
+      - "Alibaba/JD are tagged IFRS while other HK filers are HKFRS; the standard distinction is load-bearing."
+    why_this_case_exists: "Wrong period dates corrupt FX conversion for non-Dec-FYE filers (BACKLOG item 8); no built fixture exists for an IFRS HK filer."
+    edge_cases_covered:
+      - "non-Dec fiscal-year-end period synthesis"
+      - "IFRS-vs-HKFRS metadata"
+    required_for_vnext_parity: false
+    known_current_issues:
+      - "Company currency/standard come from a hardcoded six-entry _COMPANY_META dict; unknown codes default CNY/HKFRS."
+    needs_selection: true
+    confidence: medium
