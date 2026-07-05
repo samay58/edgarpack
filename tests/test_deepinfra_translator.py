@@ -9,8 +9,10 @@ import pytest
 
 from edgarpack.china.translate.deepinfra import (
     DeepInfraConfigurationError,
+    DeepInfraEmptyResponseError,
     DeepInfraTranslator,
     _build_system_prompt,
+    _CompletionResult,
 )
 from edgarpack.china.translate.glossary import FinancialGlossary
 from edgarpack.china.translate.provider import TranslationResult
@@ -87,7 +89,9 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_translate_calls_api(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = "Revenue was <<NUM_001>>."
+            mock_api.return_value = _CompletionResult(
+                content="Revenue was <<NUM_001>>.", finish_reason="stop"
+            )
             result = await translator.translate_async("营业收入为1000万元")
 
         assert isinstance(result, TranslationResult)
@@ -98,7 +102,10 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_number_tags_preserved_through_translation(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = "Net income was <<NUM_001>>, revenue was <<NUM_002>>."
+            mock_api.return_value = _CompletionResult(
+                content="Net income was <<NUM_001>>, revenue was <<NUM_002>>.",
+                finish_reason="stop",
+            )
             result = await translator.translate_async("净利润100万元，营业收入500亿元")
 
         assert "1.00 million" in result.text_en
@@ -107,7 +114,9 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_literal_tags_preserved_through_translation(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = "The ratio was <<LIT_001>> as of <<LIT_002>>."
+            mock_api.return_value = _CompletionResult(
+                content="The ratio was <<LIT_001>> as of <<LIT_002>>.", finish_reason="stop"
+            )
             result = await translator.translate_async("截至2025/9/30，比例为10.94%。")
 
         assert "2025/9/30" in result.text_en
@@ -116,8 +125,11 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_spaced_year_literals_preserved_through_translation(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = (
-                "From <<LIT_001>> to <<LIT_002>>, cumulative R&D expenses were <<NUM_001>>."
+            mock_api.return_value = _CompletionResult(
+                content=(
+                    "From <<LIT_001>> to <<LIT_002>>, cumulative R&D expenses were <<NUM_001>>."
+                ),
+                finish_reason="stop",
             )
             result = await translator.translate_async(
                 "2022 年至2024 年，公司研发费用累计金额14,995.35万元"
@@ -130,7 +142,9 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_year_only_and_fiscal_year_literals_normalize_cleanly(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = "As of <<LIT_001>>, FY comparison: <<LIT_002>>."
+            mock_api.return_value = _CompletionResult(
+                content="As of <<LIT_001>>, FY comparison: <<LIT_002>>.", finish_reason="stop"
+            )
             result = await translator.translate_async("截至2024 年，比较期间为2023 年度。")
 
         assert "2024" in result.text_en
@@ -139,7 +153,9 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_spaced_full_date_literal_is_preserved(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = "Signed on <<LIT_001>>."
+            mock_api.return_value = _CompletionResult(
+                content="Signed on <<LIT_001>>.", finish_reason="stop"
+            )
             result = await translator.translate_async("协议签署于2024 年 9 月 26 日。")
 
         assert "2024-09-26" in result.text_en
@@ -151,10 +167,13 @@ class TestDeepInfraTranslator:
             "（ 2 ） 2025 年股权激励计划扩容：上海宇翼认购新增股份。"
         )
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = (
-                "(1) Equity capital increase: new investors participated; "
-                "(2) Expansion of the equity incentive plan: "
-                "Shanghai Yuyi subscribed to new shares."
+            mock_api.return_value = _CompletionResult(
+                content=(
+                    "(1) Equity capital increase: new investors participated; "
+                    "(2) Expansion of the equity incentive plan: "
+                    "Shanghai Yuyi subscribed to new shares."
+                ),
+                finish_reason="stop",
             )
             result = await translator.translate_async(source)
 
@@ -164,7 +183,9 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_batch_translation(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = "Translated text."
+            mock_api.return_value = _CompletionResult(
+                content="Translated text.", finish_reason="stop"
+            )
             results = await translator.translate_batch(["段落一", "段落二", "段落三"])
 
         assert len(results) == 3
@@ -184,9 +205,9 @@ class TestDeepInfraTranslator:
 
         with patch.object(translator, "_get_client", new_callable=AsyncMock) as mock_get_client:
             mock_get_client.return_value = client
-            text = await translator._call_api("测试", translator.build_system_prompt())
+            result = await translator._call_api("测试", translator.build_system_prompt())
 
-        assert text == "Translated text."
+        assert result.content == "Translated text."
         assert client.post.await_count == 2
 
     @pytest.mark.asyncio
@@ -213,9 +234,9 @@ class TestDeepInfraTranslator:
             ) as mock_sleep,
         ):
             mock_get_client.return_value = client
-            text = await translator._call_api("测试", translator.build_system_prompt())
+            result = await translator._call_api("测试", translator.build_system_prompt())
 
-        assert text == "Translated text."
+        assert result.content == "Translated text."
         assert client.post.await_count == 2
         mock_sleep.assert_awaited_once_with(0.01)
 
@@ -243,16 +264,19 @@ class TestDeepInfraTranslator:
             ) as mock_sleep,
         ):
             mock_get_client.return_value = client
-            text = await translator._call_api("测试", translator.build_system_prompt())
+            result = await translator._call_api("测试", translator.build_system_prompt())
 
-        assert text == "Translated text."
+        assert result.content == "Translated text."
         mock_sleep.assert_awaited_once_with(60.0)
 
     @pytest.mark.asyncio
     async def test_meta_commentary_is_stripped(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = (
-                "No translation needed. This appears to be a section number or identifier."
+            mock_api.return_value = _CompletionResult(
+                content=(
+                    "No translation needed. This appears to be a section number or identifier."
+                ),
+                finish_reason="stop",
             )
             result = await translator.translate_async("1-1-17")
 
@@ -261,9 +285,12 @@ class TestDeepInfraTranslator:
     @pytest.mark.asyncio
     async def test_legitimate_note_translation_is_preserved(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
-            mock_api.return_value = (
-                "Note: The key performance parameters of the company's products vary "
-                "across different scenarios and model configurations."
+            mock_api.return_value = _CompletionResult(
+                content=(
+                    "Note: The key performance parameters of the company's products vary "
+                    "across different scenarios and model configurations."
+                ),
+                finish_reason="stop",
             )
             result = await translator.translate_async(
                 "注：公司产品的关键性能参数在不同场景、不同型号参数配置中有所差异。"
@@ -276,8 +303,12 @@ class TestDeepInfraTranslator:
     async def test_invented_placeholders_trigger_retry(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "截至<<NUM_YEAR>>，营业收入为<<NUM_001>>。",
-                "As of 2025, revenue was <<NUM_001>>.",
+                _CompletionResult(
+                    content="截至<<NUM_YEAR>>，营业收入为<<NUM_001>>。", finish_reason="stop"
+                ),
+                _CompletionResult(
+                    content="As of 2025, revenue was <<NUM_001>>.", finish_reason="stop"
+                ),
             ]
             result = await translator.translate_async("营业收入为100万元")
 
@@ -288,10 +319,16 @@ class TestDeepInfraTranslator:
     async def test_residual_chinese_output_triggers_english_retry(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "## **4** 、发行人技术实力与衡量核心竞争力的关键业务数据、指标",
-                (
-                    "## **4**. Issuer Technical Strength and Key Business Data and "
-                    "Metrics for Evaluating Core Competitiveness"
+                _CompletionResult(
+                    content="## **4** 、发行人技术实力与衡量核心竞争力的关键业务数据、指标",
+                    finish_reason="stop",
+                ),
+                _CompletionResult(
+                    content=(
+                        "## **4**. Issuer Technical Strength and Key Business Data and "
+                        "Metrics for Evaluating Core Competitiveness"
+                    ),
+                    finish_reason="stop",
                 ),
             ]
             result = await translator.translate_async(
@@ -305,9 +342,14 @@ class TestDeepInfraTranslator:
     async def test_residual_chinese_output_gets_one_bounded_repair_attempt(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "公司持续深化技术创新。",
-                "The Company 持续深化 technological innovation.",
-                "The Company continued to deepen technological innovation.",
+                _CompletionResult(content="公司持续深化技术创新。", finish_reason="stop"),
+                _CompletionResult(
+                    content="The Company 持续深化 technological innovation.", finish_reason="stop"
+                ),
+                _CompletionResult(
+                    content="The Company continued to deepen technological innovation.",
+                    finish_reason="stop",
+                ),
             ]
 
             result = await translator.translate_async("公司持续深化技术创新。")
@@ -319,9 +361,13 @@ class TestDeepInfraTranslator:
     async def test_residual_chinese_repair_still_fails_closed_when_invalid(self, translator):
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "公司持续深化技术创新。",
-                "The Company 持续深化 technological innovation.",
-                "The Company 持续深化 technological innovation.",
+                _CompletionResult(content="公司持续深化技术创新。", finish_reason="stop"),
+                _CompletionResult(
+                    content="The Company 持续深化 technological innovation.", finish_reason="stop"
+                ),
+                _CompletionResult(
+                    content="The Company 持续深化 technological innovation.", finish_reason="stop"
+                ),
             ]
 
             result = await translator.translate_async("公司持续深化技术创新。")
@@ -334,10 +380,18 @@ class TestDeepInfraTranslator:
         source = "型号 AlienGo 主要参数 站立尺寸：65×31×60cm 核心特点 产品布局紧凑"
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "| Model | Product Image |\n|---|---|\n| AlienGo | ![AlienGo](image_url) |",
-                (
-                    "Model AlienGo. Key parameter: standing dimensions 65×31×60cm. "
-                    "Core feature: compact layout."
+                _CompletionResult(
+                    content=(
+                        "| Model | Product Image |\n|---|---|\n| AlienGo | ![AlienGo](image_url) |"
+                    ),
+                    finish_reason="stop",
+                ),
+                _CompletionResult(
+                    content=(
+                        "Model AlienGo. Key parameter: standing dimensions 65×31×60cm. "
+                        "Core feature: compact layout."
+                    ),
+                    finish_reason="stop",
                 ),
             ]
             result = await translator.translate_async(source)
@@ -351,10 +405,21 @@ class TestDeepInfraTranslator:
         source = "型号 AlienGo 主要参数 站立尺寸：65×31×60cm 核心特点 产品布局紧凑"
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "Model | Product Image | Key Parameters | Core Features\n"
-                "--- | --- | --- | ---\n"
-                "AlienGo | | Standing dimensions 65×31×60cm | Compact layout",
-                "Model AlienGo. Standing dimensions 65×31×60cm. Core feature: compact layout.",
+                _CompletionResult(
+                    content=(
+                        "Model | Product Image | Key Parameters | Core Features\n"
+                        "--- | --- | --- | ---\n"
+                        "AlienGo | | Standing dimensions 65×31×60cm | Compact layout"
+                    ),
+                    finish_reason="stop",
+                ),
+                _CompletionResult(
+                    content=(
+                        "Model AlienGo. Standing dimensions 65×31×60cm. "
+                        "Core feature: compact layout."
+                    ),
+                    finish_reason="stop",
+                ),
             ]
             result = await translator.translate_async(source)
 
@@ -366,8 +431,19 @@ class TestDeepInfraTranslator:
         source = "型号 AlienGo 主要参数 站立尺寸：65×31×60cm 核心特点 产品布局紧凑"
         with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
             mock_api.side_effect = [
-                "Model | Product Image | Key Parameters | Core Features | Compact layout",
-                "Model AlienGo. Standing dimensions 65×31×60cm. Core feature: compact layout.",
+                _CompletionResult(
+                    content=(
+                        "Model | Product Image | Key Parameters | Core Features | Compact layout"
+                    ),
+                    finish_reason="stop",
+                ),
+                _CompletionResult(
+                    content=(
+                        "Model AlienGo. Standing dimensions 65×31×60cm. "
+                        "Core feature: compact layout."
+                    ),
+                    finish_reason="stop",
+                ),
             ]
             result = await translator.translate_async(source)
 
@@ -378,6 +454,73 @@ class TestDeepInfraTranslator:
         prompt = translator.build_table_cell_prompt(strict=True)
         assert "short markdown table cell" in prompt
         assert "concise English label" in prompt
+
+    @pytest.mark.asyncio
+    async def test_call_api_raises_on_empty_choices(self, translator):
+        request = httpx.Request("POST", "https://api.deepinfra.com")
+        response = httpx.Response(200, request=request, json={"choices": []})
+        client = AsyncMock()
+        client.post.return_value = response
+
+        with patch.object(translator, "_get_client", new_callable=AsyncMock) as mock_get_client:
+            mock_get_client.return_value = client
+            with pytest.raises(DeepInfraEmptyResponseError):
+                await translator._call_api("测试", translator.build_system_prompt())
+
+    @pytest.mark.asyncio
+    async def test_empty_choices_never_echoes_input_as_translation(self, translator):
+        with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
+            mock_api.side_effect = DeepInfraEmptyResponseError("no choices")
+            with pytest.raises(DeepInfraEmptyResponseError):
+                await translator.translate_async("营业收入为100万元")
+
+    @pytest.mark.asyncio
+    async def test_call_api_tracks_prompt_and_completion_tokens(self, translator):
+        request = httpx.Request("POST", "https://api.deepinfra.com")
+        response = httpx.Response(
+            200,
+            request=request,
+            json={
+                "choices": [{"message": {"content": "Translated text."}, "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 120, "completion_tokens": 45},
+            },
+        )
+        client = AsyncMock()
+        client.post.return_value = response
+
+        with patch.object(translator, "_get_client", new_callable=AsyncMock) as mock_get_client:
+            mock_get_client.return_value = client
+            await translator._call_api("测试", translator.build_system_prompt())
+            await translator._call_api("测试2", translator.build_system_prompt())
+
+        assert translator.prompt_tokens_used == 240
+        assert translator.completion_tokens_used == 90
+        assert translator.total_tokens_used == 330
+
+    @pytest.mark.asyncio
+    async def test_truncated_response_retries_then_succeeds(self, translator):
+        with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
+            mock_api.side_effect = [
+                _CompletionResult(content="Revenue was <<NUM_001", finish_reason="length"),
+                _CompletionResult(content="Revenue was <<NUM_001>>.", finish_reason="stop"),
+            ]
+            result = await translator.translate_async("营业收入为100万元")
+
+        assert "RMB 1.00 million" in result.text_en
+        assert mock_api.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_truncated_response_still_length_after_retry_fails_paragraph(self, translator):
+        source = "营业收入为100万元"
+        with patch.object(translator, "_call_api", new_callable=AsyncMock) as mock_api:
+            mock_api.side_effect = [
+                _CompletionResult(content="Revenue was <<NUM_001", finish_reason="length"),
+                _CompletionResult(content="Revenue was still <<NUM_001", finish_reason="length"),
+            ]
+            result = await translator.translate_async(source)
+
+        assert result.text_en == source
+        assert mock_api.await_count == 2
 
 
 class TestSectionRouter:

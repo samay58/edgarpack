@@ -6,6 +6,7 @@ import asyncio
 import email.utils
 import os
 import re
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import httpx
@@ -70,6 +71,11 @@ _RETRY_PROMPT_SUFFIX = (
     "- If the input does not contain a placeholder, the output must not contain one.\n"
     "- Return only the translated text."
 )
+_TRUNCATION_RETRY_PROMPT_SUFFIX = (
+    "\n\nCritical reminder:\n"
+    "- The previous response was cut off before it finished.\n"
+    "- Produce the complete translation without leaving it unfinished.\n"
+)
 _CELL_RETRY_PROMPT_SUFFIX = (
     "\n\nCell translation reminder:\n"
     "- Translate only the text in this short table cell.\n"
@@ -112,6 +118,16 @@ _RATE_LIMIT_MAX_API_RETRIES = 6
 
 class DeepInfraConfigurationError(RuntimeError):
     """Raised when the DeepInfra translator is missing required configuration."""
+
+
+class DeepInfraEmptyResponseError(RuntimeError):
+    """Raised when a DeepInfra response contains no choices."""
+
+
+@dataclass(frozen=True)
+class _CompletionResult:
+    content: str
+    finish_reason: str
 
 
 def _resolve_api_key(api_key: str | None = None) -> str:
@@ -172,10 +188,16 @@ class DeepInfraTranslator:
         self._semaphore = asyncio.Semaphore(max(1, max_concurrency))
         self._system_prompt = _build_system_prompt(glossary)
         self._client: httpx.AsyncClient | None = None
+        self.prompt_tokens_used = 0
+        self.completion_tokens_used = 0
 
     @property
     def provider(self) -> str:
         return f"deepinfra/{self.model}"
+
+    @property
+    def total_tokens_used(self) -> int:
+        return self.prompt_tokens_used + self.completion_tokens_used
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -234,34 +256,47 @@ class DeepInfraTranslator:
         allowed_placeholders = set(_PLACEHOLDER_RE.findall(tagged_text))
 
         async with self._semaphore:
-            text_en_raw = await self._call_api(tagged_text, system_prompt)
-            text_en_raw = _clean_translation_output(text_en_raw, text_zh)
+            completion = await self._call_api(tagged_text, system_prompt)
+            text_en_raw = _clean_translation_output(completion.content, text_zh)
+            retry_for_truncation = completion.finish_reason == "length"
             retry_for_placeholders = _has_invented_placeholders(text_en_raw, allowed_placeholders)
             retry_for_markdown = not allow_markdown_artifacts and _has_invented_markdown_artifacts(
                 text_zh, text_en_raw
             )
             retry_for_chinese = _contains_chinese(text_en_raw) and _contains_chinese(text_zh)
-            if retry_for_placeholders or retry_for_markdown or retry_for_chinese:
+            if (
+                retry_for_truncation
+                or retry_for_placeholders
+                or retry_for_markdown
+                or retry_for_chinese
+            ):
                 retry_prompt = system_prompt
+                if retry_for_truncation:
+                    retry_prompt += _TRUNCATION_RETRY_PROMPT_SUFFIX
                 if retry_for_placeholders:
                     retry_prompt += _RETRY_PROMPT_SUFFIX
                 if retry_for_markdown:
                     retry_prompt += _MARKDOWN_ARTIFACT_RETRY_PROMPT_SUFFIX
                 if retry_for_chinese:
                     retry_prompt += _ENGLISH_ONLY_RETRY_PROMPT_SUFFIX
-                text_en_raw = await self._call_api(tagged_text, retry_prompt)
-                text_en_raw = _clean_translation_output(text_en_raw, text_zh)
-                if _has_invented_placeholders(text_en_raw, allowed_placeholders) or (
-                    not allow_markdown_artifacts
-                    and _has_invented_markdown_artifacts(text_zh, text_en_raw)
+                completion = await self._call_api(tagged_text, retry_prompt)
+                text_en_raw = _clean_translation_output(completion.content, text_zh)
+                if (
+                    completion.finish_reason == "length"
+                    or _has_invented_placeholders(text_en_raw, allowed_placeholders)
+                    or (
+                        not allow_markdown_artifacts
+                        and _has_invented_markdown_artifacts(text_zh, text_en_raw)
+                    )
                 ):
                     text_en_raw = text_zh
                 elif _contains_chinese(text_en_raw) and _contains_chinese(text_zh):
                     repair_prompt = system_prompt + _RESIDUAL_HAN_REPAIR_PROMPT_SUFFIX
-                    repaired = await self._call_api(tagged_text, repair_prompt)
-                    repaired = _clean_translation_output(repaired, text_zh)
+                    repaired_completion = await self._call_api(tagged_text, repair_prompt)
+                    repaired = _clean_translation_output(repaired_completion.content, text_zh)
                     if (
-                        _has_invented_placeholders(repaired, allowed_placeholders)
+                        repaired_completion.finish_reason == "length"
+                        or _has_invented_placeholders(repaired, allowed_placeholders)
                         or (
                             not allow_markdown_artifacts
                             and _has_invented_markdown_artifacts(text_zh, repaired)
@@ -278,8 +313,15 @@ class DeepInfraTranslator:
 
         return TranslationResult(text_zh=text_zh, text_en=text_en, provider=self.provider)
 
-    async def _call_api(self, text: str, system_prompt: str) -> str:
-        """Make the actual HTTP call to DeepInfra."""
+    async def _call_api(self, text: str, system_prompt: str) -> _CompletionResult:
+        """Make the actual HTTP call to DeepInfra.
+
+        Raises DeepInfraEmptyResponseError on an empty `choices` list rather than
+        echoing the input text back as a translation. A truncated completion
+        (finish_reason == "length") is returned as-is; the caller decides whether
+        to retry or give up, since retrying belongs to the translation-quality
+        ladder, not the transport layer.
+        """
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -302,11 +344,18 @@ class DeepInfraTranslator:
                 resp = await client.post(DEEPINFRA_ENDPOINT, json=payload, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
+                usage = data.get("usage") or {}
+                self.prompt_tokens_used += usage.get("prompt_tokens", 0) or 0
+                self.completion_tokens_used += usage.get("completion_tokens", 0) or 0
                 choices = data.get("choices", [])
                 if not choices:
-                    return text
-                content = choices[0].get("message", {}).get("content", text)
-                return content if isinstance(content, str) else text
+                    raise DeepInfraEmptyResponseError("DeepInfra response contained no choices")
+                choice = choices[0]
+                content = choice.get("message", {}).get("content", text)
+                return _CompletionResult(
+                    content=content if isinstance(content, str) else text,
+                    finish_reason=choice.get("finish_reason") or "",
+                )
             except httpx.HTTPStatusError as exc:
                 last_error = exc
                 status = exc.response.status_code
@@ -323,7 +372,7 @@ class DeepInfraTranslator:
 
         if last_error is not None:
             raise last_error
-        return text
+        raise DeepInfraEmptyResponseError("DeepInfra request exhausted retries with no response")
 
     def build_system_prompt(self, extra: str = "") -> str:
         return _build_system_prompt(self.glossary, extra)
