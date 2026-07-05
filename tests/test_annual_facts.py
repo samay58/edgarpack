@@ -506,6 +506,59 @@ def test_cmb_split_chapters_key_table_is_scanned(tmp_path):
     assert by_year[2023] == 900.0
 
 
+def test_smic_separator_between_marker_and_header_scales_correctly(tmp_path):
+    """SMIC's key table has an extra separator between the 单位 marker row and
+    the real year-header row (title / marker / separator / year header); the
+    upward unit-scale scan must skip that separator instead of breaking on it,
+    and still scale 千元 values correctly."""
+    content = """## 第二节 公司简介和主要财务指标
+
+||||单位：千元|币种：人民币|
+|---|---|---|---|---|
+|主要会计数据|2025年|2024年|本期比上年同期增减(%)|2023年|
+|营业收入|67323192|57795570|16.5|45250425|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2025] == 67_323_192_000.0
+    assert by_year[2024] == 57_795_570_000.0
+    assert by_year[2023] == 45_250_425_000.0
+
+
+def test_unit_scale_still_stops_at_genuine_previous_table_boundary(tmp_path):
+    """The separator skip-ahead for SMIC's layout must not resurrect the
+    already-fixed leak across a genuinely earlier, unrelated table: a
+    separator whose adjacent row is a real header (not this table's own unit
+    marker) still marks a boundary."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：万元
+
+|小表|2024年|
+|---|---:|
+|其他数据|100|
+
+|主要会计数据|2024年|2023年|增减(%)|2022年|
+|---|---:|---:|---:|---:|
+|营业收入|1000|900|11.11|800|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    with pytest.warns(UserWarning, match="单位"):
+        facts_path = _write(tmp_path, sections)
+
+    assert facts_path is None
+
+
 def test_row_level_unit_suffix_overrides_table_level_marker(tmp_path):
     """A row-level unit suffix conflicting with the table's 单位 line wins for
     that row: it is the more specific disclosure."""

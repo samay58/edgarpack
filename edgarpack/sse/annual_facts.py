@@ -165,15 +165,25 @@ def _table_priority(header_cells: list[str]) -> int:
 
 def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
     start = max(0, header_index - _UNIT_SCALE_LOOKBACK_LINES)
-    for line in reversed(lines[start:header_index]):
-        stripped = line.strip()
+    for idx in range(header_index - 1, start - 1, -1):
+        stripped = lines[idx].strip()
         if _is_table_line(stripped):
             if _is_separator_row(stripped):
-                # A separator row only ever follows a header row, so it marks
-                # the boundary of a distinct, earlier table. Its own marker
-                # (if any) scopes that table only; stop here.
+                # A separator row usually marks the boundary of a distinct,
+                # earlier table. Exception: some SSE templates (SMIC) render
+                # title / marker row / separator / year header, an extra
+                # separator between the table's own unit marker and its real
+                # year header. Peek one row further back before treating the
+                # separator as a boundary; when that row is this table's own
+                # marker (not a previous table's header), the separator is
+                # not a boundary at all, so skip past it.
+                marker_beyond = idx - 1 >= start and _UNIT_SCALE_PATTERN.search(
+                    _clean_cell(lines[idx - 1])
+                )
+                if marker_beyond:
+                    continue
                 break
-            match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
+            match = _UNIT_SCALE_PATTERN.search(_clean_cell(lines[idx]))
             if match:
                 return _UNIT_SCALE_FACTORS[match.group(1)]
             # A non-separator pipe row above the header (a title row, or an
@@ -182,7 +192,7 @@ def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
             # not a previous table's content. Keep looking upward instead of
             # assuming it belongs to some other table.
             continue
-        match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
+        match = _UNIT_SCALE_PATTERN.search(_clean_cell(lines[idx]))
         if match:
             return _UNIT_SCALE_FACTORS[match.group(1)]
     return None
