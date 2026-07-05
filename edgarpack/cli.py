@@ -2405,7 +2405,7 @@ def _cmd_api(args: Any) -> int:
 
 
 def _cmd_query(args: Any) -> int:
-    from .identity import load_identity, looks_like_china_a_share_code, resolve
+    from .identity import load_identity, resolve
 
     # Universe-local pre-pass: catch private companies and ambiguous aliases
     # before hitting the SEC resolver. Unknown-to-universe inputs fall through
@@ -2443,9 +2443,6 @@ def _cmd_query(args: Any) -> int:
             file=sys.stderr,
         )
         return 2
-
-    if resolved is None and looks_like_china_a_share_code(args.company):
-        resolved = _synthetic_sse_company(args.company)
 
     async def _run() -> int:
         from .query.financials import financials
