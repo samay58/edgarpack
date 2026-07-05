@@ -6,6 +6,8 @@ Doctrine: ~/.claude/FABLE-ORCHESTRATION.md. Fable authored these specs and pre-m
 
 Trust cleared, coverage not: 0 wrong values across 25 filers, all 3 regression anchors pass, but only 4/25 filers yield cited values. Per the gate rule, the traced coverage gaps became the pre-wave `sweep-fixes` packet. Wave A launches only after the RE-SWEEP over the cached 25-filer corpus reaches >= 20/25 filers with cited values and 0 wrongs. Wave B and the HK packets are independent of A-share extraction health and launch immediately with sweep-fixes.
 
+RE-SWEEP RESULT (2026-07-05, post sweep-fixes merge): **PASS**. 21/25 filers yield cited values, 0 wrong values, 0 regressions on previously-working filers (byte-identical), form/filed provenance verified on all 21. Wave A launched, plus a `sweep-fixes-2` packet (sonnet, same launch) for the four new fail-closed gaps the re-sweep traced: CMB split chapters, SMIC marker/separator layout, LONGi adjusted-revenue label collision, East Money 营业总收入.
+
 ## Packets and routing
 
 | Packet | Model | Wave | Depends on | Spec |
