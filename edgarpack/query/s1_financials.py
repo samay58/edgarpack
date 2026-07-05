@@ -1223,12 +1223,12 @@ def has_registration_pack_for_cik(
     form_type: str | None = None,
     accession: str | None = None,
 ) -> bool:
-    from ..sec.submissions import normalize_form_type
+    from ..sec.submissions import matches_registration_family, normalize_form_type
 
     target_form = normalize_form_type(form_type) if form_type else None
     target_accession = accession.replace("-", "") if accession else None
     for pack in _registration_packs_for_cik(cik, pack_root):
-        if target_form is not None and normalize_form_type(pack.form_type) != target_form:
+        if target_form is not None and not matches_registration_family(pack.form_type, target_form):
             continue
         if target_accession is not None and pack.accession.replace("-", "") != target_accession:
             continue
