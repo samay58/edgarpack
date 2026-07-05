@@ -14,3 +14,7 @@ class UnknownCompany(ValueError):  # noqa: N818
 
 class AmbiguousCompany(ValueError):  # noqa: N818
     """A company name matches multiple rows; caller must disambiguate."""
+
+
+class VenueNotAvailable(ValueError):  # noqa: N818
+    """The requested --venue has no identifier on this universe entry."""

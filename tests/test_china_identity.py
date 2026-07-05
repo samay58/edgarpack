@@ -179,8 +179,11 @@ def test_live_universe_resolves_every_alias():
     for alias, expected in [
         ("baidu", "BIDU"),
         ("pinduoduo", "PDD"),
-        ("alibaba", "BABA"),
-        ("jd.com", "JD"),
+        # Alibaba and JD.com are dual-listed (dual-listing-adr): neither has
+        # a single privileged ticker anymore, so their CIK is the anchor
+        # `.ticker`; ADR/HKEX symbols live in alt_tickers instead.
+        ("alibaba", "1577552"),
+        ("jd.com", "1549802"),
         ("tencent", "0700.HK"),
         ("meituan", "3690.HK"),
         ("xgimi", "688696"),

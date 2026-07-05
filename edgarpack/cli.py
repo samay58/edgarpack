@@ -668,6 +668,15 @@ def main(argv: list[str] | None = None) -> int:
             "provenance, or both (default)."
         ),
     )
+    p_query.add_argument(
+        "--venue",
+        choices=["sec", "hkex", "sse"],
+        default=None,
+        help=(
+            "Route a dual-listed company to a specific venue instead of its "
+            "default listing (e.g. `--venue hkex` on a US-ADR company)."
+        ),
+    )
 
     def _add_registration_shortcut(name: str, form_type: str, help_text: str) -> None:
         p_reg = sub.add_parser(
@@ -1662,6 +1671,59 @@ def _cmd_registration_shortcut(args: Any) -> int:
     return _cmd_query(args)
 
 
+def _render_multi_listing_line(resolved: Any) -> str | None:
+    """Build the "Listings: ..." line for a dual/multi-listed universe entry.
+
+    Returns None when fewer than two of {cik, hk_stock_code, stock_code} are
+    populated, so single-listing filers' identify output stays untouched.
+    """
+    from .identity import load_identity, ticker_for_venue, venue_identifier
+
+    default_venue = str(getattr(resolved, "listing", "") or "").upper()
+    if default_venue not in ("SEC", "HKEX", "SSE"):
+        # Legacy entries still spell listing as an exchange name (NASDAQ,
+        # NYSE, PRIVATE); only the SEC/HKEX/SSE venue vocabulary is valid
+        # input to venue_identifier(), so drop anything else here.
+        default_venue = ""
+    # Default venue first (how a user thinks of the company), then the rest
+    # in a fixed order, deduplicated.
+    ordered_venues: list[str] = []
+    for v in (default_venue, "SEC", "HKEX", "SSE"):
+        if v and v not in ordered_venues:
+            ordered_venues.append(v)
+    populated = [v for v in ordered_venues if venue_identifier(resolved, v)]
+    if len(populated) < 2:
+        return None
+
+    index = None
+    universe_path = Path("universe.toml")
+    if universe_path.exists():
+        try:
+            index = load_identity(universe_path)
+        except Exception:
+            index = None
+
+    segments = []
+    for venue in populated:
+        code = venue_identifier(resolved, venue)
+        if venue == "SEC":
+            adr = ticker_for_venue(index, resolved, "SEC") if index is not None else None
+            detail = f"CIK {code}"
+            if adr and adr != code:
+                detail += f", ADR: {adr}"
+            # SEC + a China venue implies a foreign private issuer filing
+            # 20-F, not 10-K; there is no domestic dual-listing case here.
+            segment = f"SEC 20-F ({detail})"
+        elif venue == "HKEX":
+            segment = f"HKEX {code}"
+        else:
+            segment = f"SSE {code}"
+        if venue == default_venue:
+            segment += " [default]"
+        segments.append(segment)
+    return "Listings: " + " | ".join(segments)
+
+
 def _cmd_identify(args: Any) -> int:
     async def _run() -> int:
         from .identity import looks_like_china_a_share_code
@@ -1710,6 +1772,9 @@ def _cmd_identify(args: Any) -> int:
             print(display_name)
             print("Status: public A-share / SSE")
             print(f"Stock Code: {stock_code}")
+            listings_line = _render_multi_listing_line(resolved)
+            if listings_line:
+                print(listings_line)
             print(f"Next: edgarpack build-sse {args.company} --latest-annual --with-chunks")
             return 0
 
@@ -1718,6 +1783,9 @@ def _cmd_identify(args: Any) -> int:
             print(display_name)
             print("Status: public HKEX listing")
             print(f"Stock Code: {stock_code}")
+            listings_line = _render_multi_listing_line(resolved)
+            if listings_line:
+                print(listings_line)
             print("Next: build or import the HKEX pack, then run edgarpack which/query.")
             return 0
 
@@ -1725,6 +1793,9 @@ def _cmd_identify(args: Any) -> int:
         print("Status: public SEC filer")
         print(f"Ticker: {getattr(resolved, 'ticker', args.company)}")
         print(f"CIK: {getattr(resolved, 'cik', '')}")
+        listings_line = _render_multi_listing_line(resolved)
+        if listings_line:
+            print(listings_line)
         print(f"Next: edgarpack query {args.company} revenue --period lfy")
         return 0
 
@@ -2014,13 +2085,14 @@ def _cmd_api(args: Any) -> int:
 
 
 def _cmd_query(args: Any) -> int:
-    from .identity import load_identity, resolve
+    from .identity import VenueNotAvailable, load_identity, resolve, select_venue, ticker_for_venue
 
     # Universe-local pre-pass: catch private companies and ambiguous aliases
     # before hitting the SEC resolver. Unknown-to-universe inputs fall through
     # to financials(), which uses sec.tickers.resolve_company and now handles
     # ticker / CIK / company-name input transparently.
     resolved = None
+    index = None
     universe_path = Path("universe.toml")
     if universe_path.exists():
         try:
@@ -2053,6 +2125,26 @@ def _cmd_query(args: Any) -> int:
         )
         return 2
 
+    # Venue pre-pass: --venue overrides a dual-listed entry's default venue.
+    # Substitutes a ticker string that independently re-resolves to the
+    # chosen venue, so financials() (which re-resolves from a plain string)
+    # needs no changes to route correctly.
+    query_company = args.company
+    venue = getattr(args, "venue", None)
+    if venue:
+        if resolved is None or index is None:
+            print(
+                f"Error: --venue requires {args.company!r} to resolve through universe.toml first.",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            select_venue(resolved, venue)
+        except VenueNotAvailable as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+        query_company = ticker_for_venue(index, resolved, venue) or args.company
+
     async def _run() -> int:
         from .query.financials import financials
         from .query.layer_zero import MetricNotFound, resolve_alias
@@ -2082,7 +2174,7 @@ def _cmd_query(args: Any) -> int:
 
         async def _fetch(period: str) -> Any:
             return await financials(
-                company=args.company,
+                company=query_company,
                 metrics=metric_input,
                 period=period,
                 force=bool(args.force),
