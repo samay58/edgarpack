@@ -163,6 +163,27 @@ def test_pick_snapshot_fact_lfy_excludes_pro_forma_and_unaudited():
     assert pick_snapshot_fact(facts, metric="revenue", period="lfy") is None
 
 
+def test_pick_snapshot_fact_mrp_returns_latest_interim_even_when_unaudited():
+    # Fix 6 (audited-honesty): interim columns now carry is_audited=False, so
+    # mrp selection must NOT filter on is_audited or it would skip the most
+    # recent (interim) period. Proves mrp still resolves after the honest flag.
+    facts = [
+        SnapshotFact("a", 2025, "2025-12-31", "revenue", 500, "USD", True, False, None),
+        SnapshotFact(
+            "a", 2026, "2026-03-31", "revenue", 130, "USD", False, False, None, fiscal_period="Q1"
+        ),
+    ]
+    picked = pick_snapshot_fact(facts, metric="revenue", period="mrp")
+    assert picked is not None
+    assert picked.period_end == "2026-03-31"
+    assert picked.fiscal_period == "Q1"
+    assert picked.is_audited is False
+    # lfy still skips the unaudited interim and returns the audited FY.
+    lfy = pick_snapshot_fact(facts, metric="revenue", period="lfy")
+    assert lfy is not None
+    assert lfy.period_end == "2025-12-31"
+
+
 def test_snapshots_for_cik_walks_pack_root_and_filters_by_cik(tmp_path):
     import json as _json
 

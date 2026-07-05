@@ -10,25 +10,34 @@ from __future__ import annotations
 import json
 import sys
 import types
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch  # noqa: F401 (kept available for future tests)
 
 import pytest
 
 from edgarpack.query.s1_financials import (
+    _MAX_OUTPUT_TOKENS,
     METRIC_SLUGS,
     MODEL_ID,
     PROMPT_SYSTEM,
     SCHEMA_VERSION,
+    MissingAnthropicKeyError,
     SnapshotFact,
     SnapshotResult,
     _call_haiku_extract,
+    _detect_presentation_currency,
     _extract_summary_table_facts,
+    _gate_llm_facts,
+    _s1_max_output_tokens,
+    _s1_model_id,
+    _summary_period_from_context,
     build_extraction_prompt,
     extract_or_load_snapshot,
     find_financial_data_section,
     has_registration_pack_for_cik,
     parse_llm_response,
+    parse_llm_response_with_salvage,
     source_sha256_for_pack,
 )
 
@@ -889,25 +898,107 @@ async def test_extract_or_load_snapshot_supplements_cash_flow_rows_outside_summa
 
 
 @pytest.mark.asyncio
-async def test_extract_or_load_snapshot_uses_deterministic_summary_table(tmp_path, monkeypatch):
+async def test_extract_or_load_snapshot_merges_deterministic_and_llm_facts(tmp_path, monkeypatch):
+    # Fix 1 (merge-extraction): the deterministic parser reads the Cerebras
+    # income-statement slugs but has no label branch for balance-sheet slugs
+    # like total_assets. The LLM is invoked ONLY to fill those missing slugs;
+    # a deterministic slug wins even when the LLM returns a rival value for it.
     pack = _write_pack(
         tmp_path,
         accession="0001628280-26-025762",
         markdown=_CEREBRAS_2026_SUMMARY_TABLE,
     )
 
-    async def should_not_call_llm(_section):
-        raise AssertionError("deterministic Cerebras table should not require LLM")
+    calls = {"n": 0}
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    async def fake_haiku(_section):
+        calls["n"] += 1
+        return json.dumps(
+            [
+                {
+                    "fiscal_year": 2025,
+                    "period_end": "2025-12-31",
+                    "metric": "total_assets",
+                    "value_cents": 90_000_000_000,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                    "source_text": "Total assets ... $900,000",
+                },
+                {
+                    "fiscal_year": 2025,
+                    "period_end": "2025-12-31",
+                    "metric": "revenue",
+                    "value_cents": 111_111_111_111,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                    "source_text": "rival revenue the deterministic parser must win over",
+                },
+            ]
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", fake_haiku)
 
     result = await extract_or_load_snapshot(pack)
     by_key = {(fact.metric, fact.fiscal_year): fact for fact in result.facts}
 
     assert result.extraction_status == "ok"
-    assert result.model == "deterministic-summary-table"
+    # The LLM was called exactly once, to fill the slugs the label map misses.
+    assert calls["n"] == 1
+    # Deterministic income-statement facts win over the LLM's rival revenue.
     assert by_key[("revenue", 2025)].value_cents == 50_999_100_000
+    # A balance-sheet slug the deterministic parser cannot see is LLM-filled.
+    assert by_key[("total_assets", 2025)].value_cents == 90_000_000_000
+    # Provenance records both extractors in the model field.
+    assert "deterministic-summary-table" in result.model
+    assert _s1_model_id() in result.model
     assert (pack / "s1_financials.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_skips_llm_when_all_slugs_deterministic(
+    tmp_path, monkeypatch
+):
+    # The merge still short-circuits: if the deterministic parser already
+    # covers every slug, the LLM is never invoked.
+    facts = [
+        {
+            "accession": "0001628280-26-025762",
+            "fiscal_year": 2025,
+            "period_end": "2025-12-31",
+            "metric": slug,
+            "value_cents": 1_000,
+            "currency": "USD",
+            "is_audited": True,
+            "is_pro_forma": False,
+            "pro_forma_note": None,
+        }
+        for slug in METRIC_SLUGS
+    ]
+
+    def fake_extract(_section, *, accession):  # noqa: ARG001
+        return [SnapshotFact(**row) for row in facts]
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._extract_summary_table_facts", fake_extract)
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("full deterministic coverage must not call the LLM")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    pack = _write_pack(
+        tmp_path,
+        accession="0001628280-26-025762",
+        markdown=_CEREBRAS_2026_SUMMARY_TABLE,
+    )
+    result = await extract_or_load_snapshot(pack)
+
+    assert result.extraction_status == "ok"
+    assert result.model == "deterministic-summary-table"
+    assert {fact.metric for fact in result.facts} == set(METRIC_SLUGS)
 
 
 @pytest.mark.asyncio
@@ -1199,14 +1290,438 @@ async def test_extract_or_load_snapshot_handles_parse_failure(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_extract_or_load_snapshot_handles_missing_api_key(tmp_path, monkeypatch):
+    # Fix 2 (error-taxonomy): only a MissingAnthropicKeyError maps to the
+    # non-retryable no_api_key status, and no_api_key is never cached so adding
+    # the key and re-reading extracts immediately.
     pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
 
-    async def raising_haiku(_section):
-        raise RuntimeError("anthropic package missing")
+    async def missing_key_haiku(_section):
+        raise MissingAnthropicKeyError("ANTHROPIC_API_KEY is not set")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", raising_haiku)
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", missing_key_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "no_api_key"
     assert result.facts == []
     assert not (pack / "s1_financials.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_maps_runtime_api_failure_to_llm_call_failed(
+    tmp_path, monkeypatch
+):
+    # Fix 2 (error-taxonomy): a runtime API failure (429, outage, model
+    # retirement) is llm_call_failed, carries the exception text in `detail`,
+    # and is cached with a retry_after cooldown -- never mislabeled no_api_key.
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+
+    async def raising_haiku(_section):
+        raise RuntimeError("overloaded: 429")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", raising_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "llm_call_failed"
+    assert result.detail is not None and "429" in result.detail
+    assert result.retry_after is not None
+    assert result.facts == []
+    assert (pack / "s1_financials.json").exists()
+
+
+# ---------------------------------------------------------------------------
+# Fix 3: retryable-cache (cooldown + truncated-array salvage)
+# ---------------------------------------------------------------------------
+
+
+def _write_failure_snapshot(pack: Path, *, retry_after: str) -> None:
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "accession": pack.name,
+        "extracted_at": "2026-04-22T00:00:00Z",
+        "extraction_status": "llm_call_failed",
+        "source_sha256": source_sha256_for_pack(pack),
+        "model": "claude-haiku-4-5-20251001",
+        "detail": "overloaded: 429",
+        "retry_after": retry_after,
+        "facts": [],
+    }
+    (pack / "s1_financials.json").write_text(json.dumps(payload), encoding="utf-8")
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_serves_cached_failure_within_cooldown(
+    tmp_path, monkeypatch
+):
+    # Fix 3: a retryable failure is served from cache while its cooldown is
+    # active, so a rapid re-read does not re-hit the API.
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+    future = (datetime.now(UTC) + timedelta(minutes=20)).isoformat().replace("+00:00", "Z")
+    _write_failure_snapshot(pack, retry_after=future)
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("cached failure inside cooldown must not re-hit the API")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "llm_call_failed"
+    assert result.facts == []
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_reattempts_cached_failure_after_cooldown(
+    tmp_path, monkeypatch
+):
+    # Fix 3: once the cooldown has elapsed, a read re-attempts extraction
+    # instead of serving the stale failure forever.
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nRevenue 78,287")
+    past = (datetime.now(UTC) - timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+    _write_failure_snapshot(pack, retry_after=past)
+
+    calls = {"n": 0}
+
+    async def recovering_haiku(_section):
+        calls["n"] += 1
+        return json.dumps(
+            [
+                {
+                    "fiscal_year": 2024,
+                    "period_end": "2024-12-31",
+                    "metric": "revenue",
+                    "value_cents": 7828700000,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                    "source_text": "Revenue ... $78,287",
+                }
+            ]
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", recovering_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert calls["n"] == 1
+    assert result.extraction_status == "ok"
+    assert any(fact.metric == "revenue" for fact in result.facts)
+
+
+def test_parse_llm_response_with_salvage_recovers_truncated_array():
+    # Fix 3: a response cut off mid-array is trimmed to its last complete
+    # object and parsed, marking the snapshot truncated.
+    raw = (
+        '[{"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "total_assets",'
+        ' "value_cents": 100, "currency": "USD", "is_audited": true, "is_pro_forma": false,'
+        ' "pro_forma_note": null, "source_text": "Total assets ... $100"},'
+        ' {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "cash_and_equ'
+    )
+    facts, truncated = parse_llm_response_with_salvage(raw, accession="a")
+    assert truncated is True
+    assert [f.metric for f in facts] == ["total_assets"]
+
+
+def test_parse_llm_response_with_salvage_reraises_when_nothing_recoverable():
+    # No complete object present: salvage cannot recover anything, so the
+    # ValueError propagates and the caller records llm_parse_failed.
+    with pytest.raises(ValueError):
+        parse_llm_response_with_salvage("[{not valid", accession="a")
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_salvages_truncated_llm_json(tmp_path, monkeypatch):
+    # Fix 3 (integration): a truncated LLM array still yields an `ok` snapshot
+    # with the truncated marker rather than an llm_parse_failed.
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nRevenue 78,287")
+
+    async def truncated_haiku(_section):
+        return (
+            '[{"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "total_assets",'
+            ' "value_cents": 90000000000, "currency": "USD", "is_audited": true,'
+            ' "is_pro_forma": false, "pro_forma_note": null, "source_text": "Total assets"},'
+            ' {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "cash_and_equ'
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", truncated_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "ok"
+    assert result.truncated is True
+    assert any(fact.metric == "total_assets" for fact in result.facts)
+
+
+# ---------------------------------------------------------------------------
+# Fix 4: model-config (env overrides + one transient retry)
+# ---------------------------------------------------------------------------
+
+
+def test_s1_model_id_honors_env_override(monkeypatch):
+    monkeypatch.setenv("EDGARPACK_S1_MODEL", "claude-test-model")
+    assert _s1_model_id() == "claude-test-model"
+    monkeypatch.delenv("EDGARPACK_S1_MODEL", raising=False)
+    assert _s1_model_id() == MODEL_ID
+
+
+def test_s1_max_output_tokens_honors_env_override(monkeypatch):
+    monkeypatch.setenv("EDGARPACK_S1_MAX_TOKENS", "1234")
+    assert _s1_max_output_tokens() == 1234
+    monkeypatch.setenv("EDGARPACK_S1_MAX_TOKENS", "not-a-number")
+    assert _s1_max_output_tokens() == _MAX_OUTPUT_TOKENS
+    monkeypatch.delenv("EDGARPACK_S1_MAX_TOKENS", raising=False)
+    assert _s1_max_output_tokens() == _MAX_OUTPUT_TOKENS
+
+
+@pytest.mark.asyncio
+async def test_call_haiku_extract_retries_once_on_transient_error(monkeypatch):
+    # Fix 4: a single transient API failure is retried once (after a short
+    # backoff) before the call succeeds.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    attempts = {"n": 0}
+
+    class _FakeBlock:
+        type = "text"
+        text = "[]"
+
+    class _FakeMessage:
+        content = [_FakeBlock()]
+
+    class _FakeMessages:
+        async def create(self, **kwargs):  # noqa: ARG002
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                raise RuntimeError("transient overload")
+            return _FakeMessage()
+
+    class _FakeClient:
+        messages = _FakeMessages()
+
+    fake_module = types.SimpleNamespace(AsyncAnthropic=lambda: _FakeClient())
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    sleeps: list[float] = []
+
+    async def fake_sleep(seconds):
+        sleeps.append(seconds)
+
+    monkeypatch.setattr("edgarpack.query.s1_financials.asyncio.sleep", fake_sleep)
+
+    out = await _call_haiku_extract("# stub")
+    assert out == "[]"
+    assert attempts["n"] == 2
+    assert sleeps == [2.0]
+
+
+# ---------------------------------------------------------------------------
+# Fix 5: currency-honesty (presentation detection + ISO-4217 validation)
+# ---------------------------------------------------------------------------
+
+
+def test_detect_presentation_currency_reads_non_usd_marker():
+    assert _detect_presentation_currency("Amounts expressed in thousands of RMB.") == "CNY"
+    assert _detect_presentation_currency("in millions of EUR") == "EUR"
+    assert _detect_presentation_currency("(in thousands, except per share amounts)") == "USD"
+
+
+def test_detect_presentation_currency_fails_closed_when_ambiguous():
+    assert (
+        _detect_presentation_currency("expressed in thousands of RMB and in millions of EUR")
+        is None
+    )
+
+
+def test_summary_table_parser_stamps_non_usd_presentation_currency():
+    section = "\n".join(
+        [
+            "Summary Consolidated Financial Data",
+            "Amounts expressed in thousands of RMB.",
+            "",
+            "> 2023 / 2022",
+            "> Total revenue ... 1,000 / 900",
+        ]
+    )
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-000001")
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+    assert by_key[("revenue", 2023)].currency == "CNY"
+    assert by_key[("revenue", 2023)].value_cents == 100_000_000
+
+
+def test_summary_table_parser_fails_closed_on_ambiguous_currency():
+    section = "\n".join(
+        [
+            "Summary Consolidated Financial Data",
+            "expressed in thousands of RMB and in millions of EUR",
+            "",
+            "> 2023 / 2022",
+            "> Total revenue ... 1,000 / 900",
+        ]
+    )
+    assert _extract_summary_table_facts(section, accession="0001493152-24-000001") == []
+
+
+def test_parse_llm_response_rejects_invalid_currency_code():
+    good_and_bad = json.dumps(
+        [
+            {
+                "fiscal_year": 2024,
+                "period_end": "2024-12-31",
+                "metric": "revenue",
+                "value_cents": 100,
+                "currency": "USD",
+                "is_audited": True,
+                "is_pro_forma": False,
+                "pro_forma_note": None,
+                "source_text": "Year ended December 31, 2024 Revenue 1",
+            },
+            {
+                "fiscal_year": 2024,
+                "period_end": "2024-12-31",
+                "metric": "gross_profit",
+                "value_cents": 50,
+                "currency": "ZZZ",
+                "is_audited": True,
+                "is_pro_forma": False,
+                "pro_forma_note": None,
+                "source_text": "Year ended December 31, 2024 Gross profit 1",
+            },
+        ]
+    )
+    facts = parse_llm_response(good_and_bad, accession="a")
+    assert [f.metric for f in facts] == ["revenue"]
+
+
+# ---------------------------------------------------------------------------
+# Fix 7: real-period-ends (non-December fiscal years, honest interims)
+# ---------------------------------------------------------------------------
+
+
+def test_summary_period_from_context_carries_non_december_fiscal_year_end():
+    # The exact bug: "year ended March 31, 2026" must cite -03-31, not -12-31.
+    assert _summary_period_from_context(2026, "Year ended March 31, 2026") == ("FY", "2026-03-31")
+    # A bare year with no month-day defaults to the Dec 31 convention.
+    assert _summary_period_from_context(2026, "2026") == ("FY", "2026-12-31")
+    # Interim contexts never classify as FY.
+    assert _summary_period_from_context(2026, "three months ended January 31, 2026") == (
+        "Q1",
+        "2026-01-31",
+    )
+    # An interim marker with no parseable month-day yields no fabricated period.
+    assert _summary_period_from_context(2026, "six months ended") is None
+
+
+def test_summary_table_parser_carries_march_fiscal_year_end():
+    section = "\n".join(
+        [
+            "Summary Financial Data",
+            "> Year ended March 31, / Year ended March 31,",
+            "> 2026 / 2025",
+            "> Revenue ... 100 / 90",
+        ]
+    )
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-000001")
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+    assert by_key[("revenue", 2026)].period_end == "2026-03-31"
+    assert by_key[("revenue", 2026)].fiscal_period == "FY"
+    assert by_key[("revenue", 2025)].period_end == "2025-03-31"
+
+
+# ---------------------------------------------------------------------------
+# Fix 8: full-hash (invalidate on any content change, including past 50KB)
+# ---------------------------------------------------------------------------
+
+
+def test_source_sha256_for_pack_reflects_change_past_50kb():
+    # The old scan window was the first 50KB; a change past that must still
+    # move the hash so a late parser fix or amendment invalidates the cache.
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        pack = Path(tmp) / "pack"
+        pack.mkdir()
+        base = "A" * 60_000
+        (pack / "filing.full.md").write_text(base, encoding="utf-8")
+        digest_before = source_sha256_for_pack(pack)
+        (pack / "filing.full.md").write_text(base + "B", encoding="utf-8")
+        assert source_sha256_for_pack(pack) != digest_before
+
+
+# ---------------------------------------------------------------------------
+# Fix 10: magnitude-gates (drop implausible LLM rows, never guess)
+# ---------------------------------------------------------------------------
+
+
+def test_gate_llm_facts_drops_gross_profit_exceeding_revenue():
+    trusted = [SnapshotFact("a", 2024, "2024-12-31", "revenue", 100, "USD", True, False, None)]
+    llm = [SnapshotFact("a", 2024, "2024-12-31", "gross_profit", 200, "USD", True, False, None)]
+    kept, rejections = _gate_llm_facts(llm, trusted)
+    assert kept == []
+    assert any("gross_profit exceeds revenue" in reason for reason in rejections)
+
+
+def test_gate_llm_facts_drops_cash_exceeding_total_assets():
+    trusted = [SnapshotFact("a", 2024, "2024-12-31", "total_assets", 100, "USD", True, False, None)]
+    llm = [
+        SnapshotFact("a", 2024, "2024-12-31", "cash_and_equivalents", 200, "USD", True, False, None)
+    ]
+    kept, rejections = _gate_llm_facts(llm, trusted)
+    assert kept == []
+    assert any("cash exceeds total_assets" in reason for reason in rejections)
+
+
+def test_gate_llm_facts_drops_negative_revenue():
+    llm = [SnapshotFact("a", 2024, "2024-12-31", "revenue", -5, "USD", True, False, None)]
+    kept, rejections = _gate_llm_facts(llm, [])
+    assert kept == []
+    assert any("negative value" in reason for reason in rejections)
+
+
+def test_gate_llm_facts_drops_implausible_year_over_year_ratio():
+    trusted = [SnapshotFact("a", 2023, "2023-12-31", "revenue", 100, "USD", True, False, None)]
+    llm = [SnapshotFact("a", 2024, "2024-12-31", "revenue", 100_000, "USD", True, False, None)]
+    kept, rejections = _gate_llm_facts(llm, trusted)
+    assert kept == []
+    assert any("year-over-year" in reason for reason in rejections)
+
+
+def test_gate_llm_facts_keeps_plausible_rows():
+    trusted = [SnapshotFact("a", 2024, "2024-12-31", "revenue", 1000, "USD", True, False, None)]
+    llm = [
+        SnapshotFact("a", 2024, "2024-12-31", "gross_profit", 600, "USD", True, False, None),
+        SnapshotFact("a", 2024, "2024-12-31", "total_assets", 5000, "USD", True, False, None),
+    ]
+    kept, rejections = _gate_llm_facts(llm, trusted)
+    assert {f.metric for f in kept} == {"gross_profit", "total_assets"}
+    assert rejections == []
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_records_gate_rejections(tmp_path, monkeypatch):
+    # Fix 10 (integration): a magnitude-gated LLM row is dropped and recorded
+    # in gate_rejections, never surfaced as a fact.
+    pack = _write_pack(
+        tmp_path,
+        accession="0001628280-26-025762",
+        markdown=_CEREBRAS_2026_SUMMARY_TABLE,
+    )
+
+    async def bad_haiku(_section):
+        # gross_profit for 2025 wildly exceeds the deterministic revenue.
+        return json.dumps(
+            [
+                {
+                    "fiscal_year": 2025,
+                    "period_end": "2025-12-31",
+                    "metric": "total_assets",
+                    "value_cents": -1,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                    "source_text": "Total assets ... $(1)",
+                }
+            ]
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", bad_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.gate_rejections
+    assert not any(fact.metric == "total_assets" for fact in result.facts)
