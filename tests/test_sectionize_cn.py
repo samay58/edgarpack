@@ -311,6 +311,35 @@ def test_bold_wrapped_headings_sectionize():
     assert "annual_s03_mda" in ids
 
 
+def test_cmb_split_chapters_both_map_to_key_financials_id():
+    """CMB splits the CSRC template's usual compound title into two separate
+    chapters: 第一章 公司简介 and 第二章 会计数据和财务指标摘要. Both must
+    resolve to the annual_s02 key-financials id, since write_annual_facts
+    scans that prefix and either chapter may carry the actual table."""
+    md = """# 2025年年度报告
+
+**第一章 公司简介**
+
+公司概况内容。
+
+**第二章 会计数据和财务指标摘要**
+
+主要会计数据内容。
+
+**第三章 管理层讨论与分析**
+
+管理层讨论。
+"""
+    sections = find_sections_cn(md, document_type="ANNUAL-REPORT")
+    ids = [s.id for s in sections]
+    assert "unknown_01" not in ids
+    key_financials_ids = [
+        i for i in ids if i.startswith("annual_s02_company_profile_key_financials")
+    ]
+    assert len(key_financials_ids) == 2
+    assert "annual_s03_mda" in ids
+
+
 def test_bold_wrapped_toc_dot_leader_is_not_a_section():
     """The TOC guard applies to the bold-stripped title: a bold-wrapped TOC
     entry with dot leaders must not steal the real heading's slug."""

@@ -466,6 +466,46 @@ def test_row_level_unit_suffix_thousand_yuan_scales(tmp_path):
     assert by_year[2023] == 900_000.0
 
 
+def test_cmb_split_chapters_key_table_is_scanned(tmp_path):
+    """CMB splits the CSRC template's usual compound title into two chapters
+    (第一章 公司简介, 第二章 会计数据和财务指标摘要). Both must sectionize to
+    the annual_s02 key-financials id so this scan finds the second chapter's
+    key financial table instead of missing it under a pinyin-slug fallback."""
+    from edgarpack.sse.sectionize_cn import find_sections_cn
+
+    md = """# 2025年年度报告
+
+**第一章 公司简介**
+
+公司概况内容，没有财务数据。
+
+**第二章 会计数据和财务指标摘要**
+
+单位：元
+
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业收入|1000|900|
+
+**第三章 管理层讨论与分析**
+
+管理层讨论。
+"""
+    sections = find_sections_cn(md, document_type="ANNUAL-REPORT")
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2024] == 1000.0
+    assert by_year[2023] == 900.0
+
+
 def test_row_level_unit_suffix_overrides_table_level_marker(tmp_path):
     """A row-level unit suffix conflicting with the table's 单位 line wins for
     that row: it is the more specific disclosure."""
