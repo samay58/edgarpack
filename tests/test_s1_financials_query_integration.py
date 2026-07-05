@@ -15,6 +15,8 @@ from edgarpack.query.financials import financials
 from edgarpack.query.models import DerivedValue, QueryResult
 from edgarpack.query.s1_financials import (
     SCHEMA_VERSION,
+    SnapshotResult,
+    augment_with_s1_snapshot,
     default_registration_query_metrics,
     source_sha256_for_pack,
 )
@@ -646,3 +648,135 @@ async def test_financials_does_not_fallback_to_old_s1_when_newest_snapshot_empty
             )
 
     assert result.metrics.get("revenue") is None
+
+
+# ---------------------------------------------------------------------------
+# Fix 9: diagnostics on the registration path
+# ---------------------------------------------------------------------------
+
+
+def _registration_only_result() -> QueryResult:
+    return QueryResult(company="Cerebras Systems Inc.", cik="0002021728", metrics={"revenue": None})
+
+
+@pytest.mark.asyncio
+async def test_augment_emits_diagnostic_for_unsupported_registration_period(tmp_path):
+    # Fix 9: an unsupported selector (annual:N/ltm/mrq) on a registration-only
+    # filer used to return a silent None; it now carries a diagnostic.
+    _seed_s1_pack(tmp_path)
+    result = _registration_only_result()
+
+    await augment_with_s1_snapshot(
+        result=result,
+        cik="0002021728",
+        metrics=["revenue"],
+        period="annual:3",
+        pack_root=tmp_path,
+    )
+
+    assert any(d.metric == "period" and "not supported" in d.message for d in result.diagnostics)
+
+
+@pytest.mark.asyncio
+async def test_augment_emits_diagnostic_for_failed_extraction_status(tmp_path, monkeypatch):
+    # Fix 9: a non-ok extraction status surfaces as a diagnostic carrying the
+    # status and detail, rather than an unexplained empty result.
+    _seed_s1_pack(tmp_path)
+    result = _registration_only_result()
+
+    async def failed_extract(_pack_dir, *, force=False):  # noqa: ARG001
+        return SnapshotResult(
+            schema_version=SCHEMA_VERSION,
+            accession="0001628280-24-041596",
+            extracted_at="2026-04-22T00:00:00Z",
+            extraction_status="llm_call_failed",
+            source_sha256="deadbeef",
+            model="claude-haiku-4-5-20251001",
+            facts=[],
+            detail="overloaded: 429",
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials.extract_or_load_snapshot", failed_extract)
+
+    await augment_with_s1_snapshot(
+        result=result,
+        cik="0002021728",
+        metrics=["revenue"],
+        period="lfy",
+        pack_root=tmp_path,
+    )
+
+    assert any(
+        d.metric == "extraction" and "llm_call_failed" in d.message and "429" in d.message
+        for d in result.diagnostics
+    )
+
+
+@pytest.mark.asyncio
+async def test_augment_emits_diagnostic_when_latest_empty_but_older_cached(tmp_path):
+    # Fix 9: when the latest pack yields nothing but an older pack has a cached
+    # snapshot, explain why we do not silently fall back.
+    _seed_s1_pack(
+        tmp_path,
+        accession="0001628280-24-041596",
+        filing_date="2024-09-30",
+    )
+    _write_s1_pack_without_snapshot(
+        tmp_path,
+        accession="0001628280-26-025762",
+        filing_date="2026-04-17",
+        markdown="# Risk Factors\n\nNo financial table here.",
+    )
+    result = _registration_only_result()
+
+    await augment_with_s1_snapshot(
+        result=result,
+        cik="0002021728",
+        metrics=["revenue"],
+        period="lfy",
+        pack_root=tmp_path,
+    )
+
+    assert any(
+        d.metric == "registration" and "not falling back" in d.message for d in result.diagnostics
+    )
+
+
+@pytest.mark.asyncio
+async def test_augment_mrp_returns_interim_snapshot(tmp_path):
+    # Fix 6 (integration): the mrp selector resolves to the most recent period
+    # even though that interim column is honestly unaudited.
+    _seed_s1_pack(
+        tmp_path,
+        fiscal_year=2025,
+        period_end="2025-12-31",
+        revenue_cents=88_671_900_000,
+        extra_facts=[
+            {
+                "accession": "0001628280-24-041596",
+                "fiscal_year": 2026,
+                "period_end": "2026-03-31",
+                "metric": "revenue",
+                "value_cents": 17_015_000_000,
+                "currency": "USD",
+                "is_audited": False,
+                "is_pro_forma": False,
+                "pro_forma_note": None,
+                "fiscal_period": "Q1",
+            }
+        ],
+    )
+    result = _registration_only_result()
+
+    await augment_with_s1_snapshot(
+        result=result,
+        cik="0002021728",
+        metrics=["revenue"],
+        period="mrp",
+        pack_root=tmp_path,
+    )
+
+    row = result.metrics.get("revenue")
+    assert row is not None
+    assert row.period_end == date(2026, 3, 31)
+    assert row.value == 170_150_000.0
