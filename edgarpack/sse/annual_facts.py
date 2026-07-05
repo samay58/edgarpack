@@ -65,6 +65,11 @@ _UNIT_SCALE_FACTORS: dict[str, float] = {
 }
 _UNIT_SCALE_LOOKBACK_LINES = 15
 
+# SZSE/ChiNext-template tables sometimes carry the unit as a suffix on the row
+# label itself ("营业收入（元）", Midea's "营业收入（千元）") instead of a
+# table-level 单位 line. Matches full-width （） and half-width () parens.
+_ROW_UNIT_SUFFIX_PATTERN = re.compile(r"[（(](?:人民币)?(百万元|万元|千元|元)[)）]$")
+
 _YOY_TOLERANCE_PP = 1.5
 
 
@@ -133,6 +138,20 @@ def _is_ratio_row(label: str) -> bool:
     return bool(_RATIO_LABEL_PATTERN.search(label))
 
 
+def _strip_row_unit_suffix(label: str) -> tuple[str, float | None]:
+    """Split a SZSE/ChiNext-style row-level unit suffix from its label.
+
+    Returns the label with the suffix removed, and the row's own scale
+    factor (None when no recognized suffix is present). A row-level unit is
+    the more specific disclosure: it satisfies the fail-closed unit gate on
+    its own and overrides any table-level 单位 marker for that row.
+    """
+    match = _ROW_UNIT_SUFFIX_PATTERN.search(label)
+    if not match:
+        return label, None
+    return label[: match.start()], _UNIT_SCALE_FACTORS[match.group(1)]
+
+
 def _table_priority(header_cells: list[str]) -> int:
     """0 (key) for the 主要会计数据 table, 1 (other) for anything else.
 
@@ -149,10 +168,20 @@ def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
     for line in reversed(lines[start:header_index]):
         stripped = line.strip()
         if _is_table_line(stripped):
-            # A pipe-delimited row (data or separator) belongs to the previous
-            # table. Its 单位 marker, if any, scopes that table only; stop
-            # here instead of letting it leak into this table.
-            break
+            if _is_separator_row(stripped):
+                # A separator row only ever follows a header row, so it marks
+                # the boundary of a distinct, earlier table. Its own marker
+                # (if any) scopes that table only; stop here.
+                break
+            match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
+            if match:
+                return _UNIT_SCALE_FACTORS[match.group(1)]
+            # A non-separator pipe row above the header (a title row, or an
+            # SSE-template in-table marker row like
+            # "|单位：元<br>币种：人民币|||||") is this table's own preamble,
+            # not a previous table's content. Keep looking upward instead of
+            # assuming it belongs to some other table.
+            continue
         match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
         if match:
             return _UNIT_SCALE_FACTORS[match.group(1)]
@@ -167,6 +196,23 @@ class _Candidate:
     fiscal_year: int
     priority: int
     point: dict[str, Any]
+
+
+def _dedupe_candidates_by_value(group: list[_Candidate]) -> list[_Candidate]:
+    """Collapse candidates that restate the identical (concept, fy) value.
+
+    A 调整后/调整前 (restated/original) column pair, or any other duplicated
+    year column, is not a conflict when both columns disclose the same
+    number: it is one fact written twice. Keep the best-priority candidate
+    per distinct value so genuinely differing values still compete normally.
+    """
+    best_by_value: dict[float | int | None, _Candidate] = {}
+    for candidate in group:
+        value = candidate.point.get("val")
+        existing = best_by_value.get(value)
+        if existing is None or candidate.priority < existing.priority:
+            best_by_value[value] = candidate
+    return list(best_by_value.values())
 
 
 def _resolve_candidates(candidates: list[_Candidate]) -> dict[str, dict[str, Any]]:
@@ -184,8 +230,9 @@ def _resolve_candidates(candidates: list[_Candidate]) -> dict[str, dict[str, Any
 
     cas: dict[str, dict[str, Any]] = {}
     for (concept, unit, fiscal_year), group in groups.items():
-        best_priority = min(candidate.priority for candidate in group)
-        best = [candidate for candidate in group if candidate.priority == best_priority]
+        deduped = _dedupe_candidates_by_value(group)
+        best_priority = min(candidate.priority for candidate in deduped)
+        best = [candidate for candidate in deduped if candidate.priority == best_priority]
         if len(best) > 1:
             warnings.warn(
                 f"Conflicting candidates for {concept} FY{fiscal_year}: "
@@ -273,7 +320,8 @@ def write_annual_facts(
                 i += 1
                 continue
 
-            row_label = cells[0]
+            row_label_raw = cells[0]
+            row_label, row_unit_scale = _strip_row_unit_suffix(row_label_raw)
             if any(row_label.startswith(prefix) for prefix in _BREAKDOWN_PREFIXES):
                 i += 1
                 continue
@@ -320,12 +368,19 @@ def write_annual_facts(
                                     skip_years.add(year_a)
                                     skip_years.add(year_b)
 
+            # A row-level unit suffix is the more specific disclosure: it wins
+            # over the table-level marker for this row, and it alone can
+            # satisfy the fail-closed gate when the table carries no marker.
+            effective_unit_scale = (
+                row_unit_scale if row_unit_scale is not None else current_unit_scale
+            )
+
             for spec in _METRICS:
                 if spec.label_contains not in row_label:
                     continue
                 if row_is_ratio and not spec.is_ratio:
                     continue
-                if spec.unit == "CNY" and current_unit_scale is None:
+                if spec.unit == "CNY" and effective_unit_scale is None:
                     if not unit_missing_warned:
                         warnings.warn(
                             f"No recognized 单位 marker found near table for "
@@ -335,8 +390,8 @@ def write_annual_facts(
                         unit_missing_warned = True
                     continue
                 scale = 1.0
-                if spec.unit == "CNY" and current_unit_scale is not None:
-                    scale = current_unit_scale
+                if spec.unit == "CNY" and effective_unit_scale is not None:
+                    scale = effective_unit_scale
                 for idx, fiscal_year in current_years.items():
                     if fiscal_year in skip_years or idx not in row_raw:
                         continue
@@ -354,7 +409,7 @@ def write_annual_facts(
                         "source_url": source_url,
                         "source_document": "optional/source.pdf",
                         "section_id": section.id,
-                        "matched_label": row_label,
+                        "matched_label": row_label_raw,
                         "extraction_method": "regex:annual_table",
                     }
                     candidates.append(

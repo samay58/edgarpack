@@ -288,3 +288,41 @@ Content here.
 """
     sections = sectionize(md, "ANNUAL-REPORT")
     assert sections[0].id == "annual_s02_company_profile_key_financials"
+
+
+def test_bold_wrapped_headings_sectionize():
+    """Body headings fully wrapped in bold markers (no # prefix) must still
+    be recognized, so a template that bolds every heading (CMB) does not fall
+    back to a single unknown_01 blob."""
+    md = """# 年度报告
+
+**第一章 公司简介和主要财务指标**
+
+主要财务指标内容。
+
+**第二章 管理层讨论与分析**
+
+管理层讨论。
+"""
+    sections = find_sections_cn(md, document_type="ANNUAL-REPORT")
+    ids = [s.id for s in sections]
+    assert "unknown_01" not in ids
+    assert "annual_s02_company_profile_key_financials" in ids
+    assert "annual_s03_mda" in ids
+
+
+def test_bold_wrapped_toc_dot_leader_is_not_a_section():
+    """The TOC guard applies to the bold-stripped title: a bold-wrapped TOC
+    entry with dot leaders must not steal the real heading's slug."""
+    md = """# 招股说明书
+
+**第一节 概览 ...................... 1**
+
+## 第一节 概览
+
+公司概览内容。
+"""
+    sections = find_sections_cn(md)
+    ids = [s.id for s in sections]
+    assert ids.count("ipo_s01_overview") == 1
+    assert not any(i.endswith("_1") for i in ids)

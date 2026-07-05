@@ -2100,6 +2100,29 @@ def _china_manifest_filed_date(
     return None
 
 
+def _china_manifest_form_type(
+    manifest: dict[str, Any],
+    point: dict[str, Any],
+) -> str:
+    """Return the pack's real form/filing-type label, or "".
+
+    Mirrors ``_china_manifest_filed_date``: never invents a form label (e.g.
+    guessing "ANNUAL-REPORT") when the manifest states none. Callers leave
+    ``form`` at its current (possibly empty) value when this returns "".
+    """
+    filing = manifest.get("filing", {}) if isinstance(manifest.get("filing"), dict) else {}
+    for candidate in (
+        point.get("form"),
+        filing.get("form_type"),
+        filing.get("form"),
+        manifest.get("form_type"),
+    ):
+        text = str(candidate or "").strip()
+        if text:
+            return text
+    return ""
+
+
 def _normalize_china_fact_provenance(
     data: dict[str, Any],
     pack_dir: Path,
@@ -2133,6 +2156,10 @@ def _normalize_china_fact_provenance(
                     filed = _china_manifest_filed_date(manifest, point)
                     if filed is not None and not point.get("filed"):
                         point["filed"] = filed.isoformat()
+
+                    form_type = _china_manifest_form_type(manifest, point)
+                    if form_type and not point.get("form"):
+                        point["form"] = form_type
 
                     if source_path and not point.get("source_path"):
                         point["source_path"] = source_path
