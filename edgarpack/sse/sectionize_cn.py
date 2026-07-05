@@ -73,9 +73,9 @@ _ANNUAL_REPORT_SECTIONS: dict[str, tuple[str, str]] = {
 # Backward-compatible name used by older tests/importers.
 _CANONICAL_SECTIONS = _PROSPECTUS_SECTIONS
 
-# Pattern: 第X节 Title (with optional markdown heading prefix)
+# Pattern: 第X节 / 第X章 / 第X部分 Title (with optional markdown heading prefix)
 _SECTION_PATTERN = re.compile(
-    r"^(?:#+\s*)?第(?P<num>[一二三四五六七八九十百零]+)节\s*(?P<title>.+)$",
+    r"^(?:#+\s*)?第(?P<num>[一二三四五六七八九十百零]+)(?:节|章|部分)\s*(?P<title>.+)$",
     re.MULTILINE,
 )
 
@@ -85,22 +85,27 @@ _DECLARATIONS_PATTERN = re.compile(
     re.MULTILINE,
 )
 
+# TOC lines repeat the same heading pattern with dot leaders and a page number
+# (e.g. "第一节 释义 ...................... 5"). Without this guard the TOC
+# entry steals the real section's slug and pushes the real heading to a "_1"
+# duplicate id. Leader chars: ASCII period, ellipsis glyph, middle dot.
+_TOC_LEADER_SUFFIX = re.compile(r"[.…·]{2,}\s*\d+\s*$")
+
 
 def _cn_num_to_int(cn: str) -> int:
-    """Convert Chinese numeral string to integer."""
+    """Convert Chinese numeral string to integer.
+
+    Handles direct table lookups plus [tens-digit]十[units-digit] compounds
+    (e.g. 三十 = 30, 三十五 = 35) up to 九十九 = 99. A bare leading 十 implies
+    a tens digit of 1 (十五 = 15), matching how these numerals are written.
+    """
     if cn in _CN_NUMERALS:
         return _CN_NUMERALS[cn]
-    # Handle compound: e.g. 二十一 = 21
-    if cn.startswith("二十"):
-        rest = cn[2:]
-        if not rest:
-            return 20
-        return 20 + _CN_NUMERALS.get(rest, 0)
-    if cn.startswith("十"):
-        rest = cn[1:]
-        if not rest:
-            return 10
-        return 10 + _CN_NUMERALS.get(rest, 0)
+    if "十" in cn:
+        tens_part, _, units_part = cn.partition("十")
+        tens = _CN_NUMERALS.get(tens_part, 1) if tens_part else 1
+        units = _CN_NUMERALS.get(units_part, 0) if units_part else 0
+        return tens * 10 + units
     return 0
 
 
@@ -170,10 +175,12 @@ def find_sections_cn(markdown: str, document_type: str = "IPO-PROSPECTUS") -> li
         )
         matches.append((m.start(), 0, slug, en_title))
 
-    # Find 第X节 sections
+    # Find 第X节 / 第X章 / 第X部分 sections
     for m in _SECTION_PATTERN.finditer(markdown):
         cn_num = m.group("num")
         title = m.group("title").strip()
+        if _TOC_LEADER_SUFFIX.search(title):
+            continue
         section_num = _cn_num_to_int(cn_num)
         slug, en_title = _slug_for_title(title, section_num, document_type=document_type)
         matches.append((m.start(), section_num, slug, en_title))
