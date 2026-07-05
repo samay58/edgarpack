@@ -129,6 +129,10 @@ def format_bilingual_label(display_name: str, matched_label: str) -> str:
     """
     if not matched_label:
         return display_name
+    # Bilingual HKEX filers can carry an English matched_label; repeating the
+    # display name ("Revenue (revenue)") is noise, not a receipt.
+    if matched_label.strip().lower() == display_name.strip().lower():
+        return display_name
     label = matched_label[:_BILINGUAL_LABEL_MAX]
     return f"{display_name} ({label})"
 

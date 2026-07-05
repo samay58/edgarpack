@@ -170,42 +170,17 @@ def pick_snapshot_fact(
     metric: str,
     period: str,
 ) -> SnapshotFact | None:
-    candidates = [f for f in facts if f.metric == metric]
-    if not candidates:
-        return None
+    """Single-pack selector with the same semantics as the multi-pack picker.
 
-    if period == "pro-forma":
-        pf = [f for f in candidates if f.is_pro_forma]
-        if not pf:
-            return None
-        pf.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
-        return pf[0]
-
-    non_pro_forma = [f for f in candidates if not f.is_pro_forma]
-    if not non_pro_forma:
-        return None
-
-    # mrp = most recent period, which may be an unaudited interim quarter, so
-    # select on period regardless of is_audited. lfy / lfy-N are annual only,
-    # so they keep the audited-FY filter.
-    if period == "mrp":
-        non_pro_forma.sort(key=lambda f: (f.period_end, f.fiscal_year), reverse=True)
-        return non_pro_forma[0]
-
-    annual = [
-        f for f in non_pro_forma if f.is_audited and (f.fiscal_period or "FY").upper() == "FY"
+    Wraps facts as candidates with a neutral filing date, so duplicate
+    (fiscal_year, period_end) rows dedupe before lfy-N offset indexing exactly
+    as they do on the production path.
+    """
+    candidates = [
+        _SnapshotCandidate(fact=fact, filing_date=_date_cls.min, form_type="") for fact in facts
     ]
-    annual.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
-
-    if period == "lfy":
-        return annual[0] if annual else None
-
-    match_lfy_n = re.match(r"^lfy-(\d+)$", period)
-    if match_lfy_n:
-        offset = int(match_lfy_n.group(1))
-        return annual[offset] if offset < len(annual) else None
-
-    return None
+    picked = _pick_snapshot_candidate(candidates, metric=metric, period=period)
+    return picked.fact if picked is not None else None
 
 
 def _parse_manifest_date(raw: object) -> _date_cls:

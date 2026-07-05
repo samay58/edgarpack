@@ -371,10 +371,10 @@ def test_pickers_agree_on_single_pack(period):
     assert by_fact == (by_cand.fact if by_cand is not None else None)
 
 
-def test_pickers_diverge_on_multi_pack_supersession():
-    # Two packs report FY2024 with different values; the candidate picker prefers
-    # the newer filing (filing-date aware), the fact picker cannot (no filing
-    # date). Unifying would change one call site's behavior -> deferred decision.
+def test_pickers_agree_on_supersession():
+    # Unified 2026-07-05: production semantics won. With filing dates, the
+    # newer filing's value supersedes; without them, the wrapper tie-breaks
+    # identical periods by accession, descending, deterministically.
     facts = [
         SnapshotFact("a", 2024, "2024-12-31", "revenue", 200, "USD", True, False, None),
         SnapshotFact("b", 2024, "2024-12-31", "revenue", 210, "USD", True, False, None),
@@ -383,14 +383,14 @@ def test_pickers_diverge_on_multi_pack_supersession():
     by_fact = pick_snapshot_fact(facts, metric="revenue", period="lfy")
     by_cand = _pick_snapshot_candidate(cands, metric="revenue", period="lfy")
     assert by_fact is not None and by_cand is not None
-    assert by_fact.value_cents == 200
+    assert by_fact.value_cents == 210
     assert by_cand.fact.value_cents == 210
 
 
-def test_pickers_diverge_on_duplicate_period_lfy_offset():
-    # Duplicate (fiscal_year, period_end) audited rows: the candidate picker
-    # dedups per period before offset indexing, the fact picker does not, so
-    # lfy-1 lands on different rows. Also a deferred behavior decision.
+def test_pickers_agree_on_duplicate_period_lfy_offset():
+    # Unified 2026-07-05: duplicate (fiscal_year, period_end) audited rows
+    # dedupe before offset indexing on both paths, so lfy-1 means the prior
+    # fiscal year, never a same-year duplicate row.
     facts = [
         SnapshotFact("a", 2024, "2024-12-31", "revenue", 200, "USD", True, False, None),
         SnapshotFact("a", 2024, "2024-12-31", "revenue", 201, "USD", True, False, None),
@@ -399,12 +399,13 @@ def test_pickers_diverge_on_duplicate_period_lfy_offset():
     cands = [_cand(f, _ONE_DAY) for f in facts]
     by_fact = pick_snapshot_fact(facts, metric="revenue", period="lfy-1")
     by_cand = _pick_snapshot_candidate(cands, metric="revenue", period="lfy-1")
-    assert by_fact is not None and by_fact.value_cents == 201
+    assert by_fact is not None and by_fact.value_cents == 100
     assert by_cand is not None and by_cand.fact.value_cents == 100
 
 
 def test_integrate_module_exposes_both_pickers():
-    # Both pickers survive the split until the divergence is resolved upstream.
+    # pick_snapshot_fact is the public single-pack wrapper over the candidate
+    # picker; both names stay importable.
     assert hasattr(integrate, "pick_snapshot_fact")
     assert hasattr(integrate, "_pick_snapshot_candidate")
 

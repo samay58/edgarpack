@@ -161,6 +161,12 @@ class TestBilingualLabel:
     def test_short_label_renders_parenthesized(self) -> None:
         assert format_bilingual_label("Revenue", "营业收入") == "Revenue (营业收入)"
 
+    def test_english_label_matching_display_name_is_suppressed(self) -> None:
+        # Bilingual HKEX filers can carry English captions; "Revenue (revenue)"
+        # is noise, not a receipt.
+        assert format_bilingual_label("Revenue", "revenue") == "Revenue"
+        assert format_bilingual_label("Revenue", " Revenue ") == "Revenue"
+
     def test_long_label_truncates_at_24_chars_no_ellipsis(self) -> None:
         long_label = "归属于母公司所有者的净利润和营业总收入合计金额说明汇总统计表格"
         assert len(long_label) > 24
