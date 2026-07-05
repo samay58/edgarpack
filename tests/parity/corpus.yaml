@@ -1571,7 +1571,7 @@ cases:
     invariants:
       - "Submissions transparently paginate across recent + older columnar files; older-page fetch faults are logged-and-skipped."
       - "Exhausted iterator without match = not-found; callers must not assume every page was reachable."
-      - "get_latest_filing reads the recent window ONLY (no pagination)."
+      - "get_latest_filing paginates past filings.recent when the target form family is not found there (changed deliberately 2026-07-05, phase 2 registration-periphery packet; it previously read the recent window only)."
     why_this_case_exists: "Pins deep-pagination reach for high-volume filers and the not-found-vs-assume-reachable distinction."
     edge_cases_covered:
       - "older-page columnar parse"
