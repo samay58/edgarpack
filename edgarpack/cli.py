@@ -677,6 +677,14 @@ def main(argv: list[str] | None = None) -> int:
             "default listing (e.g. `--venue hkex` on a US-ADR company)."
         ),
     )
+    p_query.add_argument(
+        "--no-build",
+        action="store_true",
+        help=(
+            "For A-share/SSE codes with no local pack: error instead of auto-building the "
+            "latest annual report (today's behavior). Has no effect on SEC/HKEX targets."
+        ),
+    )
 
     def _add_registration_shortcut(name: str, form_type: str, help_text: str) -> None:
         p_reg = sub.add_parser(
@@ -2208,6 +2216,85 @@ def _cmd_api(args: Any) -> int:
     return 0
 
 
+async def _ensure_sse_pack_for_query(args: Any, resolved: Any) -> int:
+    """Auto-build the latest CNINFO annual-report pack for an A-share query
+    target with no local pack, mirroring the f1/s1 build-if-needed shortcut
+    (`_cmd_registration_shortcut`). SEC and HKEX targets are untouched; only
+    SSE/A-share codes route through here.
+
+    Returns 0 when the normal query path should proceed (a pack was already
+    on disk, or one was just built here). Returns non-zero when the caller
+    should stop immediately; the error is already printed to stderr.
+    """
+    from .identity import looks_like_china_a_share_code
+    from .query.financials import sse_pack_status
+
+    source = str(getattr(resolved, "source", "") or "") if resolved is not None else ""
+    if source == "SSE":
+        china_target = resolved
+    elif source:
+        return 0
+    elif looks_like_china_a_share_code(args.company):
+        china_target = _synthetic_sse_company(args.company)
+    else:
+        return 0
+
+    pack_root = Path(getattr(args, "packs", DEFAULT_PACKS_DIR))
+    stock_code = str(getattr(china_target, "stock_code", None) or args.company).strip()
+
+    pack_dir, built_without_facts = sse_pack_status(china_target, pack_root=pack_root)
+    if pack_dir is not None:
+        return 0
+    if built_without_facts:
+        print(
+            f"Pack for {stock_code} was built but no facts were extracted; "
+            "see the build warnings (rebuild with --force after fixing).",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(
+        f"No local pack for {stock_code}; fetching the latest annual report from CNINFO "
+        "(typically 2-4 minutes)...",
+        file=sys.stderr,
+    )
+    try:
+        selected = _find_latest_sse_annual_report(stock_code)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    import tempfile
+
+    from .pack.build import build_sse_pack
+
+    company_name = selected.company_name or getattr(china_target, "ticker", None) or stock_code
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        try:
+            result = await build_sse_pack(
+                url=selected.source_url,
+                stock_code=stock_code,
+                company_name=str(company_name),
+                filing_date=selected.filing_date,
+                out_dir=Path(tmp_dir),
+                with_chunks=True,
+                force=False,
+            )
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+
+        # build_sse_pack writes progressively into out_dir (not atomically);
+        # building into a throwaway temp dir first, then moving the finished
+        # tree into the real packs root only on success, keeps a download or
+        # extraction failure from leaving a partial directory in pack_root.
+        dest = pack_root / "sse" / stock_code / result.output_dir.name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(result.output_dir), str(dest))
+
+    return 0
+
+
 def _cmd_query(args: Any) -> int:
     from .identity import VenueNotAvailable, load_identity, resolve, select_venue, ticker_for_venue
 
@@ -2268,6 +2355,13 @@ def _cmd_query(args: Any) -> int:
             print(f"Error: {e}", file=sys.stderr)
             return 2
         query_company = ticker_for_venue(index, resolved, venue) or args.company
+
+    # Build-if-needed pre-pass: an A-share/SSE target with no local pack
+    # auto-builds its latest CNINFO annual report (unless --no-build).
+    if not bool(getattr(args, "no_build", False)):
+        china_rc = asyncio.run(_ensure_sse_pack_for_query(args, resolved))
+        if china_rc != 0:
+            return china_rc
 
     async def _run() -> int:
         from .query.financials import financials

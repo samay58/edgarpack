@@ -2026,6 +2026,40 @@ def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) ->
     return sorted(set(candidates), key=_sort_key, reverse=True)[0]
 
 
+def sse_pack_status(resolved: object, pack_root: Path | None = None) -> tuple[Path | None, bool]:
+    """Classify what is on disk for an SSE query target, for the CLI's
+    query-time build-if-needed pre-pass.
+
+    Reuses `_discover_china_pack_dir` for the queryable case, and only walks
+    the stock code's build directory an extra time when that comes back
+    empty, to tell "never built" apart from "built, but no facts.json"
+    extracted. A second build cannot fix the latter, so callers must not
+    retry it as though the pack were simply missing.
+
+    Returns ``(pack_dir, built_without_facts)``. ``pack_dir`` mirrors
+    `_discover_china_pack_dir`'s return value (a candidate with a queryable
+    facts.json, or None). ``built_without_facts`` is True only when
+    ``pack_dir`` is None and a build directory already exists for this stock
+    code.
+    """
+    pack_dir = _discover_china_pack_dir(resolved, pack_root=pack_root)
+    if pack_dir is not None:
+        return pack_dir, False
+
+    if str(getattr(resolved, "source", "") or "").upper() != "SSE":
+        return None, False
+    stock_code = _china_stock_code(resolved)
+    if not stock_code:
+        return None, False
+
+    roots = [Path(pack_root)] if pack_root is not None else [DEFAULT_PACKS_DIR, Path(".")]
+    for root in roots:
+        base = root / "sse" / stock_code
+        if base.exists() and any(child.is_dir() for child in base.iterdir()):
+            return None, True
+    return None, False
+
+
 def _load_china_manifest(pack_dir: Path) -> dict[str, Any]:
     manifest_path = pack_dir / "manifest.json"
     if not manifest_path.exists():
