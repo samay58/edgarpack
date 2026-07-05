@@ -73,9 +73,16 @@ _ANNUAL_REPORT_SECTIONS: dict[str, tuple[str, str]] = {
 # Backward-compatible name used by older tests/importers.
 _CANONICAL_SECTIONS = _PROSPECTUS_SECTIONS
 
-# Pattern: 第X节 / 第X章 / 第X部分 Title (with optional markdown heading prefix)
+# Pattern: 第X节 / 第X章 / 第X部分 Title (with optional markdown heading prefix,
+# or a body heading fully wrapped in bold markers like "**第一章 公司简介**").
+# The title capture is non-greedy with an optional trailing "**" so a bold
+# heading's closing marker never leaks into the extracted title.
+# Known limitation, not fixed here: a fully-designed layout with no numbered
+# 第X节/章/部分 headings at all (e.g. Ping An 601318, Zijin 601899) still
+# finds zero matches and falls closed to a single unknown_01 section.
 _SECTION_PATTERN = re.compile(
-    r"^(?:#+\s*)?第(?P<num>[一二三四五六七八九十百零]+)(?:节|章|部分)\s*(?P<title>.+)$",
+    r"^(?:#+\s*)?(?:\*\*)?第(?P<num>[一二三四五六七八九十百零]+)(?:节|章|部分)\s*"
+    r"(?P<title>.+?)(?:\*\*)?$",
     re.MULTILINE,
 )
 
