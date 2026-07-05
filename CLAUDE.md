@@ -39,11 +39,12 @@ npm --prefix web run build
 
 `EDGARPACK_USER_AGENT` (format `Name email@example.com`) is required for any live SEC call; the first network call fails with an actionable error if it is unset. SEC requests are paced (default 5 req/s) and cached on disk under `EDGARPACK_CACHE_DIR` (default `~/.edgarpack/cache`). The cache has no eviction and grows unbounded (multi-GB on heavy use); everything in it is refetchable, so deleting the directory is always safe. For China A-share / HKEX work, add `--extra china --extra sse`.
 
-The query commands need no build for SEC filers (they read companyfacts directly); only S-1 / China paths require a pack on disk first. Full flag/period/citation reference is in `docs/QUERY.md`.
+The query commands need no build for SEC filers (they read companyfacts directly); only registration (S-1/F-1) and China paths need a pack on disk, and the `s1`/`f1` shortcuts build it themselves. Full flag/period/citation reference is in `docs/QUERY.md`.
 
 ```bash
 # Cited metrics for one company. Period selectors: lfy, mrq, ltm, mrp, lfy-N, ltm-N,
-# mrq-N, annual:N, quarterly:N, or a CSV grid (lfy,lfy-1,lfy-2).
+# mrq-N, annual:N, quarterly:N, pro-forma (registration snapshots only, no -N),
+# or a CSV grid (lfy,lfy-1,lfy-2).
 uv run edgarpack query NVDA revenue,net_income --period ltm
 uv run edgarpack query NVDA --period annual:3 --audit   # show LTM/derived calc blocks
 uv run edgarpack query NVDA gross_margin --strict       # reject self-heal/learned concepts
@@ -55,6 +56,11 @@ uv run edgarpack compare NVDA AMD --metrics revenue --format markdown
 
 # Discover the qualitative / MD&A KPIs a filer discloses (one LLM call per pack, cached)
 uv run edgarpack which FIG
+
+# Pre-IPO registration shortcuts: build the latest S-1 / F-1 pack if needed, then
+# query cited registration financials (-a/--accession pins an exact filing)
+uv run edgarpack s1 "Neutron Holdings" revenue,net_income
+uv run edgarpack f1 0002004711 --period pro-forma
 
 # Diagnose pack health: manifest state, artifact inventory, KPI coverage.
 # Pass a pack dir for one report, or a ticker to sweep every pack for that filer.
@@ -68,11 +74,11 @@ The CLI (`edgarpack/cli.py`, plain `argparse`, no Click/Typer) dispatches every 
 
 **Identity routing** (`edgarpack/identity.py` + `universe.toml`): the user's positional arg (ticker / CIK / company name) resolves to a `ResolvedCompany` tagged `sec | hkex | private`. This tag decides which data path runs. Ticker/name resolution itself lives in `edgarpack/sec/tickers.py`: forgiving input, ambiguity raises a typed error listing candidates, unknown input returns a fuzzy "did you mean".
 
-**Build pipeline** (`build` → a pack on disk). `edgarpack/sec/` fetches over a stdlib HTTP client with token-bucket rate limiting + retry (`client.py`) and a SHA256-keyed atomic disk cache (`cache.py`). `edgarpack/parse/` then runs **six steps in strict order**: `ixbrl_strip → html_clean → semantic_html → md_render → md_polish → sectionize`. `edgarpack/pack/build.py` is the 13-step orchestrator that writes `filing.full.md`, `sections/*.md`, `manifest.json` (hashes + offsets), `llms.txt`, and optional `chunks.ndjson` / `xbrl.json`. S-1 filers with no native headings get synthetic headings injected before sectionize (`parse/s1_headings.py`).
+**Build pipeline** (`build` → a pack on disk). `edgarpack/sec/` fetches over a stdlib HTTP client with token-bucket rate limiting + retry (`client.py`) and a SHA256-keyed atomic disk cache (`cache.py`). `edgarpack/parse/` then runs **six steps in strict order**: `ixbrl_strip → html_clean → semantic_html → md_render → md_polish → sectionize`. `edgarpack/pack/build.py` is the 13-step orchestrator that writes `filing.full.md`, `sections/*.md`, `manifest.json` (hashes + offsets), `llms.txt`, and optional `chunks.ndjson` / `xbrl.json`. Registration-class filings (S-1, F-1) with no native headings get synthetic headings injected before sectionize (`parse/s1_headings.py`).
 
 **Query pipeline** (`query`, `comps`, `compare`, `which` → cited values, no build needed for SEC). `edgarpack/query/financials.py` is the orchestrator. `periods.py` is the subtlest module in the codebase; period vocabulary (`ltm`, `lfy`, `mrq`, `mrp`, `annual:N`, `quarterly:N`), LTM math, anchor selection, fiscal-year matching, staleness rejection. Most financial-reasoning bugs live here. The single-period table renderer lives in `query/render.py`; the shared arithmetic-formula evaluator in `query/formula.py`. Metric names resolve through `layer_zero.py` / `metric_map.py`; unknown metrics hit the **self-heal** path (`self_heal.py`) which fuzzy/LLM-resolves a concept and persists it in the `learned_concepts` registry (`learned_registry.py`, inspect via `edgarpack learned list`). `--strict` rejects any non-`hardcoded` concept source (`strict.py`).
 
-**Pre-IPO / S-1 path**: S-1 filers usually have no SEC companyfacts. Query reads the built registration pack instead and lazily extracts a snapshot (`query/s1_financials.py`), tagging values `s1_snapshot` / `s1_pro_forma`.
+**Pre-IPO / registration path (S-1, F-1)**: registration filers usually have no SEC companyfacts. Query reads the built registration pack instead and lazily extracts a snapshot (`query/s1_financials.py`, shared by both forms), tagging values `s1_snapshot` / `s1_pro_forma`. The extraction is LLM-backed: it needs the `vlm` extra (`anthropic` package) plus `ANTHROPIC_API_KEY`; without the key it injects `source="no_api_key"` placeholder rows so the CLI can surface a hint instead of guessing. The `s1` / `f1` CLI shortcuts wrap build-if-needed + query into one command.
 
 **China Lens** is a parallel sub-product, not a bolt-on. HKEX (`edgarpack/hk/`) extraction runs at pack time and populates `facts.json`, which the query layer reads instead of SEC companyfacts when identity routes a filer to HKEX. SSE / A-share (`edgarpack/sse/`, `edgarpack/china/`) build from CNINFO PDFs via `build-sse`, detect CSRC sections by Chinese numerals, and optionally run a zh→en translation pipeline (`--translate`, needs `EDGARPACK_DEEPINFRA_KEY`). FX normalization uses `data/fx_rates.csv`.
 
@@ -101,4 +107,5 @@ Branch off `main`, keep diffs small, run the gate, commit, push. No mandatory tr
 
 - `docs/ARCHITECTURE.md`: the stage-by-stage "how it works" with the parse-pipeline and query examples.
 - `docs/learn/README.md` + trails 0-8: code walk-throughs that trace a concrete command through the actual modules; `docs/learn/ref/` is the per-module dictionary.
-- `docs/QUERY.md`: full metric/period/citation/JSON reference. `docs/OBSERVATORY.md`: diff + timeline. Also `docs/DISTILL.md`, `docs/TESTING.md` (offline vs live lanes), `docs/BENCHMARKS.md`.
+- `docs/QUERY.md`: full metric/period/citation/JSON reference. `docs/S1.md`: registration build + query guide. `docs/OBSERVATORY.md`: diff + timeline. Also `docs/DISTILL.md`, `docs/TESTING.md` (offline vs live lanes), `docs/BENCHMARKS.md`.
+- `docs/rebuild/`: the clean-room-rewrite behavior corpus. `010_PHASE0_BEHAVIOR_CORPUS.md` pins current behavior with `file:line` evidence (including known-bad behavior, kept in `decisions/known_bad_current_behavior.md`); `tests/parity/corpus.yaml` is the matching parity corpus. Consult it before changing pinned behavior; don't treat pinned as correct.

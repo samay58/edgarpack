@@ -1,0 +1,77 @@
+# China Lens + S-1/F-1 Streamlining Plan
+
+Decided 2026-07-05 after a three-agent audit (China Lens code reality, S-1/F-1 registration path, rebuild-corpus digest) plus firsthand reads of `docs/rebuild/decisions/*` and `docs/BACKLOG.md`. This file is the execution contract; delete it when all phases ship.
+
+## Decisions (Samay, 2026-07-05)
+
+1. **Web stack**: cut the China demo workspace (FastAPI china routers + `china/` service half + `web/` workspace UI). Keep the observatory API routes and observatory web UI; their product fate is a separate later call. Static `edgarpack site` remains the canonical deterministic web surface.
+2. **Provenance bugs**: fix now, don't pin-then-fix. Parity corpus pins corrected behavior.
+3. **China coverage**: any-ticker acquisition. Real `build-hk`, real CNINFO/HKEX acquisition, China lanes in harvest.
+4. **S-1/F-1**: robustness + flexibility (amendments, non-USD/IFRS, module split, schema-validated LLM rows, real-filing golden fixtures). Full adapter promotion deferred to vNext.
+
+## Phase 0: steering spikes (parallel, read-only)
+
+- **pymupdf4llm stress test**: run real CNINFO annual-report PDFs through `sse/pdf_to_md.py` + `sectionize_cn` + `annual_facts`; measure section detection rate, table fidelity, 万元 prevalence. Both Phase 1 rebuild reports missed this dependency; it is load-bearing for the entire A-share path and steers Phase 3 scope.
+- **A-share routing arbitration**: run `identify`/`query` on bare `688696` to settle the docs contradiction (2026-04-27 research note says it 404s via SEC CIK; IMPLEMENTATION_TRACKER says it routes). Code is the arbiter.
+
+## Phase 1: cut (branch `streamline/phase1-cut`)
+
+Protocol per item: caller grep before deletion; offline suite + full gate (incl. `SYMPHONY_WEB=1` web build) green after.
+
+Delete:
+- `edgarpack/china/` workspace half: `service.py`, `storage.py`, `models.py`, `jobs/`, `synthesis/`, `qa/`, `index/`. Keep `translate/`, `acquire/`, `extract/`.
+- `edgarpack/api/` china routers + their dependencies; slim `api/main.py` to observatory routes + healthz. `edgarpack api` CLI command survives, observatory-only.
+- `web/` workspace surfaces: `app/(workspace)/`, `components/china-lens/`, china half of `lib/api-client.ts`, `lib/sample-data.ts`. Observatory UI stays; root already redirects to `/observatory`.
+- `hk/llm_extract.py` + the inert `llm_fallback` plumbing in `hk/extract.py` (production always passes `client=None`; dormant path carries a 1000x scaling bug). Its tests go with it.
+- Demo translators (`PrefixTranslator`/`IdentityTranslator`) in `china/translate/provider.py`, keep the Protocol (grep tests first).
+- Unreachable `_COMPANY_META` rows (Alibaba/JD) in `hk/adapter.py`.
+- Fixture PDFs from git (`tests/fixtures/china_packs/*/[0-9]*.pdf`, `source.pdf`): tests need sections + `facts.json`, not binaries. The uncommitted minimax PDF deletions in the working tree fold into this. Note: fixture REGENERATION then requires re-downloading PDFs via `scripts/download_hk_prospectus.sh`; acceptable.
+- Env-var surface that dies with the service (`EDGARPACK_CHINA_SEED_FIXTURES`, `EDGARPACK_CHINA_STORAGE_*`, `NEXT_PUBLIC_CHINA_LENS_DEMO`).
+
+Explicitly NOT cut in this phase:
+- `hk/acquire.py` (unused scraper): seed material for Phase 3 `build-hk`.
+- `insights/` (zero callers): tied to the observatory product call, which stays open.
+- `edgarpack/site/` and observatory diff/index/timeline engines: active.
+- General-bloat items from `docs/rebuild/decisions/deprecation_candidates.md` outside China Lens scope (metric_map unification, --cik flags, etc.): follow the rebuild effort's own protocol, separate pass.
+
+Tests to adjust: `test_china_api.py`, `test_api_exports.py` become observatory-only smoke tests; delete `test_hk_llm_extract.py`, `test_china_service/storage` etc.
+
+## Phase 2: trust (the correctness cluster, TDD, workflow fan-out with adversarial verify)
+
+China (all pinned at file:line in `docs/BACKLOG.md` and `docs/rebuild/decisions/known_bad_current_behavior.md`):
+- SSE 万元/scale detection (`sse/annual_facts.py`): currently unit hardcoded CNY, values raw, 10^4 risk. Fail closed when 单位 marker unrecognized.
+- FX fiscal-year average (`fx/convert.py:71-73`): average monthly rows across the period; needs an independent FY-average oracle for the golden USD numbers.
+- Real HK fiscal periods (`hk/extract.py:577-578, 622-623`): carry actual period end; instants for balance-sheet facts.
+- China `filed` date (`financials.py:2076, 2111-2113`): stop fabricating Dec-31; un-enshrine the test.
+- Replace the `tests/fixtures` + `fy=2024` production fallback (`financials.py:1976-1987`) with a configurable China pack root; migrate `test_cli_json_contract.py`.
+- `sectionize_cn` TOC guard + `第X章`/`第X部分` support (changes SSE pack bytes: PARSER_VERSION bump; batch with the BACKLOG parse-pipeline items if convenient, else standalone bump).
+- Unknown HKEX filer: fail closed instead of silent CNY/HKFRS default (`hk/adapter.py:133-140`).
+- Serialize `matched_label` into `facts.json` (`hk/extract.py:621-631`).
+- Translation: spend budget flag (token/dollar cap), DeepInfra `finish_reason=length` handling; extract the 400-line `_cmd_translate_sse` into `china/translate/pipeline.py` (BACKLOG already scopes this).
+
+S-1/F-1 (audit P0/P1s; all in `edgarpack/query/s1_financials.py` unless noted):
+- Merge deterministic + LLM extraction: LLM fills slugs the deterministic pass didn't produce, deterministic wins on conflict (`:956` short-circuit is the biggest coverage hole; label map has no cash/assets/equity/shares branches).
+- Failure statuses (`llm_parse_failed`, `no_financial_data_found`) become retryable with cooldown; attempt partial-JSON salvage.
+- Split `except Exception` → honest taxonomy: `no_api_key` only for ImportError/missing key; `llm_call_failed` carries exception text (`:971`). Fix the misleading CLI hint.
+- Currency from section context in the deterministic parser; refuse deterministic emission on non-USD presentation markers (`:613`). Stop hardcoding `is_audited=True` (`:614`).
+- Real period ends: no fabricated `-12-31` (`:338`); reject FY classification for interim contexts with unrecognized dates; fix Jan-31-style fiscal calendars.
+- Hash full `filing.full.md` for snapshot invalidation (drop the 50KB window, `:856-864`).
+- Emit `Diagnostic`s throughout the registration path (unsupported period, empty latest snapshot, status != ok).
+- Magnitude gates on LLM rows (revenue ≥ gross_profit, cross-year 1000x jump detector).
+- `MODEL_ID` / max-tokens env-overridable; one retry with backoff on transient errors.
+- Amendment awareness: `has_registration_pack_for_cik` accepts F-1/A for F-1; filing selection prefers newest of {F-1, F-1/A} (`submissions.py:257` never matches amendments today).
+- Negative caching for 404 companyfacts (`sec/xbrl.py:72-73`), preserving the 404-vs-error split.
+
+## Phase 3: build (coverage + flexibility)
+
+- `build-hk` CLI: real HKEX acquisition (rework `hk/acquire.py`), metadata from filing/universe.toml instead of the hardcoded 6-company dict.
+- Harvest China lanes (CNINFO + HKEX) so coverage refreshes; today `harvest/` is SEC-only.
+- SSE extraction widened past 4 metrics; interim-report support so `ltm`/`mrq` mean something for China filers.
+- Dual-listing linkage in `universe.toml` schema (BABA 20-F vs 9988.HK cross-market query).
+- S-1/F-1: split the 1,628-line module (deterministic parser / LLM extraction+cache / query integration); pydantic-validate LLM rows; unify `pick_snapshot_fact` + `_pick_snapshot_candidate`; rename `vlm` extra or wire vision; golden fixtures from 3-4 real filings (Cerebras S-1, one IFRS F-1, one non-calendar-FY filer); registration metric expansion (diluted shares, dilution, use of proceeds, offering terms).
+
+## Acceptance gates
+
+- Every phase: `scripts/symphony_quality_gate.sh` green (Phase 1 also with `SYMPHONY_WEB=1`).
+- Phase 2: each fix lands with a regression test; china golden yaml updated where USD numbers change (FX fix); parity corpus rows updated to pin corrected behavior per Decision 2.
+- Phase 3: end-to-end proof per feature (a real HKEX ticker built + queried; a real F-1/A picked up by `f1`).
