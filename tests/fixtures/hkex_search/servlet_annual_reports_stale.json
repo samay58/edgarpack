@@ -1,0 +1,9 @@
+{
+  "result": "[{\"FILE_INFO\":\"3MB\",\"NEWS_ID\":\"99900001\",\"SHORT_TEXT\":\"Financial Statements/ESG Information - [Sustainability Report]\",\"TOTAL_COUNT\":\"2\",\"DOD_WEB_PATH\":\"\",\"STOCK_NAME\":\"SHELLCO\",\"TITLE\":\"2025 SUSTAINABILITY REPORT\",\"FILE_TYPE\":\"PDF\",\"DATE_TIME\":\"01/06/2026 09:00\",\"LONG_TEXT\":\"Financial Statements/ESG Information - [Sustainability Report]\",\"STOCK_CODE\":\"09999\",\"FILE_LINK\":\"/listedco/listconews/sehk/2026/0601/2026060100001.pdf\"},{\"FILE_INFO\":\"2MB\",\"NEWS_ID\":\"88800001\",\"SHORT_TEXT\":\"Financial Statements/ESG Information - [Annual Report]\",\"TOTAL_COUNT\":\"2\",\"DOD_WEB_PATH\":\"\",\"STOCK_NAME\":\"SHELLCO\",\"TITLE\":\"ANNUAL REPORT 2018\",\"FILE_TYPE\":\"PDF\",\"DATE_TIME\":\"01/04/2019 17:00\",\"LONG_TEXT\":\"Financial Statements/ESG Information - [Annual Report]\",\"STOCK_CODE\":\"09999\",\"FILE_LINK\":\"/listedco/listconews/sehk/2019/0401/2019040100001.pdf\"}]",
+  "hasNextRow": false,
+  "sortList": "[[0,0]]",
+  "rowRange": 100,
+  "lang": "E",
+  "loadedRecord": 2,
+  "recordCnt": 2
+}

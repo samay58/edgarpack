@@ -1,4 +1,4 @@
-"""Shared pytest configuration for slow/live SEC test lanes."""
+"""Shared pytest configuration for slow/live SEC/HKEX test lanes."""
 
 from __future__ import annotations
 
@@ -42,6 +42,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Run expanded live SEC coverage, including the 30+ filing matrix",
     )
+    parser.addoption(
+        "--run-live-hk",
+        action="store_true",
+        default=False,
+        help="Run live HKEX search integration tests",
+    )
 
 
 @pytest.fixture
@@ -65,6 +71,12 @@ def _require_live_sec_full(
 ) -> None:
     if not request.config.getoption("--live-sec-full", default=False):
         pytest.skip("expanded live SEC coverage: pass --live-sec-full to run")
+
+
+@pytest.fixture
+def _require_live_hk(request: pytest.FixtureRequest) -> None:
+    if not request.config.getoption("--run-live-hk", default=False):
+        pytest.skip("live HKEX test: pass --run-live-hk to run")
 
 
 @pytest.fixture(autouse=True)
