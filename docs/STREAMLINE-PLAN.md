@@ -9,6 +9,13 @@ Decided 2026-07-05 after a three-agent audit (China Lens code reality, S-1/F-1 r
 3. **China coverage**: any-ticker acquisition. Real `build-hk`, real CNINFO/HKEX acquisition, China lanes in harvest.
 4. **S-1/F-1**: robustness + flexibility (amendments, non-USD/IFRS, module split, schema-validated LLM rows, real-filing golden fixtures). Full adapter promotion deferred to vNext.
 
+## Status
+
+- Phase 0 routing spike: DONE 2026-07-05. Bare A-share codes route correctly to the SSE path for configured and unconfigured codes; the 2026-04-27 research note recorded pre-fix behavior fixed the same day by 54e0214. No routing fix needed. Vestigial `resolved = _synthetic_sse_company(...)` at `cli.py:2447-2448` (never read); remove during Phase 2.
+- Phase 0 pymupdf4llm spike: running.
+- Phase 1 cut: DONE 2026-07-05 on branch `streamline/phase1-cut` (5 commits, gate green incl. SYMPHONY_WEB=1). ~4,600 LOC deleted.
+- Phase 2, Phase 3: not started.
+
 ## Phase 0: steering spikes (parallel, read-only)
 
 - **pymupdf4llm stress test**: run real CNINFO annual-report PDFs through `sse/pdf_to_md.py` + `sectionize_cn` + `annual_facts`; measure section detection rate, table fidelity, 万元 prevalence. Both Phase 1 rebuild reports missed this dependency; it is load-bearing for the entire A-share path and steers Phase 3 scope.
