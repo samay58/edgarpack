@@ -9,6 +9,7 @@ from ..china.extract.pdf_extract import extract_pdf_pages
 from . import load_section_map
 from .acquire import HKFilingRef, download_pdf
 
+
 class UnknownHKFilerError(ValueError):  # noqa: N818
     """Raised when a stock code has no entry in _COMPANY_META."""
 
