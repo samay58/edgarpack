@@ -2400,5 +2400,82 @@ class TestParsePeriodSpec(unittest.TestCase):
             parse_period_spec(",,")
 
 
+def _china_point(
+    val: float,
+    section_id: str,
+    *,
+    fy: int = 2024,
+    matched_label: str = "profit for the year",
+) -> dict:
+    """A China regex fact for one fiscal year (full-year flow shape)."""
+    return {
+        "val": val,
+        "fy": fy,
+        "fp": "FY",
+        "form": "Annual Report",
+        "accn": "02513_2024",
+        "start": f"{fy}-01-01",
+        "end": f"{fy}-12-31",
+        "extraction_method": "regex",
+        "section_id": section_id,
+        "matched_label": matched_label,
+    }
+
+
+class TestChinaDeterministicSelection(unittest.TestCase):
+    META = MetricMeta(concepts=("ProfitLoss",), duration=True)
+
+    def _select(self, points: list[dict], diagnostics: list[Diagnostic] | None = None):
+        facts = {"hkfrs": {"ProfitLoss": {"label": "ProfitLoss", "units": {"CNY": points}}}}
+        return select_period(
+            facts,
+            "ProfitLoss",
+            "net_income",
+            self.META,
+            "Zhipu",
+            "02513",
+            "lfy",
+            taxonomy="hkfrs",
+            diagnostics=diagnostics,
+        )
+
+    def test_duplicate_annual_selection_is_order_independent(self) -> None:
+        # The same fiscal year disclosed in two sections. Section priority, not
+        # document order, decides: the income statement outranks the
+        # comprehensive-income restatement, and reversing insertion order must
+        # not change the answer.
+        income = _china_point(-465, "hkex_income_statement")
+        comprehensive = _china_point(-470, "hkex_comprehensive_income")
+
+        forward = self._select([income, comprehensive])
+        reverse = self._select([comprehensive, income])
+
+        self.assertIsNotNone(forward)
+        self.assertEqual(forward.value, -465)
+        self.assertIsNotNone(reverse)
+        self.assertEqual(reverse.value, forward.value)
+
+    def test_conflicting_same_priority_returns_none_with_diagnostic(self) -> None:
+        # Two equal-priority sections disagree on the value: there is no
+        # principled winner, so the value resolves to None and a diagnostic
+        # records the conflict instead of an arbitrary pick.
+        a = _china_point(-465, "hkex_income_statement", matched_label="loss for the year")
+        b = _china_point(-466, "hkex_income_statement", matched_label="profit for the year")
+
+        diagnostics: list[Diagnostic] = []
+        result = self._select([a, b], diagnostics=diagnostics)
+
+        self.assertIsNone(result)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].kind, "layer_b_unresolved")
+        self.assertIn("net_income", diagnostics[0].message)
+
+    def test_single_point_per_year_is_untouched(self) -> None:
+        # No duplicates: the ordinary path is preserved.
+        result = self._select([_china_point(-465, "hkex_income_statement")])
+        self.assertIsNotNone(result)
+        self.assertEqual(result.value, -465)
+
+
 if __name__ == "__main__":
     unittest.main()
