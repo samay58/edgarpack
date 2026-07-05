@@ -35,6 +35,12 @@ _ATTR_SIGN_RE = re.compile(r'\bsign="([^"]*)"', re.IGNORECASE)
 _FULL_YEAR_MIN_DAYS = 350
 _FULL_YEAR_MAX_DAYS = 380
 
+# SEC XBRL taxonomies. A fact under one of these always carries a real period
+# end, so a missing end is data corruption rather than honest absence. China
+# packs tag concepts under their own taxonomies (hkfrs, cas, ifrs) and may
+# legitimately omit the end date when the manifest states no fiscal year end.
+_SEC_TAXONOMIES: frozenset[str] = frozenset({"us-gaap", "ifrs-full", "dei"})
+
 
 def _parse_display_value(text: str, scale: str, sign: str) -> float | None:
     """Parse the displayed value from an ix:nonFraction element.
@@ -363,13 +369,20 @@ def _value_to_cited(
     primary_doc = ""
     if doc_map and accn:
         primary_doc = doc_map.get(accn, "")
+    period_end = _parse_date(v.get("end", ""))
+    if period_end is None and taxonomy in _SEC_TAXONOMIES:
+        raise ValueError(
+            f"SEC fact for concept {concept!r} in taxonomy {taxonomy!r} "
+            f"(accession {accn!r}) carries no parseable period end; refusing to "
+            f"fabricate one."
+        )
     return CitedValue(
         value=v.get("val"),
         unit=unit,
         metric=metric,
         concept=concept,
         period_start=_parse_date(v.get("start", "")),
-        period_end=_parse_date(v.get("end", "")) or date.min,
+        period_end=period_end,
         fiscal_year=int(v.get("fy") or 0),
         fiscal_period=str(v.get("fp", "")),
         form_type=str(v.get("form", "")),
@@ -638,7 +651,7 @@ def _assert_ltm_invariant(
     if fp == "Q4":
         days = (
             (result.period_end - result.period_start).days
-            if result.period_start is not None
+            if result.period_start is not None and result.period_end is not None
             else None
         )
         if days is None or not (_FULL_YEAR_MIN_DAYS <= days <= _FULL_YEAR_MAX_DAYS):
