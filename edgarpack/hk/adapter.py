@@ -1,41 +1,19 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import httpx
+
 from ..china.extract.pdf_extract import extract_pdf_pages
 from . import load_section_map
-from .acquire import HKFilingRef, download_pdf
+from .acquire import HKFilingRef, download_pdf, extract_filing_metadata
+from .toc import HKSectioningError, Section, slice_sections
 
-
-class UnknownHKFilerError(ValueError):  # noqa: N818
-    """Raised when a stock code has no entry in _COMPANY_META."""
-
-
-_COMPANY_META: dict[str, dict[str, str]] = {
-    "00700": {
-        "name": "Tencent Holdings",
-        "reporting_currency": "CNY",
-        "accounting_standard": "HKFRS",
-    },
-    "03690": {
-        "name": "Meituan",
-        "reporting_currency": "CNY",
-        "accounting_standard": "HKFRS",
-    },
-    "00100": {
-        "name": "MiniMax Group Inc.",
-        "reporting_currency": "USD",
-        "accounting_standard": "HKFRS",
-    },
-    "02513": {
-        "name": "Zhipu (Knowledge Atlas Technology)",
-        "reporting_currency": "CNY",
-        "accounting_standard": "HKFRS",
-    },
-}
+__all__ = ["PackRef", "HKSectioningError", "build_hk_pack"]
 
 
 @dataclass(frozen=True)
@@ -45,105 +23,84 @@ class PackRef:
     fiscal_year: int
 
 
-def _download_pdf(ref: HKFilingRef, out: Path) -> Path:
-    download_pdf(ref, out)
+def _download_pdf(ref: HKFilingRef, out: Path, *, client: httpx.Client | None = None) -> Path:
+    download_pdf(ref, out, client=client)
     return out
 
 
-def build_hk_pack(ref: HKFilingRef, out_dir: Path) -> PackRef:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = out_dir / f"{ref.stock_code}_{ref.fiscal_year}.pdf"
-    _download_pdf(ref, pdf_path)
+def _dedupe_section_id(section_id: str, counts: dict[str, int]) -> str:
+    counts[section_id] = counts.get(section_id, 0) + 1
+    if counts[section_id] == 1:
+        return section_id
+    return f"{section_id}_{counts[section_id]:02d}"
 
-    pages = extract_pdf_pages(str(pdf_path))
-    section_map = load_section_map()
 
-    sections: list[dict[str, Any]] = []
-    unmapped_counter = 0
-    current: dict[str, Any] | None = None
-
-    for page in pages:
-        page_lines = page.text.split("\n")
-        buf: list[str] = []
-        for line in page_lines:
-            normalized = line.strip().upper().rstrip(".")
-            mapped = section_map.get(normalized) if normalized else None
-            if mapped:
-                if current and buf:
-                    current["text"] += "\n" + "\n".join(buf)
-                    current["page_end"] = page.page
-                if current:
-                    sections.append(current)
-                current = {
-                    "section_id": mapped,
-                    "text": line,
-                    "page_start": page.page,
-                    "page_end": page.page,
-                }
-                buf = []
-            else:
-                buf.append(line)
-
-        if buf:
-            if current is None:
-                unmapped_counter += 1
-                current = {
-                    "section_id": f"hkex_unmapped_{unmapped_counter:03d}",
-                    "text": "\n".join(buf),
-                    "page_start": page.page,
-                    "page_end": page.page,
-                }
-            else:
-                current["text"] += "\n" + "\n".join(buf)
-                current["page_end"] = page.page
-
-    if current:
-        sections.append(current)
-
-    merged: list[dict[str, Any]] = []
-    for s in sections:
-        if merged and merged[-1]["section_id"] == s["section_id"]:
-            merged[-1]["text"] += "\n" + s["text"]
-            merged[-1]["page_end"] = s["page_end"]
-        else:
-            merged.append(s)
-    sections = merged
-
-    name_counts: dict[str, int] = {}
-    for s in sections:
-        sid = s["section_id"]
-        name_counts[sid] = name_counts.get(sid, 0) + 1
-        if name_counts[sid] > 1:
-            s["section_id"] = f"{sid}_{name_counts[sid]:02d}"
-
+def _write_sections(out_dir: Path, sections: list[Section]) -> list[dict[str, Any]]:
     sections_dir = out_dir / "sections"
     sections_dir.mkdir(exist_ok=True)
-    for s in sections:
-        (sections_dir / f"{s['section_id']}.md").write_text(s["text"] + "\n")
+    counts: dict[str, int] = {}
+    records: list[dict[str, Any]] = []
+    for section in sections:
+        assert section.section_id is not None
+        section_id = _dedupe_section_id(section.section_id, counts)
+        (sections_dir / f"{section_id}.md").write_text(section.text + "\n")
+        records.append(
+            {
+                "section_id": section_id,
+                "text": section.text,
+                "page_start": section.start_index + 1,
+                "page_end": section.end_index,
+            }
+        )
+    return records
+
+
+def build_hk_pack(
+    ref: HKFilingRef,
+    out_dir: Path,
+    *,
+    company_name: str,
+    dual_counter_codes: Sequence[str] | None = None,
+    client: httpx.Client | None = None,
+) -> PackRef:
+    """Acquire, section and write an HKEX pack for one annual report.
+
+    The currency, accounting standard and (best-effort) legal name come from the
+    filing itself via `extract_filing_metadata`; `company_name` is the search
+    row's short name used when the filing does not disclose a legal name.
+    Raises HKSectioningError when the statements cannot be located: the pack is
+    not written rather than emitting an unusable one.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = out_dir / f"{ref.stock_code}_{ref.fiscal_year}.pdf"
+    _download_pdf(ref, pdf_path, client=client)
+
+    page_texts = [page.text for page in extract_pdf_pages(str(pdf_path))]
+    section_map = load_section_map()
+
+    sections = slice_sections(page_texts, section_map)
+    records = _write_sections(out_dir, sections)
 
     with (out_dir / "chunks.ndjson").open("w") as f:
-        for s in sections:
-            f.write(json.dumps(s) + "\n")
+        for record in records:
+            f.write(json.dumps(record) + "\n")
 
-    meta = _COMPANY_META.get(ref.stock_code)
-    if meta is None:
-        raise UnknownHKFilerError(
-            f"No HKEX filer metadata for stock code {ref.stock_code!r}. "
-            f"Add an entry to _COMPANY_META in edgarpack/hk/adapter.py giving "
-            f"the company name, reporting_currency, and accounting_standard "
-            f"before building this pack; defaulting to CNY/HKFRS would invent "
-            f"the reporting currency and standard."
-        )
-    manifest = {
+    meta = extract_filing_metadata(pdf_path)
+    manifest: dict[str, Any] = {
         "source": "HKEX",
         "stock_code": ref.stock_code,
         "fiscal_year": ref.fiscal_year,
-        "company": meta["name"],
-        "reporting_currency": meta["reporting_currency"],
-        "accounting_standard": meta["accounting_standard"],
+        "company": meta.legal_name or company_name,
+        "reporting_currency": meta.currency,
+        "accounting_standard": meta.accounting_standard,
         "pdf_url": ref.pdf_url,
         "announcement_date": ref.announcement_date,
     }
+    if meta.standard_note is not None:
+        manifest["accounting_standard_citation"] = meta.standard_note
+    codes = [code for code in (dual_counter_codes or ()) if code]
+    if len(codes) > 1:
+        manifest["dual_counter_codes"] = codes
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
     return PackRef(path=out_dir, stock_code=ref.stock_code, fiscal_year=ref.fiscal_year)
