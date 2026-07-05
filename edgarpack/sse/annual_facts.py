@@ -13,30 +13,43 @@ from typing import Any
 
 @dataclass(frozen=True)
 class AnnualMetricSpec:
-    label_contains: str
+    label_contains: tuple[str, ...]
     concept: str
     label: str
     unit: str
     divide_by: float = 1.0
     is_ratio: bool = False
+    # Rows whose label contains any of these tokens never match this spec,
+    # even when a label_contains token also matches. Scoped per-metric: a
+    # short generic label_contains token (like 营业收入) recurs as a tail
+    # substring inside longer adjusted/carve-out variants (LONGi's
+    # "扣除...后的营业收入"), which would otherwise manufacture a same-year
+    # conflict against the headline row and fail both closed.
+    exclude_if_contains: tuple[str, ...] = ()
 
 
 _METRICS: tuple[AnnualMetricSpec, ...] = (
-    AnnualMetricSpec("营业收入", "Revenue", "Revenue", "CNY"),
     AnnualMetricSpec(
-        "归属于上市公司股东的净利润",
+        ("营业收入", "营业总收入"),
+        "Revenue",
+        "Revenue",
+        "CNY",
+        exclude_if_contains=("扣除",),
+    ),
+    AnnualMetricSpec(
+        ("归属于上市公司股东的净利润",),
         "ProfitLoss",
         "Net income attributable to shareholders",
         "CNY",
     ),
     AnnualMetricSpec(
-        "经营活动产生的现金流量净额",
+        ("经营活动产生的现金流量净额",),
         "NetCashProvidedByUsedInOperatingActivities",
         "Net cash from operating activities",
         "CNY",
     ),
     AnnualMetricSpec(
-        "研发投入占营业收入的比例",
+        ("研发投入占营业收入的比例",),
         "ResearchAndDevelopmentIntensity",
         "R&D intensity",
         "pure",
@@ -386,7 +399,9 @@ def write_annual_facts(
             )
 
             for spec in _METRICS:
-                if spec.label_contains not in row_label:
+                if not any(token in row_label for token in spec.label_contains):
+                    continue
+                if any(token in row_label for token in spec.exclude_if_contains):
                     continue
                 if row_is_ratio and not spec.is_ratio:
                     continue

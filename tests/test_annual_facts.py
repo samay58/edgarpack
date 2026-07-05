@@ -584,3 +584,87 @@ def test_row_level_unit_suffix_overrides_table_level_marker(tmp_path):
     # Row-level （元） wins over the table-level 万元 marker: stays 1000,
     # not scaled up x1e4.
     assert by_year[2024] == 1000.0
+
+
+def test_longi_adjusted_revenue_row_excluded_headline_extracts(tmp_path):
+    """LONGi's key table carries both the headline 营业收入 row and an
+    adjusted 扣除...后的营业收入 variant. The 扣除 row must not compete with
+    the headline for the same fiscal year (the substring match on 营业收入
+    would otherwise manufacture a conflict and fail revenue closed)."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：元
+
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业收入|70347049950.42|82582273118.72|
+|扣除与主营业务无关的业务收入和不具备商业实质的收入后的营业收入|69156038920.71|81211823906.59|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2024] == 70_347_049_950.42
+    assert by_year[2023] == 82_582_273_118.72
+
+
+def test_eastmoney_total_revenue_label_extracts(tmp_path):
+    """Brokerage/financial filers (East Money) title the headline revenue row
+    营业总收入 instead of 营业收入; the contiguous-substring match on
+    营业收入 alone cannot see it (总 breaks the substring), so it must be
+    accepted as an additional revenue label."""
+    content = """## 第二节 公司简介和主要财务指标
+
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业总收入（元）|16067741039.51|11604343090.16|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2024] == 16_067_741_039.51
+    assert by_year[2023] == 11_604_343_090.16
+
+
+def test_eastmoney_both_revenue_labels_differing_still_fails_closed(tmp_path):
+    """When a table carries BOTH 营业收入 and 营业总收入 with differing
+    values, the existing conflict machinery must still drop both: accepting
+    营业总收入 as an additional label is not a preference rule between them."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：元
+
+|主要会计数据|2024年|
+|---|---:|
+|营业收入|1000|
+|营业总收入|1200|
+|归属于上市公司股东的净利润|500|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    with pytest.warns(UserWarning, match="Revenue"):
+        facts_path = _write(tmp_path, sections)
+
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    cas = facts["facts"]["cas"]
+
+    assert "Revenue" not in cas
