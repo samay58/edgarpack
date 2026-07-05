@@ -65,6 +65,11 @@ _UNIT_SCALE_FACTORS: dict[str, float] = {
 }
 _UNIT_SCALE_LOOKBACK_LINES = 15
 
+# SZSE/ChiNext-template tables sometimes carry the unit as a suffix on the row
+# label itself ("营业收入（元）", Midea's "营业收入（千元）") instead of a
+# table-level 单位 line. Matches full-width （） and half-width () parens.
+_ROW_UNIT_SUFFIX_PATTERN = re.compile(r"[（(](?:人民币)?(百万元|万元|千元|元)[)）]$")
+
 _YOY_TOLERANCE_PP = 1.5
 
 
@@ -131,6 +136,20 @@ def _percent_column_index(cells: list[str]) -> int | None:
 
 def _is_ratio_row(label: str) -> bool:
     return bool(_RATIO_LABEL_PATTERN.search(label))
+
+
+def _strip_row_unit_suffix(label: str) -> tuple[str, float | None]:
+    """Split a SZSE/ChiNext-style row-level unit suffix from its label.
+
+    Returns the label with the suffix removed, and the row's own scale
+    factor (None when no recognized suffix is present). A row-level unit is
+    the more specific disclosure: it satisfies the fail-closed unit gate on
+    its own and overrides any table-level 单位 marker for that row.
+    """
+    match = _ROW_UNIT_SUFFIX_PATTERN.search(label)
+    if not match:
+        return label, None
+    return label[: match.start()], _UNIT_SCALE_FACTORS[match.group(1)]
 
 
 def _table_priority(header_cells: list[str]) -> int:
@@ -301,7 +320,8 @@ def write_annual_facts(
                 i += 1
                 continue
 
-            row_label = cells[0]
+            row_label_raw = cells[0]
+            row_label, row_unit_scale = _strip_row_unit_suffix(row_label_raw)
             if any(row_label.startswith(prefix) for prefix in _BREAKDOWN_PREFIXES):
                 i += 1
                 continue
@@ -348,12 +368,19 @@ def write_annual_facts(
                                     skip_years.add(year_a)
                                     skip_years.add(year_b)
 
+            # A row-level unit suffix is the more specific disclosure: it wins
+            # over the table-level marker for this row, and it alone can
+            # satisfy the fail-closed gate when the table carries no marker.
+            effective_unit_scale = (
+                row_unit_scale if row_unit_scale is not None else current_unit_scale
+            )
+
             for spec in _METRICS:
                 if spec.label_contains not in row_label:
                     continue
                 if row_is_ratio and not spec.is_ratio:
                     continue
-                if spec.unit == "CNY" and current_unit_scale is None:
+                if spec.unit == "CNY" and effective_unit_scale is None:
                     if not unit_missing_warned:
                         warnings.warn(
                             f"No recognized 单位 marker found near table for "
@@ -363,8 +390,8 @@ def write_annual_facts(
                         unit_missing_warned = True
                     continue
                 scale = 1.0
-                if spec.unit == "CNY" and current_unit_scale is not None:
-                    scale = current_unit_scale
+                if spec.unit == "CNY" and effective_unit_scale is not None:
+                    scale = effective_unit_scale
                 for idx, fiscal_year in current_years.items():
                     if fiscal_year in skip_years or idx not in row_raw:
                         continue
@@ -382,7 +409,7 @@ def write_annual_facts(
                         "source_url": source_url,
                         "source_document": "optional/source.pdf",
                         "section_id": section.id,
-                        "matched_label": row_label,
+                        "matched_label": row_label_raw,
                         "extraction_method": "regex:annual_table",
                     }
                     candidates.append(

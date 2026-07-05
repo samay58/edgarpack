@@ -417,3 +417,77 @@ def test_identical_duplicate_year_columns_with_differing_values_fail_closed(tmp_
     # unambiguous FY2023 value still extracts.
     assert 2024 not in by_year
     assert by_year[2023] == 900.0
+
+
+def test_row_level_unit_suffix_yuan_extracts_at_scale_one(tmp_path):
+    """A （元） suffix on the row label itself satisfies the unit gate, no
+    table-level 单位 line needed (SZSE/ChiNext-template tables)."""
+    content = """## 第二节 公司简介和主要财务指标
+
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业收入（元）|1000|900|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2024] == 1000.0
+    assert by_year[2023] == 900.0
+
+
+def test_row_level_unit_suffix_thousand_yuan_scales(tmp_path):
+    """A half-width (千元) row-label suffix (Midea-style) scales x1e3."""
+    content = """## 第二节 公司简介和主要财务指标
+
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业收入(千元)|1000|900|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2024] == 1_000_000.0
+    assert by_year[2023] == 900_000.0
+
+
+def test_row_level_unit_suffix_overrides_table_level_marker(tmp_path):
+    """A row-level unit suffix conflicting with the table's 单位 line wins for
+    that row: it is the more specific disclosure."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：万元
+
+|主要会计数据|2024年|
+|---|---:|
+|营业收入（元）|1000|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    # Row-level （元） wins over the table-level 万元 marker: stays 1000,
+    # not scaled up x1e4.
+    assert by_year[2024] == 1000.0
