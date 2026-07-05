@@ -122,6 +122,56 @@ def test_snapshot_fact_to_cited_value_shares_unit():
     assert cv.unit == "shares"
 
 
+def test_snapshot_fact_to_cited_value_absent_period_end_yields_none():
+    # fix: bare-year-absent-period. A bare-year FY fact carries no period_end
+    # (empty string in the snapshot row); the CitedValue must render that as
+    # None rather than fabricating a December year-end.
+    fact = SnapshotFact(
+        accession="a",
+        fiscal_year=2026,
+        period_end="",
+        metric="revenue",
+        value_cents=100,
+        currency="USD",
+        is_audited=True,
+        is_pro_forma=False,
+        pro_forma_note=None,
+    )
+    cv = snapshot_fact_to_cited_value(
+        fact,
+        cik="x",
+        company="Test",
+        form_type="S-1",
+        filed=date(2026, 4, 17),
+        concept="Revenues",
+    )
+    assert cv.period_end is None
+    assert cv.fiscal_year == 2026
+
+
+def test_pick_snapshot_fact_lfy_resolves_with_absent_period_end():
+    # fiscal_year still drives lfy/lfy-N selection when period_end is absent.
+    facts = [
+        SnapshotFact("a", 2024, "", "revenue", 90, "USD", True, False, None),
+        SnapshotFact("a", 2025, "", "revenue", 100, "USD", True, False, None),
+    ]
+    picked = pick_snapshot_fact(facts, metric="revenue", period="lfy")
+    assert picked is not None
+    assert picked.fiscal_year == 2025
+    assert picked.value_cents == 100
+
+    prior = pick_snapshot_fact(facts, metric="revenue", period="lfy-1")
+    assert prior is not None
+    assert prior.fiscal_year == 2024
+
+
+def test_pick_snapshot_fact_mrp_resolves_with_absent_period_end():
+    facts = [SnapshotFact("a", 2025, "", "revenue", 100, "USD", True, False, None)]
+    picked = pick_snapshot_fact(facts, metric="revenue", period="mrp")
+    assert picked is not None
+    assert picked.value_cents == 100
+
+
 def test_pick_snapshot_fact_lfy_returns_latest_audited():
     facts = [
         SnapshotFact("a", 2023, "2023-12-31", "revenue", 100, "USD", True, False, None),

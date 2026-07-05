@@ -390,8 +390,9 @@ def _summary_period_from_context(year: int, context: str | None) -> tuple[str, s
     month-day is missing, returns None so the caller drops the column rather
     than fabricating a period. Annual columns carry a stated fiscal-year-end
     month-day when the context names one ("year ended March 31" -> -03-31);
-    a bare year with no month-day defaults to the Dec 31 convention, since the
-    year token is itself the citation for an annual row.
+    a bare year with no month-day still classifies as FY (the year token is
+    the citation for the row) but carries an absent period end ("") rather
+    than a fabricated December 31, since non-calendar filers exist.
     """
     lowered = (context or "").lower()
     period_end = _month_day_period_end(year, lowered)
@@ -409,7 +410,7 @@ def _summary_period_from_context(year: int, context: str | None) -> tuple[str, s
             return None
         return "Q3", period_end
     if period_end is None:
-        return "FY", f"{year}-12-31"
+        return "FY", ""
     return "FY", period_end
 
 
@@ -1284,6 +1285,104 @@ def _dedupe_deterministic_facts(facts: list[SnapshotFact]) -> list[SnapshotFact]
     return [fact for fact in deduped.values() if fact is not None]
 
 
+async def _retry_truncated_snapshot(
+    *,
+    pack_dir: Path,
+    cache_path: Path,
+    accession: str,
+    source_hash: str,
+    cached: SnapshotResult,
+) -> SnapshotResult:
+    """Re-extract the metric slugs a truncation-salvaged snapshot never reached.
+
+    Existing cached facts always win (only slugs still missing from `cached`
+    are asked for). A response that parses cleanly (no truncation this time)
+    clears the truncated marker and caches permanently, even when some slugs
+    stay unresolved: at that point they are genuinely absent from the filing,
+    not lost to truncation. Another truncated response keeps the cooldown
+    alive so a later read tries again.
+    """
+    existing_facts = list(cached.facts)
+    missing_slugs = METRIC_SLUGS - {fact.metric for fact in existing_facts}
+    if not missing_slugs:
+        return cached
+
+    markdown = ""
+    md_path = pack_dir / "filing.full.md"
+    if md_path.exists():
+        markdown = md_path.read_text(encoding="utf-8", errors="replace")
+    financial_sections = _financial_section_texts(pack_dir, markdown)
+    if not financial_sections:
+        return cached
+
+    def _finalize(
+        *, facts: list[SnapshotFact], model: str, truncated: bool, gate_rejections: list[str]
+    ) -> SnapshotResult:
+        still_missing = bool(METRIC_SLUGS - {fact.metric for fact in facts})
+        retry_after = _retry_after_iso() if truncated and still_missing else None
+        return _write_snapshot(
+            cache_path,
+            SnapshotResult(
+                schema_version=SCHEMA_VERSION,
+                accession=accession,
+                extracted_at=_utc_iso_now(),
+                extraction_status="ok",
+                source_sha256=source_hash,
+                model=model,
+                facts=facts,
+                detail=None,
+                retry_after=retry_after,
+                truncated=truncated,
+                gate_rejections=gate_rejections,
+            ),
+        )
+
+    try:
+        raw = await _call_haiku_extract("\n\n".join(financial_sections)[:_SECTION_CAP_CHARS])
+    except MissingAnthropicKeyError:
+        # Never cached, same as the initial extraction: the very next read
+        # tries again, so adding a key re-attempts immediately.
+        return cached
+    except Exception:  # noqa: BLE001 (keep the partial snapshot, refresh cooldown)
+        return _finalize(
+            facts=existing_facts,
+            model=cached.model,
+            truncated=True,
+            gate_rejections=cached.gate_rejections,
+        )
+
+    try:
+        parsed, still_truncated = parse_llm_response_with_salvage(raw, accession=accession)
+    except ValueError:
+        return _finalize(
+            facts=existing_facts,
+            model=cached.model,
+            truncated=True,
+            gate_rejections=cached.gate_rejections,
+        )
+
+    kept, new_rejections = _gate_llm_facts(parsed, existing_facts)
+    new_facts = [fact for fact in kept if fact.metric in missing_slugs]
+    gate_rejections = [*cached.gate_rejections, *new_rejections]
+    if not new_facts:
+        return _finalize(
+            facts=existing_facts,
+            model=cached.model,
+            truncated=still_truncated,
+            gate_rejections=gate_rejections,
+        )
+
+    model = cached.model
+    if _s1_model_id() not in model.split("+"):
+        model = f"{model}+{_s1_model_id()}" if model else _s1_model_id()
+    return _finalize(
+        facts=[*existing_facts, *new_facts],
+        model=model,
+        truncated=still_truncated,
+        gate_rejections=gate_rejections,
+    )
+
+
 async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> SnapshotResult:
     pack_dir = Path(pack_dir)
     accession = _read_manifest_accession(pack_dir)
@@ -1300,6 +1399,24 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
             and cached.schema_version == SCHEMA_VERSION
             and cached.source_sha256 == source_hash
         ):
+            # A truncation-salvaged ok snapshot that still has missing slugs
+            # carries its own retry_after (set below); treat it like a
+            # retryable failure instead of caching the gap forever.
+            truncated_with_gap = (
+                cached.extraction_status == "ok"
+                and cached.truncated
+                and cached.retry_after is not None
+            )
+            if truncated_with_gap:
+                if _retry_cooldown_active(cached.retry_after):
+                    return cached
+                return await _retry_truncated_snapshot(
+                    pack_dir=pack_dir,
+                    cache_path=cache_path,
+                    accession=accession,
+                    source_hash=source_hash,
+                    cached=cached,
+                )
             if cached.extraction_status not in _RETRYABLE_STATUSES:
                 return cached
             # A retryable failure is served only inside its cooldown window;
@@ -1316,7 +1433,13 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         truncated: bool = False,
         gate_rejections: list[str] | None = None,
     ) -> SnapshotResult:
-        retry_after = _retry_after_iso() if status in _RETRYABLE_STATUSES else None
+        retryable = status in _RETRYABLE_STATUSES
+        if status == "ok" and truncated and (METRIC_SLUGS - {fact.metric for fact in facts}):
+            # Truncation salvage that still leaves slugs missing did not
+            # really finish the extraction; give it the same cooldown as a
+            # retryable failure so a later read fills the gap.
+            retryable = True
+        retry_after = _retry_after_iso() if retryable else None
         return _write_snapshot(
             cache_path,
             SnapshotResult(
@@ -1398,6 +1521,16 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         )
 
     merged_facts = [*deterministic_facts, *llm_facts]
+    if not merged_facts:
+        # An empty or fully-gated LLM array with no deterministic facts is
+        # indistinguishable from a bad extraction; treat it as retryable
+        # rather than caching a permanent ok with zero facts.
+        return _finalize(
+            status="no_financial_data_found",
+            facts=[],
+            model=_s1_model_id(),
+            gate_rejections=gate_rejections,
+        )
     model_parts: list[str] = []
     if deterministic_facts:
         model_parts.append(_DETERMINISTIC_TABLE_MODEL)
@@ -1525,10 +1658,13 @@ def snapshot_fact_to_cited_value(
     value = fact.value_cents / divisor if divisor else fact.value_cents
     source = "s1_pro_forma" if fact.is_pro_forma else "s1_snapshot"
 
+    # An absent or unparseable period_end (bare-year FY column with no
+    # stated month-day) carries no fabricated date; fiscal_year still drives
+    # lfy/mrp selection, and FX conversion fails closed on the missing date.
     try:
-        period_end = _date_cls.fromisoformat(fact.period_end)
+        period_end: _date_cls | None = _date_cls.fromisoformat(fact.period_end)
     except ValueError:
-        period_end = _date_cls(fact.fiscal_year, 12, 31)
+        period_end = None
 
     return CitedValue(
         value=value,
