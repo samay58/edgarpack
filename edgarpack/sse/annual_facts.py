@@ -147,6 +147,12 @@ def _table_priority(header_cells: list[str]) -> int:
 def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
     start = max(0, header_index - _UNIT_SCALE_LOOKBACK_LINES)
     for line in reversed(lines[start:header_index]):
+        stripped = line.strip()
+        if _is_table_line(stripped):
+            # A pipe-delimited row (data or separator) belongs to the previous
+            # table. Its 单位 marker, if any, scopes that table only; stop
+            # here instead of letting it leak into this table.
+            break
         match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
         if match:
             return _UNIT_SCALE_FACTORS[match.group(1)]

@@ -133,6 +133,9 @@ def test_key_table_only_excludes_non_key_sections(tmp_path):
 
 def test_one_point_per_concept_year(tmp_path):
     """At most one point per (concept, fiscal_year); equal-priority ties drop, fail closed."""
+    # Each table restates its own 单位 marker: after the unit-scale-boundary
+    # fix, a marker no longer leaks across a previous table's rows, so a
+    # shared declaration from an earlier table cannot supply this one.
     content = """## 第二节 公司简介和主要财务指标
 
 单位：元
@@ -141,13 +144,19 @@ def test_one_point_per_concept_year(tmp_path):
 |---|---:|
 |营业收入|1000|
 
+单位：元
+
 |主要财务指标|2024年|
 |---|---:|
 |营业收入|2000|
 
+单位：元
+
 |主要会计数据|2024年|
 |---|---:|
 |归属于上市公司股东的净利润|500|
+
+单位：元
 
 |主要财务指标|2024年|
 |---|---:|
@@ -263,6 +272,28 @@ def test_unit_scale_wan_yuan_scales_correctly(tmp_path):
 def test_unit_scale_missing_marker_fails_closed(tmp_path):
     """A table with no recognizable 单位 marker must yield no facts, not a guessed unit."""
     content = """## 第二节 公司简介和主要财务指标
+
+|主要会计数据|2024年|2023年|增减(%)|2022年|
+|---|---:|---:|---:|---:|
+|营业收入|1000|900|11.11|800|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    with pytest.warns(UserWarning, match="单位"):
+        facts_path = _write(tmp_path, sections)
+
+    assert facts_path is None
+
+
+def test_unit_scale_does_not_cross_previous_table_boundary(tmp_path):
+    """A 单位 marker scoping an earlier small table must not leak into the key table."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：万元
+
+|小表|2024年|
+|---|---:|
+|其他数据|100|
 
 |主要会计数据|2024年|2023年|增减(%)|2022年|
 |---|---:|---:|---:|---:|
