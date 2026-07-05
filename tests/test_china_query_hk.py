@@ -8,10 +8,11 @@ ticker-form resolution, multi-metric queries, and failure modes.
 
 import asyncio
 import json
+from types import SimpleNamespace
 
 import pytest
 
-from edgarpack.query.financials import financials
+from edgarpack.query.financials import _discover_china_pack_dir, financials
 
 
 def test_minimax_query_returns_revenue_with_hkfrs_metadata():
@@ -146,3 +147,29 @@ def test_hkex_annual_pack_uses_local_pdf_and_announcement_date(tmp_path):
 def test_unknown_hkex_company_raises():
     with pytest.raises(Exception):
         asyncio.run(financials(company="00999.HK", metrics="revenue", period="lfy"))
+
+
+def test_china_fixture_probe_is_env_opt_in_and_derives_fy(tmp_path, monkeypatch):
+    # Flat {name}_{fy} packs are found only when EDGARPACK_CHINA_PACK_ROOT points
+    # at their root, and the fiscal year comes from the directory name, not a
+    # hardcoded constant. Production (no env var) never probes the test tree.
+    root = tmp_path / "china"
+    for fy in (2023, 2025):
+        pack = root / f"minimax_{fy}"
+        pack.mkdir(parents=True)
+        (pack / "facts.json").write_text("{}")
+
+    resolved = SimpleNamespace(
+        source="HKEX",
+        aliases=("minimax",),
+        ticker="00100.HK",
+        stock_code="00100",
+        hk_stock_code="00100",
+    )
+
+    monkeypatch.setenv("EDGARPACK_CHINA_PACK_ROOT", str(root))
+    found = _discover_china_pack_dir(resolved)
+    assert found == root / "minimax_2025"
+
+    monkeypatch.delenv("EDGARPACK_CHINA_PACK_ROOT", raising=False)
+    assert _discover_china_pack_dir(resolved) is None
