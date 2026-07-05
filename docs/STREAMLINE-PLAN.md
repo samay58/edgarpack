@@ -73,6 +73,15 @@ S-1/F-1 (audit P0/P1s; all in `edgarpack/query/s1_financials.py` unless noted):
 - Amendment awareness: `has_registration_pack_for_cik` accepts F-1/A for F-1; filing selection prefers newest of {F-1, F-1/A} (`submissions.py:257` never matches amendments today).
 - Negative caching for 404 companyfacts (`sec/xbrl.py:72-73`), preserving the 404-vs-error split.
 
+## Design north star: the zero-knowledge American investor (added 2026-07-05)
+
+Persona: a US investor with no China background and one strong prior ("Chinese numbers can't be trusted"). For them, provenance is the product: the bilingual citation path (English value, click through to the exact Chinese line + translation) is the wedge, not polish. Two principles govern Phase 3 scope:
+
+1. **English is the default surface; Chinese is the provenance layer.** Query output, metric/KPI/section labels, and errors are always English (glossary-backed); full-document translation stays opt-in. Cited values render both: "Revenue (营业收入), CNY 170.9B, FY2024 annual report, filed 2025-04-02."
+2. **Teach at the point of confusion; never editorialize.** Static one-liners for filing types ("年度报告: the A-share equivalent of a 10-K"). Filing-disclosed facts (auditor, listing venues, VIE/share-class structure) become citable KPIs. No risk scores, no dashboards, no screening, no macro commentary.
+
+Acceptance scenario for Phase 3: on a cold machine, `edgarpack query BYD revenue,net_income --period lfy` resolves the ADR/US name, builds the pack if needed (with a time expectation printed), and returns cited USD+CNY values with the Chinese source text one flag away; `edgarpack comps BYD TSLA --metrics revenue,gross_margin` returns one USD-basis table with the FX convention stated and every cell cited.
+
 ## Phase 3: build (coverage + flexibility)
 
 - `build-hk` CLI: real HKEX acquisition (rework `hk/acquire.py`), metadata from filing/universe.toml instead of the hardcoded 6-company dict.
@@ -80,7 +89,11 @@ S-1/F-1 (audit P0/P1s; all in `edgarpack/query/s1_financials.py` unless noted):
 - Consider coordinate-based `find_tables` (pymupdf) for the SSE facts layer instead of re-parsing rendered markdown; the durable fix for font-dependent artifacts. Gate Phase 3 sign-off on a 20-30 filer sweep (per-filer variance was high in the 5-filer spike).
 - Harvest China lanes (CNINFO + HKEX) so coverage refreshes; today `harvest/` is SEC-only.
 - SSE extraction widened past 4 metrics; interim-report support so `ltm`/`mrq` mean something for China filers.
-- Dual-listing linkage in `universe.toml` schema (BABA 20-F vs 9988.HK cross-market query).
+- Dual-listing linkage in `universe.toml` schema (BABA 20-F vs 9988.HK cross-market query), including US names and ADR tickers (BYDDY, BABA) resolving to the right filer with plain-language disambiguation.
+- One-command flow for China filers: `query` builds the pack if needed (the `f1`/`s1` build-if-needed pattern), so a novice never runs `build-sse` + edits universe.toml by hand.
+- English-default surface: metric/KPI/section labels and errors in English via the translation glossary; bilingual provenance rendering (English label + Chinese matched_label + source text flag). Filing-type one-liner explainers in output headers (static strings).
+- Filing-disclosed context KPIs for foreign-wary investors: auditor name, listing venues, VIE/share-class structure where the filing states them. Cited facts only, no editorial.
+- Curated starter universe (~50 recognizable China names: BYD, Moutai, CATL, Tencent, Xiaomi, ...) as the coverage seed; doubles as the 20-30+ filer Phase 3 sweep corpus.
 - S-1/F-1: split the 1,628-line module (deterministic parser / LLM extraction+cache / query integration); pydantic-validate LLM rows; unify `pick_snapshot_fact` + `_pick_snapshot_candidate`; rename `vlm` extra or wire vision; golden fixtures from 3-4 real filings (Cerebras S-1, one IFRS F-1, one non-calendar-FY filer); registration metric expansion (diluted shares, dilution, use of proceeds, offering terms).
 
 ## Acceptance gates
