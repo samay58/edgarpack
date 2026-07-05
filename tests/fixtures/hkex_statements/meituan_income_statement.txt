@@ -1,0 +1,34 @@
+Meituan  2025 Annual Report
+211   
+CONSOLIDATED INCOME STATEMENT
+ 
+Year ended December 31,
+2025 2024
+Note RMB’000 RMB’000
+Revenues 5,6 364,854,746 337,591,576
+Including: Interest revenue 1,746,150 1,964,341
+Cost of revenues 7 (253,846,120) (207,806,982)
+Gross profit 111,008,626 129,784,594
+Selling and marketing expenses 7 (102,934,044) (63,975,235)
+Research and development expenses 7 (25,998,265) (21,053,601)
+General and administrative expenses 7 (11,916,432) (10,729,203)
+Net provisions for impairment losses on financial and contract assets (872,035) (897,505)
+Fair value changes of other financial investments at fair value through 
+profit or loss 19 2,393,393 140,921
+Other gains, net 9 3,277,620 3,574,985
+Operating (loss)/profit 5 (25,041,137) 36,844,956
+Finance income 10 2,011,535 1,291,807
+Finance costs 10 (1,886,802) (1,337,038)
+Share of profits of investments accounted for using the equity method 12 78,892 1,185,704
+(Loss)/profit before income tax (24,837,512) 37,985,429
+Income tax credits/(expenses) 13 1,483,318 (2,177,107)
+(Loss)/profit for the year (23,354,194) 35,808,322
+(Loss)/profit for the year attributable to:
+Equity holders of the Company (23,355,015) 35,807,179
+Non-controlling interests 821 1,143
+(23,354,194) 35,808,322
+(Loss)/earnings per share for (loss)/profit for the year attributable to 
+the equity holders of the Company 14
+Basic (loss)/earnings per share (RMB) (3.84) 5.85
+Diluted (loss)/earnings per share (RMB) (3.92) 5.66
+The notes on pages 221 to 335 are an integral part of these consolidated financial statements.

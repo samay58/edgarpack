@@ -1,0 +1,65 @@
+134
+Consolidated Statement of Financial Position
+As at 31 December 2025
+Annual Report 2025ANTA Sports Products Limited
+2025 2024
+Note RMB’million RMB’million
+Non-current assets
+Property, plant and equipment 10 5,366 4,687
+Right-of-use assets 11 10,926 9,826
+Construction in progress 12 2,532 1,465
+Other non-current assets 13 842 991
+Intangible assets 14 4,253 2,034
+Investments in associates 15 16,453 14,669
+Other investments 16 4,428 3,164
+Pledged deposits 19 53 122
+Fixed deposits held at banks with maturity over three months 19 17,853 21,542
+Deferred tax assets 24(b) 1,933 1,633    
+Total non-current assets 64,639 60,133    
+Current assets
+Inventories 17 12,152 10,760
+Trade receivables 18 4,616 4,463
+Other current assets 18 3,744 2,762
+Amounts due from related parties 30(b) 109 81
+Other investments 16 1,920 3,869
+Pledged deposits 19 659 120
+Fixed deposits held at banks with maturity over three months 19 24,275 19,037
+Cash and cash equivalents 19 12,181 11,390
+    
+Total current assets 59,656 52,482    
+Total assets 124,295 112,615
+    
+135
+2025 2024
+Note RMB’million RMB’million
+Current liabilities
+Borrowings 20 11,532 8,583
+Trade payables 21 4,158 4,332
+Other current liabilities 21 10,224 9,017
+Lease liabilities 3,687 3,179
+Amounts due to related parties 30(b) 59 96
+Current taxation 24(a) 3,698 3,386    
+Total current liabilities 33,358 28,593    
+Net current assets 26,298 23,889    
+Total assets less current liabilities 90,937 84,022    
+Non-current liabilities
+Borrowings 20 11,770 12,233
+Other non-current liabilities 3 –
+Lease liabilities 4,775 4,125
+Deferred tax liabilities 24(b) 1,984 925
+    
+Total non-current liabilities 18,532 17,283    
+Total liabilities 51,890 45,876    
+Net assets 72,405 66,739    
+Equity
+Share capital 25 269 271
+Reserves 26 65,513 61,458
+    
+Total equity attributable to equity shareholders of the Company 65,782 61,729    
+Non-controlling interests 6,623 5,010    
+Total liabilities and equity 124,295 112,615
+    
+The notes, material accounting policy information and principal subsidiaries on pages 139 to 219 form part of these financial statements.
+Ding Shizhong Lai Shixian
+Chairman and Executive Director Executive Director and Co-Chief Executive Officer
+Hong Kong SAR, 25 March 2026
