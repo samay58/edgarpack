@@ -8,7 +8,6 @@
         "units": {
           "USD": [
             {
-              "start": "2022-01-01",
               "end": "2022-12-31",
               "val": -76374000,
               "fy": 2022,
@@ -20,7 +19,6 @@
               "matched_label": "total deficits"
             },
             {
-              "start": "2023-01-01",
               "end": "2023-12-31",
               "val": -341914000,
               "fy": 2023,
@@ -32,7 +30,6 @@
               "matched_label": "total deficits"
             },
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": -799320000,
               "fy": 2024,
@@ -51,7 +48,6 @@
         "units": {
           "USD": [
             {
-              "start": "2022-01-01",
               "end": "2022-12-31",
               "val": 4691000,
               "fy": 2022,
@@ -63,7 +59,6 @@
               "matched_label": "cash and cash equivalents"
             },
             {
-              "start": "2023-01-01",
               "end": "2023-12-31",
               "val": 206295000,
               "fy": 2023,
@@ -75,7 +70,6 @@
               "matched_label": "cash and cash equivalents"
             },
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 288912000,
               "fy": 2024,
@@ -285,7 +279,6 @@
         "units": {
           "headcount": [
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 385,
               "fy": 2024,

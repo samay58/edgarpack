@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
@@ -563,6 +564,50 @@ def extract_headcount_from_pack(pack_dir: Path) -> HKFact | None:
     return None
 
 
+# Point-in-time (balance-sheet / instant) metrics: a single period-end date,
+# no start. Everything else is a flow measured over the fiscal year and keeps a
+# start..end range.
+_INSTANT_METRICS: frozenset[str] = frozenset(
+    {
+        "total_assets",
+        "total_liabilities",
+        "total_equity",
+        "cash_and_equivalents",
+        "headcount",
+    }
+)
+
+
+def _fiscal_year_end(manifest: dict[str, Any], fiscal_year: int) -> str | None:
+    """Real fiscal-year-end (YYYY-MM-DD) for one fiscal year, or None.
+
+    Applies the month/day of the manifest's ``fiscal_year_end`` to
+    ``fiscal_year`` so a non-December year-end survives and each comparative
+    column gets its own year's end. Returns None when the manifest does not
+    state a usable fiscal-year-end: the caller then emits no period date
+    rather than a fabricated calendar year-end.
+    """
+    if fiscal_year <= 0:
+        return None
+    stated = manifest.get("fiscal_year_end")
+    if not isinstance(stated, str) or not stated.strip():
+        return None
+    try:
+        base = date.fromisoformat(stated.strip())
+    except ValueError:
+        return None
+    try:
+        return date(fiscal_year, base.month, base.day).isoformat()
+    except ValueError:
+        return None
+
+
+def _fiscal_year_start(year_end_iso: str) -> str:
+    """First day of the fiscal year ending on ``year_end_iso``."""
+    end = date.fromisoformat(year_end_iso)
+    return (end.replace(year=end.year - 1) + timedelta(days=1)).isoformat()
+
+
 def extract_facts_from_pack(pack_dir: Path) -> Path:
     manifest = json.loads((pack_dir / "manifest.json").read_text())
     standard: AccountingStandard = manifest["accounting_standard"]
@@ -608,14 +653,15 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
         concept_key = fact.concept
         fact_unit = fact.unit if fact.unit == "headcount" else currency
         fact_fy = fact.fiscal_year or fy
-        nested[standard.lower()].setdefault(
-            concept_key,
-            {"label": concept_key, "units": {}},
-        )
-        nested[standard.lower()][concept_key]["units"].setdefault(fact_unit, []).append(
+        year_end = _fiscal_year_end(manifest, fact_fy)
+
+        point: dict[str, Any] = {}
+        if year_end is not None:
+            if fact.metric not in _INSTANT_METRICS:
+                point["start"] = _fiscal_year_start(year_end)
+            point["end"] = year_end
+        point.update(
             {
-                "start": f"{fact_fy}-01-01",
-                "end": f"{fact_fy}-12-31",
                 "val": fact.value,
                 "fy": fact_fy,
                 "fp": "FY",
@@ -626,6 +672,12 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
                 "matched_label": fact.matched_label,
             }
         )
+
+        nested[standard.lower()].setdefault(
+            concept_key,
+            {"label": concept_key, "units": {}},
+        )
+        nested[standard.lower()][concept_key]["units"].setdefault(fact_unit, []).append(point)
 
     facts_path = pack_dir / "facts.json"
     facts_path.write_text(
