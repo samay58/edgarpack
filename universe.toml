@@ -531,22 +531,123 @@ forms_20f = 3
 aliases = ["baidu"]
 
 [[companies]]
+# NetEase: dual-listed. SEC (20-F) is the default venue; HKEX secondary
+# listing "9999.HK" is an alt_ticker. Verified 2026-07-05: SEC EDGAR search
+# (CIK 1110646, files 20-F), HKEX quote page for stock code 9999 ("NETEASE,
+# INC. - S").
 ticker = "NTES"  # NetEase
 cik = "0001110646"
+hk_stock_code = "09999"
+listing = "SEC"
 forms_10q = 0
 forms_20f = 2
+aliases = ["netease"]
+alt_tickers = ["9999.HK"]
 
 [[companies]]
+# Trip.com: dual-listed. SEC (20-F) is the default venue; HKEX secondary
+# listing "9961.HK" is an alt_ticker. Verified 2026-07-05: SEC EDGAR search
+# (CIK 1269238, files 20-F), HKEX quote page for stock code 9961
+# ("TRIP.COM GROUP LTD. - S").
 ticker = "TCOM"  # Trip.com
 cik = "0001269238"
+hk_stock_code = "09961"
+listing = "SEC"
 forms_10q = 0
 forms_20f = 2
+aliases = ["trip.com", "ctrip"]
+alt_tickers = ["9961.HK"]
 
 [[companies]]
 ticker = "FUTU"  # Futu Holdings
 cik = "0001754581"
 forms_10q = 0
 forms_20f = 2
+
+# Additional US-listed China ADRs (starter-universe, verified 2026-07-05 via
+# SEC EDGAR search for CIK and HKEX/Yahoo Finance quote pages for secondary
+# HK listings where noted).
+
+[[companies]]
+# NIO: dual-listed. SEC (NYSE) is the default venue; HKEX secondary listing
+# "9866.HK" is an alt_ticker. Verified: SEC EDGAR search (CIK 1736541, files
+# 20-F), HKEX/Bloomberg quote for stock code 9866.
+ticker = "NIO"
+cik = "0001736541"
+hk_stock_code = "09866"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["nio inc"]
+alt_tickers = ["9866.HK"]
+
+[[companies]]
+# XPeng: dual-listed. SEC (NYSE) is the default venue; HKEX dual-primary
+# listing "9868.HK" is an alt_ticker. Verified: SEC EDGAR search (CIK
+# 1810997, files 20-F), HKEX quote for stock code 9868.
+ticker = "XPEV"  # XPeng
+cik = "0001810997"
+hk_stock_code = "09868"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["xpeng", "xpeng motors"]
+alt_tickers = ["9868.HK"]
+
+[[companies]]
+# Yum China: dual-listed. SEC (NYSE, 10-K domestic filer) is the default
+# venue; HKEX secondary listing "9987.HK" is an alt_ticker. Verified: SEC
+# EDGAR search (CIK 1673358), HKEX quote for stock code 9987.
+ticker = "YUMC"  # Yum China Holdings
+cik = "0001673358"
+hk_stock_code = "09987"
+listing = "SEC"
+aliases = ["yum china", "yum china holdings"]
+alt_tickers = ["9987.HK"]
+
+[[companies]]
+# Vipshop: SEC-only (no verified secondary HK listing in the candidate set).
+# Verified: SEC EDGAR search (CIK 1529192, files 20-F).
+ticker = "VIPS"  # Vipshop Holdings
+cik = "0001529192"
+forms_10q = 0
+forms_20f = 2
+aliases = ["vipshop", "vipshop holdings"]
+
+[[companies]]
+# TAL Education: SEC-only (no verified secondary HK listing in the candidate
+# set). Verified: SEC EDGAR search (CIK 1499620, files 20-F).
+ticker = "TAL"  # TAL Education Group
+cik = "0001499620"
+forms_10q = 0
+forms_20f = 2
+aliases = ["tal education", "tal education group"]
+
+[[companies]]
+# Zai Lab: dual-listed. SEC is the default venue; HKEX secondary listing
+# "9688.HK" is an alt_ticker. Verified: SEC EDGAR search (CIK 1704292);
+# Zai Lab files 10-K/10-Q as a SEC domestic filer, not 20-F, since it does
+# not qualify as a foreign private issuer (majority US directors/ownership),
+# so forms_20f is left unset here. HKEX quote for stock code 9688.
+ticker = "ZLAB"  # Zai Lab
+cik = "0001704292"
+hk_stock_code = "09688"
+listing = "SEC"
+aliases = ["zai lab"]
+alt_tickers = ["9688.HK"]
+
+[[companies]]
+# New Oriental: dual-listed. SEC (20-F) is the default venue; HKEX secondary
+# listing "9901.HK" is an alt_ticker. Verified: SEC EDGAR search (CIK
+# 1372920, files 20-F), HKEX quote for stock code 9901.
+ticker = "EDU"  # New Oriental Education & Technology Group
+cik = "0001372920"
+hk_stock_code = "09901"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["new oriental", "new oriental education"]
+alt_tickers = ["9901.HK"]
 
 # ============================================================
 #  IT Services / Consulting
@@ -1085,7 +1186,17 @@ ticker = "ASX"  # ASE Technology
 [[companies]]
 ticker = "NICE"  # NICE
 [[companies]]
+# Li Auto: dual-listed. SEC (NASDAQ) is the default venue; HKEX dual-primary
+# listing "2015.HK" is an alt_ticker. Verified 2026-07-05: SEC EDGAR search
+# (CIK 1791706, files 20-F), HKEX quote for stock code 2015.
 ticker = "LI"  # Li Auto
+cik = "0001791706"
+hk_stock_code = "02015"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["li auto"]
+alt_tickers = ["2015.HK"]
 [[companies]]
 ticker = "INFA"  # Informatica
 [[companies]]
@@ -1093,7 +1204,17 @@ ticker = "CXM"  # Sprinklr
 [[companies]]
 ticker = "OPRA"  # Opera
 [[companies]]
+# ZTO Express: dual-listed. SEC (NYSE) is the default venue; HKEX secondary
+# listing "2057.HK" is an alt_ticker. Verified 2026-07-05: SEC EDGAR search
+# (CIK 1677250, files 20-F), HKEX quote for stock code 2057.
 ticker = "ZTO"  # ZTO Express
+cik = "0001677250"
+hk_stock_code = "02057"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["zto express"]
+alt_tickers = ["2057.HK"]
 [[companies]]
 ticker = "CDAY"  # Ceridian HCM
 [[companies]]
@@ -1169,15 +1290,59 @@ ticker = "BZ"  # Kanzhun (Boss Zhipin)
 [[companies]]
 ticker = "VNET"  # Vnet Group
 [[companies]]
+# KE Holdings (Beike): dual-listed. SEC (NYSE) is the default venue; HKEX
+# secondary listing "2423.HK" is an alt_ticker. Verified 2026-07-05: SEC
+# EDGAR search (CIK 1809587, files 20-F), which also confirms the HKEX
+# class A ordinary share listing under code 2423.
 ticker = "BEKE"  # KE Holdings (Beike)
+cik = "0001809587"
+hk_stock_code = "02423"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["ke holdings", "beike"]
+alt_tickers = ["2423.HK"]
 [[companies]]
+# iQIYI: SEC-only (no verified secondary HK listing in the candidate set).
+# Verified 2026-07-05: SEC EDGAR search (CIK 1722608, files 20-F).
 ticker = "IQ"  # iQIYI
+cik = "0001722608"
+forms_10q = 0
+forms_20f = 2
+aliases = ["iqiyi"]
 [[companies]]
 ticker = "BILI"  # Bilibili
+# Dual-listed: SEC (20-F) is the default venue; HKEX primary listing
+# "9626.HK" is an alt_ticker. Verified 2026-07-05: SEC EDGAR search (CIK
+# 1723690, files 20-F), HKEX quote for stock code 9626.
+cik = "0001723690"
+hk_stock_code = "09626"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["bilibili"]
+alt_tickers = ["9626.HK"]
 [[companies]]
+# Weibo: dual-listed. SEC (NASDAQ) is the default venue; HKEX secondary
+# listing "9898.HK" is an alt_ticker. Verified 2026-07-05: SEC EDGAR search
+# (CIK 1595761, files 20-F), HKEX quote for stock code 9898.
 ticker = "WB"  # Weibo
+cik = "0001595761"
+hk_stock_code = "09898"
+listing = "SEC"
+forms_10q = 0
+forms_20f = 2
+aliases = ["weibo"]
+alt_tickers = ["9898.HK"]
 [[companies]]
+# Full Truck Alliance: SEC-only (no verified secondary HK listing in the
+# candidate set). Verified 2026-07-05: SEC EDGAR search (CIK 1838413, files
+# 20-F).
 ticker = "YMM"  # Full Truck Alliance
+cik = "0001838413"
+forms_10q = 0
+forms_20f = 2
+aliases = ["full truck alliance"]
 [[companies]]
 ticker = "ZH"  # Zhihu
 [[companies]]
@@ -1469,6 +1634,335 @@ aliases = [
 ]
 stock_code = "688696"
 alt_tickers = ["XGIMI"]
+
+# ============================================================
+#  China Lens: HKEX-primary (starter-universe, verified 2026-07-05 via
+#  HKEX/Bloomberg/Yahoo Finance quote pages; A-share pair codes cross-checked
+#  the same way for dual-listed names). None of these file with the SEC, so
+#  `listing = "HKEX"` (the richest-English-filings venue) throughout.
+# ============================================================
+
+[[companies]]
+ticker = "1810.HK"
+name = "Xiaomi Corporation"
+listing = "HKEX"
+aliases = ["xiaomi", "xiaomi corporation"]
+hk_stock_code = "01810"
+
+[[companies]]
+ticker = "1024.HK"
+name = "Kuaishou Technology"
+listing = "HKEX"
+aliases = ["kuaishou", "kuaishou technology"]
+hk_stock_code = "01024"
+
+[[companies]]
+ticker = "2020.HK"
+name = "ANTA Sports Products Limited"
+listing = "HKEX"
+aliases = ["anta", "anta sports"]
+hk_stock_code = "02020"
+
+[[companies]]
+ticker = "6862.HK"
+name = "Haidilao International Holding Ltd."
+listing = "HKEX"
+aliases = ["haidilao"]
+hk_stock_code = "06862"
+
+[[companies]]
+ticker = "20.HK"
+name = "SenseTime Group Inc."
+listing = "HKEX"
+aliases = ["sensetime", "sensetime group"]
+hk_stock_code = "00020"
+
+[[companies]]
+# China Mobile: dual-listed A+H, no SEC (its NYSE ADR was delisted in 2021).
+# Verified: HKEX quote for stock code 941, Shanghai Stock Exchange listing
+# for A-share code 600941.
+ticker = "941.HK"
+name = "China Mobile Limited"
+listing = "HKEX"
+aliases = ["china mobile"]
+hk_stock_code = "00941"
+stock_code = "600941"
+
+[[companies]]
+ticker = "1299.HK"
+name = "AIA Group Limited"
+listing = "HKEX"
+aliases = ["aia", "aia group"]
+hk_stock_code = "01299"
+
+[[companies]]
+ticker = "5.HK"
+name = "HSBC Holdings plc"
+listing = "HKEX"
+aliases = ["hsbc", "hsbc holdings"]
+hk_stock_code = "00005"
+
+[[companies]]
+ticker = "285.HK"
+name = "BYD Electronic (International) Company Limited"
+listing = "HKEX"
+aliases = ["byd electronic"]
+hk_stock_code = "00285"
+
+[[companies]]
+ticker = "175.HK"
+name = "Geely Automobile Holdings Limited"
+listing = "HKEX"
+aliases = ["geely", "geely auto", "geely automobile"]
+hk_stock_code = "00175"
+
+[[companies]]
+# Great Wall Motor: dual-listed A+H, no SEC. Verified: HKEX quote for stock
+# code 2333, Shanghai Stock Exchange listing for A-share code 601633.
+ticker = "2333.HK"
+name = "Great Wall Motor Company Limited"
+listing = "HKEX"
+aliases = ["great wall motor", "great wall"]
+hk_stock_code = "02333"
+stock_code = "601633"
+
+[[companies]]
+# Ping An Insurance: dual-listed A+H, no SEC. Verified: HKEX quote for stock
+# code 2318, Shanghai Stock Exchange listing for A-share code 601318.
+ticker = "2318.HK"
+name = "Ping An Insurance (Group) Company of China, Ltd."
+listing = "HKEX"
+aliases = ["ping an", "ping an insurance"]
+hk_stock_code = "02318"
+stock_code = "601318"
+
+[[companies]]
+# ICBC: dual-listed A+H, no SEC. Verified: HKEX quote for stock code 1398,
+# Shanghai Stock Exchange listing for A-share code 601398.
+ticker = "1398.HK"
+name = "Industrial and Commercial Bank of China Limited"
+listing = "HKEX"
+aliases = ["icbc", "industrial and commercial bank of china"]
+hk_stock_code = "01398"
+stock_code = "601398"
+
+[[companies]]
+# China Construction Bank: dual-listed A+H, no SEC. Verified: HKEX quote for
+# stock code 939, Shanghai Stock Exchange listing for A-share code 601939.
+ticker = "939.HK"
+name = "China Construction Bank Corporation"
+listing = "HKEX"
+aliases = ["ccb", "china construction bank"]
+hk_stock_code = "00939"
+stock_code = "601939"
+
+[[companies]]
+# CNOOC: dual-listed A+H, no SEC. Verified: HKEX quote for stock code 883,
+# Shanghai Stock Exchange listing for A-share code 600938.
+ticker = "883.HK"
+name = "CNOOC Limited"
+listing = "HKEX"
+aliases = ["cnooc"]
+hk_stock_code = "00883"
+stock_code = "600938"
+
+# ============================================================
+#  China Lens: A-share-primary (starter-universe, verified 2026-07-05 via
+#  Shanghai/Shenzhen Stock Exchange listing pages and HKEX quote pages for
+#  H-share pairs). Dual-listed A+H names use `listing = "HKEX"` per the
+#  richest-English-filings rule (no SEC filer among these); single-listed
+#  A-share-only names use `listing = "SSE"`.
+# ============================================================
+
+[[companies]]
+ticker = "600519"
+name = "Kweichow Moutai Co., Ltd."
+listing = "SSE"
+aliases = ["moutai", "kweichow moutai"]
+stock_code = "600519"
+
+[[companies]]
+# CATL: dual-listed A+H, no SEC. Verified: Shenzhen listing for A-share code
+# 300750, HKEX quote for H-share code 3750.
+ticker = "300750"
+name = "Contemporary Amperex Technology Co., Limited"
+listing = "HKEX"
+aliases = ["catl", "contemporary amperex technology"]
+stock_code = "300750"
+hk_stock_code = "03750"
+alt_tickers = ["3750.HK"]
+
+[[companies]]
+ticker = "000858"
+name = "Wuliangye Yibin Co., Ltd."
+listing = "SSE"
+aliases = ["wuliangye"]
+stock_code = "000858"
+
+[[companies]]
+# Midea: dual-listed A+H, no SEC. Verified: Shenzhen listing for A-share
+# code 000333, HKEX quote for H-share code 0300 (Midea completed its HKEX
+# listing in September 2024).
+ticker = "000333"
+name = "Midea Group Co., Ltd."
+listing = "HKEX"
+aliases = ["midea", "midea group"]
+stock_code = "000333"
+hk_stock_code = "00300"
+alt_tickers = ["0300.HK"]
+
+[[companies]]
+ticker = "000651"
+name = "Gree Electric Appliances, Inc. of Zhuhai"
+listing = "SSE"
+aliases = ["gree", "gree electric"]
+stock_code = "000651"
+
+[[companies]]
+ticker = "002415"
+name = "Hangzhou Hikvision Digital Technology Co., Ltd."
+listing = "SSE"
+aliases = ["hikvision"]
+stock_code = "002415"
+
+[[companies]]
+# SMIC: dual-listed A (STAR Market) + H, no SEC. Verified: Shanghai STAR
+# Market listing for A-share code 688981, HKEX quote for H-share code 981.
+ticker = "688981"
+name = "Semiconductor Manufacturing International Corporation"
+listing = "HKEX"
+aliases = ["smic", "semiconductor manufacturing international"]
+stock_code = "688981"
+hk_stock_code = "00981"
+alt_tickers = ["981.HK"]
+
+[[companies]]
+ticker = "601012"
+name = "LONGi Green Energy Technology Co., Ltd."
+listing = "SSE"
+aliases = ["longi", "longi green energy"]
+stock_code = "601012"
+
+[[companies]]
+ticker = "002714"
+name = "Muyuan Foods Co., Ltd."
+listing = "SSE"
+aliases = ["muyuan", "muyuan foods"]
+stock_code = "002714"
+
+[[companies]]
+ticker = "300059"
+name = "East Money Information Co., Ltd."
+listing = "SSE"
+aliases = ["east money", "east money information"]
+stock_code = "300059"
+
+[[companies]]
+# Hengrui: dual-listed A+H, no SEC. Verified: Shanghai listing for A-share
+# code 600276, HKEX quote for H-share code 1276.
+ticker = "600276"
+name = "Jiangsu Hengrui Pharmaceuticals Co., Ltd."
+listing = "HKEX"
+aliases = ["hengrui", "jiangsu hengrui", "hengrui pharmaceuticals"]
+stock_code = "600276"
+hk_stock_code = "01276"
+alt_tickers = ["1276.HK"]
+
+[[companies]]
+# Zijin Mining: dual-listed A+H, no SEC. Verified: Shanghai listing for
+# A-share code 601899, HKEX quote for H-share code 2899.
+ticker = "601899"
+name = "Zijin Mining Group Company Limited"
+listing = "HKEX"
+aliases = ["zijin mining", "zijin"]
+stock_code = "601899"
+hk_stock_code = "02899"
+alt_tickers = ["2899.HK"]
+
+[[companies]]
+ticker = "600887"
+name = "Inner Mongolia Yili Industrial Group Co., Ltd."
+listing = "SSE"
+aliases = ["yili"]
+stock_code = "600887"
+
+[[companies]]
+# China Tourism Duty Free: dual-listed A+H, no SEC. Verified: Shanghai
+# listing for A-share code 601888, HKEX quote for H-share code 1880.
+ticker = "601888"
+name = "China Tourism Group Duty Free Corporation Limited"
+listing = "HKEX"
+aliases = ["china tourism duty free", "ctg duty free"]
+stock_code = "601888"
+hk_stock_code = "01880"
+alt_tickers = ["1880.HK"]
+
+[[companies]]
+ticker = "688111"
+name = "Beijing Kingsoft Office Software, Inc."
+listing = "SSE"
+aliases = ["kingsoft office", "wps office"]
+stock_code = "688111"
+
+[[companies]]
+ticker = "688041"
+name = "Hygon Information Technology Co., Ltd."
+listing = "SSE"
+aliases = ["hygon"]
+stock_code = "688041"
+
+[[companies]]
+ticker = "300124"
+name = "Shenzhen Inovance Technology Co., Ltd."
+listing = "SSE"
+aliases = ["inovance"]
+stock_code = "300124"
+
+[[companies]]
+ticker = "601127"
+name = "Seres Group Co., Ltd."
+listing = "SSE"
+aliases = ["seres", "seres group"]
+stock_code = "601127"
+
+[[companies]]
+ticker = "600900"
+name = "China Yangtze Power Co., Ltd."
+listing = "SSE"
+aliases = ["yangtze power", "china yangtze power"]
+stock_code = "600900"
+
+[[companies]]
+ticker = "000725"
+name = "BOE Technology Group Co., Ltd."
+listing = "SSE"
+aliases = ["boe", "boe technology"]
+stock_code = "000725"
+
+[[companies]]
+ticker = "601138"
+name = "Foxconn Industrial Internet Co., Ltd."
+listing = "SSE"
+aliases = ["foxconn industrial internet", "fii"]
+stock_code = "601138"
+
+[[companies]]
+ticker = "600031"
+name = "Sany Heavy Industry Co., Ltd."
+listing = "SSE"
+aliases = ["sany", "sany heavy industry"]
+stock_code = "600031"
+
+[[companies]]
+# WuXi AppTec: dual-listed A+H, no SEC. Verified: Shanghai listing for
+# A-share code 603259, HKEX quote for H-share code 2359.
+ticker = "603259"
+name = "WuXi AppTec Co., Ltd."
+listing = "HKEX"
+aliases = ["wuxi apptec"]
+stock_code = "603259"
+hk_stock_code = "02359"
+alt_tickers = ["2359.HK"]
 
 # Non-public China company verification fixture. Evidence note:
 # docs/research/2026-04-27-xgimi-china-filer-smoke.md records the Sofina
