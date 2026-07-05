@@ -144,6 +144,47 @@ def test_find_sections_annual_report():
     assert "annual_s03_mda" in ids
 
 
+def test_zhang_headings_sectionize():
+    md = """# 年度报告
+
+## 第一章 概览
+
+公司概览内容。
+
+## 第二章 本次发行概况
+
+发行概况内容。
+
+## 第三章 核心技术
+
+核心技术描述。
+"""
+    sections = find_sections_cn(md)
+    ids = [s.id for s in sections]
+    assert "unknown_01" not in ids
+    assert "ipo_s01_overview" in ids
+    assert "ipo_s02_offering_summary" in ids
+    assert "ipo_s04_core_technology" in ids
+
+
+def test_bufen_headings_sectionize():
+    md = """# 年度报告
+
+## 第一部分 概览
+
+公司概览内容。
+
+## 第二部分 本次发行概况
+
+发行概况内容。
+"""
+    sections = find_sections_cn(md)
+    ids = [s.id for s in sections]
+    assert "unknown_01" not in ids
+    assert "ipo_s01_overview" in ids
+    assert "ipo_s02_offering_summary" in ids
+
+
 def test_sectionize_dispatch_via_main():
     """Verify that sectionize() dispatches to CN sectionizer for IPO-PROSPECTUS."""
     from edgarpack.parse.sectionize import sectionize

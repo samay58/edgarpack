@@ -73,9 +73,9 @@ _ANNUAL_REPORT_SECTIONS: dict[str, tuple[str, str]] = {
 # Backward-compatible name used by older tests/importers.
 _CANONICAL_SECTIONS = _PROSPECTUS_SECTIONS
 
-# Pattern: 第X节 Title (with optional markdown heading prefix)
+# Pattern: 第X节 / 第X章 / 第X部分 Title (with optional markdown heading prefix)
 _SECTION_PATTERN = re.compile(
-    r"^(?:#+\s*)?第(?P<num>[一二三四五六七八九十百零]+)节\s*(?P<title>.+)$",
+    r"^(?:#+\s*)?第(?P<num>[一二三四五六七八九十百零]+)(?:节|章|部分)\s*(?P<title>.+)$",
     re.MULTILINE,
 )
 
@@ -84,6 +84,12 @@ _DECLARATIONS_PATTERN = re.compile(
     r"^(?:#+\s*)?(?:\*\*)?重要声明(?:\*\*)?\s*$",
     re.MULTILINE,
 )
+
+# TOC lines repeat the same heading pattern with dot leaders and a page number
+# (e.g. "第一节 释义 ...................... 5"). Without this guard the TOC
+# entry steals the real section's slug and pushes the real heading to a "_1"
+# duplicate id. Leader chars: ASCII period, ellipsis glyph, middle dot.
+_TOC_LEADER_SUFFIX = re.compile(r"[.…·]{2,}\s*\d+\s*$")
 
 
 def _cn_num_to_int(cn: str) -> int:
@@ -169,10 +175,12 @@ def find_sections_cn(markdown: str, document_type: str = "IPO-PROSPECTUS") -> li
         )
         matches.append((m.start(), 0, slug, en_title))
 
-    # Find 第X节 sections
+    # Find 第X节 / 第X章 / 第X部分 sections
     for m in _SECTION_PATTERN.finditer(markdown):
         cn_num = m.group("num")
         title = m.group("title").strip()
+        if _TOC_LEADER_SUFFIX.search(title):
+            continue
         section_num = _cn_num_to_int(cn_num)
         slug, en_title = _slug_for_title(title, section_num, document_type=document_type)
         matches.append((m.start(), section_num, slug, en_title))
