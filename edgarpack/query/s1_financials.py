@@ -385,10 +385,13 @@ def _month_day_period_end(year: int, context: str) -> str | None:
 def _summary_period_from_context(year: int, context: str | None) -> tuple[str, str] | None:
     """Classify a summary column's fiscal period from its header context.
 
-    Returns (fiscal_period, period_end) or None when the context states no
-    parseable month-day. Interim contexts ("three/six/nine months ended")
-    never classify as FY; the actual month-day is carried through so an
-    uncited or fabricated period is never emitted.
+    Interim contexts ("three/six/nine months ended") never classify as FY and
+    require a parseable month-day: when the interim marker is present but the
+    month-day is missing, returns None so the caller drops the column rather
+    than fabricating a period. Annual columns carry a stated fiscal-year-end
+    month-day when the context names one ("year ended March 31" -> -03-31);
+    a bare year with no month-day defaults to the Dec 31 convention, since the
+    year token is itself the citation for an annual row.
     """
     lowered = (context or "").lower()
     period_end = _month_day_period_end(year, lowered)
@@ -406,7 +409,7 @@ def _summary_period_from_context(year: int, context: str | None) -> tuple[str, s
             return None
         return "Q3", period_end
     if period_end is None:
-        return None
+        return "FY", f"{year}-12-31"
     return "FY", period_end
 
 
@@ -471,19 +474,27 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int,
         if not _YEAR_ROW_RE.fullmatch(line.strip()) and ("/" not in line or len(year_tokens) < 2):
             continue
 
+        # When the month-day sits inside the year cell itself (e.g. a balance
+        # sheet header "September 30, 2023 / September 30, 2022"), the merged
+        # `contexts` from a preceding header line is absent; fold the cell text
+        # into the per-column context so the stated period end is honored.
+        year_cells = [cell for cell in cells if _YEAR_TOKEN_RE.search(cell)]
+        aligned_cells = year_cells if len(year_cells) == len(year_tokens) else None
         columns: list[tuple[int, str, str]] = []
         unparseable_period = False
         for position, year in enumerate(year_tokens):
-            context = contexts[position] if contexts and position < len(contexts) else None
-            resolved = _summary_period_from_context(year, context)
+            base_context = contexts[position] if contexts and position < len(contexts) else None
+            cell_context = aligned_cells[position] if aligned_cells is not None else None
+            merged_context = " ".join(part for part in (base_context, cell_context) if part) or None
+            resolved = _summary_period_from_context(year, merged_context)
             if resolved is None:
                 unparseable_period = True
                 break
             fiscal_period, period_end = resolved
             columns.append((year, fiscal_period, period_end))
         if unparseable_period:
-            # A bare year with no month-day context is an uncited period; skip
-            # this row and keep scanning for a header that states one.
+            # An interim column with no parseable month-day is an uncited
+            # period; skip this row and keep scanning for a stated header.
             continue
         header_index = context_header_index if context_header_index is not None else index
         return columns, header_index, index + 1
@@ -601,9 +612,7 @@ def _compact_summary_columns(
 
     unique_years = list(dict.fromkeys(year for year, _period, _end in columns))
     annual_by_year = {year: (year, period, end) for year, period, end in columns if period == "FY"}
-    interim_by_year = {
-        year: (year, period, end) for year, period, end in columns if period != "FY"
-    }
+    interim_by_year = {year: (year, period, end) for year, period, end in columns if period != "FY"}
     if interim_by_year and value_count >= 3 and len(unique_years) >= value_count - 1:
         interim_count = 2
         annual_count = value_count - interim_count
@@ -957,8 +966,7 @@ async def _call_haiku_extract(section_text: str) -> str:
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise MissingAnthropicKeyError(
-            "S-1 financial extraction requires ANTHROPIC_API_KEY. "
-            "Export it and retry."
+            "S-1 financial extraction requires ANTHROPIC_API_KEY. Export it and retry."
         )
 
     client = AsyncAnthropic()
@@ -1088,9 +1096,7 @@ def _truncate_to_last_complete_object(raw: str) -> str | None:
     return text[start : last_object_end + 1] + "]"
 
 
-def parse_llm_response_with_salvage(
-    raw: str, *, accession: str
-) -> tuple[list[SnapshotFact], bool]:
+def parse_llm_response_with_salvage(raw: str, *, accession: str) -> tuple[list[SnapshotFact], bool]:
     """Parse the model response, salvaging a truncated JSON array if needed.
 
     Returns (facts, truncated). On a clean parse `truncated` is False. When the
@@ -1172,7 +1178,9 @@ def _gate_llm_facts(
                     reason = "implausible year-over-year change"
 
         if reason is not None:
-            rejections.append(f"{fact.metric} {fact.fiscal_year}: dropped implausible row ({reason})")
+            rejections.append(
+                f"{fact.metric} {fact.fiscal_year}: dropped implausible row ({reason})"
+            )
             continue
         kept.append(fact)
 
@@ -1408,7 +1416,7 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
 from datetime import date as _date_cls  # noqa: E402
 
 from edgarpack.query.formula import eval_formula  # noqa: E402
-from edgarpack.query.models import CitedValue, Diagnostic, DerivedValue  # noqa: E402
+from edgarpack.query.models import CitedValue, DerivedValue, Diagnostic  # noqa: E402
 from edgarpack.sec.submissions import is_registration_form  # noqa: E402
 
 
@@ -1573,9 +1581,7 @@ def pick_snapshot_fact(
         return non_pro_forma[0]
 
     annual = [
-        f
-        for f in non_pro_forma
-        if f.is_audited and (f.fiscal_period or "FY").upper() == "FY"
+        f for f in non_pro_forma if f.is_audited and (f.fiscal_period or "FY").upper() == "FY"
     ]
     annual.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
 
@@ -1983,9 +1989,7 @@ def _inject_no_api_key_placeholders(
     latest_pack: _RegistrationPack,
 ) -> None:
     placeholder_date = (
-        latest_pack.filing_date
-        if latest_pack.filing_date != _date_cls.min
-        else _date_cls.today()
+        latest_pack.filing_date if latest_pack.filing_date != _date_cls.min else _date_cls.today()
     )
     for metric in metrics:
         if result.metrics.get(metric) is not None:
