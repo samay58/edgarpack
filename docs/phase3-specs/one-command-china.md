@@ -14,6 +14,7 @@ Files owned: `edgarpack/cli.py` (ONLY the China build-if-needed block you add in
 - Existence pre-check, not error-catch: detect the missing pack via the existing China pack discovery used by the query layer, then build, then run the normal query once. A second miss after a successful build is a real error, not a retry loop.
 - Failure honesty: a build failure (CNINFO LookupError, download failure, staleness rejection) surfaces the underlying message and exits non-zero; no partial pack directory is left behind (build to a temp dir or rely on the builder's existing atomicity; verify which it is and say so in the report).
 - Lazy-startup invariant: all new imports inside `_cmd_query` / the helper, never module top level.
+- Loop-trap message (sweep friction finding): when a pack DIRECTORY exists but has no `facts.json`, today's error says `No SSE pack found... Run build-sse ... first` (discovery globs `*/facts.json`, `financials.py` ~1976; message ~2166-2171), sending the user in a circle since rebuild no-ops. Distinguish the two states: pack-with-no-facts gets `Pack for 002594 was built but no facts were extracted; see the build warnings (rebuild with --force after fixing).` and auto-build does NOT trigger for it (building again cannot help).
 
 ## Tests
 
