@@ -7,12 +7,20 @@ ticker-form resolution, multi-metric queries, and failure modes.
 """
 
 import asyncio
+import importlib
 import json
+import logging
 from types import SimpleNamespace
 
 import pytest
 
 from edgarpack.query.financials import _discover_china_pack_dir, financials
+
+# edgarpack.query.__init__ does `from .financials import financials`, which
+# shadows the `edgarpack.query.financials` submodule attribute with the
+# function of the same name. `importlib.import_module` bypasses that
+# shadowing and returns the real submodule.
+financials_module = importlib.import_module("edgarpack.query.financials")
 
 
 def test_minimax_query_returns_revenue_with_hkfrs_metadata():
@@ -173,3 +181,33 @@ def test_china_fixture_probe_is_env_opt_in_and_derives_fy(tmp_path, monkeypatch)
 
     monkeypatch.delenv("EDGARPACK_CHINA_PACK_ROOT", raising=False)
     assert _discover_china_pack_dir(resolved) is None
+
+
+def test_china_pack_root_override_warns_once_per_process(tmp_path, monkeypatch, caplog):
+    # A stale exported EDGARPACK_CHINA_PACK_ROOT silently redirects production
+    # China pack discovery. It must not stay silent: one warning naming the
+    # root directory, emitted once per process even across repeated calls.
+    root = tmp_path / "china"
+    pack = root / "minimax_2025"
+    pack.mkdir(parents=True)
+    (pack / "facts.json").write_text("{}")
+
+    resolved = SimpleNamespace(
+        source="HKEX",
+        aliases=("minimax",),
+        ticker="00100.HK",
+        stock_code="00100",
+        hk_stock_code="00100",
+    )
+
+    monkeypatch.setattr(financials_module, "_CHINA_PACK_ROOT_ENV_WARNED", set())
+    monkeypatch.setenv("EDGARPACK_CHINA_PACK_ROOT", str(root))
+
+    with caplog.at_level(logging.WARNING, logger="edgarpack.query.financials"):
+        first = _discover_china_pack_dir(resolved)
+        second = _discover_china_pack_dir(resolved)
+
+    assert first == pack
+    assert second == pack
+    assert caplog.text.count("EDGARPACK_CHINA_PACK_ROOT") == 1
+    assert str(root) in caplog.text
