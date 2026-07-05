@@ -1,48 +1,36 @@
-# Showcase ideas: marketing EdgarPack by using it
+# Showcase plan: EdgarPack as career capital
 
-Premise: the product's one unfakeable differentiator is provenance. Every artifact below is designed so a skeptical reader can click through to the exact filing line, which is the marketing. Effort tiers: WEEKEND (one sitting to first artifact), WEEK (real build), ONGOING (compounding engine). Capabilities in parentheses name what each idea proves.
+Objective (decided 2026-07-05): credibility with investors, funds, and AI-finance people. Who sees each artifact matters more than how many. Every artifact ships with visible, clickable provenance, because receipts are the differentiator nobody else's content has. Ongoing publication commitments (newsletters, bots) are deliberately excluded: they are time traps for a solo builder and a dead newsletter reads worse than none. Revisit them only if this becomes a product chasing users.
 
-## Recurring engines (compounding distribution)
+## Flagship: ten years of NVIDIA risk-factor drift (in progress)
 
-1. **The Diff**, a weekly drop of the five most meaningful language changes in filings that week across the harvest universe, each as a redline screenshot plus citation links. The mechanical-noise suppression is what makes this signal instead of spam. (diff, insights, harvest) ONGOING
-2. **@filing_diffs bot** on X/Bluesky: auto-post significant diffs with redline images the day a filing lands. Bots with taste build large followings; this one has a working taste filter. (diff, harvest) WEEK to build, then ONGOING
-3. **IPO Watch**: an automated page that catches every new S-1/F-1 and publishes a day-one cited financial snapshot plus a registration timeline that updates as amendments land. Being first with cited numbers on a hot filing, within the hour, is a repeatable virality event. (s1/f1 shortcuts, timeline, amendment awareness) WEEK
-4. **China Lens Weekly**: English, cited digest of HKEX/A-share filing season; one company per issue, bilingual citations, USD and native values side by side. Nobody else publishes cited English A-share coverage at all. (China Lens, translate, FX provenance) ONGOING
-5. **Pre-IPO terms tracker**: for each active registration, chart the pro-forma and use-of-proceeds evolution across amendments. IPO desks and fintwit both want this and currently hand-read it. (pro-forma, timeline) WEEK
+The one artifact to over-invest in. Form matters more than data here; the failure mode is a bulky redline dump that feels like homework.
 
-## Flagship demonstrations (one big swing each)
+- Lead with one chart: risk topics as streams across 2015-2025, word-share per year from the diff engine's word-weighted intensity. Crypto pulses and dies; export-control language climbs a staircase; AI overtakes gaming in a specific, screenshotable year.
+- Then six to eight curated "moments": one sentence-level redline each, big type, one-line world-context annotation. Never more than one redline per beat.
+- Closing beat: the sentence that survived all ten years verbatim.
+- Receipts layer: every moment links to the full observatory section diff.
+- Single self-contained scrollytelling page, light mode, real chart elements.
+- Division of labor: pipeline generates topic-share data and a ~25-candidate redline pool; Samay picks the beats and writes the annotations (the curation IS the career signal); Claude QAs.
+- Dependencies: none on Phase 2/3. Needs 10-11 NVDA 10-K packs and pairwise Item 1A diffs; both work today.
 
-6. **BYD vs Tesla, fully cited**: an interactive page where every number links to the exact line of the 10-K or the Chinese annual report, USD-normalized with the FX convention shown. This is the zero-knowledge-investor acceptance test turned into the flagship demo. (cross-market comps, China Lens, citations) WEEK, after Phase 3
-7. **Ten years of filing drift**: one company's risk factors as a scrollable animated diff timeline (NVDA 2015 to 2025: watch crypto appear and vanish, export controls grow). Data-viz bait for HN and finance Twitter. (diff, corpus) WEEK
-8. **IPO time machine**: for now-public companies, diff their S-1 promises against their subsequent 10-K reality. Airbnb, Snowflake, Coinbase. Registration and periodic pipelines in one narrative. (S-1 + diff) WEEK
-9. **What the S-1 does not tell you**: teardown series built on distill's gaps.csv, publishing the absences with receipts. Everyone publishes takes on what a filing says; nobody publishes what it omits, verifiably. (distill, gaps discipline) WEEKEND per teardown
-10. **The Luckin autopsy**: reconstruct a resolved fraud's filing-visible red flags purely from primary sources, cited. Use only closed, adjudicated cases to stay safe. The China Lens angle writes itself. (China Lens, diff) WEEK
-11. **Dual-listing disclosure gap**: diff what Alibaba tells SEC investors (20-F) against what it tells HK investors (annual report). Only possible with cross-market packs; genuinely novel content. (dual-listing, diff) WEEK, after Phase 3
+## Tier 1 after the flagship
 
-## Developer distribution (the tool inside other people's projects)
+1. **Engineering deep-dives** (pick two): byte-identical rebuilds as a product guarantee; suppressing diff noise mechanically (the word-weighted intensity + boilerplate story). HN-shaped, cost is only writing, and they are the artifacts AI-infra people actually judge. WEEKEND each.
+2. **S-1 gaps teardowns**: two or three during IPO windows, built on distill's gaps.csv. Publishing verifiable absences ("what the S-1 does not say") is novel; takes are commodity. Timed to hot filings for borrowed attention. WEEKEND each, opportunistic.
+3. **BYD vs Tesla, fully cited**: interactive comp where every number links to the filing line, USD-normalized with the FX convention shown. Ships the week Phase 3 makes any-ticker China real; it is the zero-knowledge-investor acceptance test made public. WEEK.
 
-12. **edgarpack-mcp**: an MCP server exposing cited query, diff, and which to any MCP client, listed on the directories. Every AI-finance tinkerer becomes a distribution channel, and the None-not-guess contract is exactly what agent builders are burned by. (whole query surface) WEEK
-13. **FinCite bench**: a published benchmark scoring frontier models answering 100 financial questions from memory versus EdgarPack-grounded, measuring fabrication rate. Release the harness. AI labs and fintech CTOs share benchmarks. (citation model as ground truth) WEEK
-14. **The 100k-token 10-K, read in 3k**: engineering post plus repo comparing agent accuracy and token cost on packs/llms.txt/chunks versus raw EDGAR HTML. Dev-marketing for the pack format itself. (build pipeline, chunks) WEEKEND
-15. **Earnings-agent template**: an open-source reference agent that takes a ticker and emits a one-page cited brief (query + which + distill + latest diff). Publish as a Claude Agent SDK / LangChain template; people fork templates. (end-to-end) WEEK
-16. **HuggingFace dataset drop**: all current-year S-1/F-1 registration financials as parquet, every row carrying accession and citation columns. Data people redistribute drops; the schema itself advertises the provenance model. (registration extraction) WEEKEND
-17. **Notebook gallery**: five reproducible notebooks (LTM math with visible component citations, diff explorer, China comps, KPI discovery, S-1 snapshot). Deterministic rebuilds mean the notebooks never rot. (determinism) WEEKEND each
+## Tier 2 (opportunistic, career-visible)
 
-## Editorial and research (credibility engines)
+4. **edgarpack-mcp**: also a credibility artifact, since shipping a clean MCP server signals builder competence to exactly the AI crowd; secondary because distribution is a product goal. WEEK.
+5. **IPO time machine**: S-1 promises diffed against later 10-K reality (Airbnb, Snowflake). Strong narrative, reuses the flagship's muscles. WEEK.
+6. **The 100k-token 10-K read in 3k**: token-cost and accuracy comparison for agent workflows on packs vs raw EDGAR. WEEKEND.
+7. **FinCite bench**: fabrication-rate benchmark of frontier models with and without EdgarPack grounding. High credibility with AI labs but honestly costed at WEEKS (question design and grading rigor decide whether it survives scrutiny); do it when a specific conversation warrants it.
+8. **HuggingFace registration-financials drop**: cheap, schema advertises the provenance model. WEEKEND.
 
-18. **State of Disclosure annual report**: corpus-wide statistics from 28M tokens: risk-factor inflation by sector, boilerplate growth rates, topic emergence (AI mentions, tariff language). Journalists cite research reports; every citation is a backlink. (index, insights, corpus scale) WEEK, yearly
-19. **The quietest sentence**: a recurring editorial finding the single highest-information change of each filing season, with the redline as the image. Small, sharable, prestige format. (language-shift detection) WEEKEND per edition
-20. **Read a Chinese annual report in ten minutes**: a screen-recorded walkthrough of translate-sse on Moutai, showing the fail-closed validators and the rule that numbers are never touched by the LLM. Kills the translation-trust objection on camera. (translation pipeline) WEEKEND
-21. **Deep-dive engineering series**: byte-identical rebuilds, the LTM citation contract, suppressing 90 percent of diff noise mechanically, the HKEX column-shift guard. Each is HN-front-page-shaped and costs only writing. (internals) WEEKEND each
-22. **Verify-the-quote service for journalists**: a guide plus a small workshop deck teaching financial journalists to verify any reported number against filings in 30 seconds. Newsroom adoption seeds "according to filings via EdgarPack" attributions. (query, citations) WEEKEND
+## Cut, with reasons (do not resurrect casually)
 
-## Stunts and formats (attention with a thesis)
-
-23. **Spot the fabrication**: a quiz site showing paired financial claims, one cited real, one model-hallucinated; players guess, then see the receipt. The product thesis as a game loop. (citation model) WEEK
-24. **Zero counter**: a public dashboard: filings processed, facts served, and a big fat zero for uncited numbers returned. The zero is the brand. (telemetry over the contract) WEEKEND
-25. **Filing-season live threads**: during 10-K season, run same-day cited threads on the five most-watched filers, generated by the pipeline, edited by a human. Timeliness plus receipts beats hot takes. (harvest, diff, query) ONGOING seasonal
-26. **The disclosure Wordle**: daily mini-game: one real risk-factor sentence, guess the company and year. Absurdly cheap, weirdly compelling, links back to the corpus. (corpus) WEEKEND
-
-## Where to start (opinion)
-
-Three engines before anything else: **The Diff** (2 then 1: bot first, newsletter wrapping it), because it compounds weekly, exercises the moat, and needs no timing luck; **IPO Watch** (3), because hot filings hand you attention spikes on a schedule you do not control but can always win with speed plus receipts; **edgarpack-mcp** (12), because developer distribution is the only channel where users do the marketing for you. The flagship (6) ships the week Phase 3 makes any-ticker China real. Everything else slots behind those four.
+- Diff bot / weekly newsletter / China Lens Weekly / live filing-season threads: ONGOING commitments, wrong for the career-capital objective and for a solo operator's time discipline.
+- Fabrication quiz, zero counter, disclosure Wordle: stunts that need pre-existing traffic to pay off.
+- Luckin autopsy: premise is weak; that fraud was exposed by channel checks, not filing language, so "filing-visible red flags" may not survive research.
+- State of Disclosure annual report, university partnership, journalist toolkit, notebook gallery: team-sized or distribution-dependent plays; filler for a solo builder right now.
