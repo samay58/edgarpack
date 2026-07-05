@@ -183,6 +183,36 @@ def test_one_point_per_concept_year(tmp_path):
     assert net_income_points[0]["val"] == 500.0
 
 
+def test_yoy_cross_check_validates_only_latest_pair(tmp_path):
+    """The stated 增减 percent describes only the newest adjacent year pair.
+
+    On a year|year|year|增减 layout, the older (second-newest, third-newest)
+    pair must not be validated against a percent that was never computed
+    from it. All three years survive.
+    """
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：元
+
+|主要会计数据|2024年|2023年|2022年|本期比上年增减(%)|
+|---|---:|---:|---:|---:|
+|营业收入|1000|900|700|11.11|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    revenue_by_year = {p["fy"]: p["val"] for p in facts["facts"]["cas"]["Revenue"]["units"]["CNY"]}
+
+    assert revenue_by_year[2024] == 1000.0
+    assert revenue_by_year[2023] == 900.0
+    assert revenue_by_year[2022] == 700.0
+
+
 def test_yoy_cross_check_drops_corrupted_pair(tmp_path):
     """A value implying an implausible YoY swing against the stated 增减 column is dropped."""
     content = """## 第二节 公司简介和主要财务指标

@@ -294,27 +294,31 @@ def write_annual_facts(
                     idx_before = [
                         idx for idx in current_years if idx < current_pct_idx and idx in row_raw
                     ]
-                    for idx_a in idx_before:
+                    if idx_before:
+                        # The stated 增减 percent describes only the most recent
+                        # adjacent year pair. On a year|year|year|增减 layout,
+                        # older pairs are not what it was computed from, so
+                        # only the newest-vs-second-newest pair is checked.
+                        idx_a = max(idx_before, key=lambda idx: current_years[idx])
                         year_a = current_years[idx_a]
-                        for idx_b in idx_before:
-                            if idx_a == idx_b:
-                                continue
+                        idx_b = next(
+                            (idx for idx in idx_before if current_years[idx] == year_a - 1),
+                            None,
+                        )
+                        if idx_b is not None:
                             year_b = current_years[idx_b]
-                            if year_b != year_a - 1:
-                                continue
                             val_prior = row_raw[idx_b]
-                            if val_prior == 0:
-                                continue
-                            computed_pct = (row_raw[idx_a] - val_prior) / val_prior * 100
-                            if abs(computed_pct - stated_pct) > _YOY_TOLERANCE_PP:
-                                warnings.warn(
-                                    f"YoY cross-check failed for {row_label} "
-                                    f"{year_a}/{year_b}: computed {computed_pct:.2f}% "
-                                    f"vs stated {stated_pct}%, dropping both years",
-                                    stacklevel=2,
-                                )
-                                skip_years.add(year_a)
-                                skip_years.add(year_b)
+                            if val_prior != 0:
+                                computed_pct = (row_raw[idx_a] - val_prior) / val_prior * 100
+                                if abs(computed_pct - stated_pct) > _YOY_TOLERANCE_PP:
+                                    warnings.warn(
+                                        f"YoY cross-check failed for {row_label} "
+                                        f"{year_a}/{year_b}: computed {computed_pct:.2f}% "
+                                        f"vs stated {stated_pct}%, dropping both years",
+                                        stacklevel=2,
+                                    )
+                                    skip_years.add(year_a)
+                                    skip_years.add(year_b)
 
             for spec in _METRICS:
                 if spec.label_contains not in row_label:
