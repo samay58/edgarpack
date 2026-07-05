@@ -74,6 +74,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
     "live_sec: hits live SEC endpoints and requires --run-live-sec",
+    "live_hk: hits live HKEX endpoints and requires --run-live-hk",
     "slow: slower-running test coverage",
     "eval: golden-fixture evaluation tests for China query parity",
 ]
