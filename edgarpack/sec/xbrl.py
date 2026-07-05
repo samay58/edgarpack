@@ -7,6 +7,18 @@ from .cache import DiskCache
 from .client import get_client
 from .submissions import normalize_cik
 
+# A 404 ("this filer has no XBRL facts") is cached for a day so pre-IPO
+# filers with no companyfacts do not re-hit SEC with a fresh 404 on every
+# query. Stored under a distinct key (see `_negative_cache_key`) so it can
+# never be mistaken for a real companyfacts payload by the positive-path
+# cache lookup below.
+_NEGATIVE_CACHE_TTL_SECONDS = 24 * 3600
+
+
+def _negative_cache_key(url: str) -> str:
+    """Cache key for a cached "no XBRL" result, distinct from `url` itself."""
+    return f"{url}#no-xbrl"
+
 
 class XBRLFetchError(Exception):
     """Raised by `fetch_company_facts` when the fetch itself failed.
@@ -62,16 +74,35 @@ async def fetch_company_facts(cik: str, force: bool = False) -> dict[str, Any]:
             else:
                 return parsed
 
+        # A cached negative behaves exactly like a fresh 404: {} with no
+        # diagnostic, no network call. Any cache-layer error here (not just
+        # the corrupt-payload cases DiskCache.get already handles) falls
+        # through to a live fetch rather than raising.
+        try:
+            negative_cached = cache.get(
+                _negative_cache_key(url), max_age_seconds=_NEGATIVE_CACHE_TTL_SECONDS
+            )
+        except Exception:
+            negative_cached = None
+        if negative_cached is not None:
+            return {}
+
     client = await get_client()
     try:
         data, headers = await client.fetch_json(url)
     except Exception as e:
         # Treat SEC 404 as "this filer has no XBRL facts" rather than a
         # fetch error. Everything else (timeouts, 5xx, TLS, parse errors)
-        # propagates as XBRLFetchError so callers can surface it.
+        # propagates as XBRLFetchError so callers can surface it, and is
+        # never negative-cached: a transient outage must not be remembered
+        # as "no XBRL" forever.
         from .client import HTTPError
 
         if isinstance(e, HTTPError) and getattr(e, "status_code", None) == 404:
+            try:
+                cache.put(_negative_cache_key(url), b"1")
+            except Exception:
+                pass
             return {}
         raise XBRLFetchError(cik, e) from e
 
