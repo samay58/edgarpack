@@ -228,7 +228,7 @@ def _compact_citation_summaries(citations: dict[str, dict[str, object]]) -> list
         fiscal = record.get("fiscal_label")
         period = record.get("period")
         filing = record.get("accession")
-        filed = record.get("filed")
+        filed = record.get("filed") or "n/a"
         lines.append(
             f"[{id_list}] {form_type} {fiscal} | period {period} | filing {filing} | filed {filed}"
         )
@@ -997,7 +997,7 @@ def _build_multi_period_dict(
             return
         entry: dict[str, object] = {
             "form_type": cited.form_type,
-            "filed": str(cited.filed),
+            "filed": cited.filed.isoformat() if cited.filed else None,
             "fiscal_year": cited.fiscal_year,
             "fiscal_period": cited.fiscal_period,
             "url": cited.filing_url,

@@ -173,6 +173,124 @@ def _filter_segment_entries(values: list[dict[str, Any]]) -> list[dict[str, Any]
     return result
 
 
+# Priority for resolving a China concept disclosed in more than one section
+# for the same fiscal year. Lower rank wins: the primary statements outrank a
+# comprehensive-income restatement or the statement of changes in equity.
+_CHINA_SECTION_PRIORITY: dict[str, int] = {
+    "hkex_income_statement": 0,
+    "hkex_balance_sheet": 0,
+    "hkex_cash_flow": 0,
+    "hkex_comprehensive_income": 1,
+    "hkex_equity_changes": 2,
+}
+
+
+def _china_section_rank(v: dict[str, Any]) -> int:
+    return _CHINA_SECTION_PRIORITY.get(str(v.get("section_id", "")), 9)
+
+
+def _is_china_point(v: dict[str, Any]) -> bool:
+    # China regex facts carry an extraction_method and never a SEC frame tag.
+    return "extraction_method" in v and not v.get("frame")
+
+
+def _dedupe_china_points(
+    points: list[dict[str, Any]],
+    metric: str,
+    diagnostics: list[Diagnostic] | None,
+) -> list[dict[str, Any]]:
+    """Collapse duplicate China facts per fiscal year, order-independently.
+
+    Two sections can disclose the same concept for one fiscal year (net income
+    in the income statement and again in the comprehensive-income statement).
+    Those points share (fy, filed) sort keys, so a stable sort would let
+    document order pick the winner. Rank by section priority instead. When the
+    top-priority sections still disagree on value the fact is irreducibly
+    conflicting, so drop that fiscal year (the value resolves to None) and
+    record a diagnostic rather than choosing arbitrarily.
+    """
+    china = [v for v in points if _is_china_point(v)]
+    if len(china) < 2:
+        return points
+
+    by_fy: dict[int, list[dict[str, Any]]] = {}
+    for v in china:
+        by_fy.setdefault(int(v.get("fy") or 0), []).append(v)
+    if all(len(group) <= 1 for group in by_fy.values()):
+        return points
+
+    kept: list[dict[str, Any]] = [v for v in points if not _is_china_point(v)]
+    for fy in sorted(by_fy):
+        group = by_fy[fy]
+        if len(group) == 1:
+            kept.append(group[0])
+            continue
+        top_rank = min(_china_section_rank(v) for v in group)
+        top = [v for v in group if _china_section_rank(v) == top_rank]
+        if len({v.get("val") for v in top}) > 1:
+            if diagnostics is not None:
+                sections = ", ".join(sorted({str(v.get("section_id", "")) for v in top}))
+                diagnostics.append(
+                    Diagnostic(
+                        metric=metric,
+                        kind="layer_b_unresolved",
+                        message=(
+                            f"conflicting {metric} values for FY{fy} across sections "
+                            f"{sections}; refusing an arbitrary winner"
+                        ),
+                    )
+                )
+            continue
+        top.sort(key=lambda v: (str(v.get("section_id", "")), str(v.get("matched_label", ""))))
+        kept.append(top[0])
+    return kept
+
+
+def _dedupe_china_conflicts(
+    facts: dict[str, Any],
+    concept: str,
+    metric: str,
+    taxonomy: str,
+    diagnostics: list[Diagnostic] | None,
+) -> dict[str, Any]:
+    """Return facts with the concept's China duplicates resolved deterministically.
+
+    A no-op for SEC facts and for China concepts with at most one point per
+    fiscal year; otherwise it copies only the rewritten path so the caller's
+    facts dict is left untouched.
+    """
+    tax = facts.get(taxonomy)
+    if not isinstance(tax, dict):
+        return facts
+    concept_data = tax.get(concept)
+    if not isinstance(concept_data, dict):
+        return facts
+    units = concept_data.get("units")
+    if not isinstance(units, dict):
+        return facts
+
+    new_units: dict[str, Any] = {}
+    changed = False
+    for unit_key, pts in units.items():
+        if isinstance(pts, list):
+            deduped = _dedupe_china_points(pts, metric, diagnostics)
+            if deduped is not pts:
+                changed = True
+            new_units[unit_key] = deduped
+        else:
+            new_units[unit_key] = pts
+    if not changed:
+        return facts
+
+    new_concept = dict(concept_data)
+    new_concept["units"] = new_units
+    new_tax = dict(tax)
+    new_tax[concept] = new_concept
+    new_facts = dict(facts)
+    new_facts[taxonomy] = new_tax
+    return new_facts
+
+
 def _extract_values(
     facts: dict[str, Any],
     concept: str,
@@ -255,7 +373,7 @@ def _value_to_cited(
         fiscal_year=int(v.get("fy") or 0),
         fiscal_period=str(v.get("fp", "")),
         form_type=str(v.get("form", "")),
-        filed=_parse_date(v.get("filed", "")) or date.min,
+        filed=_parse_date(v.get("filed", "")),
         accession=accn,
         cik=cik,
         company=company,
@@ -1225,6 +1343,11 @@ def select_period(
         CitedValue, list of CitedValues (for series), or None.
     """
     period = period.strip().lower()
+
+    # Resolve China facts disclosed in multiple sections for the same fiscal
+    # year before any selector runs, so the winner is section-priority driven
+    # rather than document-order driven. No-op for SEC facts.
+    facts = _dedupe_china_conflicts(facts, concept, metric, taxonomy, diagnostics)
 
     def _effective_years_back(selector_years_back: int) -> int:
         # Component offsets are signed in fiscal years: -1 means "one year

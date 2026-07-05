@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 from datetime import date as _date
 from datetime import datetime as _datetime
@@ -1972,19 +1973,28 @@ def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) ->
             if base.exists():
                 candidates.extend(path.parent for path in base.glob("*/facts.json"))
 
-    # Preserve existing HKEX fixture lookup used by tests and demos.
-    if source == "HKEX":
-        fy = 2024
-        for alias in getattr(resolved, "aliases", ()):
-            alias_text = str(alias).lower()
-            for name in (alias_text.replace(" ", "_"), alias_text):
-                candidate = Path(f"tests/fixtures/china_packs/{name}_{fy}")
-                if candidate.exists():
-                    candidates.append(candidate)
-        for variant in variants:
-            candidate = Path(f"tests/fixtures/china_packs/{variant}_{fy}")
-            if candidate.exists():
-                candidates.append(candidate)
+    # Flat ``{name}_{fiscal_year}`` packs (fixtures and demos) live under an
+    # explicit root, opt-in via EDGARPACK_CHINA_PACK_ROOT so production never
+    # probes the test tree. Fiscal years come from the directory names found,
+    # not a hardcoded constant.
+    china_pack_root = os.environ.get("EDGARPACK_CHINA_PACK_ROOT")
+    if china_pack_root and source == "HKEX":
+        root_dir = Path(china_pack_root)
+        if root_dir.is_dir():
+            names: set[str] = set()
+            for alias in getattr(resolved, "aliases", ()):
+                alias_text = str(alias).lower()
+                names.add(alias_text.replace(" ", "_"))
+                names.add(alias_text)
+            names.update(v.lower() for v in variants)
+            for child in sorted(root_dir.iterdir()):
+                if not (child / "facts.json").exists():
+                    continue
+                match = re.fullmatch(r"(?P<name>.+)_(?P<fy>\d{4})", child.name)
+                if match is None:
+                    continue
+                if match.group("name").lower() in names:
+                    candidates.append(child)
 
     if not candidates:
         return None
@@ -2058,24 +2068,23 @@ def _china_manifest_filed_date(
     manifest: dict[str, Any],
     point: dict[str, Any],
 ) -> _date | None:
+    """Return the pack's real announcement/filing date, or None.
+
+    Never synthesizes a date from the fiscal year or period end: a filing date
+    invented from the year-end is false provenance. Callers leave ``filed``
+    absent when this returns None.
+    """
     filing = manifest.get("filing", {}) if isinstance(manifest.get("filing"), dict) else {}
     for candidate in (
         point.get("filed"),
         filing.get("filing_date"),
         manifest.get("announcement_date"),
         manifest.get("filing_date"),
-        point.get("end"),
     ):
         parsed = _parse_china_date(candidate)
         if parsed is not None:
             return parsed
-    fiscal_year = point.get("fy") or manifest.get("fiscal_year")
-    if not isinstance(fiscal_year, int | str):
-        return None
-    try:
-        return _date(int(str(fiscal_year)), 12, 31)
-    except (TypeError, ValueError):
-        return None
+    return None
 
 
 def _normalize_china_fact_provenance(

@@ -8,7 +8,6 @@
         "units": {
           "USD": [
             {
-              "start": "2022-01-01",
               "end": "2022-12-31",
               "val": -76374000,
               "fy": 2022,
@@ -16,10 +15,10 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "total deficits"
             },
             {
-              "start": "2023-01-01",
               "end": "2023-12-31",
               "val": -341914000,
               "fy": 2023,
@@ -27,10 +26,10 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "total deficits"
             },
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": -799320000,
               "fy": 2024,
@@ -38,7 +37,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "total deficits"
             }
           ]
         }
@@ -48,7 +48,6 @@
         "units": {
           "USD": [
             {
-              "start": "2022-01-01",
               "end": "2022-12-31",
               "val": 4691000,
               "fy": 2022,
@@ -56,10 +55,10 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "cash and cash equivalents"
             },
             {
-              "start": "2023-01-01",
               "end": "2023-12-31",
               "val": 206295000,
               "fy": 2023,
@@ -67,10 +66,10 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "cash and cash equivalents"
             },
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 288912000,
               "fy": 2024,
@@ -78,7 +77,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "cash and cash equivalents"
             }
           ]
         }
@@ -96,7 +96,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_cash_flow"
+              "section_id": "hkex_cash_flow",
+              "matched_label": "net cash flows used in operating activities"
             },
             {
               "start": "2023-01-01",
@@ -107,7 +108,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_cash_flow"
+              "section_id": "hkex_cash_flow",
+              "matched_label": "net cash flows used in operating activities"
             },
             {
               "start": "2024-01-01",
@@ -118,7 +120,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_cash_flow"
+              "section_id": "hkex_cash_flow",
+              "matched_label": "net cash flows used in operating activities"
             }
           ]
         }
@@ -136,7 +139,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss for the year/period"
             },
             {
               "start": "2023-01-01",
@@ -147,7 +151,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss for the year/period"
             },
             {
               "start": "2024-01-01",
@@ -158,7 +163,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss for the year/period"
             }
           ]
         }
@@ -176,7 +182,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "research and development expenses"
             },
             {
               "start": "2023-01-01",
@@ -187,7 +194,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "research and development expenses"
             },
             {
               "start": "2024-01-01",
@@ -198,7 +206,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "research and development expenses"
             }
           ]
         }
@@ -216,7 +225,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "total revenue"
             },
             {
               "start": "2024-01-01",
@@ -227,7 +237,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "total revenue"
             }
           ]
         }
@@ -245,7 +256,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "gross (loss)/profit"
             },
             {
               "start": "2024-01-01",
@@ -256,7 +268,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "gross (loss)/profit"
             }
           ]
         }
@@ -266,7 +279,6 @@
         "units": {
           "headcount": [
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 385,
               "fy": 2024,
@@ -274,7 +286,8 @@
               "form": "Annual Report",
               "accn": "00100_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_risk_factors"
+              "section_id": "hkex_risk_factors",
+              "matched_label": "385 full-time employees"
             }
           ]
         }

@@ -8,7 +8,6 @@
         "units": {
           "CNY": [
             {
-              "start": "2022-01-01",
               "end": "2022-12-31",
               "val": -170648000,
               "fy": 2022,
@@ -16,10 +15,10 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "total equity - deficit"
             },
             {
-              "start": "2023-01-01",
               "end": "2023-12-31",
               "val": -974767000,
               "fy": 2023,
@@ -27,10 +26,10 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "total equity - deficit"
             },
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": -3870284000,
               "fy": 2024,
@@ -38,7 +37,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "total equity - deficit"
             }
           ]
         }
@@ -48,7 +48,6 @@
         "units": {
           "CNY": [
             {
-              "start": "2022-01-01",
               "end": "2022-12-31",
               "val": 219031000,
               "fy": 2022,
@@ -56,10 +55,10 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "cash at bank and on hand"
             },
             {
-              "start": "2023-01-01",
               "end": "2023-12-31",
               "val": 1249391000,
               "fy": 2023,
@@ -67,10 +66,10 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "cash at bank and on hand"
             },
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 2269222000,
               "fy": 2024,
@@ -78,7 +77,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_balance_sheet"
+              "section_id": "hkex_balance_sheet",
+              "matched_label": "cash at bank and on hand"
             }
           ]
         }
@@ -96,7 +96,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_cash_flow"
+              "section_id": "hkex_cash_flow",
+              "matched_label": "net cash used in operating activities"
             },
             {
               "start": "2023-01-01",
@@ -107,7 +108,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_cash_flow"
+              "section_id": "hkex_cash_flow",
+              "matched_label": "net cash used in operating activities"
             },
             {
               "start": "2024-01-01",
@@ -118,7 +120,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_cash_flow"
+              "section_id": "hkex_cash_flow",
+              "matched_label": "net cash used in operating activities"
             }
           ]
         }
@@ -136,7 +139,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "revenue"
             },
             {
               "start": "2023-01-01",
@@ -147,7 +151,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "revenue"
             },
             {
               "start": "2024-01-01",
@@ -158,7 +163,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "revenue"
             }
           ]
         }
@@ -176,7 +182,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "gross profit"
             },
             {
               "start": "2023-01-01",
@@ -187,7 +194,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "gross profit"
             },
             {
               "start": "2024-01-01",
@@ -198,7 +206,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "gross profit"
             }
           ]
         }
@@ -216,7 +225,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss from operations"
             },
             {
               "start": "2023-01-01",
@@ -227,7 +237,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss from operations"
             },
             {
               "start": "2024-01-01",
@@ -238,7 +249,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss from operations"
             }
           ]
         }
@@ -256,7 +268,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss for the year/period"
             },
             {
               "start": "2023-01-01",
@@ -267,7 +280,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss for the year/period"
             },
             {
               "start": "2024-01-01",
@@ -278,7 +292,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "loss for the year/period"
             }
           ]
         }
@@ -296,7 +311,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "research and development expenses"
             },
             {
               "start": "2023-01-01",
@@ -307,7 +323,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "research and development expenses"
             },
             {
               "start": "2024-01-01",
@@ -318,7 +335,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_income_statement"
+              "section_id": "hkex_income_statement",
+              "matched_label": "research and development expenses"
             }
           ]
         }
@@ -328,7 +346,6 @@
         "units": {
           "headcount": [
             {
-              "start": "2024-01-01",
               "end": "2024-12-31",
               "val": 883,
               "fy": 2024,
@@ -336,7 +353,8 @@
               "form": "Annual Report",
               "accn": "02513_2024",
               "extraction_method": "regex",
-              "section_id": "hkex_risk_factors"
+              "section_id": "hkex_risk_factors",
+              "matched_label": "883 employees"
             }
           ]
         }

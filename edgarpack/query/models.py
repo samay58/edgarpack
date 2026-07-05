@@ -35,7 +35,10 @@ class CitedValue(BaseModel):
 
     # Source
     form_type: str  # "10-K", "10-Q"
-    filed: date
+    # None when provenance carries no real filing date (e.g. a China pack whose
+    # manifest announcement date is absent). Renders as n/a in tables, null in
+    # JSON. The SEC path always sets a real date.
+    filed: date | None
     accession: str
     cik: str
     company: str
@@ -172,7 +175,8 @@ class CitedValue(BaseModel):
     def citation(self) -> str:
         """Human-readable citation string."""
         period = f"{self.fiscal_period}{self.fiscal_year}"
-        return f"{self.company} {self.form_type} ({period}), filed {self.filed}"
+        filed = self.filed.isoformat() if self.filed else "n/a"
+        return f"{self.company} {self.form_type} ({period}), filed {filed}"
 
     @property
     def fiscal_label(self) -> str:
@@ -253,7 +257,7 @@ class CitedValue(BaseModel):
             "fiscal_period": self.fiscal_period,
             "fiscal_label": self.fiscal_label,
             "form_type": self.form_type,
-            "filed": str(self.filed),
+            "filed": self.filed.isoformat() if self.filed else None,
             "accession": self.accession,
             "citation": self.citation,
             "primary_link": self.primary_link,
@@ -369,7 +373,7 @@ class DerivedValue(CitedValue):
                 "unit": component.unit,
                 "accession": component.accession,
                 "form_type": component.form_type,
-                "filed": str(component.filed),
+                "filed": component.filed.isoformat() if component.filed else None,
                 "fiscal_year": component.fiscal_year,
                 "fiscal_period": component.fiscal_period,
                 "fiscal_label": component.fiscal_label,
@@ -601,7 +605,7 @@ class QueryResult(BaseModel):
         if acc and acc not in filings:
             entry: dict[str, object] = {
                 "form_type": source.form_type,
-                "filed": str(source.filed),
+                "filed": source.filed.isoformat() if source.filed else None,
                 "fiscal_year": source.fiscal_year,
                 "fiscal_period": source.fiscal_period,
                 "url": source.filing_url,

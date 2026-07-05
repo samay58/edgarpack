@@ -3,9 +3,24 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any
 
 import pytest
+
+_CHINA_FIXTURE_PACK_ROOT = Path(__file__).parent / "fixtures" / "china_packs"
+
+
+@pytest.fixture(autouse=True)
+def _china_pack_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point China pack discovery at the committed fixtures.
+
+    Production reads flat ``{name}_{fy}`` China packs only when
+    EDGARPACK_CHINA_PACK_ROOT is set (opt-in, never a hardcoded test path).
+    The test suite opts in here so fixture-based HKEX queries resolve; setting
+    it via os.environ means subprocess-based CLI contract tests inherit it too.
+    """
+    monkeypatch.setenv("EDGARPACK_CHINA_PACK_ROOT", str(_CHINA_FIXTURE_PACK_ROOT))
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

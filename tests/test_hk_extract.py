@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -67,6 +68,130 @@ def test_extract_facts_from_pack_writes_facts_json(tmp_path):
         for concept, info in standard_facts.items()
         if "USD" in info.get("units", {})
     )
+
+
+def test_extract_facts_from_pack_serializes_matched_label(tmp_path):
+    pack_dir = tmp_path / "pack"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    (sections_dir / "hkex_income_statement.md").write_text(
+        "# Consolidated Statement of Profit or Loss\n\nTotal revenue          US$  71,200,000\n"
+    )
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "source": "HKEX",
+                "stock_code": "00100",
+                "fiscal_year": 2024,
+                "accounting_standard": "HKFRS",
+                "reporting_currency": "USD",
+                "company": "Test Company",
+                "pdf_url": "",
+                "announcement_date": "",
+            }
+        )
+    )
+
+    facts_path = extract_facts_from_pack(pack_dir)
+    data = json.loads(facts_path.read_text())
+    revenue = data["facts"]["hkfrs"]["Revenue"]["units"]["USD"][0]
+    assert revenue["matched_label"] == "total revenue"
+
+
+def test_balance_sheet_facts_instant_flow_facts_ranges(tmp_path):
+    src = Path("tests/fixtures/china_packs/minimax_2024")
+    if not src.exists():
+        pytest.skip("minimax fixture pack not built")
+    dst = tmp_path / "minimax_2024"
+    shutil.copytree(src, dst)
+
+    facts_path = extract_facts_from_pack(dst)
+    hkfrs = json.loads(facts_path.read_text())["facts"]["hkfrs"]
+
+    # Balance-sheet concepts are instants: a single period-end, no start.
+    for concept in ("TotalEquity", "CashAndCashEquivalents"):
+        for point in hkfrs[concept]["units"]["USD"]:
+            assert "start" not in point, f"{concept} carried a start date"
+            assert point["end"].endswith("-12-31")
+
+    # Flow concepts keep a full-year range.
+    for point in hkfrs["Revenue"]["units"]["USD"]:
+        assert point["start"].endswith("-01-01")
+        assert point["end"].endswith("-12-31")
+
+
+def test_explicit_non_december_year_end_is_carried(tmp_path):
+    pack_dir = tmp_path / "pack"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    (sections_dir / "hkex_balance_sheet.md").write_text(
+        "# Consolidated Balance Sheet\n\nTotal assets          US$  500,000,000\n"
+    )
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "source": "HKEX",
+                "stock_code": "00100",
+                "fiscal_year": 2024,
+                "fiscal_year_end": "2024-03-31",
+                "accounting_standard": "HKFRS",
+                "reporting_currency": "USD",
+                "company": "Test Company",
+                "pdf_url": "",
+                "announcement_date": "",
+            }
+        )
+    )
+
+    facts_path = extract_facts_from_pack(pack_dir)
+    hkfrs = json.loads(facts_path.read_text())["facts"]["hkfrs"]
+    point = hkfrs["TotalAssets"]["units"]["USD"][0]
+    assert point["end"] == "2024-03-31"
+    assert "start" not in point
+
+
+def test_absent_fiscal_year_end_leaves_period_dates_absent(tmp_path):
+    # Manifest states no fiscal_year_end, so the extractor must not invent one.
+    # Both flow and instant facts drop start/end rather than stamping a
+    # fabricated calendar year-end.
+    pack_dir = tmp_path / "pack"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    (sections_dir / "hkex_income_statement.md").write_text(
+        "# Consolidated Income Statement\n\nTotal revenue          US$  30,523,000\n"
+    )
+    (sections_dir / "hkex_balance_sheet.md").write_text(
+        "# Consolidated Balance Sheet\n\nTotal assets          US$  500,000,000\n"
+    )
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "source": "HKEX",
+                "stock_code": "00100",
+                "fiscal_year": 2024,
+                "accounting_standard": "HKFRS",
+                "reporting_currency": "USD",
+                "company": "Test Company",
+                "pdf_url": "",
+                "announcement_date": "",
+            }
+        )
+    )
+
+    facts_path = extract_facts_from_pack(pack_dir)
+    hkfrs = json.loads(facts_path.read_text())["facts"]["hkfrs"]
+
+    flow = hkfrs["Revenue"]["units"]["USD"][0]
+    assert "start" not in flow
+    assert "end" not in flow
+
+    instant = hkfrs["TotalAssets"]["units"]["USD"][0]
+    assert "start" not in instant
+    assert "end" not in instant
+
+    # Fiscal-year tagging still survives so period selection works off fy.
+    assert flow["fy"] == 2024
+    assert instant["fy"] == 2024
 
 
 def test_commaless_values_keep_year_alignment():
