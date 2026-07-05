@@ -1447,6 +1447,136 @@ async def test_extract_or_load_snapshot_salvages_truncated_llm_json(tmp_path, mo
     assert result.extraction_status == "ok"
     assert result.truncated is True
     assert any(fact.metric == "total_assets" for fact in result.facts)
+    # truncated-ok-retry: only one of thirteen slugs was salvaged, so the
+    # snapshot must carry a cooldown rather than caching the gap forever.
+    assert result.retry_after is not None
+
+
+# ---------------------------------------------------------------------------
+# Fix: truncated-ok-retry (a truncated ok snapshot with missing slugs is
+# retryable on a cooldown; complete-but-truncated stays permanent)
+# ---------------------------------------------------------------------------
+
+
+def _write_truncated_ok_snapshot(
+    pack: Path,
+    *,
+    retry_after: str | None,
+    facts: list[dict],
+) -> None:
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "accession": pack.name,
+        "extracted_at": "2026-04-22T00:00:00Z",
+        "extraction_status": "ok",
+        "source_sha256": source_sha256_for_pack(pack),
+        "model": "deterministic-summary-table",
+        "retry_after": retry_after,
+        "truncated": True,
+        "gate_rejections": [],
+        "facts": facts,
+    }
+    (pack / "s1_financials.json").write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _bare_fact(metric: str, *, value_cents: int = 1) -> dict:
+    return {
+        "accession": "a",
+        "fiscal_year": 2024,
+        "period_end": "2024-12-31",
+        "metric": metric,
+        "value_cents": value_cents,
+        "currency": "USD",
+        "is_audited": True,
+        "is_pro_forma": False,
+        "pro_forma_note": None,
+    }
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_serves_truncated_ok_within_cooldown(tmp_path, monkeypatch):
+    # A truncated ok snapshot missing slugs is served from cache while its
+    # cooldown is active, exactly like a retryable failure status.
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+    future = (datetime.now(UTC) + timedelta(minutes=20)).isoformat().replace("+00:00", "Z")
+    _write_truncated_ok_snapshot(
+        pack, retry_after=future, facts=[_bare_fact("revenue", value_cents=7828700000)]
+    )
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("truncated ok inside cooldown must not re-hit the API")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "ok"
+    assert result.truncated is True
+    assert [f.metric for f in result.facts] == ["revenue"]
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_fills_missing_slugs_after_truncated_cooldown(
+    tmp_path, monkeypatch
+):
+    # Once the cooldown elapses, a read re-extracts only the missing slugs
+    # and merges them in; the previously cached fact is never overwritten.
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+    past = (datetime.now(UTC) - timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+    _write_truncated_ok_snapshot(
+        pack, retry_after=past, facts=[_bare_fact("revenue", value_cents=7828700000)]
+    )
+
+    calls = {"n": 0}
+
+    async def filling_haiku(_section):
+        calls["n"] += 1
+        return json.dumps(
+            [
+                {
+                    "fiscal_year": 2024,
+                    "period_end": "2024-12-31",
+                    "metric": "total_assets",
+                    "value_cents": 44768800000,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                    "source_text": "Total assets ... $447,688",
+                }
+            ]
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", filling_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert calls["n"] == 1
+    metrics = {f.metric for f in result.facts}
+    assert "revenue" in metrics and "total_assets" in metrics
+    # The retry's own response parsed cleanly (no truncation this time), so
+    # the marker clears even though other slugs remain genuinely unfound.
+    assert result.truncated is False
+    assert result.retry_after is None
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_truncated_ok_without_gaps_stays_permanent(
+    tmp_path, monkeypatch
+):
+    # A truncated snapshot that already covers every metric slug is a
+    # complete extraction; it must never re-attempt, cooldown or not.
+    pack = _write_pack(tmp_path, markdown=CEREBRAS_SFD.read_text(encoding="utf-8"))
+    facts = [_bare_fact(slug) for slug in sorted(METRIC_SLUGS)]
+    _write_truncated_ok_snapshot(pack, retry_after=None, facts=facts)
+
+    async def should_not_call_llm(_section):
+        raise AssertionError("a complete-but-truncated snapshot must never re-attempt")
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "ok"
+    assert result.truncated is True
+    assert len(result.facts) == len(METRIC_SLUGS)
 
 
 # ---------------------------------------------------------------------------
