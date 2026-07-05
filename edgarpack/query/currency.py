@@ -109,6 +109,13 @@ def convert_cited_to_usd(
     if cited.value is None or not is_currency_value(cited):
         return None
 
+    # Fail closed on an absent period end: without a real date there is no
+    # honest as-of for the rate, so convert nothing rather than reach for a
+    # fabricated one (China packs with no fiscal year end land here).
+    period_end = cited.period_end
+    if period_end is None:
+        return None
+
     native_currency = _display_currency(cited)
     if native_currency == "USD":
         return FxDisplay(
@@ -117,7 +124,7 @@ def convert_cited_to_usd(
             native_currency="USD",
             rate_used=1.0,
             convention="native",
-            as_of=cited.period_end,
+            as_of=period_end,
         )
 
     convention = convention_for_metric(metric or cited.metric)
@@ -127,10 +134,10 @@ def convert_cited_to_usd(
             value=Decimal(str(cited.value)),
             from_ccy=native_currency,
             to_ccy="USD",
-            as_of=cited.period_end,
+            as_of=period_end,
             convention=convention,  # type: ignore[arg-type]
             rates=rates,
-            period_end=cited.period_end if convention == "average" else None,
+            period_end=period_end if convention == "average" else None,
             period_start=cited.period_start if convention == "average" else None,
         )
     except (RateNotFound, NotImplementedError):
@@ -142,7 +149,7 @@ def convert_cited_to_usd(
         native_currency=native_currency,
         rate_used=result.rate_used,
         convention=convention,
-        as_of=cited.period_end,
+        as_of=period_end,
     )
 
 

@@ -29,7 +29,11 @@ class CitedValue(BaseModel):
 
     # Period
     period_start: date | None = None
-    period_end: date
+    # None when provenance carries no real period end (e.g. a China pack whose
+    # manifest states no fiscal year end). Renders as n/a in tables, null in
+    # JSON. The SEC path always sets a real date; a missing SEC end is treated
+    # as data corruption at parse time rather than passed through as None.
+    period_end: date | None
     fiscal_year: int
     fiscal_period: str  # "FY", "Q1", "Q2", "Q3", "Q4"
 
@@ -233,9 +237,10 @@ class CitedValue(BaseModel):
     def citation_key(self) -> str:
         """Stable identity key for deduplicating citations."""
         period_start = str(self.period_start) if self.period_start else ""
+        period_end = str(self.period_end) if self.period_end else ""
         return (
             f"{self.cik}|{self.accession}|{self.taxonomy}|{self.concept}|"
-            f"{period_start}|{self.period_end}|{self.value}|{self.fact_id}|"
+            f"{period_start}|{period_end}|{self.value}|{self.fact_id}|"
             f"{self.source_url}|{self.section_id}"
         )
 
@@ -252,7 +257,7 @@ class CitedValue(BaseModel):
             "unit": self.unit,
             "period": self._period_str(),
             "period_start": str(self.period_start) if self.period_start else None,
-            "period_end": str(self.period_end),
+            "period_end": str(self.period_end) if self.period_end else None,
             "fiscal_year": self.fiscal_year,
             "fiscal_period": self.fiscal_period,
             "fiscal_label": self.fiscal_label,
@@ -314,6 +319,8 @@ class CitedValue(BaseModel):
 
     def _period_str(self) -> str:
         """Compact period string: 'start/end' or just 'end' for instants."""
+        if self.period_end is None:
+            return "n/a"
         if self.period_start:
             return f"{self.period_start}/{self.period_end}"
         return str(self.period_end)
@@ -379,7 +386,7 @@ class DerivedValue(CitedValue):
                 "fiscal_label": component.fiscal_label,
                 "period": component._period_str(),
                 "period_start": str(component.period_start) if component.period_start else None,
-                "period_end": str(component.period_end),
+                "period_end": str(component.period_end) if component.period_end else None,
                 "primary_link": component.primary_link,
                 "primary_link_type": component.primary_link_type,
             }

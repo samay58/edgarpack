@@ -106,7 +106,7 @@ def _series_period(period: str) -> tuple[str, int] | None:
     return match.group(1), int(match.group(2))
 
 
-def _period_alignment_key(cited: CitedValue) -> tuple[int, str, _date]:
+def _period_alignment_key(cited: CitedValue) -> tuple[int, str, _date | None]:
     """Key used to ensure derived components describe the same reporting window."""
     return cited.fiscal_year, cited.fiscal_period.upper(), cited.period_end
 
@@ -1348,8 +1348,8 @@ def _compute_derived_series(
                 results.append(value)
         return results
 
-    component_maps: dict[str, dict[tuple[int, str, _date], CitedValue]] = {}
-    component_order: list[tuple[int, str, _date]] = []
+    component_maps: dict[str, dict[tuple[int, str, _date | None], CitedValue]] = {}
+    component_order: list[tuple[int, str, _date | None]] = []
 
     for raw_comp in meta.components:
         comp_name, raw_comp_offset = _normalize_component(raw_comp)
@@ -1373,7 +1373,7 @@ def _compute_derived_series(
         if not series:
             return []
 
-        by_key: dict[tuple[int, str, _date], CitedValue] = {}
+        by_key: dict[tuple[int, str, _date | None], CitedValue] = {}
         for cited in series:
             if cited.value is None:
                 continue
