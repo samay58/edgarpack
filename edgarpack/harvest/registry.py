@@ -61,6 +61,12 @@ _MIGRATIONS = [
         "idx_harvest_errors_ticker",
         "CREATE INDEX IF NOT EXISTS idx_harvest_errors_ticker ON harvest_errors(ticker)",
     ),
+    ("market", "ALTER TABLE packs ADD COLUMN market TEXT"),
+    ("stock_code", "ALTER TABLE packs ADD COLUMN stock_code TEXT"),
+    (
+        "idx_packs_stock_code",
+        "CREATE INDEX IF NOT EXISTS idx_packs_stock_code ON packs(stock_code)",
+    ),
 ]
 
 
@@ -80,6 +86,10 @@ class PackRecord(BaseModel):
     manifest_hash: str | None = None
     warnings_json: str | None = None
     indexed_at: str | None = None
+    # China A-share (SSE) packs have no CIK/accession; the natural key is
+    # (stock_code, filing_date). SEC rows leave both None.
+    market: str | None = None
+    stock_code: str | None = None
 
 
 class PackRegistry:
@@ -130,14 +140,21 @@ class PackRegistry:
         manifest_hash: str | None = None,
         warnings: list[str] | None = None,
         built_at: str | None = None,
+        market: str | None = None,
+        stock_code: str | None = None,
     ) -> None:
-        """Register a built pack in the registry."""
+        """Register a built pack in the registry.
+
+        market/stock_code are for China A-share (SSE) packs, which have no
+        real SEC cik/accession; SEC rows leave both None.
+        """
         conn = self._get_conn()
         conn.execute(
             """INSERT OR REPLACE INTO packs
             (accession, cik, ticker, company_name, form_type, filing_date,
-             sections_count, tokens_total, pack_dir, built_at, manifest_hash, warnings_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+             sections_count, tokens_total, pack_dir, built_at, manifest_hash, warnings_json,
+             market, stock_code)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 accession,
                 cik,
@@ -151,6 +168,8 @@ class PackRegistry:
                 built_at or datetime.now(UTC).isoformat(),
                 manifest_hash,
                 json.dumps(warnings) if warnings else None,
+                market,
+                stock_code,
             ),
         )
         conn.commit()
@@ -175,6 +194,8 @@ class PackRegistry:
             manifest_hash=record.manifest_hash,
             warnings=warnings,
             built_at=record.built_at,
+            market=record.market,
+            stock_code=record.stock_code,
         )
 
     def lookup(self, accession: str) -> PackRecord | None:
@@ -189,6 +210,19 @@ class PackRegistry:
         """Check if an accession is already registered."""
         conn = self._get_conn()
         row = conn.execute("SELECT 1 FROM packs WHERE accession = ?", (accession,)).fetchone()
+        return row is not None
+
+    def has_sse_filing(self, stock_code: str, filing_date: str) -> bool:
+        """Check by the SSE natural key: (stock_code, filing_date).
+
+        SSE packs have no SEC accession, so this is the equivalent of
+        has_accession() for the China A-share lane.
+        """
+        conn = self._get_conn()
+        row = conn.execute(
+            "SELECT 1 FROM packs WHERE stock_code = ? AND filing_date = ?",
+            (stock_code, filing_date),
+        ).fetchone()
         return row is not None
 
     def list_packs(
