@@ -13,30 +13,43 @@ from typing import Any
 
 @dataclass(frozen=True)
 class AnnualMetricSpec:
-    label_contains: str
+    label_contains: tuple[str, ...]
     concept: str
     label: str
     unit: str
     divide_by: float = 1.0
     is_ratio: bool = False
+    # Rows whose label contains any of these tokens never match this spec,
+    # even when a label_contains token also matches. Scoped per-metric: a
+    # short generic label_contains token (like 营业收入) recurs as a tail
+    # substring inside longer adjusted/carve-out variants (LONGi's
+    # "扣除...后的营业收入"), which would otherwise manufacture a same-year
+    # conflict against the headline row and fail both closed.
+    exclude_if_contains: tuple[str, ...] = ()
 
 
 _METRICS: tuple[AnnualMetricSpec, ...] = (
-    AnnualMetricSpec("营业收入", "Revenue", "Revenue", "CNY"),
     AnnualMetricSpec(
-        "归属于上市公司股东的净利润",
+        ("营业收入", "营业总收入"),
+        "Revenue",
+        "Revenue",
+        "CNY",
+        exclude_if_contains=("扣除",),
+    ),
+    AnnualMetricSpec(
+        ("归属于上市公司股东的净利润",),
         "ProfitLoss",
         "Net income attributable to shareholders",
         "CNY",
     ),
     AnnualMetricSpec(
-        "经营活动产生的现金流量净额",
+        ("经营活动产生的现金流量净额",),
         "NetCashProvidedByUsedInOperatingActivities",
         "Net cash from operating activities",
         "CNY",
     ),
     AnnualMetricSpec(
-        "研发投入占营业收入的比例",
+        ("研发投入占营业收入的比例",),
         "ResearchAndDevelopmentIntensity",
         "R&D intensity",
         "pure",
@@ -165,15 +178,25 @@ def _table_priority(header_cells: list[str]) -> int:
 
 def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
     start = max(0, header_index - _UNIT_SCALE_LOOKBACK_LINES)
-    for line in reversed(lines[start:header_index]):
-        stripped = line.strip()
+    for idx in range(header_index - 1, start - 1, -1):
+        stripped = lines[idx].strip()
         if _is_table_line(stripped):
             if _is_separator_row(stripped):
-                # A separator row only ever follows a header row, so it marks
-                # the boundary of a distinct, earlier table. Its own marker
-                # (if any) scopes that table only; stop here.
+                # A separator row usually marks the boundary of a distinct,
+                # earlier table. Exception: some SSE templates (SMIC) render
+                # title / marker row / separator / year header, an extra
+                # separator between the table's own unit marker and its real
+                # year header. Peek one row further back before treating the
+                # separator as a boundary; when that row is this table's own
+                # marker (not a previous table's header), the separator is
+                # not a boundary at all, so skip past it.
+                marker_beyond = idx - 1 >= start and _UNIT_SCALE_PATTERN.search(
+                    _clean_cell(lines[idx - 1])
+                )
+                if marker_beyond:
+                    continue
                 break
-            match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
+            match = _UNIT_SCALE_PATTERN.search(_clean_cell(lines[idx]))
             if match:
                 return _UNIT_SCALE_FACTORS[match.group(1)]
             # A non-separator pipe row above the header (a title row, or an
@@ -182,7 +205,7 @@ def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
             # not a previous table's content. Keep looking upward instead of
             # assuming it belongs to some other table.
             continue
-        match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
+        match = _UNIT_SCALE_PATTERN.search(_clean_cell(lines[idx]))
         if match:
             return _UNIT_SCALE_FACTORS[match.group(1)]
     return None
@@ -376,7 +399,9 @@ def write_annual_facts(
             )
 
             for spec in _METRICS:
-                if spec.label_contains not in row_label:
+                if not any(token in row_label for token in spec.label_contains):
+                    continue
+                if any(token in row_label for token in spec.exclude_if_contains):
                     continue
                 if row_is_ratio and not spec.is_ratio:
                     continue

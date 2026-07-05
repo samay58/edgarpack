@@ -51,12 +51,23 @@ _PROSPECTUS_SECTIONS: dict[str, tuple[str, str]] = {
     "备查文件": ("ipo_s12_reference_docs", "Reference Documents"),
 }
 
+_KEY_FINANCIALS_ANNUAL_SECTION: tuple[str, str] = (
+    "annual_s02_company_profile_key_financials",
+    "Company Profile and Key Financials",
+)
+
 _ANNUAL_REPORT_SECTIONS: dict[str, tuple[str, str]] = {
     "重要提示": ("annual_important_notice", "Important Notice"),
-    "公司简介和主要财务指标": (
-        "annual_s02_company_profile_key_financials",
-        "Company Profile and Key Financials",
-    ),
+    "公司简介和主要财务指标": _KEY_FINANCIALS_ANNUAL_SECTION,
+    # Some templates (CMB) split the CSRC compound title above into two
+    # standalone chapters: a bare company-profile chapter and a separate
+    # accounting-data/key-financials chapter. Map both to the same canonical
+    # id so write_annual_facts's annual_s02 prefix scan finds whichever
+    # chapter actually carries the key financial table.
+    "会计数据和财务指标摘要": _KEY_FINANCIALS_ANNUAL_SECTION,
+    "主要会计数据": _KEY_FINANCIALS_ANNUAL_SECTION,
+    "会计数据摘要": _KEY_FINANCIALS_ANNUAL_SECTION,
+    "公司简介": _KEY_FINANCIALS_ANNUAL_SECTION,
     "管理层讨论与分析": ("annual_s03_mda", "Management Discussion and Analysis"),
     "公司治理": ("annual_s04_corporate_governance", "Corporate Governance"),
     "环境与社会责任": ("annual_s05_esg", "Environmental and Social Responsibility"),

@@ -47,7 +47,7 @@ DEFAULT_REPORTS_DIR = Path("reports")
 RATE_LIMIT = _env_float("EDGARPACK_SEC_RATE_LIMIT", 5.0)
 
 # Parser versioning for determinism tracking
-PARSER_VERSION = "0.2.3"
+PARSER_VERSION = "0.2.4"
 SCHEMA_VERSION = 1
 
 # SEC API endpoints
