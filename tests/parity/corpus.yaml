@@ -2213,6 +2213,6 @@ cases:
       - "IFRS-vs-HKFRS metadata"
     required_for_vnext_parity: false
     known_current_issues:
-      - "Company currency/standard come from a hardcoded six-entry _COMPANY_META dict; unknown codes default CNY/HKFRS."
+      - "SUPERSEDED 2026-07-05 (phase3/build-hk-construct): _COMPANY_META was deleted; currency/standard now come from the filing's basis-of-preparation and presentation-currency notes via extract_filing_metadata, failing closed when both anchors are missing. The prior pinned behavior (hardcoded six-entry dict, unknown codes defaulting CNY/HKFRS) no longer exists."
     needs_selection: true
     confidence: medium
