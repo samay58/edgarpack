@@ -1521,6 +1521,16 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
         )
 
     merged_facts = [*deterministic_facts, *llm_facts]
+    if not merged_facts:
+        # An empty or fully-gated LLM array with no deterministic facts is
+        # indistinguishable from a bad extraction; treat it as retryable
+        # rather than caching a permanent ok with zero facts.
+        return _finalize(
+            status="no_financial_data_found",
+            facts=[],
+            model=_s1_model_id(),
+            gate_rejections=gate_rejections,
+        )
     model_parts: list[str] = []
     if deterministic_facts:
         model_parts.append(_DETERMINISTIC_TABLE_MODEL)

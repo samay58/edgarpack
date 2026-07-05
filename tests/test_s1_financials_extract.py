@@ -1580,6 +1580,73 @@ async def test_extract_or_load_snapshot_truncated_ok_without_gaps_stays_permanen
 
 
 # ---------------------------------------------------------------------------
+# Fix: empty-ok-retryable (an empty / fully-gated LLM array with no
+# deterministic facts is retryable, not a permanent ok with zero facts)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_empty_llm_response_is_retryable_not_ok(
+    tmp_path, monkeypatch
+):
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nRevenue 78,287")
+
+    async def empty_haiku(_section):
+        return "[]"
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", empty_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert result.extraction_status == "no_financial_data_found"
+    assert result.facts == []
+    assert result.retry_after is not None
+
+
+@pytest.mark.asyncio
+async def test_extract_or_load_snapshot_reattempts_after_empty_llm_response(tmp_path, monkeypatch):
+    pack = _write_pack(tmp_path, markdown="# Selected Financial Data\n\nRevenue 78,287")
+    past = (datetime.now(UTC) - timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "accession": pack.name,
+        "extracted_at": "2026-04-22T00:00:00Z",
+        "extraction_status": "no_financial_data_found",
+        "source_sha256": source_sha256_for_pack(pack),
+        "model": MODEL_ID,
+        "retry_after": past,
+        "facts": [],
+    }
+    (pack / "s1_financials.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    calls = {"n": 0}
+
+    async def recovering_haiku(_section):
+        calls["n"] += 1
+        return json.dumps(
+            [
+                {
+                    "fiscal_year": 2024,
+                    "period_end": "2024-12-31",
+                    "metric": "revenue",
+                    "value_cents": 7828700000,
+                    "currency": "USD",
+                    "is_audited": True,
+                    "is_pro_forma": False,
+                    "pro_forma_note": None,
+                    "source_text": "Revenue ... $78,287",
+                }
+            ]
+        )
+
+    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", recovering_haiku)
+
+    result = await extract_or_load_snapshot(pack)
+    assert calls["n"] == 1
+    assert result.extraction_status == "ok"
+    assert any(fact.metric == "revenue" for fact in result.facts)
+
+
+# ---------------------------------------------------------------------------
 # Fix 4: model-config (env overrides + one transient retry)
 # ---------------------------------------------------------------------------
 
