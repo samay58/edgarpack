@@ -111,6 +111,23 @@ def is_registration_form(form_type: str) -> bool:
     return normalized in REGISTRATION_FORMS
 
 
+def matches_registration_family(form_type: str, base: str) -> bool:
+    """Return True when `form_type` belongs to the same filing family as `base`.
+
+    `base` is an already-normalized target form (e.g. "F-1", "S-1", "10-K").
+    For the S-1 and F-1 registration families, a filer's amendment (S-1/A,
+    F-1/A) counts as the same family as its base form: "latest F-1" means
+    the newest of {F-1, F-1/A}. Every other form type requires an exact
+    normalized match, unchanged from prior behavior. Exact accession
+    pinning (`get_filing_by_accession`) bypasses this helper entirely since
+    it matches on accession number directly, not form type.
+    """
+    normalized = normalize_form_type(form_type)
+    if base in {"S-1", "F-1"}:
+        return normalized in {base, f"{base}/A"}
+    return normalized == base
+
+
 def normalize_cik(cik: str) -> str:
     """Normalize CIK to 10-digit zero-padded format."""
     return cik.lstrip("0").zfill(10)
@@ -261,38 +278,54 @@ async def get_latest_filing(
 ) -> FilingMeta:
     """Get the latest filing of a specific type.
 
+    For the S-1 / F-1 registration family, "latest" means the newest of
+    the base form and its amendment (e.g. F-1 or F-1/A), by filing date
+    with accession as a tiebreaker. Matching starts in `filings.recent`
+    and only pages into older submission files (like `get_filing_by_accession`)
+    when the family is not found there, so the common case (an active
+    filer whose target form is still in the recent window) pays no extra
+    latency.
+
     Args:
         cik: CIK number
-        form_type: Form type (10-K, 10-Q, 8-K)
+        form_type: Form type (10-K, 10-Q, 8-K, S-1, F-1, ...)
         force: Bypass cache
 
     Returns:
         FilingMeta for the latest matching filing
 
     Raises:
-        ValueError: If no matching filing found
+        ValueError: If no matching filing found across recent + all older pages.
     """
     data = await fetch_submissions(cik, force=force)
 
     cik = normalize_cik(cik)
     company_name = data.get("name", f"CIK {cik}")
-
-    filings = data.get("filings", {}).get("recent", {})
-
-    forms = filings.get("form", [])
-    accessions = filings.get("accessionNumber", [])
-    dates = filings.get("filingDate", [])
-    report_dates = filings.get("reportDate", [])
-    docs = filings.get("primaryDocument", [])
-
-    # Find matching filings
     target_form = normalize_form_type(form_type)
-    for i, form in enumerate(forms):
-        if normalize_form_type(form) == target_form:
+
+    async for page in _iter_submission_pages(data, force=force):
+        forms = page.get("form", [])
+        accessions = page.get("accessionNumber", [])
+        dates = page.get("filingDate", [])
+        report_dates = page.get("reportDate", [])
+        docs = page.get("primaryDocument", [])
+
+        best_idx: int | None = None
+        best_key: tuple[date, str] | None = None
+        for i, form in enumerate(forms):
+            if not matches_registration_family(form, target_form):
+                continue
+            key = (date.fromisoformat(dates[i]), accessions[i])
+            if best_key is None or key > best_key:
+                best_key = key
+                best_idx = i
+
+        if best_idx is not None:
+            i = best_idx
             return FilingMeta(
                 cik=cik,
                 accession=accessions[i],
-                form_type=form,
+                form_type=forms[i],
                 filing_date=date.fromisoformat(dates[i]),
                 primary_document=docs[i],
                 company_name=company_name,
