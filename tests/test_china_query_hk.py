@@ -62,13 +62,13 @@ def test_minimax_query_preserves_non_sec_source_provenance():
     revenue = result.metrics["revenue"]
 
     # Fixture PDFs are untracked (sections + facts.json only), so provenance
-    # degrades to the manifest pdf_url and source_document is empty. Phase 2 of
-    # docs/STREAMLINE-PLAN.md replaces this fixture fallback with a
-    # configurable China pack root.
+    # degrades to the manifest pdf_url and source_document is empty.
     assert revenue.primary_link_type == "source_url"
     assert revenue.primary_link.endswith("source.pdf")
     assert revenue.source_document == ""
-    assert revenue.filed.isoformat() == "2024-12-31"
+    # The fixture manifest states announcement_date: "N/A", so there is no real
+    # filing date to carry; filed must be None rather than a fabricated year-end.
+    assert revenue.filed is None
     assert revenue.source == "regex"
     assert revenue.section_id == "hkex_income_statement"
     assert "sec.gov" not in revenue.primary_link

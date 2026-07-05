@@ -2058,24 +2058,23 @@ def _china_manifest_filed_date(
     manifest: dict[str, Any],
     point: dict[str, Any],
 ) -> _date | None:
+    """Return the pack's real announcement/filing date, or None.
+
+    Never synthesizes a date from the fiscal year or period end: a filing date
+    invented from the year-end is false provenance. Callers leave ``filed``
+    absent when this returns None.
+    """
     filing = manifest.get("filing", {}) if isinstance(manifest.get("filing"), dict) else {}
     for candidate in (
         point.get("filed"),
         filing.get("filing_date"),
         manifest.get("announcement_date"),
         manifest.get("filing_date"),
-        point.get("end"),
     ):
         parsed = _parse_china_date(candidate)
         if parsed is not None:
             return parsed
-    fiscal_year = point.get("fy") or manifest.get("fiscal_year")
-    if not isinstance(fiscal_year, int | str):
-        return None
-    try:
-        return _date(int(str(fiscal_year)), 12, 31)
-    except (TypeError, ValueError):
-        return None
+    return None
 
 
 def _normalize_china_fact_provenance(
