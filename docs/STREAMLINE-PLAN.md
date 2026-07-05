@@ -12,7 +12,7 @@ Decided 2026-07-05 after a three-agent audit (China Lens code reality, S-1/F-1 r
 ## Status
 
 - Phase 0 routing spike: DONE 2026-07-05. Bare A-share codes route correctly to the SSE path for configured and unconfigured codes; the 2026-04-27 research note recorded pre-fix behavior fixed the same day by 54e0214. No routing fix needed. Vestigial `resolved = _synthetic_sse_company(...)` at `cli.py:2447-2448` (never read); remove during Phase 2.
-- Phase 0 pymupdf4llm spike: running.
+- Phase 0 pymupdf4llm spike: DONE 2026-07-05. Five real CNINFO filings (Moutai, XGIMI, BYD, SigmaStar, Wuliangye) built end to end. Verdict: pymupdf4llm is a sound foundation for the text/section layer on modern filings across all three boards (no OCR needed post-2007, sections clean); the regex facts layer on top of it is not (2 correct / 1 empty / 1 confidently-wrong). Worst case reproduced: BYD FY2025 revenue returned as a fully cited ¥80.00 (an ESG ratio row). New Phase 2 items added below from this spike. Phase 3 sign-off requires a 20-30 filer sweep. Artifacts under the session scratchpad `sse-spike/`.
 - Phase 1 cut: DONE 2026-07-05 on branch `streamline/phase1-cut` (5 commits, gate green incl. SYMPHONY_WEB=1). ~4,600 LOC deleted.
 - Phase 2, Phase 3: not started.
 
@@ -46,7 +46,11 @@ Tests to adjust: `test_china_api.py`, `test_api_exports.py` become observatory-o
 ## Phase 2: trust (the correctness cluster, TDD, workflow fan-out with adversarial verify)
 
 China (all pinned at file:line in `docs/BACKLOG.md` and `docs/rebuild/decisions/known_bad_current_behavior.md`):
-- SSE 万元/scale detection (`sse/annual_facts.py`): currently unit hardcoded CNY, values raw, 10^4 risk. Fail closed when 单位 marker unrecognized.
+- Rebuild the SSE facts extraction contract (`sse/annual_facts.py`), per the Phase 0 spike: extract from the 第二节 key-financials table only (substring matching over all sections pulled ESG ratios and parent-company rows into Revenue); handle the empty SZSE header corner cell (`_split_row` at `:57` strips it, shifting BYD's whole year map one column left); reset `current_years` at table boundaries (`:105`, quarterly tables inherit the annual year map); emit at most one point per (concept, fiscal_year); cross-validate against the table's own YoY% column; strip backtick code spans in `_clean_cell` (mono-font digits zeroed out SigmaStar extraction, silently).
+- SSE 万元/scale detection (`sse/annual_facts.py`): currently unit hardcoded CNY, values raw. Modern key tables are 单位:元, but each filing carries 6-13 万元-denominated MD&A tables the current matcher can ingest at 1/10,000 scale. Fail closed when the 单位 marker is unrecognized.
+- Fix CNINFO `--latest-annual` selection (`china/acquire/cninfo.py:269`): use the orgId-based `stock=` parameter instead of `searchkey=` full-text (which served Wuliangye's FY2005 scanned report as "latest"); exclude 英文版 filings from `_is_full_annual_report`; add a staleness floor on the selected filing.
+- Query-side China fact selection (`query/periods.py:164-166,324`): frame-tagged duplicates share an identical (fy, filed) sort key, so document order decides which point wins. Make selection deterministic and prefer the key-table point; a contaminated point must lose or the result must go to None + diagnostic.
+- OCR is an undeclared system dependency: pymupdf4llm silently shells to Tesseract on image-heavy pages, and a missing chi_sim model injected junk into a pack. Detect and fail loudly (or skip with a build warning naming the dependency).
 - FX fiscal-year average (`fx/convert.py:71-73`): average monthly rows across the period; needs an independent FY-average oracle for the golden USD numbers.
 - Real HK fiscal periods (`hk/extract.py:577-578, 622-623`): carry actual period end; instants for balance-sheet facts.
 - China `filed` date (`financials.py:2076, 2111-2113`): stop fabricating Dec-31; un-enshrine the test.
@@ -72,6 +76,8 @@ S-1/F-1 (audit P0/P1s; all in `edgarpack/query/s1_financials.py` unless noted):
 ## Phase 3: build (coverage + flexibility)
 
 - `build-hk` CLI: real HKEX acquisition (rework `hk/acquire.py`), metadata from filing/universe.toml instead of the hardcoded 6-company dict.
+- Any-ticker query for built packs: `query` currently refuses A-share codes absent from `universe.toml` even after `build-sse` succeeded ad hoc; discover built China packs from the pack root/registry instead.
+- Consider coordinate-based `find_tables` (pymupdf) for the SSE facts layer instead of re-parsing rendered markdown; the durable fix for font-dependent artifacts. Gate Phase 3 sign-off on a 20-30 filer sweep (per-filer variance was high in the 5-filer spike).
 - Harvest China lanes (CNINFO + HKEX) so coverage refreshes; today `harvest/` is SEC-only.
 - SSE extraction widened past 4 metrics; interim-report support so `ltm`/`mrq` mean something for China filers.
 - Dual-listing linkage in `universe.toml` schema (BABA 20-F vs 9988.HK cross-market query).
