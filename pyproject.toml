@@ -35,6 +35,8 @@ sse = [
     "pypinyin>=0.53",
     "httpx>=0.27",
 ]
+llm = ["anthropic>=0.40"]
+# Deprecated alias for [llm]; kept so existing install instructions keep working.
 vlm = ["anthropic>=0.40"]
 dev = [
     "pytest>=8.0",

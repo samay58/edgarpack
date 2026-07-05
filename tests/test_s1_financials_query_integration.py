@@ -582,7 +582,7 @@ async def test_financials_extracts_newest_s1_before_using_old_cached_snapshot(
     async def should_not_call_llm(_section):
         raise AssertionError("latest Cerebras summary table should parse deterministically")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", should_not_call_llm)
 
     import sys
 
@@ -696,7 +696,9 @@ async def test_augment_emits_diagnostic_for_failed_extraction_status(tmp_path, m
             detail="overloaded: 429",
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials.extract_or_load_snapshot", failed_extract)
+    monkeypatch.setattr(
+        "edgarpack.query.registration.integrate.extract_or_load_snapshot", failed_extract
+    )
 
     await augment_with_s1_snapshot(
         result=result,
