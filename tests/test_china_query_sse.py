@@ -212,6 +212,72 @@ def test_unknown_a_share_like_code_reports_missing_china_pack(tmp_path):
         )
 
 
+def test_sse_provenance_threads_form_and_filed_into_json_full(tmp_path):
+    """A fact point missing its own form/filed inherits both from the pack
+    manifest's filing.form_type / filing.filing_date, not just filed alone."""
+    pack_root = tmp_path / "packs"
+    pack_dir = pack_root / "sse" / "601988" / "601988_2025-03-28"
+    pack_dir.mkdir(parents=True)
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "filing": {
+                    "company_name": "China Merchants Bank",
+                    "filing_date": "2025-03-28",
+                    "form_type": "ANNUAL-REPORT",
+                    "stock_code": "601988",
+                    "exchange": "SSE",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pack_dir / "facts.json").write_text(
+        json.dumps(
+            {
+                "source": "SSE",
+                "exchange": "SSE",
+                "stock_code": "601988",
+                "company": "China Merchants Bank",
+                "facts": {
+                    "cas": {
+                        "Revenue": {
+                            "label": "Revenue",
+                            "units": {
+                                "CNY": [
+                                    {
+                                        "start": "2024-01-01",
+                                        "end": "2024-12-31",
+                                        "fy": 2024,
+                                        "fp": "FY",
+                                        "accn": "601988_2025-03-28",
+                                        "extraction_method": "regex:annual_table",
+                                        "val": 1000.0,
+                                    }
+                                ]
+                            },
+                        }
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = asyncio.run(
+        financials(company="601988", metrics="revenue", period="lfy", pack_root=pack_root)
+    )
+    revenue = result.metrics["revenue"]
+
+    assert revenue.form_type == "ANNUAL-REPORT"
+    assert revenue.filed is not None
+    assert revenue.filed.isoformat() == "2025-03-28"
+
+    payload = revenue.to_cited_dict()
+    assert payload["form_type"] == "ANNUAL-REPORT"
+    assert payload["filed"] == "2025-03-28"
+
+
 def test_known_sse_without_pack_gives_build_next_step(tmp_path):
     with pytest.raises(FileNotFoundError) as excinfo:
         asyncio.run(
