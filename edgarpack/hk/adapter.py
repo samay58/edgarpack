@@ -9,6 +9,10 @@ from ..china.extract.pdf_extract import extract_pdf_pages
 from . import load_section_map
 from .acquire import HKFilingRef, download_pdf
 
+class UnknownHKFilerError(ValueError):  # noqa: N818
+    """Raised when a stock code has no entry in _COMPANY_META."""
+
+
 _COMPANY_META: dict[str, dict[str, str]] = {
     "00700": {
         "name": "Tencent Holdings",
@@ -120,14 +124,22 @@ def build_hk_pack(ref: HKFilingRef, out_dir: Path) -> PackRef:
         for s in sections:
             f.write(json.dumps(s) + "\n")
 
-    meta = _COMPANY_META.get(ref.stock_code, {})
+    meta = _COMPANY_META.get(ref.stock_code)
+    if meta is None:
+        raise UnknownHKFilerError(
+            f"No HKEX filer metadata for stock code {ref.stock_code!r}. "
+            f"Add an entry to _COMPANY_META in edgarpack/hk/adapter.py giving "
+            f"the company name, reporting_currency, and accounting_standard "
+            f"before building this pack; defaulting to CNY/HKFRS would invent "
+            f"the reporting currency and standard."
+        )
     manifest = {
         "source": "HKEX",
         "stock_code": ref.stock_code,
         "fiscal_year": ref.fiscal_year,
-        "company": meta.get("name", ref.stock_code),
-        "reporting_currency": meta.get("reporting_currency", "CNY"),
-        "accounting_standard": meta.get("accounting_standard", "HKFRS"),
+        "company": meta["name"],
+        "reporting_currency": meta["reporting_currency"],
+        "accounting_standard": meta["accounting_standard"],
         "pdf_url": ref.pdf_url,
         "announcement_date": ref.announcement_date,
     }

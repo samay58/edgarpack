@@ -1,10 +1,12 @@
 import json
 from unittest.mock import patch
 
+import pytest
+
 from edgarpack.china.extract.pdf_extract import ExtractedPage
 from edgarpack.china.models import ExtractionMethod
 from edgarpack.hk.acquire import HKFilingRef
-from edgarpack.hk.adapter import PackRef, build_hk_pack
+from edgarpack.hk.adapter import PackRef, UnknownHKFilerError, build_hk_pack
 
 
 def _page(num: int, text: str) -> ExtractedPage:
@@ -116,3 +118,29 @@ def test_build_hk_pack_uses_meituan_metadata(tmp_path):
     assert manifest["company"] == "Meituan"
     assert manifest["reporting_currency"] == "CNY"
     assert manifest["accounting_standard"] == "HKFRS"
+
+
+def test_build_hk_pack_raises_for_unknown_filer(tmp_path):
+    ref = HKFilingRef(
+        stock_code="09999",
+        fiscal_year=2024,
+        pdf_url="https://example/9999.pdf",
+        announcement_date="01/01/2025",
+    )
+    out_dir = tmp_path / "unknown"
+    fake_pdf = tmp_path / "u.pdf"
+    fake_pdf.write_bytes(b"%PDF-1.4\n")
+
+    with (
+        patch("edgarpack.hk.adapter._download_pdf", return_value=fake_pdf),
+        patch(
+            "edgarpack.hk.adapter.extract_pdf_pages",
+            return_value=[_page(1, "CHAIRMAN'S STATEMENT\n\nBody.")],
+        ),
+        pytest.raises(UnknownHKFilerError) as exc,
+    ):
+        build_hk_pack(ref, out_dir)
+
+    message = str(exc.value)
+    assert "09999" in message
+    assert "_COMPANY_META" in message
