@@ -131,6 +131,7 @@ def convert_cited_to_usd(
             convention=convention,  # type: ignore[arg-type]
             rates=rates,
             period_end=cited.period_end if convention == "average" else None,
+            period_start=cited.period_start if convention == "average" else None,
         )
     except (RateNotFound, NotImplementedError):
         return None

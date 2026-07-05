@@ -15,6 +15,8 @@ import pytest
 
 from edgarpack.fx.convert import RateNotFound, convert
 from edgarpack.fx.rates import MonthlyRate, RateTable
+from edgarpack.query.currency import convert_cited_to_usd
+from edgarpack.query.models import CitedValue
 
 _MONTHLY_AVERAGE = {
     1: 0.90,
@@ -119,3 +121,39 @@ def test_missing_month_inside_period_fails_closed():
             period_start=dt.date(2021, 1, 1),
             period_end=dt.date(2021, 12, 31),
         )
+
+
+def _flow_cited_value() -> CitedValue:
+    return CitedValue(
+        value=1_000_000,
+        unit="XXX",
+        metric="revenue",
+        concept="Revenues",
+        period_start=dt.date(2021, 1, 1),
+        period_end=dt.date(2021, 12, 31),
+        fiscal_year=2021,
+        fiscal_period="FY",
+        form_type="10-K",
+        filed=dt.date(2022, 2, 1),
+        accession="0000000000-22-000001",
+        cik="0000000000",
+        company="Test Co",
+    )
+
+
+def test_convert_cited_to_usd_uses_period_average_not_end_month():
+    # Regression for fx-production-wiring: convert_cited_to_usd is the sole
+    # production caller of convert() and must pass period_start through for
+    # "average" convention, so a flow value spanning a full fiscal year
+    # converts at the multi-month mean, not sampled off the end-month rate.
+    rates = _synthetic_rates()
+    cited = _flow_cited_value()
+
+    fx = convert_cited_to_usd(cited, rates=rates)
+
+    assert fx is not None
+    expected_rate = sum(_MONTHLY_AVERAGE.values()) / 12
+    end_month_rate = _MONTHLY_AVERAGE[12]
+    assert fx.rate_used == pytest.approx(expected_rate)
+    assert fx.rate_used != pytest.approx(end_month_rate)
+    assert fx.usd_value == pytest.approx(1_000_000 * expected_rate)

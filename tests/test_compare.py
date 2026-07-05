@@ -242,7 +242,7 @@ def test_compare_currency_native_respects_flag():
 
     assert r.returncode == 0, r.stderr
     assert "¥312.4M" in r.stdout
-    assert "$42.9M" not in r.stdout
+    assert "$43.4M" not in r.stdout
     assert "FX:" not in r.stdout
 
 
@@ -259,7 +259,7 @@ def test_compare_currency_usd_shows_native_fx_provenance():
     )
 
     assert r.returncode == 0, r.stderr
-    assert "$42.9M" in r.stdout
+    assert "$43.4M" in r.stdout
     assert "native: ¥312.4M" in r.stdout
     assert "FX: data/fx_rates.csv CNY/USD 2024-12-31 average" in r.stdout
 

@@ -1947,6 +1947,12 @@ def _china_stock_code(resolved: object) -> str:
     return str(stock_code or "").strip()
 
 
+# Once-per-process guard so a stale exported EDGARPACK_CHINA_PACK_ROOT warns
+# instead of silently redirecting every China pack lookup for the rest of
+# the run.
+_CHINA_PACK_ROOT_ENV_WARNED: set[str] = set()
+
+
 def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) -> Path | None:
     """Find a local China pack for HKEX/SSE query paths."""
     source = str(getattr(resolved, "source", "") or "").upper()
@@ -1979,6 +1985,13 @@ def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) ->
     # not a hardcoded constant.
     china_pack_root = os.environ.get("EDGARPACK_CHINA_PACK_ROOT")
     if china_pack_root and source == "HKEX":
+        if "EDGARPACK_CHINA_PACK_ROOT" not in _CHINA_PACK_ROOT_ENV_WARNED:
+            _CHINA_PACK_ROOT_ENV_WARNED.add("EDGARPACK_CHINA_PACK_ROOT")
+            logger.warning(
+                "EDGARPACK_CHINA_PACK_ROOT override active: China pack discovery "
+                "is redirected to %s",
+                china_pack_root,
+            )
         root_dir = Path(china_pack_root)
         if root_dir.is_dir():
             names: set[str] = set()

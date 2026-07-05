@@ -13,14 +13,13 @@ from __future__ import annotations
 import asyncio
 import math
 from dataclasses import dataclass
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
 import yaml
 
-from edgarpack.fx.convert import convert
 from edgarpack.fx.rates import load_rates
+from edgarpack.query.currency import convert_cited_to_usd
 from edgarpack.query.financials import financials
 
 GOLDEN_PATH = Path(__file__).parent / "eval" / "china_golden.yaml"
@@ -168,20 +167,19 @@ def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
                 pytrace=False,
             )
     else:
+        # Go through the production conversion path (convert_cited_to_usd),
+        # not a hand-rolled convert() call, so the goldens exercise the
+        # exact code every --currency usd surface (query/comps/compare)
+        # actually runs.
         rates = load_rates(FX_PATH)
-        convention = case.fx_convention or "average"
-        period_end = cited.period_end
-        converted = convert(
-            value=Decimal(str(cited.value)),
-            from_ccy=cited.reporting_currency,
-            to_ccy="USD",
-            as_of=period_end,
-            convention=convention,  # type: ignore[arg-type]
-            rates=rates,
-            period_end=period_end,
-            period_start=cited.period_start,
-        )
-        actual = converted.converted_value
+        fx = convert_cited_to_usd(cited, metric=case.metric, rates=rates)
+        if fx is None:
+            pytest.fail(
+                f"{_case_id(case)}: convert_cited_to_usd returned None "
+                "(unsupported currency or missing FX rate)",
+                pytrace=False,
+            )
+        actual = fx.usd_value
         if case.expected is None:
             pytest.fail(
                 f"{_case_id(case)}: golden USD value is null but xfail was not set",
@@ -189,7 +187,7 @@ def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
             )
         if not math.isclose(actual, case.expected, rel_tol=USD_REL_TOL):
             pytest.fail(
-                _fail_block(case, actual, rate_used=converted.rate_used),
+                _fail_block(case, actual, rate_used=fx.rate_used),
                 pytrace=False,
             )
 

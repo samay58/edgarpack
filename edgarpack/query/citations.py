@@ -15,6 +15,22 @@ def _period_str(cited: Any) -> str:
     return f"{start}/{end}" if start else str(end)
 
 
+def _filed_str(cited: Any) -> str | None:
+    """ISO date string for a component's ``filed``, or ``None`` when unset.
+
+    Some China packs carry no manifest announcement date, so ``filed`` is
+    legitimately ``None``. Serializing it must emit JSON null, not the
+    literal string ``"None"``.
+    """
+    filed = getattr(cited, "filed", None)
+    if not filed:
+        return None
+    isoformat = getattr(filed, "isoformat", None)
+    if callable(isoformat):
+        return str(isoformat())
+    return str(filed)
+
+
 def _is_derived(item: Any) -> bool:
     return bool(getattr(item, "derived", False)) and isinstance(
         getattr(item, "components", None),
@@ -98,7 +114,7 @@ class CitationRegistry:
                 "period": _period_str(component),
                 "accession": getattr(component, "accession", ""),
                 "form_type": getattr(component, "form_type", ""),
-                "filed": str(getattr(component, "filed", "")),
+                "filed": _filed_str(component),
                 "primary_link": getattr(component, "primary_link", ""),
                 "primary_link_type": getattr(component, "primary_link_type", ""),
             }
