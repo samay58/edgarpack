@@ -97,6 +97,15 @@ Acceptance scenario for Phase 3: on a cold machine, `edgarpack query BYD revenue
 - Curated starter universe (~50 recognizable China names: BYD, Moutai, CATL, Tencent, Xiaomi, ...) as the coverage seed; doubles as the 20-30+ filer Phase 3 sweep corpus.
 - S-1/F-1: split the 1,628-line module (deterministic parser / LLM extraction+cache / query integration); pydantic-validate LLM rows; unify `pick_snapshot_fact` + `_pick_snapshot_candidate`; rename `vlm` extra or wire vision; golden fixtures from 3-4 real filings (Cerebras S-1, one IFRS F-1, one non-calendar-FY filer); registration metric expansion (diluted shares, dilution, use of proceeds, offering terms).
 
+## Phase 4: close-out (registered directive, Samay 2026-07-05; run when Phase 3 completes)
+
+Trigger: Wave A merged, re-sweep gate passed, and the build-hk-construct decision made (shipped or explicitly deferred). Then, in order:
+
+1. **Tight and polished, no AI slop shipped.** Full quality gate (ruff, mypy strict, offline suite, SYMPHONY_WEB build). Adversarial review pass over the accumulated Phase 3 diff (opus refuters, findings verified before acting). A dedicated slop sweep against the kill list in ~/.claude/CLAUDE.md over every shipped prose surface: docs touched this effort (STREAMLINE-PLAN, specs, QUERY/S1/OBSERVATORY updates), README, CLI user-facing strings and error messages, and code comments/docstrings (delete formulaic ones rather than rewrite). Run slopcheck.py on self-authored docs. Fable takes the final taste pass on diffs only.
+2. **Consolidate.** Prune all worktrees; worktrees themselves are disposable checkouts, the BRANCHES are what merge: fold any unmerged packet branches or drop them deliberately, then delete merged phase2/phase3 branches. Update CLAUDE.md and docs to match the shipped reality (removed China workspace/api surfaces, new commands, new package layout). Refresh project memory (MEMORY.md) to the post-streamline state. Final ledger entry: totals by tier, Fable share, all-Fable counterfactual, per the doctrine's promotion checklist.
+3. **Push to main properly.** Merge the stack (phase1-cut -> phase2-trust -> phase3-build) into main, run the full gate ON main before pushing, push. No force-push; the branch history is the audit trail.
+4. **Production surfaces updated.** The PARSER_VERSION bumps (0.2.1 -> 0.2.3) stale-key the existing pack corpus and diff caches: decide refresh scope, then re-run harvest (now with China lanes) and incremental index, regenerate the static site, and confirm the daily-refresh launchd job still points at a valid checkout and binary. Verify with a readback: one SEC query, one A-share query, one HK query (if shipped), one diff report, all from the refreshed corpus.
+
 ## Acceptance gates
 
 - Every phase: `scripts/symphony_quality_gate.sh` green (Phase 1 also with `SYMPHONY_WEB=1`).
