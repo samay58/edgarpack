@@ -69,6 +69,34 @@ def test_extract_facts_from_pack_writes_facts_json(tmp_path):
     )
 
 
+def test_extract_facts_from_pack_serializes_matched_label(tmp_path):
+    pack_dir = tmp_path / "pack"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    (sections_dir / "hkex_income_statement.md").write_text(
+        "# Consolidated Statement of Profit or Loss\n\nTotal revenue          US$  71,200,000\n"
+    )
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "source": "HKEX",
+                "stock_code": "00100",
+                "fiscal_year": 2024,
+                "accounting_standard": "HKFRS",
+                "reporting_currency": "USD",
+                "company": "Test Company",
+                "pdf_url": "",
+                "announcement_date": "",
+            }
+        )
+    )
+
+    facts_path = extract_facts_from_pack(pack_dir)
+    data = json.loads(facts_path.read_text())
+    revenue = data["facts"]["hkfrs"]["Revenue"]["units"]["USD"][0]
+    assert revenue["matched_label"] == "total revenue"
+
+
 def test_commaless_values_keep_year_alignment():
     # 618 has no thousands comma. The old parser dropped it, shifting every
     # later column one year to the left (2023's value cited as FY2024).

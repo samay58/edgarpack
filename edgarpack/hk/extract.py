@@ -623,6 +623,7 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
                 "accn": accession,
                 "extraction_method": fact.extraction_method,
                 "section_id": fact.section_id,
+                "matched_label": fact.matched_label,
             }
         )
 
