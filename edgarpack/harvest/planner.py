@@ -21,14 +21,18 @@ from .universe import UniverseConfig
 class HarvestItem(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
-    cik: str
+    cik: str | None = None
     ticker: str
     company_name: str
-    accession: str
+    accession: str | None = None
     form_type: str
     filing_date: str
-    primary_document: str
+    primary_document: str | None = None
     already_built: bool = False
+    # SSE (A-share) items carry market/stock_code instead of cik/accession;
+    # SEC items leave both None.
+    market: str | None = None
+    stock_code: str | None = None
 
 
 class PlanError(BaseModel):
@@ -85,6 +89,34 @@ async def plan_harvest(
     for spec in universe.companies:
         if spec.private:
             continue
+
+        if spec.listing == "SSE":
+            # HKEX is not planned here; that lane waits on build-hk and will
+            # need its own branch once an HKEX harvest path exists.
+            if not spec.stock_code:
+                msg = "SSE entries require a stock_code to plan an annual-report harvest"
+                errors.append(
+                    PlanError(ticker=spec.display_label, form_type="ANNUAL-REPORT", error=msg)
+                )
+                print(f"  SKIP {spec.display_label}: {msg}", file=sys.stderr)
+                continue
+
+            items.append(
+                HarvestItem(
+                    cik=None,
+                    ticker=(spec.ticker or spec.stock_code).upper(),
+                    company_name=spec.name or spec.display_label,
+                    accession=None,
+                    form_type="ANNUAL-REPORT",
+                    filing_date="",
+                    primary_document=None,
+                    already_built=False,
+                    market="SSE",
+                    stock_code=spec.stock_code,
+                )
+            )
+            continue
+
         try:
             resolved_cik, _title = await resolve_filer(spec)
         except Exception as e:

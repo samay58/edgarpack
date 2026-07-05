@@ -126,6 +126,72 @@ def test_list_companies():
     registry.close()
 
 
+def test_sse_migration_is_idempotent():
+    registry = _make_registry()
+    # _ensure_schema() already ran once in __init__; run the migration list
+    # again directly to confirm it tolerates a second application.
+    conn = registry._get_conn()
+    registry._run_migrations(conn)
+    registry._run_migrations(conn)
+
+    row = conn.execute("PRAGMA table_info(packs)").fetchall()
+    columns = {r["name"] for r in row}
+    assert "market" in columns
+    assert "stock_code" in columns
+
+    registry.close()
+
+
+def test_register_sse_pack_round_trips():
+    registry = _make_registry()
+    registry.register(
+        accession="SSE:688696:2026-03-20",
+        cik="SSE:688696",
+        ticker="688696",
+        company_name="Chengdu XGIMI Technology Co., Ltd.",
+        form_type="ANNUAL-REPORT",
+        filing_date="2026-03-20",
+        sections_count=12,
+        tokens_total=45000,
+        pack_dir="/tmp/packs/688696/2026-annual",
+        market="SSE",
+        stock_code="688696",
+    )
+
+    record = registry.lookup("SSE:688696:2026-03-20")
+    assert record is not None
+    assert record.market == "SSE"
+    assert record.stock_code == "688696"
+
+    assert registry.has_sse_filing("688696", "2026-03-20")
+    assert not registry.has_sse_filing("688696", "2025-03-20")
+    assert not registry.has_sse_filing("000001", "2026-03-20")
+
+    registry.close()
+
+
+def test_sec_rows_leave_market_and_stock_code_null():
+    registry = _make_registry()
+    registry.register(
+        accession="0001045810-25-000042",
+        cik="0001045810",
+        ticker="NVDA",
+        company_name="NVIDIA CORP",
+        form_type="10-K",
+        filing_date="2025-02-26",
+        sections_count=22,
+        tokens_total=156000,
+        pack_dir="/tmp/packs/0001045810",
+    )
+
+    record = registry.lookup("0001045810-25-000042")
+    assert record is not None
+    assert record.market is None
+    assert record.stock_code is None
+
+    registry.close()
+
+
 def test_get_stats():
     registry = _make_registry()
     registry.register(
