@@ -8,12 +8,13 @@ config load time, not query time.
 
 from __future__ import annotations
 
+import dataclasses
 import difflib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
-from .errors import AmbiguousCompany, UnknownCompany
+from .errors import AmbiguousCompany, UnknownCompany, VenueNotAvailable
 from .harvest.universe import CompanySpec, load_universe
 
 __all__ = [
@@ -22,9 +23,13 @@ __all__ = [
     "ResolvedCompany",
     "Source",
     "UnknownCompany",
+    "VenueNotAvailable",
     "load_identity",
     "looks_like_china_a_share_code",
     "resolve",
+    "select_venue",
+    "ticker_for_venue",
+    "venue_identifier",
 ]
 
 Source = Literal["SEC", "HKEX", "SSE"]
@@ -95,7 +100,11 @@ def _resolved_for(spec: CompanySpec, ticker: str) -> ResolvedCompany:
         source=_source_for(spec, ticker),
         cik=cik,
         hk_stock_code=spec.hk_stock_code,
-        stock_code=spec.stock_code or spec.hk_stock_code,
+        # No fallback to hk_stock_code here: stock_code is the SSE identity,
+        # hk_stock_code is the HKEX identity. A dual-listed spec (e.g. one
+        # SEC + HKEX, no A-share) must NOT have its HKEX code leak into the
+        # SSE-specific field just because stock_code was left unset.
+        stock_code=spec.stock_code,
         aliases=display_aliases,
         private=spec.private,
     )
@@ -116,9 +125,11 @@ def load_identity(path: Path) -> IdentityIndex:
             continue
 
         primary = _resolved_for(spec, primary_key)
-        ticker_inserts = []
-        if spec.ticker:
-            ticker_inserts.append((spec.ticker, primary))
+        # primary_key is always ticker-resolvable, even when spec.ticker is
+        # unset. A dual-listed entry with no single privileged ticker (e.g.
+        # cik as the neutral anchor, ADR/HK symbols both in alt_tickers)
+        # still needs its anchor identifier to resolve as a "ticker" lookup.
+        ticker_inserts = [(primary_key, primary)]
         for alt in spec.alt_tickers:
             ticker_inserts.append((alt, _resolved_for(spec, alt)))
         for raw_ticker, resolved in ticker_inserts:
@@ -189,3 +200,123 @@ def resolve(
     raise UnknownCompany(
         f"Unknown company {company!r}. Did you mean: {', '.join(rendered) or 'none'}?"
     )
+
+
+_VENUE_NOTE: dict[Source, str] = {
+    "SEC": "SEC EDGAR filings",
+    "HKEX": "HKEX filings",
+    "SSE": "CNINFO annual reports",
+}
+
+_VENUE_ABSENCE: dict[Source, str] = {
+    "SEC": "does not file with the SEC",
+    "HKEX": "does not have an HKEX listing",
+    "SSE": "does not file with the SSE",
+}
+
+
+def _venue_key(venue: str) -> Source:
+    key = venue.strip().upper()
+    if key not in ("SEC", "HKEX", "SSE"):
+        raise ValueError(f"Unknown venue {venue!r}. Choose one of: sec, hkex, sse.")
+    return cast(Source, key)
+
+
+def venue_identifier(resolved: ResolvedCompany, venue: str) -> str | None:
+    """The identifier `resolved` carries for `venue`, or None if unpopulated."""
+    key = _venue_key(venue)
+    if key == "SEC":
+        return resolved.cik
+    if key == "HKEX":
+        return resolved.hk_stock_code
+    return resolved.stock_code
+
+
+def _display_name(resolved: ResolvedCompany) -> str:
+    if resolved.aliases:
+        first = resolved.aliases[0].strip()
+        if first:
+            return first
+    return resolved.ticker
+
+
+def select_venue(resolved: ResolvedCompany, venue: str) -> ResolvedCompany:
+    """Apply an explicit venue override (the CLI's --venue flag).
+
+    Raises VenueNotAvailable, teaching every venue the entry DOES carry an
+    identifier for, when the requested one is absent. On success, returns a
+    ResolvedCompany carrying only the chosen venue's identity: the other two
+    of {cik, hk_stock_code, stock_code} are nulled out so a downstream reader
+    cannot accidentally pick up an identifier from a different listing.
+    """
+    key = _venue_key(venue)
+    identifier = venue_identifier(resolved, key)
+    if not identifier:
+        # List the entry's own default venue first (matching how a user
+        # thinks of the company), then the rest in a fixed order.
+        try:
+            default = _venue_key(resolved.listing) if resolved.listing else None
+        except ValueError:
+            default = None
+        order = list(dict.fromkeys([v for v in (default, "SEC", "HKEX", "SSE") if v]))
+        available = [
+            f"{v.lower()} ({code}, {_VENUE_NOTE[v]})"
+            for v in order
+            if (code := venue_identifier(resolved, v))
+        ]
+        raise VenueNotAvailable(
+            f"{_display_name(resolved)} {_VENUE_ABSENCE[key]}. "
+            f"Available: {', '.join(available) or 'none'}."
+        )
+    return dataclasses.replace(
+        resolved,
+        listing=key,
+        source=key,
+        cik=identifier if key == "SEC" else None,
+        hk_stock_code=identifier if key == "HKEX" else None,
+        stock_code=identifier if key == "SSE" else None,
+    )
+
+
+def ticker_for_venue(index: IdentityIndex, resolved: ResolvedCompany, venue: str) -> str | None:
+    """Find a ticker key that independently re-resolves to `venue`.
+
+    Callers that only accept a plain company string (financials(), the
+    identify command's ADR-symbol display) use this instead of threading a
+    ResolvedCompany through, so those functions need no changes: whatever
+    string this returns, re-resolving it lands on the requested venue slice
+    of the same dual-listed company.
+    """
+    key = _venue_key(venue)
+    if key == "SSE":
+        # A bare 6-digit A-share code always re-resolves, independent of
+        # universe.toml ticker registration, via the china-a-share-code
+        # passthrough in financials(). No need to search for a ticker key,
+        # and no ADR-style symbol is more "correct" here than the code.
+        return venue_identifier(resolved, key)
+
+    identity_key = (resolved.cik, resolved.hk_stock_code, resolved.stock_code)
+    candidates = [
+        ticker
+        for ticker, candidate in index.by_ticker.items()
+        if candidate.source == key
+        and (candidate.cik, candidate.hk_stock_code, candidate.stock_code) == identity_key
+    ]
+    if not candidates:
+        # No ticker/alt_ticker independently routes here (e.g. a populated
+        # hk_stock_code with no ".HK" alt_ticker on file). Best effort: reuse
+        # resolved.ticker if it already sits at this venue, else the bare
+        # identifier (unlikely to resolve for HKEX, but nothing better is
+        # available).
+        if resolved.source == key:
+            return resolved.ticker
+        return venue_identifier(resolved, key)
+
+    if key == "SEC":
+        # Prefer a human ticker symbol over a bare numeric key (a CIK
+        # registered as its own ticker_insert) so identify's ADR label
+        # reads "BABA", not the CIK repeated.
+        alpha = sorted(t for t in candidates if not t.replace(".", "").isdigit())
+        if alpha:
+            return alpha[0]
+    return sorted(candidates)[0]

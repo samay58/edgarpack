@@ -471,13 +471,19 @@ ticker = "EA"  # Electronic Arts
 # ============================================================
 
 [[companies]]
-ticker = "BABA"  # Alibaba
-listing = "NYSE"
-cik = "0001577552"
+# Alibaba: dual-listed. SEC (20-F, CIK 1577552) is the default venue; ADR
+# "BABA" and HKEX "9988.HK" are alt_tickers into the same entry, not
+# separate companies. Verified 2026-07-05: SEC EDGAR browse-edgar (CIK
+# 1577552 = Alibaba Group Holding Ltd, files 20-F), SEC company_tickers.json
+# (ticker BABA -> CIK 1577552), Yahoo Finance quote metadata for 9988.HK
+# ("Alibaba Group Holding Limited").
+cik = "1577552"
+hk_stock_code = "09988"
+listing = "SEC"
 forms_10q = 0
 forms_20f = 3
 aliases = ["alibaba", "alibaba group"]
-alt_tickers = ["9988.HK"]
+alt_tickers = ["BABA", "9988.HK"]
 
 [[companies]]
 ticker = "PDD"  # PDD Holdings / Pinduoduo
@@ -488,13 +494,33 @@ forms_20f = 3
 aliases = ["pinduoduo", "pdd holdings"]
 
 [[companies]]
-ticker = "JD"  # JD.com
-listing = "NASDAQ"
-cik = "0001549802"
+# JD.com: dual-listed. SEC (20-F, CIK 1549802) is the default venue; ADR
+# "JD" and HKEX "9618.HK" are alt_tickers into the same entry. Verified
+# 2026-07-05: SEC EDGAR browse-edgar (CIK 1549802 = JD.com, Inc., files
+# 20-F), SEC company_tickers.json (ticker JD -> CIK 1549802), Yahoo Finance
+# quote metadata for 9618.HK ("JD-SW").
+cik = "1549802"
+hk_stock_code = "09618"
+listing = "SEC"
 forms_10q = 0
 forms_20f = 3
 aliases = ["jd.com", "jingdong"]
-alt_tickers = ["9618.HK"]
+alt_tickers = ["JD", "9618.HK"]
+
+[[companies]]
+# BYD: dual-listed, SSE-primary. A-share (SSE, stock code 002594) is the
+# default venue; HKEX "1211.HK" (BYD Company Limited) is the secondary
+# listing. BYD has NO SEC reporting; its US "BYDDY" symbol is an OTC ADR,
+# not an SEC filer, so it is an alt_ticker for lookup/display only, never a
+# filing venue (this entry is the deliberate --venue sec teaching-error
+# test case). Verified 2026-07-05 via Yahoo Finance quote metadata for
+# 1211.HK ("BYD COMPANY"), 002594.SZ ("BYD"), and BYDDY ("BYD Co., Ltd.").
+ticker = "002594"
+stock_code = "002594"
+hk_stock_code = "01211"
+listing = "SSE"
+aliases = ["byd", "byd company"]
+alt_tickers = ["1211.HK", "BYDDY"]
 
 [[companies]]
 ticker = "BIDU"  # Baidu
