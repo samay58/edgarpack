@@ -122,6 +122,23 @@ def _parse_year(cell: str) -> int | None:
     return int(match.group(1))
 
 
+def _is_data_row(stripped: str) -> bool:
+    """True when a table row carries actual figures (>= 2 non-year numbers).
+
+    A table's own preamble above its year header (title row, 单位 marker) has
+    no data. So a data row encountered while scanning upward for a unit marker
+    means we have crossed into a *previous* table, not this one's preamble.
+    """
+    numeric = 0
+    for cell in _split_row(stripped):
+        text = cell.strip()
+        if not text or _parse_year(text) is not None:
+            continue
+        if _parse_number(text) is not None:
+            numeric += 1
+    return numeric >= 2
+
+
 def _parse_number(cell: str) -> float | None:
     text = cell.replace(",", "").replace("，", "").replace("%", "").replace("`", "").strip()
     text = text.replace("−", "-")
@@ -199,11 +216,16 @@ def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
             match = _UNIT_SCALE_PATTERN.search(_clean_cell(lines[idx]))
             if match:
                 return _UNIT_SCALE_FACTORS[match.group(1)]
-            # A non-separator pipe row above the header (a title row, or an
-            # SSE-template in-table marker row like
-            # "|单位：元<br>币种：人民币|||||") is this table's own preamble,
-            # not a previous table's content. Keep looking upward instead of
-            # assuming it belongs to some other table.
+            if _is_data_row(stripped):
+                # A data row above our header belongs to an earlier table; our
+                # own preamble (title, 单位 marker) carries no data. Stop rather
+                # than leak a previous table's unit scale into this one, which
+                # would emit a 10,000x-wrong CNY value under a clean citation.
+                break
+            # A non-separator, data-free pipe row above the header (a title
+            # row, or an SSE-template in-table marker row like
+            # "|单位：元<br>币种：人民币|||||") is this table's own preamble.
+            # Keep looking upward instead of assuming it belongs elsewhere.
             continue
         match = _UNIT_SCALE_PATTERN.search(_clean_cell(lines[idx]))
         if match:

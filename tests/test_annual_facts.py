@@ -362,6 +362,39 @@ def test_in_table_unit_row_between_title_and_year_header_extracts(tmp_path):
     assert by_year[2023] == 900.0
 
 
+def test_unit_marker_does_not_leak_across_a_prior_table(tmp_path):
+    """A 万元 marker on an earlier small table must not scale a later markerless
+    table in the same section. Fail closed (no fact) rather than emit a
+    10,000x-wrong CNY value under a clean citation."""
+    content = """## 第二节 公司简介和主要财务指标
+
+|单位：万元|||
+|---|---:|---:|
+|加权平均净资产收益率|10|9|
+
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业收入|5000|4500|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+
+    # The second table has no unit marker of its own; the 万元 above belongs to
+    # a different table. Failing closed here means the whole section yields no
+    # facts (facts_path is None); the leak would instead emit Revenue=50,000,000.
+    if facts_path is None:
+        return
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    revenue = facts["facts"].get("cas", {}).get("Revenue")
+    if revenue is not None:
+        points = revenue["units"].get("CNY", [])
+        assert all(p["val"] != 50_000_000 for p in points), points
+
+
 def test_identical_duplicate_year_columns_with_same_value_extract_once(tmp_path):
     """Two identical-year columns (调整后/调整前) with the SAME value are one
     fact written twice, not a conflict."""

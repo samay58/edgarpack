@@ -103,11 +103,13 @@ _DECLARATIONS_PATTERN = re.compile(
     re.MULTILINE,
 )
 
-# TOC lines repeat the same heading pattern with dot leaders and a page number
-# (e.g. "第一节 释义 ...................... 5"). Without this guard the TOC
-# entry steals the real section's slug and pushes the real heading to a "_1"
-# duplicate id. Leader chars: ASCII period, ellipsis glyph, middle dot.
-_TOC_LEADER_SUFFIX = re.compile(r"[.…·]{2,}\s*\d+\s*$")
+# TOC lines repeat the same heading pattern with a page number, either behind
+# dot leaders ("第一节 释义 ............ 5") or, when PDF extraction collapses
+# the leaders to whitespace, behind a run of spaces ("**第二节 释义    5**").
+# Without this guard the TOC entry steals the real section's slug and pushes
+# the real heading to a "_1" duplicate id. Leader chars: ASCII period,
+# ellipsis glyph, middle dot; or 2+ spaces before the trailing page number.
+_TOC_LEADER_SUFFIX = re.compile(r"(?:[.…·]{2,}|\s{2,})\s*\d+\s*$")
 
 
 def _cn_num_to_int(cn: str) -> int:

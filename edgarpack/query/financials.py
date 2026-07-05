@@ -10,7 +10,10 @@ import re
 from datetime import date as _date
 from datetime import datetime as _datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from ..identity import ResolvedCompany
 
 from ..config import DEFAULT_PACKS_DIR
 from ..sec.archives import fetch_file
@@ -680,6 +683,7 @@ async def financials(
     force: bool = False,
     display_token: str | None = None,
     pack_root: Path | None = None,
+    resolved_override: ResolvedCompany | None = None,
 ) -> QueryResult:
     """Query financial metrics for a single company.
 
@@ -704,6 +708,23 @@ async def financials(
     from pathlib import Path as _Path
 
     from .. import identity as _identity
+
+    # An explicit --venue selection (a venue-narrowed ResolvedCompany) takes
+    # precedence over string re-resolution. This is load-bearing for A+H
+    # filers whose bare A-share code is shadowed by an HKEX-listed universe
+    # entry: `--venue sse` on such a filer must route to SSE, which the
+    # string path cannot express.
+    if resolved_override is not None:
+        if resolved_override.source in {"HKEX", "SSE"}:
+            return await _query_china_pack(
+                resolved_override,
+                metrics,
+                period,
+                display_token=display_token,
+                pack_root=pack_root,
+            )
+        if resolved_override.source == "SEC" and resolved_override.cik:
+            company = resolved_override.cik
 
     _universe_path = _Path("universe.toml")
     if _universe_path.exists():

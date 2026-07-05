@@ -207,6 +207,37 @@ def test_query_venue_hkex_substitutes_the_hk_alt_ticker():
     assert mock_fin.call_args.kwargs.get("display_token") == "BABA"
 
 
+def test_financials_resolved_override_routes_ah_filer_to_sse(universe_index):
+    """`--venue sse` on an A+H filer (e.g. CATL, listing HKEX, ticker 300750)
+    must route to SSE. The bare A-code alone re-resolves to HKEX (shadowed by
+    the universe entry), so financials() honors the venue-narrowed override
+    instead of the string."""
+    import asyncio
+    import importlib
+
+    # Import the module object, not the re-exported financials() function that
+    # `edgarpack.query` binds to the same name.
+    fin_mod = importlib.import_module("edgarpack.query.financials")
+
+    resolved = resolve(universe_index, ticker="300750", company=None)
+    assert resolved.source == "HKEX"  # default venue is HKEX
+    narrowed = select_venue(resolved, "sse")
+    assert narrowed.source == "SSE" and narrowed.stock_code == "300750"
+
+    seen = {}
+
+    async def _fake_china_pack(rc, *a, **k):
+        seen["source"] = rc.source
+        seen["stock_code"] = rc.stock_code
+        return SimpleNamespace(metrics={})
+
+    with patch.object(fin_mod, "_query_china_pack", new=_fake_china_pack):
+        asyncio.run(
+            fin_mod.financials(company="300750", metrics="revenue", resolved_override=narrowed)
+        )
+    assert seen == {"source": "SSE", "stock_code": "300750"}
+
+
 def test_query_venue_sec_on_byd_returns_teaching_error_without_calling_financials(
     capsys,
 ):

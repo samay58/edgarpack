@@ -352,6 +352,19 @@ def _parse_columns_plain(line: str, n_years: int) -> list[int | float | None] | 
         # Exactly one extra column and it leads with a 1-2 digit bare
         # integer: the note-reference column, not a value.
         cols = cols[1:]
+    elif (
+        len(cols) == n_years
+        and len(bare_small_int) >= 2
+        and bare_small_int[0]
+        and not bare_small_int[1]
+    ):
+        # A leading 1-2 digit bare integer followed by a real (comma'd or
+        # decimal) figure, with the grid already at the year count: the
+        # comparative cell collapsed, so this is a note reference plus one
+        # value, not two values. Which year the value belongs to is
+        # ambiguous, so fail closed rather than emit the note number as the
+        # current-year figure (a wrong cited value under a clean citation).
+        return None
     if len(cols) != n_years:
         return None
     return cols

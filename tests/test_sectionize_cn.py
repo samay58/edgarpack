@@ -311,6 +311,30 @@ def test_bold_wrapped_headings_sectionize():
     assert "annual_s03_mda" in ids
 
 
+def test_space_leader_bold_toc_is_not_a_section():
+    """A bold TOC line whose dot leaders collapsed to spaces during PDF
+    extraction ("**第二节 释义    5**") must not steal a real section's slug."""
+    md = """# 2025年年度报告
+
+**第一节 释义    3**
+**第二节 公司简介和主要财务指标    5**
+
+**第二节 公司简介和主要财务指标**
+
+主要财务指标内容。
+
+**第三节 管理层讨论与分析**
+
+管理层讨论。
+"""
+    sections = find_sections_cn(md, document_type="ANNUAL-REPORT")
+    ids = [s.id for s in sections]
+    # The space-padded TOC entries are skipped, so the real body heading keeps
+    # the canonical id (no "_1" duplicate from a stolen slug).
+    assert "annual_s02_company_profile_key_financials" in ids
+    assert "annual_s02_company_profile_key_financials_1" not in ids
+
+
 def test_cmb_split_chapters_both_map_to_key_financials_id():
     """CMB splits the CSRC template's usual compound title into two separate
     chapters: 第一章 公司简介 and 第二章 会计数据和财务指标摘要. Both must

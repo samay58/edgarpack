@@ -85,6 +85,23 @@ def test_byd_balance_sheet_split_year_header_yields_nothing_not_a_wrong_value():
     assert facts == []
 
 
+def test_blank_comparative_with_leading_note_ref_fails_closed():
+    # A first-time-disclosed line item (or a dropped comparative cell) leaves a
+    # bare note ref and one value: "... 8 12,345" with a 2-year header. The
+    # note number must not be emitted as the current-year value; which year the
+    # lone value belongs to is ambiguous, so parsing fails closed (None).
+    from edgarpack.hk.extract import _parse_columns_plain
+
+    assert _parse_columns_plain("Research and development expenses 8 12,345", 2) is None
+    # A genuine two-year row of small similar-magnitude values is unaffected.
+    assert _parse_columns_plain("Some line item 80 75", 2) == [80, 75]
+    # The note-ref-plus-two-years case still drops just the note column.
+    assert _parse_columns_plain("Research and development expenses 8 12,345 11,200", 2) == [
+        12345,
+        11200,
+    ]
+
+
 def test_anta_income_statement_all_metrics_both_years_correct():
     text = (FIXTURES / "anta_income_statement.txt").read_text()
     by = _facts_by_metric_year(text, "hkex_income_statement")

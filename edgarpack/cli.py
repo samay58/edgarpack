@@ -2269,7 +2269,11 @@ async def _ensure_sse_pack_for_query(args: Any, resolved: Any) -> int:
     from .pack.build import build_sse_pack
 
     company_name = selected.company_name or getattr(china_target, "ticker", None) or stock_code
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    # Build into a temp dir on the SAME filesystem as pack_root so the
+    # move-on-success below is an atomic rename, not a cross-device copytree
+    # (which an interrupt could leave half-populated under the real root).
+    pack_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=pack_root) as tmp_dir:
         try:
             result = await build_sse_pack(
                 url=selected.source_url,
@@ -2337,10 +2341,12 @@ def _cmd_query(args: Any) -> int:
         return 2
 
     # Venue pre-pass: --venue overrides a dual-listed entry's default venue.
-    # Substitutes a ticker string that independently re-resolves to the
-    # chosen venue, so financials() (which re-resolves from a plain string)
-    # needs no changes to route correctly.
+    # select_venue returns a venue-narrowed ResolvedCompany (correct source
+    # and identifier); it is threaded to financials() as resolved_override so
+    # routing does not depend on a string that a shadowing universe entry
+    # would re-resolve to the wrong venue (e.g. an A+H filer's bare A-code).
     query_company = args.company
+    venue_resolved = None
     venue = getattr(args, "venue", None)
     if venue:
         if resolved is None or index is None:
@@ -2350,16 +2356,19 @@ def _cmd_query(args: Any) -> int:
             )
             return 2
         try:
-            select_venue(resolved, venue)
+            venue_resolved = select_venue(resolved, venue)
         except VenueNotAvailable as e:
             print(f"Error: {e}", file=sys.stderr)
             return 2
         query_company = ticker_for_venue(index, resolved, venue) or args.company
 
     # Build-if-needed pre-pass: an A-share/SSE target with no local pack
-    # auto-builds its latest CNINFO annual report (unless --no-build).
+    # auto-builds its latest CNINFO annual report (unless --no-build). Under
+    # --venue, the venue-narrowed identity decides, so `--venue sse` on an
+    # A+H filer builds the SSE pack rather than keying off its default venue.
     if not bool(getattr(args, "no_build", False)):
-        china_rc = asyncio.run(_ensure_sse_pack_for_query(args, resolved))
+        build_resolved = venue_resolved if venue_resolved is not None else resolved
+        china_rc = asyncio.run(_ensure_sse_pack_for_query(args, build_resolved))
         if china_rc != 0:
             return china_rc
 
@@ -2398,6 +2407,7 @@ def _cmd_query(args: Any) -> int:
                 force=bool(args.force),
                 pack_root=getattr(args, "packs", DEFAULT_PACKS_DIR),
                 display_token=args.company,
+                resolved_override=venue_resolved,
             )
 
         try:
