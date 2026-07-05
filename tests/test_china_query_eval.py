@@ -25,7 +25,10 @@ from edgarpack.query.financials import financials
 
 GOLDEN_PATH = Path(__file__).parent / "eval" / "china_golden.yaml"
 FX_PATH = Path(__file__).parent.parent / "data" / "fx_rates.csv"
-USD_REL_TOL = 0.02
+# Tightened from 0.02 now that convert() averages the whole period instead of
+# sampling the fiscal-year-end month; the only residual slack is 6-decimal
+# rounding in the hand-derived golden oracle (~1e-6 relative), not FX bug slop.
+USD_REL_TOL = 0.001
 
 
 @dataclass(frozen=True)
@@ -176,6 +179,7 @@ def test_china_golden(case: GoldenCase, request: pytest.FixtureRequest) -> None:
             convention=convention,  # type: ignore[arg-type]
             rates=rates,
             period_end=period_end,
+            period_start=cited.period_start,
         )
         actual = converted.converted_value
         if case.expected is None:
