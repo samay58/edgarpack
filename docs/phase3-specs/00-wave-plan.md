@@ -14,7 +14,9 @@ The 25-filer A-share extraction sweep must return a passing verdict (no WRONG re
 | dual-listing-adr | sonnet | A | sweep gate | dual-listing-adr.md |
 | starter-universe | sonnet | A | dual-listing-adr branch | starter-universe.md |
 | harvest-china-sse | sonnet | A | sweep gate | harvest-china-sse.md |
-| build-hk | sonnet (tbd) | A' | HKEX spike results | build-hk.md (STUB, do not launch) |
+| build-hk-acquire | sonnet | A | sweep gate | build-hk.md (finalized from the 2026-07-05 spike) |
+| hk-construct-prototype | sonnet | A | sweep gate | hk-construct-prototype.md (report-only, no repo code) |
+| build-hk-construct | tbd | A'' | hk-construct-prototype report | spec to be authored by Fable from the prototype evidence |
 | s1-structure | opus | B | none | s1-structure.md |
 | english-surface | sonnet | B | none | english-surface.md |
 
