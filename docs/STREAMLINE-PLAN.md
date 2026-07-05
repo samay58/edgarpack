@@ -97,7 +97,11 @@ Acceptance scenario for Phase 3: on a cold machine, `edgarpack query BYD revenue
 - Curated starter universe (~50 recognizable China names: BYD, Moutai, CATL, Tencent, Xiaomi, ...) as the coverage seed; doubles as the 20-30+ filer Phase 3 sweep corpus.
 - S-1/F-1: split the 1,628-line module (deterministic parser / LLM extraction+cache / query integration); pydantic-validate LLM rows; unify `pick_snapshot_fact` + `_pick_snapshot_candidate`; rename `vlm` extra or wire vision; golden fixtures from 3-4 real filings (Cerebras S-1, one IFRS F-1, one non-calendar-FY filer); registration metric expansion (diluted shares, dilution, use of proceeds, offering terms).
 
-## Phase 4: close-out (registered directive, Samay 2026-07-05; run when Phase 3 completes)
+## Phase 4: close-out — DONE 2026-07-05
+
+Executed: adversarial review layer (5 opus refuters + 9 verifiers; 6 confirmed findings fixed with regression tests, incl. 2 trust-critical silent-wrong-value bugs); slop sweep clean (0 em-dashes across the 101-commit diff, slopcheck clean on all authored docs); consolidation (12 stale worktrees pruned, merged branches deleted, CLAUDE.md + MEMORY.md updated to shipped reality, ledger finalized); fast-forward merge to `main` + push to origin (final SHA b515a83), gate green on main (1,860 offline tests, ruff, mypy strict, web build). Production surfaces: static site regenerated, daily-refresh launchd plist verified valid (not loaded; user's call), bulk re-harvest left to the cron. Readbacks: SEC (`query NVDA` -> cited $215.9B), A-share cold-start (`query BYD` -> cited $111.9B / ¥804.0B, the acceptance scenario, the same filer that returned ¥80.00 pre-streamline), HK (`build-hk 0700` + query -> Net Income ¥229.8B cited). The HK readback caught a cross-packet seam (build-hk wrote packs where the query layer did not look); fixed and pushed (commit b515a83). Known-limitation notes: HK facts carry no period dates (no fabricated FYE); Tencent revenue and IFRS-filer bilingual labels are open backlog items, all fail-closed.
+
+## Phase 4 checklist (as registered, Samay 2026-07-05)
 
 Trigger: Wave A merged, re-sweep gate passed, and the build-hk-construct decision made (shipped or explicitly deferred). Then, in order:
 
