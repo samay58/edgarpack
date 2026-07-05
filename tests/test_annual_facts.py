@@ -360,3 +360,60 @@ def test_in_table_unit_row_between_title_and_year_header_extracts(tmp_path):
 
     assert by_year[2024] == 1000.0
     assert by_year[2023] == 900.0
+
+
+def test_identical_duplicate_year_columns_with_same_value_extract_once(tmp_path):
+    """Two identical-year columns (调整后/调整前) with the SAME value are one
+    fact written twice, not a conflict."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：元
+
+|主要会计数据|2024年调整后|2024年调整前|2023年|
+|---|---:|---:|---:|
+|营业收入|1000|1000|900|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert len(points) == 2
+    assert by_year[2024] == 1000.0
+    assert by_year[2023] == 900.0
+
+
+def test_identical_duplicate_year_columns_with_differing_values_fail_closed(tmp_path):
+    """Two identical-year columns with DIFFERENT values are a genuine
+    conflict and still drop, fail closed."""
+    content = """## 第二节 公司简介和主要财务指标
+
+单位：元
+
+|主要会计数据|2024年调整后|2024年调整前|2023年|
+|---|---:|---:|---:|
+|营业收入|1000|1200|900|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    with pytest.warns(UserWarning, match="Revenue"):
+        facts_path = _write(tmp_path, sections)
+
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    # The conflicting FY2024 pair (1000 vs 1200) drops entirely; the
+    # unambiguous FY2023 value still extracts.
+    assert 2024 not in by_year
+    assert by_year[2023] == 900.0

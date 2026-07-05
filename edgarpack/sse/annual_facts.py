@@ -179,6 +179,23 @@ class _Candidate:
     point: dict[str, Any]
 
 
+def _dedupe_candidates_by_value(group: list[_Candidate]) -> list[_Candidate]:
+    """Collapse candidates that restate the identical (concept, fy) value.
+
+    A 调整后/调整前 (restated/original) column pair, or any other duplicated
+    year column, is not a conflict when both columns disclose the same
+    number: it is one fact written twice. Keep the best-priority candidate
+    per distinct value so genuinely differing values still compete normally.
+    """
+    best_by_value: dict[float | int | None, _Candidate] = {}
+    for candidate in group:
+        value = candidate.point.get("val")
+        existing = best_by_value.get(value)
+        if existing is None or candidate.priority < existing.priority:
+            best_by_value[value] = candidate
+    return list(best_by_value.values())
+
+
 def _resolve_candidates(candidates: list[_Candidate]) -> dict[str, dict[str, Any]]:
     """Collapse candidates to at most one point per (concept, unit, fiscal_year).
 
@@ -194,8 +211,9 @@ def _resolve_candidates(candidates: list[_Candidate]) -> dict[str, dict[str, Any
 
     cas: dict[str, dict[str, Any]] = {}
     for (concept, unit, fiscal_year), group in groups.items():
-        best_priority = min(candidate.priority for candidate in group)
-        best = [candidate for candidate in group if candidate.priority == best_priority]
+        deduped = _dedupe_candidates_by_value(group)
+        best_priority = min(candidate.priority for candidate in deduped)
+        best = [candidate for candidate in deduped if candidate.priority == best_priority]
         if len(best) > 1:
             warnings.warn(
                 f"Conflicting candidates for {concept} FY{fiscal_year}: "
