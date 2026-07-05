@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:3000}"
-ROUTES="/cmp_tencent_0700/overview /cmp_tencent_0700/packs /cmp_tencent_0700/evidence"
+ROUTES="/observatory"
 all_assets_tmp="$(mktemp)"
 unique_assets_tmp="$(mktemp)"
 
