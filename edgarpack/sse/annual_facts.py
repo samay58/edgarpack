@@ -149,10 +149,20 @@ def _find_unit_scale(lines: list[str], header_index: int) -> float | None:
     for line in reversed(lines[start:header_index]):
         stripped = line.strip()
         if _is_table_line(stripped):
-            # A pipe-delimited row (data or separator) belongs to the previous
-            # table. Its 单位 marker, if any, scopes that table only; stop
-            # here instead of letting it leak into this table.
-            break
+            if _is_separator_row(stripped):
+                # A separator row only ever follows a header row, so it marks
+                # the boundary of a distinct, earlier table. Its own marker
+                # (if any) scopes that table only; stop here.
+                break
+            match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
+            if match:
+                return _UNIT_SCALE_FACTORS[match.group(1)]
+            # A non-separator pipe row above the header (a title row, or an
+            # SSE-template in-table marker row like
+            # "|单位：元<br>币种：人民币|||||") is this table's own preamble,
+            # not a previous table's content. Keep looking upward instead of
+            # assuming it belongs to some other table.
+            continue
         match = _UNIT_SCALE_PATTERN.search(_clean_cell(line))
         if match:
             return _UNIT_SCALE_FACTORS[match.group(1)]

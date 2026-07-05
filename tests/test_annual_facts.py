@@ -335,3 +335,28 @@ def test_unit_scale_does_not_cross_previous_table_boundary(tmp_path):
         facts_path = _write(tmp_path, sections)
 
     assert facts_path is None
+
+
+def test_in_table_unit_row_between_title_and_year_header_extracts(tmp_path):
+    """SSE-template tables carry the 单位 marker as a row INSIDE the table,
+    directly above the year-header row, not as prose before the table."""
+    content = """## 第二节 公司简介和主要财务指标
+
+|单位：元<br>币种：人民币|||||
+|主要会计数据|2024年|2023年|
+|---|---:|---:|
+|营业收入|1000|900|
+"""
+    sections = [_section("annual_s02_company_profile_key_financials", content)]
+
+    facts_path = _write(tmp_path, sections)
+    assert facts_path is not None
+
+    import json
+
+    facts = json.loads(facts_path.read_text())
+    points = facts["facts"]["cas"]["Revenue"]["units"]["CNY"]
+    by_year = {p["fy"]: p["val"] for p in points}
+
+    assert by_year[2024] == 1000.0
+    assert by_year[2023] == 900.0
