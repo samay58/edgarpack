@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from ..query.metric_map import AccountingStandard
 
-ExtractionMethod = Literal["regex", "learned:llm"]
+ExtractionMethod = Literal["regex"]
 
 _FINANCIAL_SECTIONS = {
     "hkex_income_statement",
@@ -563,7 +563,7 @@ def extract_headcount_from_pack(pack_dir: Path) -> HKFact | None:
     return None
 
 
-def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
+def extract_facts_from_pack(pack_dir: Path) -> Path:
     manifest = json.loads((pack_dir / "manifest.json").read_text())
     standard: AccountingStandard = manifest["accounting_standard"]
     currency: str = manifest["reporting_currency"]
@@ -602,11 +602,6 @@ def extract_facts_from_pack(pack_dir: Path, llm_fallback: bool = True) -> Path:
     headcount_fact = extract_headcount_from_pack(pack_dir)
     if headcount_fact is not None:
         all_facts.append(headcount_fact)
-
-    if llm_fallback:
-        from .llm_extract import fill_missing_with_llm
-
-        all_facts = fill_missing_with_llm(all_facts, sections_dir, standard, accession)
 
     nested: dict[str, Any] = {standard.lower(): {}}
     for fact in all_facts:

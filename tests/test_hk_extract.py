@@ -57,7 +57,7 @@ def test_extract_facts_from_pack_writes_facts_json(tmp_path):
         )
     )
 
-    facts_path = extract_facts_from_pack(pack_dir, llm_fallback=False)
+    facts_path = extract_facts_from_pack(pack_dir)
     assert facts_path.exists()
     data = json.loads(facts_path.read_text())
     assert "facts" in data
@@ -188,7 +188,7 @@ def test_extract_facts_minimax_real_pack_yields_revenue():
     pack_dir = Path("tests/fixtures/china_packs/minimax_2024")
     if not (pack_dir / "manifest.json").exists():
         pytest.skip("minimax fixture pack not built")
-    facts_path = extract_facts_from_pack(pack_dir, llm_fallback=False)
+    facts_path = extract_facts_from_pack(pack_dir)
     data = json.loads(facts_path.read_text())
     revenues = [
         info["units"][unit][0]["val"]

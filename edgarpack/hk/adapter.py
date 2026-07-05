@@ -20,16 +20,6 @@ _COMPANY_META: dict[str, dict[str, str]] = {
         "reporting_currency": "CNY",
         "accounting_standard": "HKFRS",
     },
-    "09988": {
-        "name": "Alibaba Group (HK)",
-        "reporting_currency": "CNY",
-        "accounting_standard": "IFRS",
-    },
-    "09618": {
-        "name": "JD.com (HK)",
-        "reporting_currency": "CNY",
-        "accounting_standard": "IFRS",
-    },
     "00100": {
         "name": "MiniMax Group Inc.",
         "reporting_currency": "USD",
