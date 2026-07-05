@@ -83,6 +83,10 @@ Five review agents swept the codebase (query core, parse/pack, sec client, obser
 
 ---
 
+## Deferred from the Phase 2 adversarial review (2026-07-05)
+
+- S-1/F-1 snapshot merge coverage is per-slug, not per-(slug, period): a deterministic fact for a metric in any year excludes that metric from the LLM's missing-slug list, so LLM rows for the same metric's other periods (e.g. an interim disclosed only in MD&A) are discarded. Coverage limitation, not a fabrication (values stay honestly labeled); revisit with the Phase 3 registration metric expansion. Evidence: `covered_slugs`/`missing_slugs` around `s1_financials.py:1356-1387`.
+
 ## Deferred cli.py decomposition (from the 2026-06-02 tech-debt pass)
 
 The single-period query renderer was already extracted to `query/render.py`. The remaining "cli.py is wiring, not logic" moves, each a self-contained, test-covered commit when wanted:
