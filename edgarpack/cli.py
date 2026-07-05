@@ -1121,6 +1121,29 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_build_sse.add_argument("--force", action="store_true", help="Rebuild even if exists")
 
+    p_build_hk = sub.add_parser(
+        "build-hk",
+        help="Build a pack from a HKEX-listed issuer's latest English annual report",
+        description=(
+            "Resolve a HKEX issuer (company name/ticker via universe, or a bare stock "
+            "code like 0700), acquire its latest English annual report, section it via "
+            "the report's own table of contents, extract facts, and write the pack. "
+            "The acquire step always selects the latest annual report; pinning a "
+            "specific filing is out of scope for this command."
+        ),
+    )
+    p_build_hk.add_argument(
+        "company",
+        help="Company name/ticker (resolved via universe) or a bare HKEX stock code (e.g. 0700)",
+    )
+    p_build_hk.add_argument(
+        "--out",
+        "-o",
+        type=Path,
+        default=DEFAULT_PACKS_DIR,
+        help="Output directory",
+    )
+
     p_translate = sub.add_parser(
         "translate-sse",
         help="Translate an existing SSE pack to English (requires EDGARPACK_DEEPINFRA_KEY)",
@@ -1172,6 +1195,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_identify(args)
     if args.cmd == "build-sse":
         return _cmd_build_sse(args)
+    if args.cmd == "build-hk":
+        return _cmd_build_hk(args)
     if args.cmd == "translate-sse":
         return _cmd_translate_sse(args)
     if args.cmd == "build":
@@ -1891,6 +1916,105 @@ def _cmd_build_sse(args: Any) -> int:
         return 0
 
     return asyncio.run(_run())
+
+
+def _resolve_hk_stock_code(company: str) -> str:
+    """Resolve a build-hk positional arg to a HKEX stock code.
+
+    A bare numeric code goes straight to the acquire layer, which zero-pads and
+    substring-resolves it. A name/ticker is resolved through the identity index
+    and must route to a HKEX listing.
+    """
+    query = company.strip()
+    if query.replace(" ", "").isdigit():
+        return query.replace(" ", "")
+    resolved = asyncio.run(_resolve_cli_company(query))
+    if getattr(resolved, "source", None) != "HKEX":
+        raise UnknownCompany(
+            f"{company!r} does not resolve to a HKEX listing; pass a bare HKEX stock "
+            "code (e.g. 0700) instead."
+        )
+    code = getattr(resolved, "hk_stock_code", None)
+    if not code:
+        raise UnknownCompany(f"{company!r} resolves to HKEX but has no stock code in the universe.")
+    return str(code)
+
+
+def _acquire_hk_filing(client: Any, code: str) -> tuple[Any, str, list[str]]:
+    from .hk import acquire as hk
+
+    hk.warm_up(client)
+    match = hk.resolve_stock_id(client, code)
+    rows = hk.list_annual_reports(client, match.stock_id)
+    row = hk.select_latest_annual_report(rows, stock_code=match.code)
+    ref = hk.to_filing_ref(row, stock_code=match.code)
+    return ref, match.name, list(row.stock_codes)
+
+
+def _print_hk_facts_summary(pack_path: Path, facts_path: Path) -> None:
+    data = json.loads(facts_path.read_text())
+    facts = data.get("facts", {})
+    concept_count = sum(len(concepts) for concepts in facts.values())
+    print(f"Pack: {pack_path}")
+    print(f"Company: {data.get('company')}  Stock code: {data.get('stock_code')}")
+    print(f"Facts: {concept_count} concept(s) across {len(facts)} standard block(s)")
+
+
+def _cmd_build_hk(args: Any) -> int:
+    import httpx
+
+    from .hk import acquire as hk
+    from .hk import extract as hk_extract
+    from .hk.adapter import build_hk_pack
+    from .hk.toc import HKSectioningError
+
+    class _BlockedFallbackError(Exception):
+        pass
+
+    try:
+        code = _resolve_hk_stock_code(args.company)
+    except (UnknownCompany, AmbiguousCompany) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+
+    client = httpx.Client(
+        headers={"User-Agent": "edgarpack/0.1 (+https://github.com)"},
+        follow_redirects=True,
+        timeout=120.0,
+    )
+    try:
+        ref, company_name, dual_codes = _acquire_hk_filing(client, code)
+        out_dir = args.out / ref.stock_code / f"{ref.stock_code}_{ref.fiscal_year}"
+        pack = build_hk_pack(
+            ref,
+            out_dir,
+            company_name=company_name,
+            dual_counter_codes=dual_codes,
+            client=client,
+        )
+    except HKSectioningError as e:
+        print(f"Error: could not section the HKEX filing for {code}: {e}", file=sys.stderr)
+        return 1
+    except (hk.HKEXSearchBlocked, hk.HKFilingMetadataError, LookupError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+    finally:
+        client.close()
+
+    # hk-extract-fixes owns extract.py; consume its typed error when it lands,
+    # falling back to a local stand-in in trees where it has not.
+    blocked_error: type[BaseException] = getattr(
+        hk_extract, "HKExtractionBlockedError", _BlockedFallbackError
+    )
+    try:
+        facts_path = hk_extract.extract_facts_from_pack(pack.path)
+    except blocked_error as e:
+        print(f"Error: HKEX facts extraction blocked for {code}: {e}", file=sys.stderr)
+        print(f"Sectioned pack written to {pack.path} (facts not extracted).")
+        return 1
+
+    _print_hk_facts_summary(pack.path, facts_path)
+    return 0
 
 
 def _cmd_translate_sse(args: Any) -> int:

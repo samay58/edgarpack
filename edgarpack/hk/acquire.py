@@ -104,6 +104,7 @@ class HKFilingMeta:
     currency: str
     accounting_standard: str
     legal_name: str | None
+    standard_note: str | None = None
 
 
 def _blocked_message(step: str) -> str:
@@ -441,12 +442,23 @@ def download_pdf(ref: HKFilingRef, out_path: Path, *, client: httpx.Client | Non
             active_client.close()
 
 
-_PRESENTATION_ANCHOR_PATTERNS = (
-    re.compile(
-        r"presents?\s+its\s+(?:consolidated\s+)?financial\s+statements?\s+in\b",
-        re.IGNORECASE,
+# Currency-presentation anchors, each with the character window scanned after
+# the match for a currency keyword. The presentation-clause anchors are tried
+# first; the parenthetical note header ("(Expressed in Renminbi ...)", Anta) and
+# the numbered reporting-currency note ("The Company's reporting currency ...
+# were Renminbi", BYD's CAS form) follow, each verified against a real FY2025
+# filing.
+_CURRENCY_ANCHORS: tuple[tuple[re.Pattern[str], int], ...] = (
+    (
+        re.compile(
+            r"presents?\s+its\s+(?:consolidated\s+)?financial\s+statements?\s+in\b",
+            re.IGNORECASE,
+        ),
+        60,
     ),
-    re.compile(r"financial\s+statements?\s+(?:are|is)\s+presented\s+in\b", re.IGNORECASE),
+    (re.compile(r"financial\s+statements?\s+(?:are|is)\s+presented\s+in\b", re.IGNORECASE), 60),
+    (re.compile(r"expressed\s+in\b", re.IGNORECASE), 60),
+    (re.compile(r"reporting\s+currency\b", re.IGNORECASE), 160),
 )
 
 _CURRENCY_KEYWORDS: tuple[tuple[re.Pattern[str], str], ...] = (
@@ -455,18 +467,22 @@ _CURRENCY_KEYWORDS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"United\s+States\s+dollars?|US\$|\bUSD\b", re.IGNORECASE), "USD"),
 )
 
+_IFRS_PATTERN = re.compile(
+    r"IFRS\s+Accounting\s+Standards|International\s+Financial\s+Reporting\s+Standards",
+    re.IGNORECASE,
+)
+_HKFRS_PATTERN = re.compile(
+    r"Hong\s+Kong\s+Financial\s+Reporting\s+Standards|\bHKFRS\b", re.IGNORECASE
+)
+_CAS_PATTERN = re.compile(
+    r"Accounting\s+Standards\s+for\s+Business\s+Enterprises|PRC\s+ASBEs?|\bASBEs?\b",
+    re.IGNORECASE,
+)
+
 _STANDARD_KEYWORDS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (
-        re.compile(
-            r"IFRS\s+Accounting\s+Standards|International\s+Financial\s+Reporting\s+Standards",
-            re.IGNORECASE,
-        ),
-        "IFRS",
-    ),
-    (
-        re.compile(r"Hong\s+Kong\s+Financial\s+Reporting\s+Standards|\bHKFRS\b", re.IGNORECASE),
-        "HKFRS",
-    ),
+    (_IFRS_PATTERN, "IFRS"),
+    (_HKFRS_PATTERN, "HKFRS"),
+    (_CAS_PATTERN, "CAS"),
 )
 
 _CORP_SUFFIX_RE = re.compile(
@@ -477,14 +493,12 @@ _LEGAL_NAME_PREFIX_PAGES = 15
 
 
 def _find_currency(text: str) -> str | None:
-    for anchor in _PRESENTATION_ANCHOR_PATTERNS:
-        match = anchor.search(text)
-        if not match:
-            continue
-        window = text[match.end() : match.end() + 60]
-        for pattern, iso in _CURRENCY_KEYWORDS:
-            if pattern.search(window):
-                return iso
+    for anchor, window_size in _CURRENCY_ANCHORS:
+        for match in anchor.finditer(text):
+            window = text[match.end() : match.end() + window_size]
+            for pattern, iso in _CURRENCY_KEYWORDS:
+                if pattern.search(window):
+                    return iso
     return None
 
 
@@ -492,6 +506,18 @@ def _find_accounting_standard(text: str) -> str | None:
     for pattern, name in _STANDARD_KEYWORDS:
         if pattern.search(text):
             return name
+    return None
+
+
+def _joint_standard_note(text: str, standard: str) -> str | None:
+    """Note a joint IFRS/HKFRS citation (Anta) that was normalized to IFRS.
+
+    Anta's audit opinion cites IFRS Accounting Standards and HKFRS Accounting
+    Standards together; `_find_accounting_standard` returns IFRS. Recording the
+    joint form keeps the manifest honest about what the filing actually stated.
+    """
+    if standard == "IFRS" and _HKFRS_PATTERN.search(text):
+        return "IFRS and HKFRS Accounting Standards (joint citation, normalized to IFRS)"
     return None
 
 
@@ -535,6 +561,7 @@ def extract_metadata_from_text(text: str, *, source: str = "<text>") -> HKFiling
         currency=cast(str, currency),
         accounting_standard=cast(str, standard),
         legal_name=_find_legal_name(text),
+        standard_note=_joint_standard_note(text, cast(str, standard)),
     )
 
 
@@ -565,4 +592,5 @@ def extract_filing_metadata(pdf_path: Path) -> HKFilingMeta:
         currency=meta.currency,
         accounting_standard=meta.accounting_standard,
         legal_name=prefix_name,
+        standard_note=meta.standard_note,
     )

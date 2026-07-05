@@ -4,6 +4,8 @@ sections:
   "BUSINESS REVIEW": hkex_business_review
   "CONSOLIDATED STATEMENT OF PROFIT OR LOSS": hkex_income_statement
   "CONSOLIDATED STATEMENTS OF PROFIT OR LOSS": hkex_income_statement
+  "CONSOLIDATED INCOME STATEMENT": hkex_income_statement
+  "CONSOLIDATED STATEMENT OF PROFIT OR LOSS AND OTHER COMPREHENSIVE INCOME": hkex_income_statement
   "CONSOLIDATED STATEMENT OF COMPREHENSIVE INCOME": hkex_comprehensive_income
   "CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME": hkex_comprehensive_income
   "CONSOLIDATED STATEMENTS OF PROFIT OR LOSS AND OTHER COMPREHENSIVE INCOME": hkex_income_statement
@@ -12,6 +14,12 @@ sections:
   "CONSOLIDATED STATEMENTS OF FINANCIAL POSITION": hkex_balance_sheet
   "CONSOLIDATED STATEMENTS OF FINANCIAL POSITION (CONTINUED)": hkex_balance_sheet
   "CONSOLIDATED BALANCE SHEETS": hkex_balance_sheet
+  "CONSOLIDATED BALANCE SHEET": hkex_balance_sheet
+  # BYD-class A+H filers also print PRC-statutory parent-company-only statements
+  # titled "Balance Sheet" / "Income Statement" / "Cash Flow Statement" (no
+  # "Consolidated" prefix). Those are a different reporting entity and are left
+  # unmapped on purpose: heading lookup is exact (alphanumeric-normalized), so a
+  # bare "Balance Sheet" never collides with the consolidated statement above.
   "CONSOLIDATED STATEMENT OF CASH FLOWS": hkex_cash_flow
   "CONSOLIDATED STATEMENTS OF CASH FLOWS": hkex_cash_flow
   "CONSOLIDATED STATEMENT OF CHANGES IN EQUITY": hkex_equity_changes
