@@ -73,12 +73,25 @@ def test_build_hk_end_to_end_writes_pack_and_facts(
     rc = main(["build-hk", "0700", "--out", str(tmp_path)])
     assert rc == 0
 
-    pack_dir = tmp_path / "00700" / "00700_2025"
+    # Written under the "hk/" exchange segment so the query layer finds it.
+    pack_dir = tmp_path / "hk" / "00700" / "00700_2025"
     assert (pack_dir / "manifest.json").exists()
     assert (pack_dir / "sections" / "hkex_income_statement.md").exists()
     facts = json.loads((pack_dir / "facts.json").read_text())
     assert facts["stock_code"] == "00700"
     assert facts["facts"]  # at least one extracted concept
+
+    # Seam: the query layer's China pack discovery must find exactly what
+    # build-hk just wrote (this cross-packet path was uncovered before).
+    from types import SimpleNamespace
+
+    from edgarpack.query.financials import _discover_china_pack_dir
+
+    resolved = SimpleNamespace(
+        source="HKEX", stock_code="00700", hk_stock_code="00700", ticker="0700.HK", aliases=()
+    )
+    found = _discover_china_pack_dir(resolved, pack_root=tmp_path)
+    assert found == pack_dir
 
 
 def test_build_hk_garbled_facts_step_fails_loudly_with_pack_written(
@@ -101,7 +114,7 @@ def test_build_hk_garbled_facts_step_fails_loudly_with_pack_written(
     rc = main(["build-hk", "0700", "--out", str(tmp_path)])
     assert rc == 1
 
-    pack_dir = tmp_path / "00700" / "00700_2025"
+    pack_dir = tmp_path / "hk" / "00700" / "00700_2025"
     # Pack (sections + manifest) is still written; facts.json is not.
     assert (pack_dir / "sections" / "hkex_income_statement.md").exists()
     assert not (pack_dir / "facts.json").exists()

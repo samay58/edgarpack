@@ -2063,7 +2063,10 @@ def _cmd_build_hk(args: Any) -> int:
     )
     try:
         ref, company_name, dual_codes = _acquire_hk_filing(client, code)
-        out_dir = args.out / ref.stock_code / f"{ref.stock_code}_{ref.fiscal_year}"
+        # Write under the "hk/" exchange segment so the query layer's China
+        # pack discovery (_discover_china_pack_dir looks in <root>/hk/<code>/)
+        # finds it, matching the build-sse -> sse/<code>/ convention.
+        out_dir = args.out / "hk" / ref.stock_code / f"{ref.stock_code}_{ref.fiscal_year}"
         pack = build_hk_pack(
             ref,
             out_dir,
