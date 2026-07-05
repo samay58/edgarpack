@@ -131,78 +131,119 @@ companies:
       revenue:
         lfy:
           native: 312414000
-          usd: 42910063
-          fx_rate: 0.137350
+          # fy-average oracle: CNY/USD period_average rows for FY2024
+          # (data/fx_rates.csv, 2024-01..2024-12): 0.139457, 0.139015,
+          # 0.138861, 0.138171, 0.138261, 0.137841, 0.137724, 0.139912,
+          # 0.141327, 0.141086, 0.138775, 0.137350
+          # mean = 1.667780 / 12 = 0.138982
+          # usd = 312414000 * 0.138982 = 43419922.548 -> 43419923
+          usd: 43419923
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
         ltm:
           native: 312414000
-          usd: 42910063
-          fx_rate: 0.137350
+          # LTM mirrors LFY (annual-only filer): same FY2024 fy-average
+          # oracle as lfy above, mean 0.138982.
+          # usd = 312414000 * 0.138982 = 43419922.548 -> 43419923
+          usd: 43419923
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
         lfy-1:
           native: 124538000
-          usd: 17441920
-          fx_rate: 0.140053
+          # fy-average oracle: CNY/USD period_average rows for FY2023
+          # (data/fx_rates.csv, 2023-01..2023-12): 0.147275, 0.146254,
+          # 0.145122, 0.145190, 0.143169, 0.139645, 0.139158, 0.137963,
+          # 0.137026, 0.136853, 0.138467, 0.140053
+          # mean = 1.696175 / 12 = 0.141348
+          # usd = 124538000 * 0.141348 = 17603197.224 -> 17603197
+          usd: 17603197
+          fx_rate: 0.141348
           fx_convention: average
           source: "Zhipu 02513.HK FY2023 historical column in FY2024 pack, Consolidated Statement of Profit or Loss"
         lfy-2:
           native: 57409000
-          usd: 8234689
-          fx_rate: 0.143439
+          # fy-average oracle: CNY/USD period_average rows for FY2022
+          # (data/fx_rates.csv, 2022-01..2022-12): 0.157343, 0.157642,
+          # 0.157617, 0.155528, 0.149287, 0.149363, 0.148476, 0.147055,
+          # 0.142484, 0.139088, 0.139268, 0.143439
+          # mean = 1.786590 / 12 = 0.148883
+          # usd = 57409000 * 0.148883 = 8547224.147 -> 8547224
+          usd: 8547224
+          fx_rate: 0.148883
           fx_convention: average
           source: "Zhipu 02513.HK FY2022 historical column in FY2024 pack, Consolidated Statement of Profit or Loss"
       gross_profit:
         lfy:
           native: 175889000
-          usd: 24158354
-          fx_rate: 0.137350
+          # fy-average oracle: same FY2024 mean as revenue.lfy above, 0.138982
+          # (CNY/USD period_average, data/fx_rates.csv, 2024-01..2024-12).
+          # usd = 175889000 * 0.138982 = 24445404.998 -> 24445405
+          usd: 24445405
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
         ltm:
           native: 175889000
-          usd: 24158354
-          fx_rate: 0.137350
+          # LTM mirrors LFY: same FY2024 fy-average oracle, mean 0.138982.
+          # usd = 175889000 * 0.138982 = 24445404.998 -> 24445405
+          usd: 24445405
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
       operating_income:
         lfy:
           native: -2538352000
-          usd: -348642647
-          fx_rate: 0.137350
+          # fy-average oracle: same FY2024 mean as revenue.lfy above, 0.138982
+          # (CNY/USD period_average, data/fx_rates.csv, 2024-01..2024-12).
+          # usd = -2538352000 * 0.138982 = -352785237.664 -> -352785238
+          usd: -352785238
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
         ltm:
           native: -2538352000
-          usd: -348642647
-          fx_rate: 0.137350
+          # LTM mirrors LFY: same FY2024 fy-average oracle, mean 0.138982.
+          # usd = -2538352000 * 0.138982 = -352785237.664 -> -352785238
+          usd: -352785238
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
       net_income:
         lfy:
           native: -2958007000
-          usd: -406282261
-          fx_rate: 0.137350
+          # fy-average oracle: same FY2024 mean as revenue.lfy above, 0.138982
+          # (CNY/USD period_average, data/fx_rates.csv, 2024-01..2024-12).
+          # usd = -2958007000 * 0.138982 = -411109728.874 -> -411109729
+          usd: -411109729
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss"
         ltm:
           native: -2958007000
-          usd: -406282261
-          fx_rate: 0.137350
+          # LTM mirrors LFY: same FY2024 fy-average oracle, mean 0.138982.
+          # usd = -2958007000 * 0.138982 = -411109728.874 -> -411109729
+          usd: -411109729
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Statement of Profit or Loss (LTM proxy: annual-only filer, mirrors LFY)"
       operating_cash_flow:
         lfy:
           native: -2244919000
-          usd: -308339625
-          fx_rate: 0.137350
+          # fy-average oracle: same FY2024 mean as revenue.lfy above, 0.138982
+          # (CNY/USD period_average, data/fx_rates.csv, 2024-01..2024-12).
+          # usd = -2244919000 * 0.138982 = -312003332.458 -> -312003332
+          usd: -312003332
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Cash Flow Statement"
         ltm:
           native: -2244919000
-          usd: -308339625
-          fx_rate: 0.137350
+          # LTM mirrors LFY: same FY2024 fy-average oracle, mean 0.138982.
+          # usd = -2244919000 * 0.138982 = -312003332.458 -> -312003332
+          usd: -312003332
+          fx_rate: 0.138982
           fx_convention: average
           source: "Zhipu 02513.HK FY2024 pack, Consolidated Cash Flow Statement (LTM proxy: annual-only filer, mirrors LFY)"
       cash_and_equivalents:
@@ -260,8 +301,11 @@ companies:
       revenue_per_employee:
         lfy:
           native: 353809.7395243488
-          usd: 48595.67068676738
+          # fy-average oracle: same FY2024 mean as revenue.lfy above, 0.138982
+          # (CNY/USD period_average, data/fx_rates.csv, 2024-01..2024-12).
+          # usd = 353809.7395243488 * 0.138982 = 49173.185218573046
+          usd: 49173.185218573046
           unit: scalar_native
-          fx_rate: 0.137350
+          fx_rate: 0.138982
           fx_convention: average
           source: "Derived: Zhipu FY2024 revenue 312,414,000 CNY / 883 employees -> USD via average FX"
