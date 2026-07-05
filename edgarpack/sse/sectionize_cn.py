@@ -87,20 +87,19 @@ _DECLARATIONS_PATTERN = re.compile(
 
 
 def _cn_num_to_int(cn: str) -> int:
-    """Convert Chinese numeral string to integer."""
+    """Convert Chinese numeral string to integer.
+
+    Handles direct table lookups plus [tens-digit]十[units-digit] compounds
+    (e.g. 三十 = 30, 三十五 = 35) up to 九十九 = 99. A bare leading 十 implies
+    a tens digit of 1 (十五 = 15), matching how these numerals are written.
+    """
     if cn in _CN_NUMERALS:
         return _CN_NUMERALS[cn]
-    # Handle compound: e.g. 二十一 = 21
-    if cn.startswith("二十"):
-        rest = cn[2:]
-        if not rest:
-            return 20
-        return 20 + _CN_NUMERALS.get(rest, 0)
-    if cn.startswith("十"):
-        rest = cn[1:]
-        if not rest:
-            return 10
-        return 10 + _CN_NUMERALS.get(rest, 0)
+    if "十" in cn:
+        tens_part, _, units_part = cn.partition("十")
+        tens = _CN_NUMERALS.get(tens_part, 1) if tens_part else 1
+        units = _CN_NUMERALS.get(units_part, 0) if units_part else 0
+        return tens * 10 + units
     return 0
 
 

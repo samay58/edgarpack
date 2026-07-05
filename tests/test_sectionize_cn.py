@@ -11,6 +11,12 @@ def test_cn_num_basics():
     assert _cn_num_to_int("二十") == 20
 
 
+def test_cn_num_extended_compounds():
+    assert _cn_num_to_int("三十") == 30
+    assert _cn_num_to_int("三十五") == 35
+    assert _cn_num_to_int("九十九") == 99
+
+
 def test_slug_canonical_sections():
     slug, title = _slug_for_title("概览", 1)
     assert slug == "ipo_s01_overview"
