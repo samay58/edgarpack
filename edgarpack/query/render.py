@@ -40,7 +40,7 @@ def _render_citation_lines(
     fiscal_label = record.get("fiscal_label")
     period = record.get("period")
     accession = record.get("accession")
-    filed = record.get("filed")
+    filed = record.get("filed") or "n/a"
 
     primary = record.get("primary_link")
     primary = primary if isinstance(primary, str) else ""

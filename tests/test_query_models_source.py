@@ -72,6 +72,29 @@ class TestCitedValueSource(unittest.TestCase):
         self.assertEqual(d.get("source"), "learned:llm")
 
 
+class TestCitedValueFiledOptional(unittest.TestCase):
+    def test_sec_path_filed_survives_json_and_table(self) -> None:
+        cv = _make_cited(filed=date(2025, 2, 1))
+        # JSON: real filed date is preserved verbatim.
+        self.assertEqual(cv.to_cited_dict()["filed"], "2025-02-01")
+        self.assertEqual(cv.to_citation_record("C1")["filed"], "2025-02-01")
+        # Table: the human citation string shows the real date.
+        self.assertIn("filed 2025-02-01", cv.citation)
+
+    def test_missing_filed_is_null_in_json(self) -> None:
+        cv = _make_cited(filed=None)
+        self.assertIsNone(cv.to_cited_dict()["filed"])
+        self.assertIsNone(cv.to_citation_record("C1")["filed"])
+
+    def test_missing_filed_renders_na_in_table(self) -> None:
+        from edgarpack.query.citations import citation_summary
+
+        cv = _make_cited(filed=None)
+        record = cv.to_citation_record("C1")
+        self.assertIn("filed n/a", citation_summary("C1", record))
+        self.assertIn("filed n/a", cv.citation)
+
+
 class TestCitedValueExcerptText(unittest.TestCase):
     def test_default_excerpt_text_is_empty(self) -> None:
         cv = _make_cited()

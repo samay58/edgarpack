@@ -255,7 +255,7 @@ def _value_to_cited(
         fiscal_year=int(v.get("fy") or 0),
         fiscal_period=str(v.get("fp", "")),
         form_type=str(v.get("form", "")),
-        filed=_parse_date(v.get("filed", "")) or date.min,
+        filed=_parse_date(v.get("filed", "")),
         accession=accn,
         cik=cik,
         company=company,

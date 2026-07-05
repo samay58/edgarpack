@@ -187,7 +187,7 @@ def citation_summary(citation_id: str, record: dict[str, object]) -> str:
     fiscal = record.get("fiscal_label")
     period = record.get("period")
     filing = record.get("accession")
-    filed = record.get("filed")
+    filed = record.get("filed") or "n/a"
     return (
         f"[{citation_id}] {form_type} {fiscal} | period {period} | filing {filing} | filed {filed}"
     )
