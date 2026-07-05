@@ -27,7 +27,6 @@ china = [
     "fastapi>=0.111",
     "uvicorn>=0.30",
     "httpx>=0.27",
-    "psycopg[binary]>=3.2",
     "pypdf>=4.0",
     "pyyaml>=6.0",
 ]
@@ -43,7 +42,6 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "httpx>=0.27",
-    "psycopg[binary]>=3.2",
     "pypdf>=4.0",
 ]
 

@@ -25,12 +25,15 @@ class TestPackExports(unittest.TestCase):
 
 
 class TestChinaExports(unittest.TestCase):
-    def test_china_exports(self) -> None:
-        from edgarpack.china import Company, Pack, SearchEvidenceRequest
+    def test_china_surviving_exports(self) -> None:
+        from edgarpack.china.acquire import CninfoAnnualReportRef, find_latest_annual_report
+        from edgarpack.china.extract.pdf_extract import extract_pdf_pages
+        from edgarpack.china.models import ExtractionMethod
 
-        self.assertTrue(issubclass(Company, object))
-        self.assertTrue(issubclass(Pack, object))
-        self.assertTrue(issubclass(SearchEvidenceRequest, object))
+        self.assertTrue(callable(find_latest_annual_report))
+        self.assertTrue(callable(extract_pdf_pages))
+        self.assertTrue(issubclass(CninfoAnnualReportRef, object))
+        self.assertTrue(issubclass(ExtractionMethod, object))
 
     def test_api_create_app_export(self) -> None:
         from edgarpack.api import create_app

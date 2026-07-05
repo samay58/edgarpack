@@ -1,11 +1,13 @@
-"""FastAPI application entry point for China Lens."""
+"""FastAPI application entry point for the Observatory API.
+
+The China Lens Evidence Explorer routers that used to mount here were
+removed with the parked workspace (docs/STREAMLINE-PLAN.md, Phase 1).
+"""
 
 from __future__ import annotations
 
 from importlib.util import find_spec
 from typing import Any
-
-from edgarpack.china.service import create_default_service
 
 
 def _require_fastapi() -> Any:
@@ -25,20 +27,11 @@ def create_app() -> Any:
     from fastapi.middleware.cors import CORSMiddleware
 
     from .observatory import observatory_router
-    from .routes import (
-        ask_router,
-        citations_router,
-        companies_router,
-        connectors_router,
-        documents_router,
-        evidence_router,
-        packs_router,
-    )
 
     app = fastapi_cls(
-        title="Rogo China Lens API",
+        title="EdgarPack Observatory API",
         version="0.1.0",
-        summary="Citation-backed research API for Chinese primary sources.",
+        summary="Filing diff, timeline, and search over local packs.",
     )
     app.add_middleware(
         CORSMiddleware,
@@ -50,21 +43,12 @@ def create_app() -> Any:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.state.china_service = create_default_service()
 
     @app.get("/healthz", tags=["infra"])  # type: ignore[untyped-decorator]
     def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
-    api_prefix = "/api/v1"
-    app.include_router(companies_router, prefix=api_prefix)
-    app.include_router(packs_router, prefix=api_prefix)
-    app.include_router(documents_router, prefix=api_prefix)
-    app.include_router(evidence_router, prefix=api_prefix)
-    app.include_router(ask_router, prefix=api_prefix)
-    app.include_router(citations_router, prefix=api_prefix)
-    app.include_router(connectors_router, prefix=api_prefix)
-    app.include_router(observatory_router, prefix=api_prefix)
+    app.include_router(observatory_router, prefix="/api/v1")
     return app
 
 
