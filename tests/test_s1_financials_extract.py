@@ -887,7 +887,7 @@ async def test_extract_or_load_snapshot_supplements_cash_flow_rows_outside_summa
     async def should_not_call_llm(_section):
         raise AssertionError("cash-flow supplement should stay deterministic")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", should_not_call_llm)
 
     result = await extract_or_load_snapshot(pack)
     by_key = {(fact.metric, fact.fiscal_year): fact for fact in result.facts}
@@ -940,7 +940,7 @@ async def test_extract_or_load_snapshot_merges_deterministic_and_llm_facts(tmp_p
             ]
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", fake_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", fake_haiku)
 
     result = await extract_or_load_snapshot(pack)
     by_key = {(fact.metric, fact.fiscal_year): fact for fact in result.facts}
@@ -982,12 +982,14 @@ async def test_extract_or_load_snapshot_skips_llm_when_all_slugs_deterministic(
     def fake_extract(_section, *, accession):  # noqa: ARG001
         return [SnapshotFact(**row) for row in facts]
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._extract_summary_table_facts", fake_extract)
+    monkeypatch.setattr(
+        "edgarpack.query.registration.table_parse._extract_summary_table_facts", fake_extract
+    )
 
     async def should_not_call_llm(_section):
         raise AssertionError("full deterministic coverage must not call the LLM")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", should_not_call_llm)
 
     pack = _write_pack(
         tmp_path,
@@ -1152,7 +1154,7 @@ async def test_extract_or_load_snapshot_writes_cache_on_first_call(tmp_path, mon
             ]
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", fake_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", fake_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "ok"
@@ -1194,7 +1196,7 @@ async def test_extract_or_load_snapshot_cache_hit_skips_llm(tmp_path, monkeypatc
         called["n"] += 1
         return "[]"
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", counting_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", counting_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert called["n"] == 0
@@ -1222,7 +1224,7 @@ async def test_extract_or_load_snapshot_invalidates_on_source_change(tmp_path, m
         called["n"] += 1
         return "[]"
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", fresh_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", fresh_haiku)
 
     await extract_or_load_snapshot(pack)
     assert called["n"] == 1
@@ -1248,7 +1250,7 @@ async def test_extract_or_load_snapshot_force_bypasses_cache(tmp_path, monkeypat
         called["n"] += 1
         return "[]"
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", forced_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", forced_haiku)
 
     await extract_or_load_snapshot(pack, force=True)
     assert called["n"] == 1
@@ -1264,7 +1266,9 @@ async def test_extract_or_load_snapshot_handles_no_section(tmp_path, monkeypatch
         called["n"] += 1
         return "[]"
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_be_called)
+    monkeypatch.setattr(
+        "edgarpack.query.registration.llm._call_haiku_extract", should_not_be_called
+    )
 
     result = await extract_or_load_snapshot(pack)
     assert called["n"] == 0
@@ -1280,7 +1284,7 @@ async def test_extract_or_load_snapshot_handles_parse_failure(tmp_path, monkeypa
     async def garbage_haiku(_section):
         return "this is not json"
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", garbage_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", garbage_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "llm_parse_failed"
@@ -1298,7 +1302,7 @@ async def test_extract_or_load_snapshot_handles_missing_api_key(tmp_path, monkey
     async def missing_key_haiku(_section):
         raise MissingAnthropicKeyError("ANTHROPIC_API_KEY is not set")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", missing_key_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", missing_key_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "no_api_key"
@@ -1318,7 +1322,7 @@ async def test_extract_or_load_snapshot_maps_runtime_api_failure_to_llm_call_fai
     async def raising_haiku(_section):
         raise RuntimeError("overloaded: 429")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", raising_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", raising_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "llm_call_failed"
@@ -1361,7 +1365,7 @@ async def test_extract_or_load_snapshot_serves_cached_failure_within_cooldown(
     async def should_not_call_llm(_section):
         raise AssertionError("cached failure inside cooldown must not re-hit the API")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", should_not_call_llm)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "llm_call_failed"
@@ -1398,7 +1402,7 @@ async def test_extract_or_load_snapshot_reattempts_cached_failure_after_cooldown
             ]
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", recovering_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", recovering_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert calls["n"] == 1
@@ -1441,7 +1445,7 @@ async def test_extract_or_load_snapshot_salvages_truncated_llm_json(tmp_path, mo
             ' {"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "cash_and_equ'
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", truncated_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", truncated_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "ok"
@@ -1506,7 +1510,7 @@ async def test_extract_or_load_snapshot_serves_truncated_ok_within_cooldown(tmp_
     async def should_not_call_llm(_section):
         raise AssertionError("truncated ok inside cooldown must not re-hit the API")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", should_not_call_llm)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "ok"
@@ -1546,7 +1550,7 @@ async def test_extract_or_load_snapshot_fills_missing_slugs_after_truncated_cool
             ]
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", filling_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", filling_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert calls["n"] == 1
@@ -1571,7 +1575,7 @@ async def test_extract_or_load_snapshot_truncated_ok_without_gaps_stays_permanen
     async def should_not_call_llm(_section):
         raise AssertionError("a complete-but-truncated snapshot must never re-attempt")
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", should_not_call_llm)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", should_not_call_llm)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "ok"
@@ -1594,7 +1598,7 @@ async def test_extract_or_load_snapshot_empty_llm_response_is_retryable_not_ok(
     async def empty_haiku(_section):
         return "[]"
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", empty_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", empty_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.extraction_status == "no_financial_data_found"
@@ -1638,7 +1642,7 @@ async def test_extract_or_load_snapshot_reattempts_after_empty_llm_response(tmp_
             ]
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", recovering_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", recovering_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert calls["n"] == 1
@@ -1699,7 +1703,7 @@ async def test_call_haiku_extract_retries_once_on_transient_error(monkeypatch):
     async def fake_sleep(seconds):
         sleeps.append(seconds)
 
-    monkeypatch.setattr("edgarpack.query.s1_financials.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("edgarpack.query.registration.llm.asyncio.sleep", fake_sleep)
 
     out = await _call_haiku_extract("# stub")
     assert out == "[]"
@@ -1938,7 +1942,7 @@ async def test_extract_or_load_snapshot_records_gate_rejections(tmp_path, monkey
             ]
         )
 
-    monkeypatch.setattr("edgarpack.query.s1_financials._call_haiku_extract", bad_haiku)
+    monkeypatch.setattr("edgarpack.query.registration.llm._call_haiku_extract", bad_haiku)
 
     result = await extract_or_load_snapshot(pack)
     assert result.gate_rejections
