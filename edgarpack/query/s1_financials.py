@@ -390,8 +390,9 @@ def _summary_period_from_context(year: int, context: str | None) -> tuple[str, s
     month-day is missing, returns None so the caller drops the column rather
     than fabricating a period. Annual columns carry a stated fiscal-year-end
     month-day when the context names one ("year ended March 31" -> -03-31);
-    a bare year with no month-day defaults to the Dec 31 convention, since the
-    year token is itself the citation for an annual row.
+    a bare year with no month-day still classifies as FY (the year token is
+    the citation for the row) but carries an absent period end ("") rather
+    than a fabricated December 31, since non-calendar filers exist.
     """
     lowered = (context or "").lower()
     period_end = _month_day_period_end(year, lowered)
@@ -409,7 +410,7 @@ def _summary_period_from_context(year: int, context: str | None) -> tuple[str, s
             return None
         return "Q3", period_end
     if period_end is None:
-        return "FY", f"{year}-12-31"
+        return "FY", ""
     return "FY", period_end
 
 
@@ -1525,10 +1526,13 @@ def snapshot_fact_to_cited_value(
     value = fact.value_cents / divisor if divisor else fact.value_cents
     source = "s1_pro_forma" if fact.is_pro_forma else "s1_snapshot"
 
+    # An absent or unparseable period_end (bare-year FY column with no
+    # stated month-day) carries no fabricated date; fiscal_year still drives
+    # lfy/mrp selection, and FX conversion fails closed on the missing date.
     try:
-        period_end = _date_cls.fromisoformat(fact.period_end)
+        period_end: _date_cls | None = _date_cls.fromisoformat(fact.period_end)
     except ValueError:
-        period_end = _date_cls(fact.fiscal_year, 12, 31)
+        period_end = None
 
     return CitedValue(
         value=value,

@@ -1596,8 +1596,10 @@ def test_parse_llm_response_rejects_invalid_currency_code():
 def test_summary_period_from_context_carries_non_december_fiscal_year_end():
     # The exact bug: "year ended March 31, 2026" must cite -03-31, not -12-31.
     assert _summary_period_from_context(2026, "Year ended March 31, 2026") == ("FY", "2026-03-31")
-    # A bare year with no month-day defaults to the Dec 31 convention.
-    assert _summary_period_from_context(2026, "2026") == ("FY", "2026-12-31")
+    # A bare year with no month-day carries an absent period end (empty
+    # string in the snapshot row) rather than fabricating a December
+    # year-end for non-calendar filers (fix: bare-year-absent-period).
+    assert _summary_period_from_context(2026, "2026") == ("FY", "")
     # Interim contexts never classify as FY.
     assert _summary_period_from_context(2026, "three months ended January 31, 2026") == (
         "Q1",
@@ -1621,6 +1623,25 @@ def test_summary_table_parser_carries_march_fiscal_year_end():
     assert by_key[("revenue", 2026)].period_end == "2026-03-31"
     assert by_key[("revenue", 2026)].fiscal_period == "FY"
     assert by_key[("revenue", 2025)].period_end == "2025-03-31"
+
+
+def test_summary_table_parser_bare_year_header_has_absent_period_end():
+    # fix: bare-year-absent-period. A header row that is nothing but the
+    # bare years (no "Year ended" caption) carries no month-day anywhere,
+    # so the resulting FY facts get an absent period end, not a fabricated
+    # December 31.
+    section = "\n".join(
+        [
+            "Summary Financial Data",
+            "> 2026 / 2025",
+            "> Revenue ... 100 / 90",
+        ]
+    )
+    facts = _extract_summary_table_facts(section, accession="0001493152-24-000001")
+    by_key = {(fact.metric, fact.fiscal_year): fact for fact in facts}
+    assert by_key[("revenue", 2026)].period_end == ""
+    assert by_key[("revenue", 2026)].fiscal_period == "FY"
+    assert by_key[("revenue", 2025)].period_end == ""
 
 
 # ---------------------------------------------------------------------------
