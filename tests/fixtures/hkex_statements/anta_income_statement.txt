@@ -1,0 +1,51 @@
+133
+Consolidated Statement of Profit or Loss and  
+Other Comprehensive Income
+For the year ended 31 December 2025
+2025 2024
+Note RMB’million RMB’million
+Revenue 1(a) 80,219 70,826
+Cost of sales (30,485) (26,794)    
+Gross profit 49,734 44,032
+Other net income 2 2,999 2,408
+Selling and distribution expenses (28,456) (25,647)
+Administrative expenses (5,186) (4,198)    
+Profit from operations 19,091 16,595
+Net finance income 3 1,151 1,388
+Share of net profit of associates 15 1,203 198
+Gain arising from equity dilution under the Amer Sports Listing – 1,579
+Gain arising from equity dilution under the Amer Sports Placing 15 – 2,090
+Gain arising from repurchase and cancellation of 2025 Convertible Bonds 20(c)(i) 1 34    
+Profit before taxation 4 21,446 21,884
+Taxation 5 (5,784) (4,895)    
+PROFIT FOR THE YEAR 15,662 16,989
+    
+Other comprehensive income/(loss) for the year
+Items that may be reclassified subsequently to profit or loss:
+Foreign currency translation differences (2,894) 1,387
+Share of other comprehensive income of a joint venture – 138
+Share of other comprehensive income/(loss) of associates 15 841 (556)
+Items that will not be reclassified to profit or loss:
+Equity investments at fair value through other comprehensive income (“FVOCI”)  
+– net movement in fair value reserve (non-recycling) 174 66
+Share of other comprehensive income of a joint venture – 44
+Share of other comprehensive income of associates 15 22 9    
+TOTAL COMPREHENSIVE INCOME FOR THE YEAR 13,805 18,077
+    
+PROFIT ATTRIBUTABLE TO:
+Equity shareholders of the Company 13,588 15,596
+Non-controlling interests 2,074 1,393    
+PROFIT FOR THE YEAR 15,662 16,989
+    
+TOTAL COMPREHENSIVE INCOME ATTRIBUTABLE TO:
+Equity shareholders of the Company 11,738 16,680
+Non-controlling interests 2,067 1,397    
+TOTAL COMPREHENSIVE INCOME FOR THE YEAR 13,805 18,077
+    
+RMB RMB
+Earnings per share 8
+– Basic 4.89 5.55
+– Diluted 4.80 5.41
+    
+The notes, material accounting policy information and principal subsidiaries on pages 139 to 219 form part of these financial statements. 
+Details of dividends payable to equity shareholders of the Company are set out in note 27.

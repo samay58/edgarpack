@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -10,6 +11,18 @@ from typing import Any, Literal
 from ..query.metric_map import AccountingStandard
 
 ExtractionMethod = Literal["regex"]
+
+
+class HKExtractionBlockedError(RuntimeError):  # noqa: N818
+    """A section's text carries a subsetted-font garble signature.
+
+    HSBC-class filings ship with no usable ToUnicode CMap: pypdf and
+    pymupdf both decode digits (and other glyphs) as control characters,
+    identically. No downstream regex fix can recover the real values
+    from that text, so extraction refuses to run rather than emit a
+    confidently wrong number.
+    """
+
 
 _FINANCIAL_SECTIONS = {
     "hkex_income_statement",
@@ -23,6 +36,7 @@ _PROSE_LABELS: dict[str, list[str]] = {
     "revenue": [
         "total revenue",
         "revenue",
+        "revenues",
         "turnover",
         "net revenues",
         "net revenue",
@@ -198,6 +212,8 @@ def _detect_multiplier(text: str) -> int:
     header = text[:800]
     if re.search(r"in millions\b", header, re.IGNORECASE):
         return 1_000_000
+    if re.search(r"['\u2019\u2018]million\b", header, re.IGNORECASE):
+        return 1_000_000
     if re.search(r"in thousands\b", header, re.IGNORECASE):
         return 1_000
     if re.search(r"['\u2019\u2018]000\b", header):
@@ -208,6 +224,66 @@ def _detect_multiplier(text: str) -> int:
 def _is_interleaved(text: str) -> bool:
     """True when the section uses interleaved (amount, %) column pairs."""
     return bool(re.search(r"(?:US\$|HK\$|RMB)\s+%", text[:800]))
+
+
+def _find_year_header_line(text: str) -> list[str] | None:
+    """Return the year tokens of the table's own header row, or None.
+
+    The header row is the line whose trailing run of two or more bare
+    20XX/19XX tokens has nothing after it, preceded only by short
+    non-numeric label tokens ("Note", "Notes", a note-category marker
+    like "V"). Anchoring here (instead of scanning a fixed character
+    window) avoids counting boilerplate year mentions that precede the
+    real header ("Annual Report 2025", "For the year ended 31 December
+    2025"): those inflated the year-column count, so correct 2-column
+    rows failed their column-count check while rows carrying a leading
+    note-reference digit coincidentally lined up as a value.
+    """
+    for line in text.split("\n"):
+        tokens = line.split()
+        if not tokens:
+            continue
+        run_len = 0
+        for tok in reversed(tokens):
+            if _BARE_YEAR_RE.fullmatch(tok):
+                run_len += 1
+            else:
+                break
+        if run_len < 2:
+            continue
+        prefix = tokens[: len(tokens) - run_len]
+        if any(re.search(r"\d", tok) for tok in prefix):
+            continue
+        return tokens[len(tokens) - run_len :]
+    return None
+
+
+# Control characters in this range are absent from clean extracted statement
+# text but dense in HSBC-class PDFs (subsetted font, no ToUnicode CMap):
+# pypdf and pymupdf both decode digits as control bytes. Tab, newline, and
+# carriage return are excluded since they are legitimate row separators.
+_GARBLE_CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x18]")
+_GARBLE_CONTROL_RATIO = 0.02
+_GARBLE_PRINTABLE_FLOOR = 0.90
+
+
+def _is_garbled(text: str) -> bool:
+    """True when text carries a subsetted-font garble signature.
+
+    Flags on either a control-character density spike or a collapsed
+    printable-character ratio over the section text. Thresholds are set
+    with wide margin against the hk-construct-prototype evidence: the
+    garbled HSBC excerpt runs at roughly 30% control characters and a 69%
+    printable ratio, while every clean issuer's extracted statement text
+    has zero control characters and a 100% printable ratio.
+    """
+    if not text:
+        return False
+    control_hits = len(_GARBLE_CONTROL_RE.findall(text))
+    if control_hits / len(text) > _GARBLE_CONTROL_RATIO:
+        return True
+    printable = sum(1 for c in text if c.isprintable() or c in "\t\n\r")
+    return printable / len(text) < _GARBLE_PRINTABLE_FLOOR
 
 
 _MONTH_NAMES = (
@@ -477,7 +553,15 @@ def extract_with_regex(
     if not metrics:
         return []
 
-    raw_years = [int(y) for y in re.findall(r"\b(20\d\d)\b", text[:500])]
+    if _is_garbled(text):
+        raise HKExtractionBlockedError(
+            f"{section_id}: text carries a subsetted-font garble signature "
+            "(control-range characters or a collapsed printable-character "
+            "ratio); refusing to regex-extract values from it"
+        )
+
+    header_tokens = _find_year_header_line(text)
+    raw_years = [int(y) for y in header_tokens] if header_tokens is not None else []
 
     # Keep first-occurrence of each year (duplicates are typically interim
     # period columns reusing the same calendar year) and drop years that
@@ -494,9 +578,14 @@ def extract_with_regex(
 
     # No year header detected: fall back to legacy single-value inline
     # extraction, emitting facts with fiscal_year=0 so the caller can
-    # stamp the pack-level fiscal year.
+    # stamp the pack-level fiscal year. But only when the text shows no
+    # sign of a multi-year table this extractor failed to anchor (e.g. a
+    # year header split across separate lines): the single-value fallback
+    # reads whichever number ends the matched line, so applying it to an
+    # unrecognized multi-column row would silently mislabel a prior-year
+    # value as the current period.
     if not year_cols:
-        if not raw_years:
+        if not raw_years and len(set(_BARE_YEAR_RE.findall(text))) < 2:
             return _extract_inline_single_year(text, section_id, metrics, _detect_multiplier(text))
         return []
 
@@ -629,7 +718,11 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
             continue
 
         text = section_file.read_text()
-        raw_facts = extract_with_regex(text, section_id, standard, max_fy=fy)
+        try:
+            raw_facts = extract_with_regex(text, section_id, standard, max_fy=fy)
+        except HKExtractionBlockedError as exc:
+            logging.getLogger(__name__).warning("skipping %s in %s: %s", section_id, pack_dir, exc)
+            continue
         for f in raw_facts:
             all_facts.append(
                 HKFact(

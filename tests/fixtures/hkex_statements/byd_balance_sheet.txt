@@ -1,0 +1,165 @@
+Annual Report 2025
+ɚཧɚʞϋϋజ
+141
+Consolidated Balance Sheet
+ڌ
+31 December 2025
+ɚཧɚʞϋɤɚ˜ɧɤɓ˚
+RMB’000
+ɛ͏࿆ɷʩ
+31 December 
+2025
+31 December 
+2024
+Assets 資產
+Note V
+附註五
+二零二五年
+十二月三十一日
+二零二四年
+十二月三十一日
+ 
+Current assets 流動資產
+Monetary funds 貨幣資金 1 75,424,747 102,738,734
+Financial assets held for trading 交易性金融資產 2 54,532,541 40,511,496
+Derivative financial assets 衍生金融資產 – 35,093
+Purchases of financial assets under resale 
+agreements
+買入返售金融資產 – 392,472
+Trade receivables 應收賬款 3 37,004,685 62,298,988
+Receivables financing 應收款項融資 4 5,484,126 10,449,966
+Prepayments 預付款項 6 5,024,873 3,974,023
+Other receivables 其他應收款 5 3,153,552 3,616,030
+Inventories 存貨 7 138,420,580 116,036,237
+Contract assets 合同資產 8 1,165,068 1,410,541
+Non-current assets due within one year 一年內到期的非流動資產 9 20,533,911 11,379,480
+Other current assets 其他流動資產 10 30,723,475 17,729,184
+ 
+Total current assets 流動資產合計 371,467,558 370,572,244
+ 
+Non-current assets 非流動資產
+Long-term receivables 長期應收款 11 13,056,606 10,206,134
+Long-term equity investments 長期股權投資 12 21,781,418 19,082,496
+Other equity instrument investments 其他權益工具投資 13 8,610,322 8,501,093
+Other non-current financial assets 其他非流動金融資產 14 3,079,960 2,655,245
+Investment properties 投資性房地產 58,520 60,228
+Fixed assets 固定資產 15 292,775,929 262,287,302
+Construction in progress 在建工程 16 48,293,781 19,954,343
+Right-of-use assets 使用權資產 17 9,082,775 10,575,072
+Intangible assets 無形資產 18 41,485,229 38,423,925
+Development expenditures 開發支出 5,971,312 508,038
+Goodwill 商譽 19 4,427,571 4,427,571
+Long-term deferred expenditures 長期待攤費用 20 4,171,222 5,006,717
+Deferred tax assets 遞延所得稅資產 21 15,358,088 8,559,492
+Other non-current assets 其他非流動資產 22 44,109,592 22,535,955
+ 
+Total non-current assets 非流動資產合計 512,262,325 412,783,611
+ 
+Total assets 資產總計 883,729,883 783,355,855
+ 
+The accompanying notes form an integral part of these financial  
+statements
+後附財務報表附註為本財務報表的組成部分
+142
+BYD Company Limited
+ʮ̡
+Consolidated Balance Sheet
+ڌ
+31 December 2025
+ɚཧɚʞϋɤɚ˜ɧɤɓ˚
+RMB’000
+ɛ͏࿆ɷʩ
+31 December 
+2025
+31 December 
+2024
+Liabilities 負債
+Note V
+附註五
+二零二五年
+十二月三十一日
+二零二四年
+十二月三十一日
+ 
+Current liabilities 流動負債
+Short-term borrowings 短期借款 24 38,484,710 12,103,272
+Derivative financial liabilities 衍生金融負債 550,144 1,993
+Bills payables 應付票據 25 22,463,883 2,383,996
+Trade payables 應付賬款 26 186,742,375 241,643,424
+Contract liabilities 合同負債 27 51,471,055 43,729,585
+Employee benefits payables 應付職工薪酬 28 16,025,385 21,843,196
+Tax payables 應交稅費 29 10,716,012 10,096,912
+Other payables 其他應付款 30 119,482,902 144,989,197
+Provision 預計負債 31 5,384,983 3,547,165
+Non-current liabilities due within one year 一年內到期的非流動負債 32 6,311,964 10,222,575
+Other current liabilities 其他流動負債 33 10,817,944 5,423,861
+ 
+Total current liabilities 流動負債合計 468,451,357 495,985,176
+ 
+Non-current liabilities 非流動負債
+Long-term borrowings 長期借款 34 60,705,569 8,257,786
+Bond payables 應付債券 35 4,997,910 –
+Lease liabilities 租賃負債 36 8,620,487 9,875,967
+Deferred tax liabilities 遞延所得稅負債 21 1,617,317 2,787,484
+Other non-current liabilities 其他非流動負債 37 80,798,058 67,761,233
+ 
+Total non-current liabilities 非流動負債合計 156,739,341 88,682,470
+ 
+Total liabilities 負債合計 625,190,698 584,667,646
+     
+The accompanying notes form an integral part of these financial  
+statements
+後附財務報表附註為本財務報表的組成部分
+Annual Report 2025
+ɚཧɚʞϋϋజ
+143
+Consolidated Balance Sheet
+ڌ
+31 December 2025
+ɚཧɚʞϋɤɚ˜ɧɤɓ˚
+RMB’000
+ɛ͏࿆ɷʩ
+31 December 
+2025
+31 December 
+2024
+Shareholders ’ equity 股東權益
+Note V
+附註五
+二零二五年
+十二月三十一日
+二零二四年
+十二月三十一日
+ 
+Shareholders ’ equity 股東權益
+Share capital 股本 38 9,117,198 2,909,266
+Other equity instruments 其他權益工具 39 18,733,984 14,894,442
+Including: Perpetual bond 其中：永續債 18,733,984 14,894,442
+Capital reserve 資本公積 40 95,276,659 60,679,406
+Less: treasury shares 減：庫存股 41 3,988,271 723,968
+Other comprehensive income 其他綜合收益 42 3,251,842 1,440,616
+Special reserve 專項儲備 31,078 29,461
+Surplus reserve 盈餘公積 43 7,794,688 7,374,087
+Undistributed profit 未分配利潤 44 116,057,428 98,647,794
+ 
+Total shareholders ’ equity attributable to the 
+ parent company
+歸屬於母公司股東權益合計 246,274,606 185,251,104
+Non-controlling interests 少數股東權益 12,264,579 13,437,105
+ 
+Total shareholders ’ equity 股東權益合計 258,539,185 198,688,209
+ 
+Total liabilities and shareholders ’ equity 負債和股東權益總計 883,729,883 783,355,855
+     
+The financial statements were signed by the following persons:
+Legal representative:  
+Wang Chuan-fu
+Chief Financial Officer:  
+Zhou Ya-lin 
+Head of Accounting Department:  
+Liu Hui
+法定代表人：王傳福 主管會計工作負責人：周亞琳 會計機構負責人：劉惠
+The accompanying notes form an integral part of these financial 
+statements
+後附財務報表附註為本財務報表的組成部分
+財務報表由以下人士簽署：
