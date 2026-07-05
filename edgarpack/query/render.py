@@ -54,6 +54,14 @@ def _render_citation_lines(
         f"{marker_label} {form_type} {fiscal_label} | period {period} | "
         f"filing {accession} | filed {filed}"
     )
+
+    matched_label = record.get("matched_label")
+    if isinstance(matched_label, str) and matched_label:
+        from .formatting import bilingual_label_truncated
+
+        if bilingual_label_truncated(matched_label):
+            summary = f"{summary} | label: {matched_label}"
+
     if show_links != "none" and not osc8_on and primary:
         summary = f"{summary}  {compact_url(primary)}"
     lines.extend(_wrap_cli_text(summary, width, indent="         "))
@@ -171,6 +179,52 @@ def _reproduce_command(permalink: str, args: Any) -> str:
     return f"{permalink} --packs {shlex.quote(pack_root_text)}"
 
 
+# One-line filing-type context for China-path table output, keyed by the
+# value's accounting_standard provenance field. CAS is the SSE / A-share
+# path (CNINFO annual reports); HKFRS is the HKEX path. No entry for
+# US-GAAP/IFRS: those render with no context line, exactly as before.
+_CHINA_CONTEXT_LINES = {
+    "CAS": "Source: 年度报告 (annual report) filed with CNINFO, the A-share equivalent of a 10-K.",
+    "HKFRS": "Source: annual report filed with HKEX news.",
+}
+
+
+def _china_context_line(result: Any) -> str | None:
+    """Filing-type context line for a China-path table, or None for SEC/registration.
+
+    Detected from the existing accounting_standard provenance field (already
+    set by the HKEX/SSE query paths); no new CitedValue fields needed.
+    """
+    for raw_value in result.metrics.values():
+        if raw_value is None:
+            continue
+        values = raw_value if isinstance(raw_value, list) else [raw_value]
+        for value in values:
+            if value is None:
+                continue
+            standard = getattr(value, "accounting_standard", "")
+            line = _CHINA_CONTEXT_LINES.get(standard)
+            if line:
+                return line
+    return None
+
+
+def _bilingual_metric_label(label: str, value: Any) -> str:
+    """Bilingual metric cell label for a China-path value carrying a matched_label.
+
+    Non-China values (or a value with no matched_label) return `label`
+    unchanged, so SEC table output stays byte-identical.
+    """
+    standard = getattr(value, "accounting_standard", "")
+    matched_label = getattr(value, "matched_label", "")
+    if standard not in ("CAS", "HKFRS") or not matched_label:
+        return label
+
+    from .formatting import format_bilingual_label
+
+    return format_bilingual_label(label, matched_label)
+
+
 def _render_query_table(result: Any, args: Any) -> str:
     """Render single-company query output with inline citation/audit ergonomics."""
     from .currency import CurrencyMode, format_cited_currency
@@ -221,6 +275,9 @@ def _render_query_table(result: Any, args: Any) -> str:
             continue
 
         if isinstance(raw_value, list):
+            first_item = next((item for item in raw_value if item is not None), None)
+            if first_item is not None:
+                label = _bilingual_metric_label(label, first_item)
             lines.append(f"{label}:")
             lean_items = lean_value if isinstance(lean_value, list) else []
             for idx, item in enumerate(raw_value):
@@ -265,6 +322,7 @@ def _render_query_table(result: Any, args: Any) -> str:
             continue
 
         payload = lean_value if isinstance(lean_value, dict) else {}
+        label = _bilingual_metric_label(label, raw_value)
         marker = ""
         calc_id = payload.get("calculation_id")
         citation_ids = payload.get("citation_ids", [])
@@ -383,6 +441,11 @@ def _render_query_table(result: Any, args: Any) -> str:
                                 str(cid), record, show_links=args.show_links, width=width
                             )
                         )
+
+    context_line = _china_context_line(result)
+    if context_line:
+        lines.append("")
+        lines.append(context_line)
 
     if args.citations == "footer":
         if citations:

@@ -116,6 +116,28 @@ def format_number(value: float | None, unit: str) -> str:
     return f"{value:,.2f}"
 
 
+_BILINGUAL_LABEL_MAX = 24
+
+
+def format_bilingual_label(display_name: str, matched_label: str) -> str:
+    """English display name plus the parenthesized original filing label.
+
+    Renders "Revenue (营业收入)" style for China-path metric cells. A label
+    over 24 chars is cut at 24 with no ellipsis marker (truncation ellipses
+    are on the kill-list); the caller shows the untruncated label elsewhere
+    (the citation line) when ``bilingual_label_truncated`` is True.
+    """
+    if not matched_label:
+        return display_name
+    label = matched_label[:_BILINGUAL_LABEL_MAX]
+    return f"{display_name} ({label})"
+
+
+def bilingual_label_truncated(matched_label: str) -> bool:
+    """True when ``format_bilingual_label`` would cut the label short."""
+    return len(matched_label) > _BILINGUAL_LABEL_MAX
+
+
 def format_citation_marker(cited: Any) -> str:  # noqa: ANN401 (duck-typed on CitedValue)
     """Inline citation marker for table renderings.
 
@@ -139,4 +161,10 @@ def format_citation_marker(cited: Any) -> str:  # noqa: ANN401 (duck-typed on Ci
     return f"[{form_label}, {short}]"
 
 
-__all__ = ["format_number", "format_citation_marker", "_CURRENCY_SYMBOLS"]
+__all__ = [
+    "format_number",
+    "format_citation_marker",
+    "format_bilingual_label",
+    "bilingual_label_truncated",
+    "_CURRENCY_SYMBOLS",
+]

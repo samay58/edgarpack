@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from edgarpack.query.formatting import format_number
+from edgarpack.query.formatting import (
+    bilingual_label_truncated,
+    format_bilingual_label,
+    format_number,
+)
 
 
 class TestScaleAndPrecision:
@@ -148,3 +152,30 @@ class TestEdgeCases:
 
     def test_inf_returns_na(self) -> None:
         assert format_number(float("inf"), "USD") == "N/A"
+
+
+class TestBilingualLabel:
+    def test_empty_matched_label_returns_display_name(self) -> None:
+        assert format_bilingual_label("Revenue", "") == "Revenue"
+
+    def test_short_label_renders_parenthesized(self) -> None:
+        assert format_bilingual_label("Revenue", "营业收入") == "Revenue (营业收入)"
+
+    def test_long_label_truncates_at_24_chars_no_ellipsis(self) -> None:
+        long_label = "归属于母公司所有者的净利润和营业总收入合计金额说明汇总统计表格"
+        assert len(long_label) > 24
+        rendered = format_bilingual_label("Revenue", long_label)
+        assert rendered == f"Revenue ({long_label[:24]})"
+        assert "…" not in rendered
+        assert "..." not in rendered
+
+    def test_label_exactly_24_chars_not_truncated(self) -> None:
+        label = "x" * 24
+        assert format_bilingual_label("Revenue", label) == f"Revenue ({label})"
+        assert not bilingual_label_truncated(label)
+
+    def test_bilingual_label_truncated_false_for_short_label(self) -> None:
+        assert bilingual_label_truncated("营业收入") is False
+
+    def test_bilingual_label_truncated_true_for_long_label(self) -> None:
+        assert bilingual_label_truncated("x" * 25) is True
