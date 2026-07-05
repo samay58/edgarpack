@@ -122,6 +122,82 @@ def test_duplicate_ids_get_suffixed():
     assert "ipo_s01_overview_1" in ids
 
 
+def test_toc_dot_leaders_are_not_sections():
+    """A dot-leader TOC must not steal the clean slug from the real heading."""
+    md = """# 招股说明书
+
+目录
+
+第一节 概览 ...................... 1
+第二节 本次发行概况 ...................... 5
+第三节 发行人基本情况 ...................... 10
+第四节 核心技术 ...................... 15
+第五节 业务与技术 ...................... 20
+第六节 行业概况 ...................... 25
+第七节 公司治理 ...................... 30
+第八节 财务会计信息 ...................... 35
+第九节 募集资金运用 ...................... 40
+第十节 风险因素 ...................... 45
+
+## 第一节 概览
+
+公司概览内容。
+
+## 第二节 本次发行概况
+
+发行概况内容。
+
+## 第三节 发行人基本情况
+
+发行人信息。
+
+## 第四节 核心技术
+
+核心技术描述。
+
+## 第五节 业务与技术
+
+业务技术描述。
+
+## 第六节 行业概况
+
+行业概况描述。
+
+## 第七节 公司治理
+
+公司治理描述。
+
+## 第八节 财务会计信息
+
+财务信息描述。
+
+## 第九节 募集资金运用
+
+募集资金描述。
+
+## 第十节 风险因素
+
+风险因素说明。
+"""
+    sections = find_sections_cn(md)
+    ids = [s.id for s in sections]
+    expected = [
+        "ipo_s01_overview",
+        "ipo_s02_offering_summary",
+        "ipo_s03_issuer_info",
+        "ipo_s04_core_technology",
+        "ipo_s05_business_technology",
+        "ipo_s06_industry_overview",
+        "ipo_s07_corporate_governance",
+        "ipo_s08_financial_info",
+        "ipo_s09_use_of_proceeds",
+        "ipo_s10_risk_factors",
+    ]
+    for slug in expected:
+        assert ids.count(slug) == 1, f"{slug}: expected exactly 1, got {ids.count(slug)}"
+    assert not any(i.endswith("_1") for i in ids)
+
+
 def test_find_sections_annual_report():
     md = """# 2024年年度报告
 
