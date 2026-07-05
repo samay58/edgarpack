@@ -2542,10 +2542,11 @@ def _cmd_query(args: Any) -> int:
                             seen.add(name)
                             strict_rejected.append(name)
 
-        # Emit a one-line hint when registration extraction couldn't run due to a
-        # missing API key so the user knows why cells show N/A. Scan every
-        # period's result (not just the first) so --period lfy,pro-forma
-        # surfaces the hint even when only the pro-forma call hit no_api_key.
+        # Emit a one-line hint when registration extraction couldn't run. A
+        # missing API key gets install/export instructions; a runtime call
+        # failure gets its detail and a retry nudge. Scan every period's result
+        # (not just the first) so --period lfy,pro-forma surfaces the hint even
+        # when only the pro-forma call hit the failure.
         scan_sources = [result] if len(periods) == 1 else list(results_by_period.values())
         missing_key = any(
             getattr(v, "source", "") == "no_api_key"
@@ -2555,6 +2556,10 @@ def _cmd_query(args: Any) -> int:
         )
         if missing_key:
             print(_render_query_no_api_key_hint(), file=sys.stderr)
+        else:
+            extraction_failed = _registration_extraction_failure_message(scan_sources)
+            if extraction_failed:
+                print(_render_query_extraction_failed_hint(extraction_failed), file=sys.stderr)
 
         # Single-period path: keep existing behavior byte-for-byte.
         if len(periods) == 1:
@@ -3462,6 +3467,27 @@ def _render_query_no_api_key_hint() -> str:
         "for an install use `pip install edgarpack[vlm]`. Disclosures available via "
         "`edgarpack which`."
     )
+
+
+def _registration_extraction_failure_message(results: list[Any]) -> str | None:
+    """Return a registration extraction-failure diagnostic message, if any.
+
+    Skips the missing-key case (handled by the no_api_key hint) so this only
+    fires for a runtime call / parse failure the user can retry.
+    """
+    for result in results:
+        for diag in getattr(result, "diagnostics", []) or []:
+            if getattr(diag, "metric", "") != "extraction":
+                continue
+            message = str(getattr(diag, "message", ""))
+            if "no_api_key" in message:
+                continue
+            return message
+    return None
+
+
+def _render_query_extraction_failed_hint(message: str) -> str:
+    return f"Note: {message}. Retry shortly."
 
 
 def _render_which_empty_state(

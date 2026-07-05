@@ -11,11 +11,13 @@ the existing `edgarpack query` surface via a fallback in
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
+import os
 import re
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -75,17 +77,30 @@ class SnapshotResult:
     """All extracted facts for one S-1 pack, plus extraction metadata.
 
     Persisted as `<pack_dir>/s1_financials.json`. `source_sha256` is the
-    sha256 of the first 50KB of `<pack_dir>/filing.full.md`, used to
-    invalidate the cache when the source markdown changes.
+    sha256 of the whole `<pack_dir>/filing.full.md`, used to invalidate the
+    cache when the source markdown changes.
+
+    extraction_status is one of: "ok", "no_api_key" (missing key / anthropic
+    ImportError only), "llm_call_failed" (runtime API failure, exception text
+    in `detail`), "llm_parse_failed", "no_financial_data_found". The last
+    three are retryable: `retry_after` holds the ISO-8601 timestamp before
+    which a cached failure is served, after which a read re-attempts. `ok`
+    snapshots never expire (invalidated by hash / schema only). `truncated`
+    marks a snapshot salvaged from a truncated JSON array. `gate_rejections`
+    records LLM rows dropped by the magnitude sanity gates.
     """
 
     schema_version: int
     accession: str
     extracted_at: str  # ISO 8601 UTC
-    extraction_status: str  # "ok" | "llm_parse_failed" | "no_financial_data_found" | "no_api_key"
+    extraction_status: str
     source_sha256: str
     model: str
     facts: list[SnapshotFact]
+    detail: str | None = None
+    retry_after: str | None = None
+    truncated: bool = False
+    gate_rejections: list[str] = field(default_factory=list)
 
     def to_json(self) -> str:
         payload = {
@@ -95,6 +110,10 @@ class SnapshotResult:
             "extraction_status": self.extraction_status,
             "source_sha256": self.source_sha256,
             "model": self.model,
+            "detail": self.detail,
+            "retry_after": self.retry_after,
+            "truncated": self.truncated,
+            "gate_rejections": self.gate_rejections,
             "facts": [f.to_dict() for f in self.facts],
         }
         return json.dumps(payload, indent=2)
@@ -111,6 +130,10 @@ class SnapshotResult:
             source_sha256=str(data["source_sha256"]),
             model=str(data["model"]),
             facts=facts,
+            detail=(str(data["detail"]) if data.get("detail") is not None else None),
+            retry_after=(str(data["retry_after"]) if data.get("retry_after") is not None else None),
+            truncated=bool(data.get("truncated", False)),
+            gate_rejections=[str(r) for r in data.get("gate_rejections", [])],
         )
 
 
@@ -309,33 +332,82 @@ def _split_summary_cells(line: str) -> list[str]:
     return [_clean_summary_cell(cell) for cell in _strip_summary_line(line).split("/")]
 
 
-def _summary_period_from_context(year: int, context: str | None) -> tuple[str, str]:
+_MONTH_TO_NUM: dict[str, int] = {
+    "january": 1,
+    "jan": 1,
+    "february": 2,
+    "feb": 2,
+    "march": 3,
+    "mar": 3,
+    "april": 4,
+    "apr": 4,
+    "may": 5,
+    "june": 6,
+    "jun": 6,
+    "july": 7,
+    "jul": 7,
+    "august": 8,
+    "aug": 8,
+    "september": 9,
+    "sept": 9,
+    "sep": 9,
+    "october": 10,
+    "oct": 10,
+    "november": 11,
+    "nov": 11,
+    "december": 12,
+    "dec": 12,
+}
+_MONTH_DAY_RE = re.compile(
+    r"\b(" + "|".join(sorted(_MONTH_TO_NUM, key=len, reverse=True)) + r")\.?\s+(\d{1,2})\b",
+    re.IGNORECASE,
+)
+
+
+def _month_day_period_end(year: int, context: str) -> str | None:
+    """Return an ISO period_end from a "<month> <day>" phrase, or None.
+
+    Recognizes any month name (not just quarter-end months) and validates the
+    day against the calendar so an unparseable phrase yields no fabricated date.
+    """
+    match = _MONTH_DAY_RE.search(context)
+    if match is None:
+        return None
+    month = _MONTH_TO_NUM[match.group(1).lower()]
+    day = int(match.group(2))
+    try:
+        datetime(year, month, day)
+    except ValueError:
+        return None
+    return f"{year}-{month:02d}-{day:02d}"
+
+
+def _summary_period_from_context(year: int, context: str | None) -> tuple[str, str] | None:
+    """Classify a summary column's fiscal period from its header context.
+
+    Returns (fiscal_period, period_end) or None when the context states no
+    parseable month-day. Interim contexts ("three/six/nine months ended")
+    never classify as FY; the actual month-day is carried through so an
+    uncited or fabricated period is never emitted.
+    """
     lowered = (context or "").lower()
-    period_end_by_label = {
-        "march 31": f"{year}-03-31",
-        "june 30": f"{year}-06-30",
-        "september 30": f"{year}-09-30",
-        "december 31": f"{year}-12-31",
-    }
-    period_end = next(
-        (end for label, end in period_end_by_label.items() if label in lowered),
-        None,
-    )
-    if "three months ended" in lowered and period_end:
-        fiscal_period = {
-            "03-31": "Q1",
-            "06-30": "Q2",
-            "09-30": "Q3",
-            "12-31": "Q4",
-        }[period_end[-5:]]
-        return fiscal_period, period_end
-    if "six months ended" in lowered and period_end:
+    period_end = _month_day_period_end(year, lowered)
+    if "three months ended" in lowered:
+        if period_end is None:
+            return None
+        quarter = ((int(period_end[5:7]) - 1) // 3) + 1
+        return f"Q{quarter}", period_end
+    if "six months ended" in lowered or "half-year ended" in lowered:
+        if period_end is None:
+            return None
         return "Q2", period_end
-    if "half-year ended" in lowered and period_end:
-        return "Q2", period_end
-    if "nine months ended" in lowered and period_end:
+    if "nine months ended" in lowered:
+        if period_end is None:
+            return None
         return "Q3", period_end
-    return "FY", f"{year}-12-31"
+    if period_end is None:
+        return None
+    return "FY", period_end
 
 
 def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int, int]:
@@ -367,7 +439,10 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int,
                 if year_match is None:
                     continue
                 year = int(year_match.group(1))
-                fiscal_period, period_end = _summary_period_from_context(year, cell)
+                resolved = _summary_period_from_context(year, cell)
+                if resolved is None:
+                    continue
+                fiscal_period, period_end = resolved
                 header_columns.append((year, fiscal_period, period_end))
             unique_header_columns = list(dict.fromkeys(header_columns))
             if len(unique_header_columns) >= 2:
@@ -397,10 +472,19 @@ def _summary_columns(lines: list[str]) -> tuple[list[tuple[int, str, str]], int,
             continue
 
         columns: list[tuple[int, str, str]] = []
+        unparseable_period = False
         for position, year in enumerate(year_tokens):
             context = contexts[position] if contexts and position < len(contexts) else None
-            fiscal_period, period_end = _summary_period_from_context(year, context)
+            resolved = _summary_period_from_context(year, context)
+            if resolved is None:
+                unparseable_period = True
+                break
+            fiscal_period, period_end = resolved
             columns.append((year, fiscal_period, period_end))
+        if unparseable_period:
+            # A bare year with no month-day context is an uncited period; skip
+            # this row and keep scanning for a header that states one.
+            continue
         header_index = context_header_index if context_header_index is not None else index
         return columns, header_index, index + 1
     return [], 0, 0
@@ -516,17 +600,28 @@ def _compact_summary_columns(
         return columns
 
     unique_years = list(dict.fromkeys(year for year, _period, _end in columns))
-    has_interim = any(period != "FY" for _year, period, _end in columns)
-    if has_interim and value_count >= 3 and len(unique_years) >= value_count - 1:
+    annual_by_year = {year: (year, period, end) for year, period, end in columns if period == "FY"}
+    interim_by_year = {
+        year: (year, period, end) for year, period, end in columns if period != "FY"
+    }
+    if interim_by_year and value_count >= 3 and len(unique_years) >= value_count - 1:
         interim_count = 2
         annual_count = value_count - interim_count
         annual_years = unique_years[:annual_count]
         interim_start = max(0, annual_count - 1)
         interim_years = unique_years[interim_start : interim_start + interim_count]
-        compact: list[tuple[int, str, str]] = [
-            (year, "FY", f"{year}-12-31") for year in annual_years
-        ]
-        compact.extend((year, "Q1", f"{year}-03-31") for year in interim_years)
+        # Derive each compacted column from an actual parsed column rather than
+        # fabricating a Q1/-03-31 stub; drop the compaction if a real column is
+        # missing for a needed year.
+        compact: list[tuple[int, str, str]] = []
+        for year in annual_years:
+            annual_col = annual_by_year.get(year)
+            if annual_col is not None:
+                compact.append(annual_col)
+        for year in interim_years:
+            interim_col = interim_by_year.get(year)
+            if interim_col is not None:
+                compact.append(interim_col)
         if len(compact) == value_count:
             return compact
 
@@ -536,6 +631,60 @@ def _compact_summary_columns(
     return columns
 
 
+# ISO-4217 codes we accept from either extractor. Kept small on purpose: an
+# unrecognized code is treated as an extraction error, not passed through.
+_ACCEPTED_CURRENCIES: frozenset[str] = frozenset(
+    {"USD", "EUR", "GBP", "JPY", "CNY", "HKD", "SEK", "CHF", "CAD", "AUD", "SGD"}
+)
+
+_PRESENTATION_CURRENCY_WORDS: dict[str, str] = {
+    "rmb": "CNY",
+    "renminbi": "CNY",
+    "cny": "CNY",
+    "eur": "EUR",
+    "euro": "EUR",
+    "euros": "EUR",
+    "sek": "SEK",
+    "gbp": "GBP",
+    "jpy": "JPY",
+    "yen": "JPY",
+    "hkd": "HKD",
+    "chf": "CHF",
+    "cad": "CAD",
+    "aud": "AUD",
+    "sgd": "SGD",
+}
+
+# A presentation-currency phrase names a currency next to a scale marker, e.g.
+# "expressed in thousands of RMB" or "in millions of EUR". Restricting to this
+# shape avoids treating an incidental currency mention in prose as the table's
+# presentation currency.
+_PRESENTATION_CURRENCY_RE = re.compile(
+    r"(?:expressed\s+in|amounts\s+in|in)\s+"
+    r"(?:thousands|millions|billions)?\s*(?:of\s+)?"
+    r"(" + "|".join(sorted(_PRESENTATION_CURRENCY_WORDS, key=len, reverse=True)) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_presentation_currency(section_text: str) -> str | None:
+    """Return the ISO-4217 presentation currency for a summary section.
+
+    Returns "USD" when no non-USD presentation marker is present, the ISO code
+    when exactly one non-USD currency is named, or None when a marker is
+    present but ambiguous (multiple currencies) so the caller can fail closed.
+    """
+    found = {
+        _PRESENTATION_CURRENCY_WORDS[match.group(1).lower()]
+        for match in _PRESENTATION_CURRENCY_RE.finditer(section_text)
+    }
+    if not found:
+        return "USD"
+    if len(found) == 1:
+        return next(iter(found))
+    return None
+
+
 def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[SnapshotFact]:
     """Parse common S-1 summary financial tables without an LLM.
 
@@ -543,6 +692,11 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
     explicit period headers such as `2025 / 2024` or S-1 annual-plus-quarterly
     tables. Ambiguous rows are skipped.
     """
+    currency = _detect_presentation_currency(section_text)
+    if currency is None:
+        # A currency marker is present but ambiguous; refuse deterministic
+        # emission and let the LLM path handle this table.
+        return []
     lines = [_strip_summary_line(line) for line in section_text.splitlines()]
     money_multiplier = _summary_scale_multiplier(section_text)
     facts_by_key: dict[tuple[str, int, str, str], SnapshotFact | None] = {}
@@ -610,8 +764,10 @@ def _extract_summary_table_facts(section_text: str, *, accession: str) -> list[S
                     period_end=period_end,
                     metric=metric,
                     value_cents=value_cents,
-                    currency="USD",
-                    is_audited=True,
+                    currency=currency,
+                    # Annual columns of an S-1 come from audited statements;
+                    # interim / stub columns are unaudited. Stamp truthfully.
+                    is_audited=(fiscal_period or "FY").upper() == "FY",
                     is_pro_forma=False,
                     pro_forma_note=None,
                     fiscal_period=fiscal_period,
@@ -764,32 +920,73 @@ def _llm_row_has_metric_context(row: dict[str, object]) -> bool:
 
 MODEL_ID = "claude-haiku-4-5-20251001"
 _MAX_OUTPUT_TOKENS = 8000
+_RETRY_BACKOFF_SECONDS = 2.0
+
+
+class MissingAnthropicKeyError(RuntimeError):
+    """Raised when the anthropic package or ANTHROPIC_API_KEY is unavailable.
+
+    Distinct from a runtime API failure so the caller can map it to the
+    non-retryable `no_api_key` status instead of `llm_call_failed`.
+    """
+
+
+def _s1_model_id() -> str:
+    return os.environ.get("EDGARPACK_S1_MODEL") or MODEL_ID
+
+
+def _s1_max_output_tokens() -> int:
+    raw = os.environ.get("EDGARPACK_S1_MAX_TOKENS")
+    if not raw:
+        return _MAX_OUTPUT_TOKENS
+    try:
+        return int(raw)
+    except ValueError:
+        return _MAX_OUTPUT_TOKENS
 
 
 async def _call_haiku_extract(section_text: str) -> str:
     try:
         from anthropic import AsyncAnthropic
     except ImportError as exc:
-        raise RuntimeError(
+        raise MissingAnthropicKeyError(
             "S-1 financial extraction requires the `anthropic` package. "
             "Install with `pip install edgarpack[vlm]` and export "
             "ANTHROPIC_API_KEY."
         ) from exc
 
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise MissingAnthropicKeyError(
+            "S-1 financial extraction requires ANTHROPIC_API_KEY. "
+            "Export it and retry."
+        )
+
     client = AsyncAnthropic()
     prompt = build_extraction_prompt(section_text)
-    message = await client.messages.create(
-        model=MODEL_ID,
-        max_tokens=_MAX_OUTPUT_TOKENS,
-        system=PROMPT_SYSTEM,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    text_blocks = [
-        str(getattr(block, "text", ""))
-        for block in message.content
-        if getattr(block, "type", "") == "text"
-    ]
-    return "".join(text_blocks).strip()
+    last_exc: Exception | None = None
+    # One retry with a short backoff on a transient API failure before the
+    # caller surfaces llm_call_failed.
+    for attempt in range(2):
+        try:
+            message = await client.messages.create(
+                model=_s1_model_id(),
+                max_tokens=_s1_max_output_tokens(),
+                system=PROMPT_SYSTEM,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as exc:  # noqa: BLE001 (surfaced as llm_call_failed detail)
+            last_exc = exc
+            if attempt == 0:
+                await asyncio.sleep(_RETRY_BACKOFF_SECONDS)
+                continue
+            raise
+        text_blocks = [
+            str(getattr(block, "text", ""))
+            for block in message.content
+            if getattr(block, "type", "") == "text"
+        ]
+        return "".join(text_blocks).strip()
+    raise last_exc if last_exc is not None else RuntimeError("extraction failed")
 
 
 def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
@@ -821,6 +1018,9 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
             continue
         if not _llm_row_has_metric_context(row):
             continue
+        currency = str(row.get("currency") or "").strip().upper()
+        if currency not in _ACCEPTED_CURRENCIES:
+            continue
         try:
             fact = SnapshotFact(
                 accession=accession,
@@ -828,7 +1028,7 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
                 period_end=str(row["period_end"]),
                 metric=str(row["metric"]),
                 value_cents=int(row["value_cents"]),
-                currency=str(row["currency"]),
+                currency=currency,
                 is_audited=bool(row["is_audited"]),
                 is_pro_forma=bool(row["is_pro_forma"]),
                 pro_forma_note=(
@@ -851,16 +1051,173 @@ def parse_llm_response(raw: str, *, accession: str) -> list[SnapshotFact]:
     return facts
 
 
-SCHEMA_VERSION = 8
+def _truncate_to_last_complete_object(raw: str) -> str | None:
+    """Trim a truncated JSON array to its last complete object.
+
+    Returns a parseable `[...]` string ending at the last `}` that closes a
+    top-level array element, or None when no complete object is present.
+    """
+    text = _strip_code_fences(raw)
+    start = text.find("[")
+    if start == -1:
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    last_object_end = -1
+    for index in range(start + 1, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                last_object_end = index
+    if last_object_end == -1:
+        return None
+    return text[start : last_object_end + 1] + "]"
+
+
+def parse_llm_response_with_salvage(
+    raw: str, *, accession: str
+) -> tuple[list[SnapshotFact], bool]:
+    """Parse the model response, salvaging a truncated JSON array if needed.
+
+    Returns (facts, truncated). On a clean parse `truncated` is False. When the
+    array is truncated mid-stream, trims to the last complete object and parses
+    that; a salvage that yields at least one valid row returns truncated=True.
+    Re-raises ValueError when nothing parseable can be recovered.
+    """
+    try:
+        return parse_llm_response(raw, accession=accession), False
+    except ValueError:
+        salvaged = _truncate_to_last_complete_object(raw)
+        if salvaged is None:
+            raise
+        facts = parse_llm_response(salvaged, accession=accession)
+        if not facts:
+            raise
+        return facts, True
+
+
+# Metrics whose values must be non-negative; a negative here is an extraction
+# slip, not a real figure.
+_NON_NEGATIVE_METRICS: frozenset[str] = frozenset({"revenue", "total_assets"})
+_ADJACENT_RATIO_CAP = Decimal(500)
+
+
+def _facts_by_period(facts: list[SnapshotFact]) -> dict[tuple[str, int, str], int]:
+    return {(f.metric, f.fiscal_year, f.period_end): f.value_cents for f in facts}
+
+
+def _gate_llm_facts(
+    llm_facts: list[SnapshotFact],
+    trusted_facts: list[SnapshotFact],
+) -> tuple[list[SnapshotFact], list[str]]:
+    """Drop implausible LLM rows so an arithmetic slip never becomes a citation.
+
+    Gates: revenue / total_assets must be non-negative; within one period
+    revenue >= gross_profit and total_assets >= cash_and_equivalents; an
+    adjacent-year same-metric ratio outside [1/500, 500] rejects the newer row.
+    Rejected rows are returned as human-readable reasons, never emitted.
+    """
+    kept: list[SnapshotFact] = []
+    rejections: list[str] = []
+
+    def lookup(metric: str, fy: int, end: str) -> int | None:
+        for fact in [*trusted_facts, *kept]:
+            if fact.metric == metric and fact.fiscal_year == fy and fact.period_end == end:
+                return fact.value_cents
+        return None
+
+    def adjacent(metric: str, fy: int, period: str) -> int | None:
+        for fact in [*trusted_facts, *kept]:
+            if (
+                fact.metric == metric
+                and fact.fiscal_year == fy - 1
+                and (fact.fiscal_period or "FY") == period
+            ):
+                return fact.value_cents
+        return None
+
+    for fact in llm_facts:
+        reason: str | None = None
+        value = fact.value_cents
+        if fact.metric in _NON_NEGATIVE_METRICS and value < 0:
+            reason = "negative value"
+        elif fact.metric == "gross_profit":
+            revenue = lookup("revenue", fact.fiscal_year, fact.period_end)
+            if revenue is not None and value > revenue:
+                reason = "gross_profit exceeds revenue"
+        elif fact.metric == "cash_and_equivalents":
+            total_assets = lookup("total_assets", fact.fiscal_year, fact.period_end)
+            if total_assets is not None and value > total_assets:
+                reason = "cash exceeds total_assets"
+
+        if reason is None:
+            prior = adjacent(fact.metric, fact.fiscal_year, fact.fiscal_period or "FY")
+            if prior is not None and prior != 0 and value != 0:
+                ratio = abs(Decimal(value) / Decimal(prior))
+                if ratio > _ADJACENT_RATIO_CAP or ratio < (1 / _ADJACENT_RATIO_CAP):
+                    reason = "implausible year-over-year change"
+
+        if reason is not None:
+            rejections.append(f"{fact.metric} {fact.fiscal_year}: dropped implausible row ({reason})")
+            continue
+        kept.append(fact)
+
+    return kept, rejections
+
+
+SCHEMA_VERSION = 9
 _CACHE_FILENAME = "s1_financials.json"
-_SOURCE_SCAN_CHARS = 50_000
+
+# Statuses that describe a transient / recoverable failure. They are cached
+# with a retry_after cooldown so a later read re-attempts instead of serving
+# the failure forever. no_api_key is deliberately excluded: it is not cached,
+# so adding the key and re-reading extracts immediately.
+_RETRYABLE_STATUSES: frozenset[str] = frozenset(
+    {"llm_call_failed", "llm_parse_failed", "no_financial_data_found"}
+)
+_RETRY_COOLDOWN = timedelta(minutes=30)
+
+
+def _retry_after_iso() -> str:
+    return (
+        (datetime.now(UTC) + _RETRY_COOLDOWN)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
+def _retry_cooldown_active(retry_after: str | None) -> bool:
+    if not retry_after:
+        return False
+    try:
+        deadline = datetime.fromisoformat(retry_after.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return datetime.now(UTC) < deadline
 
 
 def source_sha256_for_pack(pack_dir: Path) -> str:
     md_path = Path(pack_dir) / "filing.full.md"
     if not md_path.exists():
         return ""
-    blob = md_path.read_text(encoding="utf-8", errors="replace")[:_SOURCE_SCAN_CHARS]
+    # Hash the whole file: a parser fix or amendment past the first 50KB must
+    # still invalidate the cached snapshot.
+    blob = md_path.read_text(encoding="utf-8", errors="replace")
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
@@ -897,6 +1254,28 @@ def _read_manifest_accession(pack_dir: Path) -> str:
     return str(data.get("filing", {}).get("accession", pack_dir.name))
 
 
+def _write_snapshot(cache_path: Path, result: SnapshotResult) -> SnapshotResult:
+    # no_api_key is never cached: re-attempt on the next read so adding the key
+    # extracts immediately instead of serving a permanent placeholder.
+    if result.extraction_status != "no_api_key":
+        cache_path.write_text(result.to_json(), encoding="utf-8")
+    return result
+
+
+def _dedupe_deterministic_facts(facts: list[SnapshotFact]) -> list[SnapshotFact]:
+    deduped: dict[tuple[str, int, str, str], SnapshotFact | None] = {}
+    for fact in facts:
+        key = (fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)
+        existing = deduped.get(key)
+        if existing is None and key in deduped:
+            continue
+        if existing is not None and existing.value_cents != fact.value_cents:
+            deduped[key] = None
+            continue
+        deduped[key] = fact
+    return [fact for fact in deduped.values() if fact is not None]
+
+
 async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> SnapshotResult:
     pack_dir = Path(pack_dir)
     accession = _read_manifest_accession(pack_dir)
@@ -913,7 +1292,39 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
             and cached.schema_version == SCHEMA_VERSION
             and cached.source_sha256 == source_hash
         ):
-            return cached
+            if cached.extraction_status not in _RETRYABLE_STATUSES:
+                return cached
+            # A retryable failure is served only inside its cooldown window;
+            # past it, fall through and re-attempt extraction.
+            if _retry_cooldown_active(cached.retry_after):
+                return cached
+
+    def _finalize(
+        *,
+        status: str,
+        facts: list[SnapshotFact],
+        model: str,
+        detail: str | None = None,
+        truncated: bool = False,
+        gate_rejections: list[str] | None = None,
+    ) -> SnapshotResult:
+        retry_after = _retry_after_iso() if status in _RETRYABLE_STATUSES else None
+        return _write_snapshot(
+            cache_path,
+            SnapshotResult(
+                schema_version=SCHEMA_VERSION,
+                accession=accession,
+                extracted_at=_utc_iso_now(),
+                extraction_status=status,
+                source_sha256=source_hash,
+                model=model,
+                facts=facts,
+                detail=detail,
+                retry_after=retry_after,
+                truncated=truncated,
+                gate_rejections=gate_rejections or [],
+            ),
+        )
 
     markdown = ""
     md_path = pack_dir / "filing.full.md"
@@ -922,87 +1333,82 @@ async def extract_or_load_snapshot(pack_dir: Path, *, force: bool = False) -> Sn
 
     financial_sections = _financial_section_texts(pack_dir, markdown)
     if not financial_sections:
-        result = SnapshotResult(
-            schema_version=SCHEMA_VERSION,
-            accession=accession,
-            extracted_at=_utc_iso_now(),
-            extraction_status="no_financial_data_found",
-            source_sha256=source_hash,
-            model=MODEL_ID,
-            facts=[],
-        )
-        cache_path.write_text(result.to_json(), encoding="utf-8")
-        return result
+        return _finalize(status="no_financial_data_found", facts=[], model=_s1_model_id())
 
     deterministic_facts: list[SnapshotFact] = []
     for section in financial_sections:
         deterministic_facts.extend(_extract_summary_table_facts(section, accession=accession))
-    deduped_facts: dict[tuple[str, int, str, str], SnapshotFact | None] = {}
-    for fact in deterministic_facts:
-        key = (fact.metric, fact.fiscal_year, fact.fiscal_period, fact.period_end)
-        existing = deduped_facts.get(key)
-        if existing is None and key in deduped_facts:
-            continue
-        if existing is not None and existing.value_cents != fact.value_cents:
-            deduped_facts[key] = None
-            continue
-        deduped_facts[key] = fact
-    deterministic_facts = [fact for fact in deduped_facts.values() if fact is not None]
+    deterministic_facts = _dedupe_deterministic_facts(deterministic_facts)
     deterministic_facts = _supplement_cash_flow_facts_from_full_filing(
         deterministic_facts,
         full_text=markdown,
         accession=accession,
     )
-    if deterministic_facts:
-        result = SnapshotResult(
-            schema_version=SCHEMA_VERSION,
-            accession=accession,
-            extracted_at=_utc_iso_now(),
-            extraction_status="ok",
-            source_sha256=source_hash,
-            model=_DETERMINISTIC_TABLE_MODEL,
-            facts=deterministic_facts,
-        )
-        cache_path.write_text(result.to_json(), encoding="utf-8")
-        return result
 
+    covered_slugs = {fact.metric for fact in deterministic_facts}
+    missing_slugs = METRIC_SLUGS - covered_slugs
+
+    # Deterministic facts win per-slug; the LLM is invoked only to fill slugs
+    # the deterministic label map cannot see (e.g. balance-sheet metrics).
+    if not missing_slugs:
+        return _finalize(
+            status="ok",
+            facts=deterministic_facts,
+            model=_DETERMINISTIC_TABLE_MODEL,
+        )
+
+    llm_status: str | None = None
+    detail: str | None = None
+    truncated = False
+    llm_facts: list[SnapshotFact] = []
+    gate_rejections: list[str] = []
     try:
         raw = await _call_haiku_extract("\n\n".join(financial_sections)[:_SECTION_CAP_CHARS])
-    except Exception:
-        return SnapshotResult(
-            schema_version=SCHEMA_VERSION,
-            accession=accession,
-            extracted_at=_utc_iso_now(),
-            extraction_status="no_api_key",
-            source_sha256=source_hash,
-            model=MODEL_ID,
-            facts=[],
+    except MissingAnthropicKeyError:
+        llm_status = "no_api_key"
+    except Exception as exc:  # noqa: BLE001 (surfaced as llm_call_failed detail)
+        llm_status = "llm_call_failed"
+        detail = str(exc)
+    else:
+        try:
+            parsed, truncated = parse_llm_response_with_salvage(raw, accession=accession)
+        except ValueError:
+            llm_status = "llm_parse_failed"
+        else:
+            kept, gate_rejections = _gate_llm_facts(parsed, deterministic_facts)
+            llm_facts = [fact for fact in kept if fact.metric in missing_slugs]
+
+    if llm_status is not None:
+        # The LLM enrichment failed. Keep the deterministic facts (if any) but
+        # carry the failure status so the missing slugs are re-attempted later.
+        model = _DETERMINISTIC_TABLE_MODEL if deterministic_facts else _s1_model_id()
+        return _finalize(
+            status=llm_status,
+            facts=deterministic_facts,
+            model=model,
+            detail=detail,
         )
 
-    try:
-        facts = parse_llm_response(raw, accession=accession)
-        status = "ok"
-    except ValueError:
-        facts = []
-        status = "llm_parse_failed"
-
-    result = SnapshotResult(
-        schema_version=SCHEMA_VERSION,
-        accession=accession,
-        extracted_at=_utc_iso_now(),
-        extraction_status=status,
-        source_sha256=source_hash,
-        model=MODEL_ID,
-        facts=facts,
+    merged_facts = [*deterministic_facts, *llm_facts]
+    model_parts: list[str] = []
+    if deterministic_facts:
+        model_parts.append(_DETERMINISTIC_TABLE_MODEL)
+    if llm_facts:
+        model_parts.append(_s1_model_id())
+    model = "+".join(model_parts) if model_parts else _s1_model_id()
+    return _finalize(
+        status="ok",
+        facts=merged_facts,
+        model=model,
+        truncated=truncated,
+        gate_rejections=gate_rejections,
     )
-    cache_path.write_text(result.to_json(), encoding="utf-8")
-    return result
 
 
 from datetime import date as _date_cls  # noqa: E402
 
 from edgarpack.query.formula import eval_formula  # noqa: E402
-from edgarpack.query.models import CitedValue, DerivedValue  # noqa: E402
+from edgarpack.query.models import CitedValue, Diagnostic, DerivedValue  # noqa: E402
 from edgarpack.sec.submissions import is_registration_form  # noqa: E402
 
 
@@ -1155,15 +1561,22 @@ def pick_snapshot_fact(
         pf.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
         return pf[0]
 
-    audited = [f for f in candidates if f.is_audited and not f.is_pro_forma]
-    if not audited:
+    non_pro_forma = [f for f in candidates if not f.is_pro_forma]
+    if not non_pro_forma:
         return None
 
+    # mrp = most recent period, which may be an unaudited interim quarter, so
+    # select on period regardless of is_audited. lfy / lfy-N are annual only,
+    # so they keep the audited-FY filter.
     if period == "mrp":
-        audited.sort(key=lambda f: (f.period_end, f.fiscal_year), reverse=True)
-        return audited[0]
+        non_pro_forma.sort(key=lambda f: (f.period_end, f.fiscal_year), reverse=True)
+        return non_pro_forma[0]
 
-    annual = [f for f in audited if (f.fiscal_period or "FY").upper() == "FY"]
+    annual = [
+        f
+        for f in non_pro_forma
+        if f.is_audited and (f.fiscal_period or "FY").upper() == "FY"
+    ]
     annual.sort(key=lambda f: (f.fiscal_year, f.period_end), reverse=True)
 
     if period == "lfy":
@@ -1289,18 +1702,24 @@ def _pick_snapshot_candidate(
         )
         return pro_forma[0]
 
-    audited = [c for c in metric_candidates if c.fact.is_audited and not c.fact.is_pro_forma]
-    if not audited:
+    non_pro_forma = [c for c in metric_candidates if not c.fact.is_pro_forma]
+    if not non_pro_forma:
         return None
 
+    # mrp = most recent period; an interim quarter is unaudited but still the
+    # most recent period, so select on period regardless of is_audited.
     if period == "mrp":
-        audited.sort(
+        non_pro_forma.sort(
             key=lambda c: (c.fact.period_end, c.fact.fiscal_year, c.filing_date),
             reverse=True,
         )
-        return audited[0]
+        return non_pro_forma[0]
 
-    audited = [c for c in audited if (c.fact.fiscal_period or "FY").upper() == "FY"]
+    audited = [
+        c
+        for c in non_pro_forma
+        if c.fact.is_audited and (c.fact.fiscal_period or "FY").upper() == "FY"
+    ]
     if not audited:
         return None
 
@@ -1537,6 +1956,59 @@ def _find_latest_registration_pack(cik: str, pack_root: Path) -> Path | None:
     return packs[0].pack_dir
 
 
+_SUPPORTED_REGISTRATION_PERIODS = frozenset({"lfy", "mrp", "pro-forma"})
+_REGISTRATION_EXTRACTION_DIAGNOSTIC_PREFIX = "registration extraction "
+
+
+def _is_supported_registration_period(period: str) -> bool:
+    if period in _SUPPORTED_REGISTRATION_PERIODS:
+        return True
+    return re.match(r"^lfy-\d+$", period) is not None
+
+
+def _add_registration_diagnostic(result: Any, *, metric: str, message: str) -> None:
+    diagnostics = getattr(result, "diagnostics", None)
+    if diagnostics is None:
+        return
+    diagnostics.append(Diagnostic(metric=metric, kind="layer_b_unresolved", message=message))
+
+
+def _inject_no_api_key_placeholders(
+    result: Any,
+    *,
+    metrics: list[str],
+    cik: str,
+    company: str,
+    form_type: str,
+    latest_pack: _RegistrationPack,
+) -> None:
+    placeholder_date = (
+        latest_pack.filing_date
+        if latest_pack.filing_date != _date_cls.min
+        else _date_cls.today()
+    )
+    for metric in metrics:
+        if result.metrics.get(metric) is not None:
+            continue
+        snapshot_metric = _snapshot_metric_for_query_metric(metric)
+        unit, _ = _UNIT_FOR_METRIC.get(snapshot_metric, ("USD", 100))
+        result.metrics[metric] = CitedValue(
+            value=None,
+            unit=unit,
+            metric=metric,
+            concept=_resolve_concept_for_metric(metric),
+            period_end=placeholder_date,
+            fiscal_year=0,
+            fiscal_period="FY",
+            form_type=latest_pack.form_type or form_type,
+            filed=placeholder_date,
+            accession="",
+            cik=cik,
+            company=company,
+            source="no_api_key",
+        )
+
+
 async def augment_with_s1_snapshot(
     *,
     result: Any,  # QueryResult; kept as Any to avoid circular import pressure
@@ -1551,9 +2023,11 @@ async def augment_with_s1_snapshot(
     """Fill result.metrics cells that are still None with S-1 snapshot rows.
 
     When no cached snapshots exist, lazily extract from the most recent
-    registration-class pack for this CIK. If that extraction fails due to
+    registration-class pack for this CIK. If that extraction fails due to a
     missing ANTHROPIC_API_KEY, inject placeholder CitedValue rows with
-    source="no_api_key" so the CLI can surface a helpful hint.
+    source="no_api_key" so the CLI can surface a helpful hint. Non-ok
+    extraction statuses, unsupported period selectors, dropped magnitude-gate
+    rows, and a silently-empty latest pack each surface a Diagnostic.
     """
     packs = _registration_packs_for_cik(cik, pack_root)
     if not packs:
@@ -1562,37 +2036,60 @@ async def augment_with_s1_snapshot(
     periodic_context_years = (
         set() if period == "pro-forma" else _periodic_context_fiscal_years(result)
     )
-    latest_pack = packs[0]
-    latest_result = await extract_or_load_snapshot(latest_pack.pack_dir)
-    if latest_result.extraction_status == "no_api_key":
-        if periodic_context_years:
-            return result
-        if latest_pack.filing_date != _date_cls.min:
-            placeholder_date = latest_pack.filing_date
-        else:
-            placeholder_date = _date_cls.today()
-        for metric in metrics:
-            if result.metrics.get(metric) is None:
-                snapshot_metric = _snapshot_metric_for_query_metric(metric)
-                unit, _ = _UNIT_FOR_METRIC.get(snapshot_metric, ("USD", 100))
-                result.metrics[metric] = CitedValue(
-                    value=None,
-                    unit=unit,
-                    metric=metric,
-                    concept=_resolve_concept_for_metric(metric),
-                    period_end=placeholder_date,
-                    fiscal_year=0,
-                    fiscal_period="FY",
-                    form_type=latest_pack.form_type or form_type,
-                    filed=placeholder_date,
-                    accession="",
-                    cik=cik,
-                    company=company,
-                    source="no_api_key",
-                )
+    registration_only = not periodic_context_years
+
+    if registration_only and not _is_supported_registration_period(period):
+        _add_registration_diagnostic(
+            result,
+            metric="period",
+            message=(
+                f"period selector '{period}' is not supported for registration-only "
+                "filers; use lfy, lfy-N, mrp, or pro-forma."
+            ),
+        )
         return result
 
+    latest_pack = packs[0]
+    latest_result = await extract_or_load_snapshot(latest_pack.pack_dir)
+
+    if registration_only and latest_result.extraction_status != "ok":
+        detail = f": {latest_result.detail}" if latest_result.detail else ""
+        _add_registration_diagnostic(
+            result,
+            metric="extraction",
+            message=(
+                f"{_REGISTRATION_EXTRACTION_DIAGNOSTIC_PREFIX}"
+                f"{latest_result.extraction_status}{detail}"
+            ),
+        )
+    if registration_only:
+        for rejection in latest_result.gate_rejections:
+            slug = rejection.split(" ", 1)[0]
+            _add_registration_diagnostic(result, metric=slug, message=rejection)
+
     if not latest_result.facts:
+        # Latest pack yielded nothing: inject a missing-key placeholder, or
+        # explain why we do not silently fall back to an older filing.
+        if registration_only and latest_result.extraction_status == "no_api_key":
+            _inject_no_api_key_placeholders(
+                result,
+                metrics=metrics,
+                cik=cik,
+                company=company,
+                form_type=form_type,
+                latest_pack=latest_pack,
+            )
+        elif registration_only and any(
+            _current_cached_snapshot(pack) is not None for pack in packs[1:]
+        ):
+            _add_registration_diagnostic(
+                result,
+                metric="registration",
+                message=(
+                    "latest registration pack yielded no snapshot facts; not falling "
+                    "back to an older filing's cached snapshot."
+                ),
+            )
         return result
 
     candidates = _snapshot_candidates(latest_result, latest_pack)
@@ -1625,4 +2122,17 @@ async def augment_with_s1_snapshot(
         )
         if value is not None:
             result.metrics[metric] = value
+
+    # A no_api_key snapshot can still carry deterministic facts; those filled
+    # their cells above. For any requested metric still empty, inject the
+    # placeholder so the CLI hint fires.
+    if registration_only and latest_result.extraction_status == "no_api_key":
+        _inject_no_api_key_placeholders(
+            result,
+            metrics=metrics,
+            cik=cik,
+            company=company,
+            form_type=form_type,
+            latest_pack=latest_pack,
+        )
     return result
