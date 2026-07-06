@@ -205,3 +205,17 @@ class TestJsonUnaffected:
         assert list(payload["metrics"].keys()) == ["revenue"]
         assert "Source:" not in str(payload)
         assert "(营业收入)" not in str(payload)
+
+
+def test_additive_ltm_expr_only_for_additive_roles():
+    """The additive LTM audit line prints only for a genuine mrp+lfy-mrp_prior
+    sum, not for a ratio-of-LTMs like gross_margin (which showed '[?]')."""
+    from edgarpack.query.render import _additive_ltm_expr
+
+    assert (
+        _additive_ltm_expr({"mrp": "C2", "lfy": "C3", "mrp_prior": "C4"})
+        == "mrp[C2] + lfy[C3] - mrp_prior[C4]"
+    )
+    # gross_margin's LTM components are the numerator/denominator metrics.
+    assert _additive_ltm_expr({"gross_profit": "C10", "revenue": "C1"}) is None
+    assert _additive_ltm_expr({}) is None

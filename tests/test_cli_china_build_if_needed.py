@@ -206,7 +206,7 @@ def test_build_failure_propagates_message_and_leaves_packs_root_untouched(
     assert not (tmp_path / "sse").exists()
 
 
-def test_hkex_target_never_triggers_sse_auto_build(tmp_path, monkeypatch, capsys):
+def test_hkex_target_auto_builds_via_hk_not_sse(tmp_path, monkeypatch, capsys):
     def fail_find(*_a: object, **_k: object) -> CninfoAnnualReportRef:
         raise AssertionError("HKEX targets must not route through SSE auto-build")
 
@@ -216,12 +216,36 @@ def test_hkex_target_never_triggers_sse_auto_build(tmp_path, monkeypatch, capsys
     monkeypatch.setattr(cli, "_find_latest_sse_annual_report", fail_find)
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
 
+    calls: dict[str, str] = {}
+
+    def fake_hk_build(code: str, packs_root: object) -> object:
+        calls["code"] = code
+        raise LookupError("no annual report found (test)")
+
+    monkeypatch.setattr(cli, "_acquire_and_build_hk", fake_hk_build)
+
     rc = cli.main(["query", "0700.HK", "revenue", "--packs", str(tmp_path)])
 
     captured = capsys.readouterr()
     assert rc != 0
+    # HK auto-build was attempted (and SSE was not).
+    assert calls.get("code") == "00700"
+    assert "fetching the latest annual report from HKEX news" in captured.err
+    assert "no annual report found" in captured.err
+
+
+def test_no_build_flag_skips_hk_auto_build(tmp_path, monkeypatch, capsys):
+    def fail_hk(*_a: object, **_k: object) -> object:
+        raise AssertionError("--no-build must skip HK auto-build")
+
+    monkeypatch.setattr(cli, "_acquire_and_build_hk", fail_hk)
+
+    rc = cli.main(["query", "0700.HK", "revenue", "--no-build", "--packs", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert rc != 0
     assert "No HKEX pack found for 00700" in captured.err
-    assert "fetching the latest annual report" not in captured.err
+    assert "fetching" not in captured.err
 
 
 def test_built_pack_with_no_facts_reports_distinct_message_and_skips_build(

@@ -55,9 +55,22 @@ def calculation_kind(item: Any) -> tuple[str, str]:
     return "D", "derived"
 
 
+def _has_additive_ltm_components(item: Any) -> bool:
+    """True when a value's components are the additive LTM roles.
+
+    Separates a genuine LTM sum (components mrp/lfy/mrp_prior) from a ratio
+    evaluated over LTM windows (e.g. gross_margin = LTM gross_profit / LTM
+    revenue), whose components are the numerator/denominator metrics.
+    """
+    components = getattr(item, "components", {}) or {}
+    return {"mrp", "lfy", "mrp_prior"} <= set(components)
+
+
 def calculation_formula(item: Any, kind: str) -> str:
-    if kind == "ltm":
+    if kind == "ltm" and _has_additive_ltm_components(item):
         return "mrp + lfy - mrp_prior"
+    # A ratio-of-LTMs carries its real formula in ``concept`` (e.g.
+    # "gross_profit / revenue"), not the additive LTM template.
     return str(getattr(item, "concept", ""))
 
 

@@ -368,6 +368,12 @@ class DerivedValue(CitedValue):
         """True when this derived value represents an LTM-style window."""
         return self.fiscal_period.upper().startswith("LTM")
 
+    def _is_additive_ltm(self) -> bool:
+        """True for a genuine LTM sum (components mrp/lfy/mrp_prior), False for
+        a ratio evaluated over LTM windows (e.g. gross_margin), whose
+        components are the numerator/denominator metrics."""
+        return self._is_ltm_like() and {"mrp", "lfy", "mrp_prior"} <= set(self.components)
+
     def _ltm_components_payload(self) -> dict[str, object]:
         """Expanded metadata for LTM/LTM-1 component windows."""
         ltm_comps: dict[str, object] = {}
@@ -406,9 +412,9 @@ class DerivedValue(CitedValue):
     def to_cited_dict(self) -> dict[str, object]:
         d = super().to_cited_dict()
         d["derived"] = True
-        d["formula"] = "mrp + lfy - mrp_prior" if self._is_ltm_like() else self.concept
+        d["formula"] = "mrp + lfy - mrp_prior" if self._is_additive_ltm() else self.concept
         d["components"] = {k: v.to_cited_dict() for k, v in self.components.items()}
-        if self._is_ltm_like() and self.components:
+        if self._is_additive_ltm() and self.components:
             d["ltm_components"] = self._ltm_components_payload()
         return d
 
@@ -418,13 +424,14 @@ class DerivedValue(CitedValue):
         d["derived"] = True
         d["formula"] = self.concept  # concept holds the formula for derived metrics
 
-        if self._is_ltm_like() and self.components:
-            # LTM components are temporal slices, inline them
+        if self._is_additive_ltm() and self.components:
+            # LTM sum: components are temporal slices, inline them
             d["formula"] = "mrp + lfy - mrp_prior"
             d["ltm_components"] = self._ltm_components_payload()
             d["ltm_variant"] = self.fiscal_period.lower()
         else:
-            # Standard derived metric (ratio/sum): reference component names
+            # Standard derived metric (ratio/sum), including a ratio evaluated
+            # over LTM windows: reference component names, keep the real formula
             d["components"] = list(self.components.keys())
 
         return d

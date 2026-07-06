@@ -2030,6 +2030,35 @@ def _acquire_hk_filing(client: Any, code: str) -> tuple[Any, str, list[str]]:
     return ref, match.name, list(row.stock_codes)
 
 
+def _acquire_and_build_hk(code: str, packs_root: Path) -> Path:
+    """Acquire the latest HKEX annual report for a stock code and build its
+    pack under ``<packs_root>/hk/<code>/<code>_<year>``. Returns the pack path;
+    raises the acquire/section errors for the caller to map. Shared by the
+    build-hk command and the query build-if-needed path."""
+    import httpx
+
+    from .hk.adapter import build_hk_pack
+
+    client = httpx.Client(
+        headers={"User-Agent": "edgarpack/0.1 (+https://github.com)"},
+        follow_redirects=True,
+        timeout=120.0,
+    )
+    try:
+        ref, company_name, dual_codes = _acquire_hk_filing(client, code)
+        out_dir = packs_root / "hk" / ref.stock_code / f"{ref.stock_code}_{ref.fiscal_year}"
+        pack = build_hk_pack(
+            ref,
+            out_dir,
+            company_name=company_name,
+            dual_counter_codes=dual_codes,
+            client=client,
+        )
+    finally:
+        client.close()
+    return pack.path
+
+
 def _print_hk_facts_summary(pack_path: Path, facts_path: Path) -> None:
     data = json.loads(facts_path.read_text())
     facts = data.get("facts", {})
@@ -2040,11 +2069,8 @@ def _print_hk_facts_summary(pack_path: Path, facts_path: Path) -> None:
 
 
 def _cmd_build_hk(args: Any) -> int:
-    import httpx
-
     from .hk import acquire as hk
     from .hk import extract as hk_extract
-    from .hk.adapter import build_hk_pack
     from .hk.toc import HKSectioningError
 
     class _BlockedFallbackError(Exception):
@@ -2056,32 +2082,14 @@ def _cmd_build_hk(args: Any) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 2
 
-    client = httpx.Client(
-        headers={"User-Agent": "edgarpack/0.1 (+https://github.com)"},
-        follow_redirects=True,
-        timeout=120.0,
-    )
     try:
-        ref, company_name, dual_codes = _acquire_hk_filing(client, code)
-        # Write under the "hk/" exchange segment so the query layer's China
-        # pack discovery (_discover_china_pack_dir looks in <root>/hk/<code>/)
-        # finds it, matching the build-sse -> sse/<code>/ convention.
-        out_dir = args.out / "hk" / ref.stock_code / f"{ref.stock_code}_{ref.fiscal_year}"
-        pack = build_hk_pack(
-            ref,
-            out_dir,
-            company_name=company_name,
-            dual_counter_codes=dual_codes,
-            client=client,
-        )
+        pack_path = _acquire_and_build_hk(code, args.out)
     except HKSectioningError as e:
         print(f"Error: could not section the HKEX filing for {code}: {e}", file=sys.stderr)
         return 1
     except (hk.HKEXSearchBlocked, hk.HKFilingMetadataError, LookupError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
-    finally:
-        client.close()
 
     # hk-extract-fixes owns extract.py; consume its typed error when it lands,
     # falling back to a local stand-in in trees where it has not.
@@ -2089,13 +2097,51 @@ def _cmd_build_hk(args: Any) -> int:
         hk_extract, "HKExtractionBlockedError", _BlockedFallbackError
     )
     try:
-        facts_path = hk_extract.extract_facts_from_pack(pack.path)
+        facts_path = hk_extract.extract_facts_from_pack(pack_path)
     except blocked_error as e:
         print(f"Error: HKEX facts extraction blocked for {code}: {e}", file=sys.stderr)
-        print(f"Sectioned pack written to {pack.path} (facts not extracted).")
+        print(f"Sectioned pack written to {pack_path} (facts not extracted).")
         return 1
 
-    _print_hk_facts_summary(pack.path, facts_path)
+    _print_hk_facts_summary(pack_path, facts_path)
+    return 0
+
+
+def _ensure_hk_pack_for_query(args: Any, resolved: Any) -> int:
+    """Auto-build the latest HKEX annual-report pack for a query target that
+    routes to HKEX and has no local pack, mirroring the SSE build-if-needed
+    path. Returns 0 to proceed, non-zero to stop (error already printed)."""
+    from .query.financials import _discover_china_pack_dir
+
+    if resolved is None or str(getattr(resolved, "source", "") or "") != "HKEX":
+        return 0
+    code = str(getattr(resolved, "hk_stock_code", None) or "").strip()
+    if not code:
+        return 0
+
+    pack_root = Path(getattr(args, "packs", DEFAULT_PACKS_DIR))
+    if _discover_china_pack_dir(resolved, pack_root=pack_root) is not None:
+        return 0
+
+    print(
+        f"No local HKEX pack for {code}; fetching the latest annual report from HKEX news "
+        "(typically 1-3 minutes)...",
+        file=sys.stderr,
+    )
+    try:
+        pack_path = _acquire_and_build_hk(code, pack_root)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    from .hk import extract as hk_extract
+
+    blocked_error: type[BaseException] = getattr(hk_extract, "HKExtractionBlockedError", Exception)
+    try:
+        hk_extract.extract_facts_from_pack(pack_path)
+    except blocked_error as e:
+        print(f"Error: HKEX facts extraction blocked for {code}: {e}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -2374,6 +2420,9 @@ def _cmd_query(args: Any) -> int:
         china_rc = asyncio.run(_ensure_sse_pack_for_query(args, build_resolved))
         if china_rc != 0:
             return china_rc
+        hk_rc = _ensure_hk_pack_for_query(args, build_resolved)
+        if hk_rc != 0:
+            return hk_rc
 
     async def _run() -> int:
         from .query.financials import financials

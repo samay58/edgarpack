@@ -200,7 +200,8 @@ def test_query_venue_hkex_substitutes_the_hk_alt_ticker():
         "edgarpack.query.financials.financials",
         new=AsyncMock(return_value=stub_result),
     ) as mock_fin:
-        rc = cli._cmd_query(_query_args(venue="hkex"))
+        # --no-build isolates venue routing from the HKEX auto-build pre-pass.
+        rc = cli._cmd_query(_query_args(venue="hkex", no_build=True))
     assert rc == 0
     assert mock_fin.call_args.kwargs.get("company") == "9988.HK"
     # display_token stays the user's original input, not the substituted one.

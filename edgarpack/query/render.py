@@ -13,6 +13,19 @@ import textwrap
 from typing import Any, cast
 
 
+def _additive_ltm_expr(comp_map: dict[str, str]) -> str | None:
+    """The 'mrp + lfy - mrp_prior' citation expression, or None.
+
+    Returns None for a ratio-of-LTMs (e.g. gross_margin = LTM gross_profit /
+    LTM revenue), which is also calc kind "ltm" but whose components are the
+    numerator/denominator metrics, not the additive roles. Callers then print
+    the real formula instead of an mrp/lfy/mrp_prior line of "[?]".
+    """
+    if not all(role in comp_map for role in ("mrp", "lfy", "mrp_prior")):
+        return None
+    return f"mrp[{comp_map['mrp']}] + lfy[{comp_map['lfy']}] - mrp_prior[{comp_map['mrp_prior']}]"
+
+
 def _wrap_cli_text(text: str, width: int, indent: str = "      ") -> list[str]:
     """Wrap CLI text while preserving readable hanging indentation."""
     wrapped = textwrap.fill(
@@ -363,30 +376,16 @@ def _render_query_table(result: Any, args: Any) -> str:
                 calc = calculations.get(calc_id, {})
                 formula = calc.get("formula", "")
                 kind = calc.get("kind", "")
-                if kind == "ltm":
-                    components = calc.get("components", [])
-                    if isinstance(components, list) and components:
-                        comp_map = {
-                            str(comp.get("role")): str(comp.get("citation_id"))
-                            for comp in components
-                            if isinstance(comp, dict)
-                        }
-                        expr = (
-                            f"mrp[{comp_map.get('mrp', '?')}] + "
-                            f"lfy[{comp_map.get('lfy', '?')}] - "
-                            f"mrp_prior[{comp_map.get('mrp_prior', '?')}]"
-                        )
-                        lines.extend(
-                            _wrap_cli_text(f"  [{calc_id}] LTM = {expr}", width, indent="         ")
-                        )
-                    else:
-                        lines.extend(
-                            _wrap_cli_text(
-                                f"  [{calc_id}] formula: {formula}",
-                                width,
-                                indent="         ",
-                            )
-                        )
+                comp_map = {
+                    str(comp.get("role")): str(comp.get("citation_id"))
+                    for comp in calc.get("components", [])
+                    if isinstance(comp, dict)
+                }
+                expr = _additive_ltm_expr(comp_map) if kind == "ltm" else None
+                if expr is not None:
+                    lines.extend(
+                        _wrap_cli_text(f"  [{calc_id}] LTM = {expr}", width, indent="         ")
+                    )
                 else:
                     lines.extend(
                         _wrap_cli_text(
