@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from edgarpack.hk.extract import extract_facts_from_pack, extract_with_regex
+from edgarpack.hk.extract import (
+    HKExtractionBlockedError,
+    extract_facts_from_pack,
+    extract_with_regex,
+)
 
 
 def test_extract_revenue_simple_inline_currency():
@@ -96,6 +100,59 @@ def test_extract_facts_from_pack_serializes_matched_label(tmp_path):
     data = json.loads(facts_path.read_text())
     revenue = data["facts"]["hkfrs"]["Revenue"]["units"]["USD"][0]
     assert revenue["matched_label"] == "total revenue"
+
+
+def test_extract_facts_from_pack_blocks_garbled_statement_without_facts_json(tmp_path):
+    pack_dir = tmp_path / "pack"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    garbled = "Consolidated income statement\n" + ("\x01" * 20) + "Revenue 100\n"
+    (sections_dir / "hkex_income_statement.md").write_text(garbled)
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "source": "HKEX",
+                "stock_code": "00100",
+                "fiscal_year": 2024,
+                "accounting_standard": "HKFRS",
+                "reporting_currency": "USD",
+                "company": "Test Company",
+                "pdf_url": "",
+                "announcement_date": "",
+            }
+        )
+    )
+
+    with pytest.raises(HKExtractionBlockedError):
+        extract_facts_from_pack(pack_dir)
+
+    assert not (pack_dir / "facts.json").exists()
+
+
+def test_extract_facts_from_pack_no_target_rows_leaves_no_facts_json(tmp_path):
+    pack_dir = tmp_path / "pack"
+    sections_dir = pack_dir / "sections"
+    sections_dir.mkdir(parents=True)
+    (sections_dir / "hkex_income_statement.md").write_text(
+        "# Consolidated Statement of Profit or Loss\n\nNo matching target rows here.\n"
+    )
+    (pack_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "source": "HKEX",
+                "stock_code": "00100",
+                "fiscal_year": 2024,
+                "accounting_standard": "HKFRS",
+                "reporting_currency": "USD",
+                "company": "Test Company",
+                "pdf_url": "",
+                "announcement_date": "",
+            }
+        )
+    )
+
+    assert extract_facts_from_pack(pack_dir) is None
+    assert not (pack_dir / "facts.json").exists()
 
 
 def test_balance_sheet_facts_instant_flow_facts_ranges(tmp_path):

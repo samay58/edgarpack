@@ -21,6 +21,7 @@ import pytest
 
 from edgarpack.query.registration import integrate, llm
 from edgarpack.query.registration.integrate import (
+    _candidate_to_cited_value,
     _pick_snapshot_candidate,
     _SnapshotCandidate,
     pick_snapshot_fact,
@@ -415,3 +416,29 @@ def test_llm_module_orchestrator_is_patchable_at_source():
     # orchestrator lives in llm and calls the module-local haiku entry point.
     assert asyncio.iscoroutinefunction(llm._call_haiku_extract)
     assert asyncio.iscoroutinefunction(llm.extract_or_load_snapshot)
+
+
+def test_snapshot_candidate_without_filing_date_keeps_filed_absent():
+    fact = SnapshotFact(
+        accession="0001628280-26-025762",
+        fiscal_year=2025,
+        period_end="",
+        metric="revenue",
+        value_cents=509_991_000_00,
+        currency="USD",
+        is_audited=True,
+        is_pro_forma=False,
+        pro_forma_note=None,
+    )
+    candidate = _SnapshotCandidate(fact=fact, filing_date=date.min, form_type="S-1")
+
+    value = _candidate_to_cited_value(
+        candidate,
+        public_metric="revenue",
+        cik="0002021728",
+        company="Cerebras Systems Inc.",
+        form_type="S-1",
+        filed=None,
+    )
+
+    assert value.filed is None

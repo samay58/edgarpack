@@ -2020,43 +2020,15 @@ def _resolve_hk_stock_code(company: str) -> str:
 
 
 def _acquire_hk_filing(client: Any, code: str) -> tuple[Any, str, list[str]]:
-    from .hk import acquire as hk
+    from .china.build_if_needed import _acquire_hk_filing as acquire_hk_filing
 
-    hk.warm_up(client)
-    match = hk.resolve_stock_id(client, code)
-    rows = hk.list_annual_reports(client, match.stock_id)
-    row = hk.select_latest_annual_report(rows, stock_code=match.code)
-    ref = hk.to_filing_ref(row, stock_code=match.code)
-    return ref, match.name, list(row.stock_codes)
+    return acquire_hk_filing(client, code)
 
 
 def _acquire_and_build_hk(code: str, packs_root: Path) -> Path:
-    """Acquire the latest HKEX annual report for a stock code and build its
-    pack under ``<packs_root>/hk/<code>/<code>_<year>``. Returns the pack path;
-    raises the acquire/section errors for the caller to map. Shared by the
-    build-hk command and the query build-if-needed path."""
-    import httpx
+    from .china.build_if_needed import build_hk_latest_pack
 
-    from .hk.adapter import build_hk_pack
-
-    client = httpx.Client(
-        headers={"User-Agent": "edgarpack/0.1 (+https://github.com)"},
-        follow_redirects=True,
-        timeout=120.0,
-    )
-    try:
-        ref, company_name, dual_codes = _acquire_hk_filing(client, code)
-        out_dir = packs_root / "hk" / ref.stock_code / f"{ref.stock_code}_{ref.fiscal_year}"
-        pack = build_hk_pack(
-            ref,
-            out_dir,
-            company_name=company_name,
-            dual_counter_codes=dual_codes,
-            client=client,
-        )
-    finally:
-        client.close()
-    return pack.path
+    return build_hk_latest_pack(code, packs_root, publish_debug_on_failure=True).pack_dir
 
 
 def _print_hk_facts_summary(pack_path: Path, facts_path: Path) -> None:
@@ -2069,12 +2041,9 @@ def _print_hk_facts_summary(pack_path: Path, facts_path: Path) -> None:
 
 
 def _cmd_build_hk(args: Any) -> int:
+    from .china.build_if_needed import ChinaPackNoFactsError, build_hk_latest_pack
     from .hk import acquire as hk
-    from .hk import extract as hk_extract
     from .hk.toc import HKSectioningError
-
-    class _BlockedFallbackError(Exception):
-        pass
 
     try:
         code = _resolve_hk_stock_code(args.company)
@@ -2083,65 +2052,30 @@ def _cmd_build_hk(args: Any) -> int:
         return 2
 
     try:
-        pack_path = _acquire_and_build_hk(code, args.out)
+        result = build_hk_latest_pack(code, args.out, publish_debug_on_failure=True)
     except HKSectioningError as e:
         print(f"Error: could not section the HKEX filing for {code}: {e}", file=sys.stderr)
         return 1
     except (hk.HKEXSearchBlocked, hk.HKFilingMetadataError, LookupError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
-
-    # hk-extract-fixes owns extract.py; consume its typed error when it lands,
-    # falling back to a local stand-in in trees where it has not.
-    blocked_error: type[BaseException] = getattr(
-        hk_extract, "HKExtractionBlockedError", _BlockedFallbackError
-    )
-    try:
-        facts_path = hk_extract.extract_facts_from_pack(pack_path)
-    except blocked_error as e:
-        print(f"Error: HKEX facts extraction blocked for {code}: {e}", file=sys.stderr)
-        print(f"Sectioned pack written to {pack_path} (facts not extracted).")
-        return 1
-
-    _print_hk_facts_summary(pack_path, facts_path)
-    return 0
-
-
-def _ensure_hk_pack_for_query(args: Any, resolved: Any) -> int:
-    """Auto-build the latest HKEX annual-report pack for a query target that
-    routes to HKEX and has no local pack, mirroring the SSE build-if-needed
-    path. Returns 0 to proceed, non-zero to stop (error already printed)."""
-    from .query.financials import _discover_china_pack_dir
-
-    if resolved is None or str(getattr(resolved, "source", "") or "") != "HKEX":
-        return 0
-    code = str(getattr(resolved, "hk_stock_code", None) or "").strip()
-    if not code:
-        return 0
-
-    pack_root = Path(getattr(args, "packs", DEFAULT_PACKS_DIR))
-    if _discover_china_pack_dir(resolved, pack_root=pack_root) is not None:
-        return 0
-
-    print(
-        f"No local HKEX pack for {code}; fetching the latest annual report from HKEX news "
-        "(typically 1-3 minutes)...",
-        file=sys.stderr,
-    )
-    try:
-        pack_path = _acquire_and_build_hk(code, pack_root)
-    except Exception as e:
+    except ChinaPackNoFactsError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
-    from .hk import extract as hk_extract
-
-    blocked_error: type[BaseException] = getattr(hk_extract, "HKExtractionBlockedError", Exception)
-    try:
-        hk_extract.extract_facts_from_pack(pack_path)
-    except blocked_error as e:
-        print(f"Error: HKEX facts extraction blocked for {code}: {e}", file=sys.stderr)
+    if result.blocked_error is not None:
+        print(
+            f"Error: HKEX facts extraction blocked for {code}: {result.blocked_error}",
+            file=sys.stderr,
+        )
+        print(f"Sectioned pack written to {result.pack_dir} (facts not extracted).")
         return 1
+    if result.no_facts or result.facts_path is None:
+        print(f"Error: HKEX facts extraction produced no facts for {code}", file=sys.stderr)
+        print(f"Sectioned pack written to {result.pack_dir} (facts not extracted).")
+        return 1
+
+    _print_hk_facts_summary(result.pack_dir, result.facts_path)
     return 0
 
 
@@ -2265,89 +2199,6 @@ def _cmd_api(args: Any) -> int:
     return 0
 
 
-async def _ensure_sse_pack_for_query(args: Any, resolved: Any) -> int:
-    """Auto-build the latest CNINFO annual-report pack for an A-share query
-    target with no local pack, mirroring the f1/s1 build-if-needed shortcut
-    (`_cmd_registration_shortcut`). SEC and HKEX targets are untouched; only
-    SSE/A-share codes route through here.
-
-    Returns 0 when the normal query path should proceed (a pack was already
-    on disk, or one was just built here). Returns non-zero when the caller
-    should stop immediately; the error is already printed to stderr.
-    """
-    from .identity import looks_like_china_a_share_code
-    from .query.financials import sse_pack_status
-
-    source = str(getattr(resolved, "source", "") or "") if resolved is not None else ""
-    if source == "SSE":
-        china_target = resolved
-    elif source:
-        return 0
-    elif looks_like_china_a_share_code(args.company):
-        china_target = _synthetic_sse_company(args.company)
-    else:
-        return 0
-
-    pack_root = Path(getattr(args, "packs", DEFAULT_PACKS_DIR))
-    stock_code = str(getattr(china_target, "stock_code", None) or args.company).strip()
-
-    pack_dir, built_without_facts = sse_pack_status(china_target, pack_root=pack_root)
-    if pack_dir is not None:
-        return 0
-    if built_without_facts:
-        print(
-            f"Pack for {stock_code} was built but no facts were extracted; "
-            "see the build warnings (rebuild with --force after fixing).",
-            file=sys.stderr,
-        )
-        return 1
-
-    print(
-        f"No local pack for {stock_code}; fetching the latest annual report from CNINFO "
-        "(typically 2-4 minutes)...",
-        file=sys.stderr,
-    )
-    try:
-        selected = _find_latest_sse_annual_report(stock_code)
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
-
-    import tempfile
-
-    from .pack.build import build_sse_pack
-
-    company_name = selected.company_name or getattr(china_target, "ticker", None) or stock_code
-    # Build into a temp dir on the SAME filesystem as pack_root so the
-    # move-on-success below is an atomic rename, not a cross-device copytree
-    # (which an interrupt could leave half-populated under the real root).
-    pack_root.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=pack_root) as tmp_dir:
-        try:
-            result = await build_sse_pack(
-                url=selected.source_url,
-                stock_code=stock_code,
-                company_name=str(company_name),
-                filing_date=selected.filing_date,
-                out_dir=Path(tmp_dir),
-                with_chunks=True,
-                force=False,
-            )
-        except Exception as e:
-            print(f"Error: {e}", file=sys.stderr)
-            return 1
-
-        # build_sse_pack writes progressively into out_dir (not atomically);
-        # building into a throwaway temp dir first, then moving the finished
-        # tree into the real packs root only on success, keeps a download or
-        # extraction failure from leaving a partial directory in pack_root.
-        dest = pack_root / "sse" / stock_code / result.output_dir.name
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(result.output_dir), str(dest))
-
-    return 0
-
-
 def _cmd_query(args: Any) -> int:
     from .identity import VenueNotAvailable, load_identity, resolve, select_venue, ticker_for_venue
 
@@ -2416,13 +2267,20 @@ def _cmd_query(args: Any) -> int:
     # --venue, the venue-narrowed identity decides, so `--venue sse` on an
     # A+H filer builds the SSE pack rather than keying off its default venue.
     if not bool(getattr(args, "no_build", False)):
+        from .china.build_if_needed import ensure_china_pack_for_query
+
         build_resolved = venue_resolved if venue_resolved is not None else resolved
-        china_rc = asyncio.run(_ensure_sse_pack_for_query(args, build_resolved))
-        if china_rc != 0:
-            return china_rc
-        hk_rc = _ensure_hk_pack_for_query(args, build_resolved)
-        if hk_rc != 0:
-            return hk_rc
+        ensure_result = asyncio.run(
+            ensure_china_pack_for_query(
+                company_input=args.company,
+                resolved=build_resolved,
+                pack_root=Path(getattr(args, "packs", DEFAULT_PACKS_DIR)),
+            )
+        )
+        if ensure_result.message:
+            print(ensure_result.message, file=sys.stderr)
+        if not ensure_result.ok:
+            return ensure_result.return_code
 
     async def _run() -> int:
         from .query.financials import financials

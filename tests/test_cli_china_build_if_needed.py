@@ -14,7 +14,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from edgarpack import cli
+from edgarpack.china import build_if_needed
 from edgarpack.china.acquire import CninfoAnnualReportRef
+from edgarpack.hk.extract import HKExtractionBlockedError
 
 _SELECTED = CninfoAnnualReportRef(
     stock_code="002594",
@@ -114,7 +116,9 @@ def test_cold_query_builds_missing_sse_pack_then_returns_value(tmp_path, monkeyp
         calls.append(kwargs)
         return await _fake_build_sse_pack(**kwargs)
 
-    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", lambda *_a, **_k: _SELECTED)
+    monkeypatch.setattr(
+        build_if_needed, "_find_latest_sse_annual_report", lambda *_a, **_k: _SELECTED
+    )
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fake_build_sse_pack)
 
     rc = cli.main(["query", "002594", "revenue", "--packs", str(tmp_path), "--format", "json"])
@@ -148,7 +152,7 @@ def test_warm_query_with_existing_pack_never_calls_build(tmp_path, monkeypatch, 
     async def fail_build(**_k: object) -> SimpleNamespace:
         raise AssertionError("should not build when a pack already exists")
 
-    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", fail_find)
+    monkeypatch.setattr(build_if_needed, "_find_latest_sse_annual_report", fail_find)
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
 
     rc = cli.main(["query", "002594", "revenue", "--packs", str(tmp_path), "--format", "json"])
@@ -167,7 +171,7 @@ def test_no_build_flag_preserves_current_missing_pack_error(tmp_path, monkeypatc
     async def fail_build(**_k: object) -> SimpleNamespace:
         raise AssertionError("--no-build must not attempt a build")
 
-    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", fail_find)
+    monkeypatch.setattr(build_if_needed, "_find_latest_sse_annual_report", fail_find)
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
 
     rc = cli.main(["query", "002594", "revenue", "--packs", str(tmp_path), "--no-build"])
@@ -195,7 +199,7 @@ def test_build_failure_propagates_message_and_leaves_packs_root_untouched(
     async def fail_build(**_k: object) -> SimpleNamespace:
         raise AssertionError("a selector failure must not reach the build step")
 
-    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", fail_find)
+    monkeypatch.setattr(build_if_needed, "_find_latest_sse_annual_report", fail_find)
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
 
     rc = cli.main(["query", "002594", "revenue", "--packs", str(tmp_path)])
@@ -213,7 +217,7 @@ def test_hkex_target_auto_builds_via_hk_not_sse(tmp_path, monkeypatch, capsys):
     async def fail_build(**_k: object) -> SimpleNamespace:
         raise AssertionError("HKEX targets must not route through SSE auto-build")
 
-    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", fail_find)
+    monkeypatch.setattr(build_if_needed, "_find_latest_sse_annual_report", fail_find)
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
 
     calls: dict[str, str] = {}
@@ -222,7 +226,7 @@ def test_hkex_target_auto_builds_via_hk_not_sse(tmp_path, monkeypatch, capsys):
         calls["code"] = code
         raise LookupError("no annual report found (test)")
 
-    monkeypatch.setattr(cli, "_acquire_and_build_hk", fake_hk_build)
+    monkeypatch.setattr(build_if_needed, "_build_hk_query_pack", fake_hk_build)
 
     rc = cli.main(["query", "0700.HK", "revenue", "--packs", str(tmp_path)])
 
@@ -234,11 +238,33 @@ def test_hkex_target_auto_builds_via_hk_not_sse(tmp_path, monkeypatch, capsys):
     assert "no annual report found" in captured.err
 
 
+def test_hkex_blocked_auto_build_does_not_publish_pack(tmp_path, monkeypatch, capsys):
+    def fail_find(*_a: object, **_k: object) -> CninfoAnnualReportRef:
+        raise AssertionError("HKEX targets must not route through SSE auto-build")
+
+    async def fail_build(**_k: object) -> SimpleNamespace:
+        raise AssertionError("HKEX targets must not route through SSE auto-build")
+
+    def blocked_hk(_code: str, _packs_root: Path) -> Path:
+        raise HKExtractionBlockedError("statement text was image-only")
+
+    monkeypatch.setattr(build_if_needed, "_find_latest_sse_annual_report", fail_find)
+    monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
+    monkeypatch.setattr(build_if_needed, "_build_hk_query_pack", blocked_hk)
+
+    rc = cli.main(["query", "0700.HK", "revenue", "--packs", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert rc != 0
+    assert "statement text was image-only" in captured.err
+    assert not (tmp_path / "hk" / "00700" / "00700_2025").exists()
+
+
 def test_no_build_flag_skips_hk_auto_build(tmp_path, monkeypatch, capsys):
     def fail_hk(*_a: object, **_k: object) -> object:
         raise AssertionError("--no-build must skip HK auto-build")
 
-    monkeypatch.setattr(cli, "_acquire_and_build_hk", fail_hk)
+    monkeypatch.setattr(build_if_needed, "_build_hk_query_pack", fail_hk)
 
     rc = cli.main(["query", "0700.HK", "revenue", "--no-build", "--packs", str(tmp_path)])
 
@@ -275,7 +301,7 @@ def test_built_pack_with_no_facts_reports_distinct_message_and_skips_build(
     async def fail_build(**_k: object) -> SimpleNamespace:
         raise AssertionError("a build that already ran with no facts must not be retried")
 
-    monkeypatch.setattr(cli, "_find_latest_sse_annual_report", fail_find)
+    monkeypatch.setattr(build_if_needed, "_find_latest_sse_annual_report", fail_find)
     monkeypatch.setattr("edgarpack.pack.build.build_sse_pack", fail_build)
 
     rc = cli.main(["query", "002594", "revenue", "--packs", str(tmp_path)])

@@ -124,7 +124,7 @@ def snapshot_fact_to_cited_value(
     cik: str,
     company: str,
     form_type: str,
-    filed: _date_cls,
+    filed: _date_cls | None,
     concept: str,
     public_metric: str | None = None,
 ) -> CitedValue:
@@ -360,15 +360,12 @@ def _filed_date_for_candidate(
     candidate: _SnapshotCandidate,
     *,
     filed: _date_cls | None,
-) -> _date_cls:
+) -> _date_cls | None:
     if candidate.filing_date != _date_cls.min:
         return candidate.filing_date
     if filed is not None:
         return filed
-    try:
-        return _date_cls.fromisoformat(candidate.fact.period_end)
-    except ValueError:
-        return _date_cls.today()
+    return None
 
 
 def _candidate_to_cited_value(
@@ -575,9 +572,6 @@ def _inject_no_api_key_placeholders(
     form_type: str,
     latest_pack: _RegistrationPack,
 ) -> None:
-    placeholder_date = (
-        latest_pack.filing_date if latest_pack.filing_date != _date_cls.min else _date_cls.today()
-    )
     for metric in metrics:
         if result.metrics.get(metric) is not None:
             continue
@@ -588,11 +582,11 @@ def _inject_no_api_key_placeholders(
             unit=unit,
             metric=metric,
             concept=_resolve_concept_for_metric(metric),
-            period_end=placeholder_date,
+            period_end=None,
             fiscal_year=0,
             fiscal_period="FY",
             form_type=latest_pack.form_type or form_type,
-            filed=placeholder_date,
+            filed=None,
             accession="",
             cik=cik,
             company=company,

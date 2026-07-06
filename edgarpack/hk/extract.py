@@ -710,7 +710,7 @@ def _fiscal_year_start(year_end_iso: str) -> str:
     return (end.replace(year=end.year - 1) + timedelta(days=1)).isoformat()
 
 
-def extract_facts_from_pack(pack_dir: Path) -> Path:
+def extract_facts_from_pack(pack_dir: Path) -> Path | None:
     manifest = json.loads((pack_dir / "manifest.json").read_text())
     standard: AccountingStandard = manifest["accounting_standard"]
     currency: str = manifest["reporting_currency"]
@@ -719,6 +719,7 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
 
     sections_dir = pack_dir / "sections"
     all_facts: list[HKFact] = []
+    blocked: list[str] = []
 
     for section_file in sorted(sections_dir.glob("*.md")):
         stem = section_file.stem
@@ -734,7 +735,8 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
         try:
             raw_facts = extract_with_regex(text, section_id, standard, max_fy=fy)
         except HKExtractionBlockedError as exc:
-            logging.getLogger(__name__).warning("skipping %s in %s: %s", section_id, pack_dir, exc)
+            logging.getLogger(__name__).warning("blocked %s in %s: %s", section_id, pack_dir, exc)
+            blocked.append(str(exc))
             continue
         for f in raw_facts:
             all_facts.append(
@@ -753,6 +755,11 @@ def extract_facts_from_pack(pack_dir: Path) -> Path:
     headcount_fact = extract_headcount_from_pack(pack_dir)
     if headcount_fact is not None:
         all_facts.append(headcount_fact)
+
+    if blocked:
+        raise HKExtractionBlockedError("; ".join(blocked))
+    if not all_facts:
+        return None
 
     nested: dict[str, Any] = {standard.lower(): {}}
     for fact in all_facts:

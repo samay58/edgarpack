@@ -52,7 +52,7 @@ def _patch_acquire_and_pdf(monkeypatch: pytest.MonkeyPatch) -> None:
         announcement_date="09/04/2026",
     )
     monkeypatch.setattr(
-        "edgarpack.cli._acquire_hk_filing",
+        "edgarpack.china.build_if_needed._acquire_hk_filing",
         lambda client, code: (ref, "TENCENT", ["00700", "80700"]),
     )
     monkeypatch.setattr("edgarpack.hk.adapter._download_pdf", lambda ref, out, client=None: out)
@@ -85,12 +85,12 @@ def test_build_hk_end_to_end_writes_pack_and_facts(
     # build-hk just wrote (this cross-packet path was uncovered before).
     from types import SimpleNamespace
 
-    from edgarpack.query.financials import _discover_china_pack_dir
+    from edgarpack.china.pack_store import discover_china_pack
 
     resolved = SimpleNamespace(
         source="HKEX", stock_code="00700", hk_stock_code="00700", ticker="0700.HK", aliases=()
     )
-    found = _discover_china_pack_dir(resolved, pack_root=tmp_path)
+    found = discover_china_pack(resolved, pack_root=tmp_path)
     assert found == pack_dir
 
 
@@ -105,11 +105,8 @@ def test_build_hk_garbled_facts_step_fails_loudly_with_pack_written(
     def _raise(pack_dir: Any) -> Any:
         raise _BlockedError("statement text was image-only")
 
-    # Stand in for the typed error hk-extract-fixes will raise once it lands.
-    monkeypatch.setattr(
-        "edgarpack.hk.extract.HKExtractionBlockedError", _BlockedError, raising=False
-    )
-    monkeypatch.setattr("edgarpack.hk.extract.extract_facts_from_pack", _raise)
+    monkeypatch.setattr("edgarpack.china.build_if_needed.HKExtractionBlockedError", _BlockedError)
+    monkeypatch.setattr("edgarpack.china.build_if_needed.extract_facts_from_pack", _raise)
 
     rc = main(["build-hk", "0700", "--out", str(tmp_path)])
     assert rc == 1

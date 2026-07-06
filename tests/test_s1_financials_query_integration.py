@@ -715,6 +715,46 @@ async def test_augment_emits_diagnostic_for_failed_extraction_status(tmp_path, m
 
 
 @pytest.mark.asyncio
+async def test_no_api_key_placeholder_keeps_missing_dates_absent(tmp_path, monkeypatch):
+    _write_s1_pack_without_snapshot(
+        tmp_path,
+        accession="0001628280-26-025762",
+        filing_date="",
+        markdown="# Selected Financial Data\n\nRevenue table requires LLM extraction.",
+    )
+    result = _registration_only_result()
+
+    async def no_api_key_extract(_pack_dir, *, force=False):  # noqa: ARG001
+        return SnapshotResult(
+            schema_version=SCHEMA_VERSION,
+            accession="0001628280-26-025762",
+            extracted_at="2026-04-22T00:00:00Z",
+            extraction_status="no_api_key",
+            source_sha256="deadbeef",
+            model="claude-haiku-4-5-20251001",
+            facts=[],
+        )
+
+    monkeypatch.setattr(
+        "edgarpack.query.registration.integrate.extract_or_load_snapshot", no_api_key_extract
+    )
+
+    await augment_with_s1_snapshot(
+        result=result,
+        cik="0002021728",
+        metrics=["revenue"],
+        period="lfy",
+        pack_root=tmp_path,
+    )
+
+    row = result.metrics.get("revenue")
+    assert row is not None
+    assert row.filed is None
+    assert row.period_end is None
+    assert row.fiscal_year == 0
+
+
+@pytest.mark.asyncio
 async def test_augment_emits_diagnostic_when_latest_empty_but_older_cached(tmp_path):
     # Fix 9: when the latest pack yields nothing but an older pack has a cached
     # snapshot, explain why we do not silently fall back.

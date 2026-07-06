@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import re
 from datetime import date as _date
 from datetime import datetime as _datetime
@@ -15,6 +14,7 @@ from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     from ..identity import ResolvedCompany
 
+from ..china.pack_store import discover_china_pack
 from ..config import DEFAULT_PACKS_DIR
 from ..sec.archives import fetch_file
 from ..sec.client import HTTPError
@@ -1968,119 +1968,6 @@ def _china_stock_code(resolved: object) -> str:
     return str(stock_code or "").strip()
 
 
-# Once-per-process guard so a stale exported EDGARPACK_CHINA_PACK_ROOT warns
-# instead of silently redirecting every China pack lookup for the rest of
-# the run.
-_CHINA_PACK_ROOT_ENV_WARNED: set[str] = set()
-
-
-def _discover_china_pack_dir(resolved: object, pack_root: Path | None = None) -> Path | None:
-    """Find a local China pack for HKEX/SSE query paths."""
-    source = str(getattr(resolved, "source", "") or "").upper()
-    stock_code = _china_stock_code(resolved)
-    ticker = str(getattr(resolved, "ticker", "") or "")
-
-    roots: list[Path] = []
-    if pack_root is not None:
-        roots.append(Path(pack_root))
-    else:
-        roots.extend([DEFAULT_PACKS_DIR, Path(".")])
-
-    exchange_dirs = ["sse"] if source == "SSE" else ["hk", "hkex"]
-    variants = [v for v in (stock_code, stock_code.lstrip("0"), ticker, ticker.upper()) if v]
-    candidates: list[Path] = []
-    for root in roots:
-        for exchange_dir in exchange_dirs:
-            for variant in variants:
-                base = root / exchange_dir / variant
-                if base.exists():
-                    candidates.extend(path.parent for path in base.glob("*/facts.json"))
-        if source == "SSE" and stock_code:
-            base = root / "sse" / stock_code
-            if base.exists():
-                candidates.extend(path.parent for path in base.glob("*/facts.json"))
-
-    # Flat ``{name}_{fiscal_year}`` packs (fixtures and demos) live under an
-    # explicit root, opt-in via EDGARPACK_CHINA_PACK_ROOT so production never
-    # probes the test tree. Fiscal years come from the directory names found,
-    # not a hardcoded constant.
-    china_pack_root = os.environ.get("EDGARPACK_CHINA_PACK_ROOT")
-    if china_pack_root and source == "HKEX":
-        if "EDGARPACK_CHINA_PACK_ROOT" not in _CHINA_PACK_ROOT_ENV_WARNED:
-            _CHINA_PACK_ROOT_ENV_WARNED.add("EDGARPACK_CHINA_PACK_ROOT")
-            logger.warning(
-                "EDGARPACK_CHINA_PACK_ROOT override active: China pack discovery "
-                "is redirected to %s",
-                china_pack_root,
-            )
-        root_dir = Path(china_pack_root)
-        if root_dir.is_dir():
-            names: set[str] = set()
-            for alias in getattr(resolved, "aliases", ()):
-                alias_text = str(alias).lower()
-                names.add(alias_text.replace(" ", "_"))
-                names.add(alias_text)
-            names.update(v.lower() for v in variants)
-            for child in sorted(root_dir.iterdir()):
-                if not (child / "facts.json").exists():
-                    continue
-                match = re.fullmatch(r"(?P<name>.+)_(?P<fy>\d{4})", child.name)
-                if match is None:
-                    continue
-                if match.group("name").lower() in names:
-                    candidates.append(child)
-
-    if not candidates:
-        return None
-
-    def _sort_key(path: Path) -> tuple[str, str]:
-        manifest_path = path / "manifest.json"
-        if manifest_path.exists():
-            try:
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                filing = manifest.get("filing", {}) if isinstance(manifest, dict) else {}
-                return (str(filing.get("filing_date") or ""), str(path))
-            except Exception:
-                pass
-        return (path.name, str(path))
-
-    return sorted(set(candidates), key=_sort_key, reverse=True)[0]
-
-
-def sse_pack_status(resolved: object, pack_root: Path | None = None) -> tuple[Path | None, bool]:
-    """Classify what is on disk for an SSE query target, for the CLI's
-    query-time build-if-needed pre-pass.
-
-    Reuses `_discover_china_pack_dir` for the queryable case, and only walks
-    the stock code's build directory an extra time when that comes back
-    empty, to tell "never built" apart from "built, but no facts.json"
-    extracted. A second build cannot fix the latter, so callers must not
-    retry it as though the pack were simply missing.
-
-    Returns ``(pack_dir, built_without_facts)``. ``pack_dir`` mirrors
-    `_discover_china_pack_dir`'s return value (a candidate with a queryable
-    facts.json, or None). ``built_without_facts`` is True only when
-    ``pack_dir`` is None and a build directory already exists for this stock
-    code.
-    """
-    pack_dir = _discover_china_pack_dir(resolved, pack_root=pack_root)
-    if pack_dir is not None:
-        return pack_dir, False
-
-    if str(getattr(resolved, "source", "") or "").upper() != "SSE":
-        return None, False
-    stock_code = _china_stock_code(resolved)
-    if not stock_code:
-        return None, False
-
-    roots = [Path(pack_root)] if pack_root is not None else [DEFAULT_PACKS_DIR, Path(".")]
-    for root in roots:
-        base = root / "sse" / stock_code
-        if base.exists() and any(child.is_dir() for child in base.iterdir()):
-            return None, True
-    return None, False
-
-
 def _load_china_manifest(pack_dir: Path) -> dict[str, Any]:
     manifest_path = pack_dir / "manifest.json"
     if not manifest_path.exists():
@@ -2241,7 +2128,7 @@ async def _query_china_pack(
 
     from .models import QueryResult
 
-    pack_dir = _discover_china_pack_dir(resolved, pack_root=pack_root)
+    pack_dir = discover_china_pack(resolved, pack_root=pack_root)
     if pack_dir is None:
         source = str(getattr(resolved, "source", "China") or "China")
         stock_code = _china_stock_code(resolved)
