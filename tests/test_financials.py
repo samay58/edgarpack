@@ -1374,6 +1374,30 @@ class TestLeanJson(unittest.IsolatedAsyncioTestCase):
     @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
     @patch(f"{_P}.fetch_company_facts")
     @patch(f"{_P}.resolve_ticker")
+    async def test_lean_ltm_ratio_still_surfaces_components(
+        self, mock_resolve, mock_facts, _ms
+    ) -> None:
+        """A ratio over LTM windows (gross_margin --period ltm) surfaces its
+        components inline, like the same ratio at lfy. Regression: the LTM
+        ratio branch stopped emitting ltm_components, so the component-surfacing
+        guard must key on the additive-LTM test, not on fiscal_period."""
+        mock_resolve.return_value = ("0001045810", "NVIDIA CORP")
+        mock_facts.return_value = MOCK_COMPANY_FACTS
+
+        result = await financials("NVDA", "gross_margin", period="ltm")
+        gm = result.metrics.get("gross_margin")
+        if gm is None or not getattr(gm, "components", None):
+            self.skipTest("gross_margin LTM not derivable from the mock facts")
+
+        metrics = result.to_lean_dict()["metrics"]
+        self.assertIn("gross_margin", metrics)
+        # Components reachable inline regardless of LTM-ness of the ratio.
+        for comp in gm.components:
+            self.assertIn(comp, metrics, f"component {comp} not surfaced inline")
+
+    @patch(f"{_P}.fetch_submissions", new_callable=AsyncMock, side_effect=_mock_submissions)
+    @patch(f"{_P}.fetch_company_facts")
+    @patch(f"{_P}.resolve_ticker")
     async def test_lean_derived_has_formula(self, mock_resolve, mock_facts, mock_subs) -> None:
         """Derived metrics should include formula and component references."""
         mock_resolve.return_value = ("0001045810", "NVIDIA CORP")

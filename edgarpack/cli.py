@@ -681,8 +681,8 @@ def main(argv: list[str] | None = None) -> int:
         "--no-build",
         action="store_true",
         help=(
-            "For A-share/SSE codes with no local pack: error instead of auto-building the "
-            "latest annual report (today's behavior). Has no effect on SEC/HKEX targets."
+            "For an A-share/SSE or HKEX target with no local pack: error instead of "
+            "auto-building its latest annual report. No effect on SEC targets."
         ),
     )
 

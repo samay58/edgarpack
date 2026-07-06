@@ -556,9 +556,11 @@ class QueryResult(BaseModel):
                 continue
 
             metrics_out[metric_name] = _serialize_one(metric_name, value)
-            if isinstance(value, DerivedValue) and not value.fiscal_period.upper().startswith(
-                "LTM"
-            ):
+            # Surface a derived value's components inline unless it is an
+            # additive LTM (which carries them in its own ltm_components block).
+            # A ratio evaluated over LTM windows takes this path too, so its
+            # components stay inline like the same ratio at a non-LTM period.
+            if isinstance(value, DerivedValue) and not value._is_additive_ltm():
                 for comp_name, comp_val in value.components.items():
                     if comp_name not in self.metrics:
                         component_metrics[comp_name] = comp_val
