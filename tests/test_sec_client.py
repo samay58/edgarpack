@@ -61,7 +61,11 @@ class TestRetryAfterParsing(unittest.TestCase):
 
 class TestRetryBackoff(unittest.IsolatedAsyncioTestCase):
     async def test_retry_uses_max_of_backoff_and_retry_after(self) -> None:
-        client = SECClient(rate_limit=1000, max_retries=2)
+        client = SECClient(
+            user_agent="EdgarPack Test test@example.com",
+            rate_limit=1000,
+            max_retries=2,
+        )
         responses = [
             (b"", {"Retry-After": "0.2"}, 429),
             (b"ok", {}, 200),
@@ -88,7 +92,11 @@ class TestRetryBackoff(unittest.IsolatedAsyncioTestCase):
           <p>Your access to SEC.gov will be limited for 10 minutes.</p>
         </html>
         """
-        client = SECClient(rate_limit=1000, max_retries=3)
+        client = SECClient(
+            user_agent="EdgarPack Test test@example.com",
+            rate_limit=1000,
+            max_retries=3,
+        )
         client._fetch_sync = lambda _url: (traffic_limit_page, {}, 429)  # type: ignore[assignment]
         client._rate_limiter.acquire = AsyncMock()  # type: ignore[method-assign]
 
@@ -120,8 +128,17 @@ class TestClientSingleton(unittest.IsolatedAsyncioTestCase):
         import edgarpack.sec.client as client_module
 
         client_module._clients_by_loop.clear()
-        gathered = await asyncio.gather(*(get_client() for _ in range(10)))
-        self.assertEqual(len({id(c) for c in gathered}), 1)
+        with patch.dict(
+            "os.environ",
+            {"EDGARPACK_USER_AGENT": "EdgarPack Test test@example.com"},
+        ):
+            gathered = await asyncio.gather(*(get_client() for _ in range(10)))
+            self.assertEqual(len({id(c) for c in gathered}), 1)
+
+    async def test_client_requires_user_agent_identity(self) -> None:
+        with patch.dict("os.environ", {"EDGARPACK_USER_AGENT": ""}, clear=False):
+            with self.assertRaisesRegex(ValueError, "EDGARPACK_USER_AGENT"):
+                SECClient()
 
 
 if __name__ == "__main__":

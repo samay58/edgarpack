@@ -26,3 +26,4 @@ jobs:
         env:
           SYMPHONY_WEB: "1"
           EDGARPACK_CACHE_DIR: /tmp/edgarpack-cache
+          EDGARPACK_USER_AGENT: "EdgarPack CI admin@edgarpack.dev"

@@ -1005,6 +1005,7 @@ async def test_extract_or_load_snapshot_skips_llm_when_all_slugs_deterministic(
 
 @pytest.mark.asyncio
 async def test_call_haiku_extract_returns_raw_response_text(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     fake_text = (
         '[{"fiscal_year": 2024, "period_end": "2024-12-31", "metric": "revenue",'
         ' "value_cents": 7828700000, "currency": "USD", "is_audited": true,'

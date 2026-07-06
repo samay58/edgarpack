@@ -12,6 +12,7 @@ import gzip
 import http.client
 import json
 import logging
+import os
 import time
 import urllib.error
 import urllib.request
@@ -82,17 +83,20 @@ class SECClient:
 
     def __init__(
         self,
-        user_agent: str = USER_AGENT,
+        user_agent: str | None = None,
         rate_limit: float = RATE_LIMIT,
         max_retries: int = MAX_RETRIES,
     ):
-        if not user_agent or not user_agent.strip():
+        resolved_user_agent = (
+            user_agent if user_agent is not None else os.getenv("EDGARPACK_USER_AGENT", USER_AGENT)
+        )
+        if not resolved_user_agent or not resolved_user_agent.strip():
             raise ValueError(
                 "EDGARPACK_USER_AGENT is not set. SEC requires you to identify "
                 "yourself on every request.\n"
                 'Example: export EDGARPACK_USER_AGENT="Your Name your.email@example.com"'
             )
-        self.user_agent = user_agent
+        self.user_agent = resolved_user_agent
         self._rate_limiter = RateLimiter(rate_limit)
         self._max_retries = max(1, int(max_retries))
 
