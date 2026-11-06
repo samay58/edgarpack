@@ -14,7 +14,7 @@ The top-level CLI also accepts a comma-separated list of scalar selectors
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from ..sec.submissions import is_registration_form
@@ -521,22 +521,6 @@ def _is_standalone_quarter(v: dict[str, Any]) -> bool:
     return days <= 100
 
 
-def _is_cumulative_quarter(v: dict[str, Any]) -> bool:
-    """Check if a duration value is a cumulative YTD value (not standalone quarter).
-
-    For Q1, cumulative and standalone are identical (~90 days). For Q2+, cumulative
-    values span from fiscal year start to the quarter end (>100 days).
-    """
-    days = _duration_days(v)
-    if days is None:
-        return False
-    # Q1 cumulative = standalone (~90 days), so we accept anything with a valid duration
-    fp = str(v.get("fp", "")).upper()
-    if fp == "Q1":
-        return days <= 100  # Q1 cumulative = standalone
-    return days > 100
-
-
 def _is_per_share_metric(metric: str) -> bool:
     """Check if a metric is per-share (sensitive to stock splits)."""
     m = metric.lower()
@@ -558,47 +542,46 @@ def _quarter_recency_key(v: dict[str, Any]) -> tuple[date, int, int, date]:
     )
 
 
-def _pick_cumulative_quarter(values: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Pick the best cumulative quarter entry from a single fiscal period."""
-    if not values:
-        return None
-    cumulative = [v for v in values if _is_cumulative_quarter(v)]
-    candidates = cumulative if cumulative else values
-    candidates.sort(
-        key=lambda v: (_duration_days(v) or -1, _parse_date(v.get("filed", "")) or date.min),
-        reverse=True,
-    )
-    return candidates[0] if candidates else None
+# Two period ends (or two durations) within this many days are the same
+# fiscal window: covers 52/53-week calendars and leap days.
+_MATCH_TOLERANCE_DAYS = 10
 
 
-def _pick_anchor_quarter(
-    quarterly: list[dict[str, Any]],
-    newest: dict[str, Any],
-    years_back: int,
+def _accession_max_end(values: list[dict[str, Any]]) -> dict[str, date]:
+    """Latest period end per filing: the filing's own period, not a comparative."""
+    out: dict[str, date] = {}
+    for v in values:
+        end = _parse_date(v.get("end", ""))
+        accn = str(v.get("accn", ""))
+        if end is not None and (accn not in out or end > out[accn]):
+            out[accn] = end
+    return out
+
+
+def _native_first_key(v: dict[str, Any], accn_max_end: dict[str, date]) -> tuple[bool, date]:
+    """Prefer the filing that reports this window as its own period, then the newest."""
+    native = _parse_date(v.get("end", "")) == accn_max_end.get(str(v.get("accn", "")))
+    return (native, _parse_date(v.get("filed", "")) or date.min)
+
+
+def _pick_near(
+    rows: list[dict[str, Any]],
+    end: date,
+    accn_max_end: dict[str, date],
+    duration: int | None = None,
 ) -> dict[str, Any] | None:
-    """Pick the quarter anchor for LTM-like windows.
-
-    ``years_back=0`` anchors to the newest quarter (LTM).
-    ``years_back=1`` anchors one fiscal year earlier (LTM-1).
-
-    Returns None when the exact same-quarter entry for the target fiscal
-    year is missing. Returning a nearer year here would mislabel a different
-    window as LTM-N, so the caller must fail closed.
-    """
-    newest_fp = str(newest.get("fp", "")).upper()
-    newest_fy = int(newest.get("fy") or 0)
-
-    if years_back <= 0:
-        return newest
-
-    same_period = [
-        v
-        for v in quarterly
-        if str(v.get("fp", "")).upper() == newest_fp and v.get("val") is not None
-    ]
-    target_fy = newest_fy - years_back
-    target = [v for v in same_period if int(v.get("fy") or 0) == target_fy]
-    return _pick_cumulative_quarter(target)
+    """The row whose window ends near ``end`` (and spans about ``duration`` days)."""
+    candidates = []
+    for v in rows:
+        v_end = _parse_date(v.get("end", ""))
+        if v_end is None or abs((v_end - end).days) > _MATCH_TOLERANCE_DAYS:
+            continue
+        if duration is not None:
+            v_days = _duration_days(v)
+            if v_days is None or abs(v_days - duration) > _MATCH_TOLERANCE_DAYS:
+                continue
+        candidates.append(v)
+    return max(candidates, key=lambda v: _native_first_key(v, accn_max_end), default=None)
 
 
 def _annual_for_fy(values: list[dict[str, Any]], fiscal_year: int) -> dict[str, Any] | None:
@@ -815,94 +798,112 @@ def _select_ltm_like(
             )
         )
 
-    quarterly.sort(key=_quarter_recency_key, reverse=True)
-    newest = quarterly[0]
-    newest_key = (
-        int(newest.get("fy") or 0),
-        str(newest.get("fp", "")).upper(),
-        _parse_date(newest.get("end", "")) or date.min,
-    )
-    newest_candidates = [
-        v
-        for v in quarterly
-        if (
-            int(v.get("fy") or 0),
-            str(v.get("fp", "")).upper(),
-            _parse_date(v.get("end", "")) or date.min,
-        )
-        == newest_key
+    # Match the three LTM parts by period dates, never by companyfacts (fy, fp):
+    # those tags describe the filing, so a 10-Q's prior-year comparative carries
+    # the current year's tags, and some filers (CRM) tag a 10-K one fiscal year
+    # off from the 10-Qs covering the same months.
+    accn_max_end = _accession_max_end(values)
+    full_years = [
+        v for v in values if _is_annual(v) and v.get("val") is not None and _is_full_fiscal_year(v)
     ]
-    newest_mrp = _pick_cumulative_quarter(newest_candidates) or newest
-    anchor = _pick_anchor_quarter(quarterly, newest_mrp, years_back)
-    if anchor is None:
-        newest_fp = str(newest_mrp.get("fp", "")).upper()
-        target_fy = int(newest_mrp.get("fy") or 0) - years_back
+    quarterly.sort(key=_quarter_recency_key, reverse=True)
+    newest_end = _parse_date(quarterly[0].get("end", "")) or date.min
+    fy_ends = sorted({_parse_date(v.get("end", "")) or date.min for v in full_years}, reverse=True)
+
+    if fy_ends and fy_ends[0] >= newest_end:
+        # A 10-K filed after the last 10-Q closes a newer window than any
+        # quarter: the full year IS the LTM, and LTM-N steps back whole years.
+        fy_end = fy_ends[0]
+        for _ in range(years_back):
+            prior_end = next((e for e in fy_ends if 350 <= (fy_end - e).days <= 380), None)
+            if prior_end is None:
+                _record_incomputable(
+                    f"no fiscal year {years_back} year(s) before the latest annual "
+                    f"({fy_ends[0]}) to anchor {fiscal_period_label}"
+                )
+                return _finalize(None)
+            fy_end = prior_end
+        fy_row = _pick_near(full_years, fy_end, accn_max_end)
+        assert fy_row is not None  # fy_end was taken from full_years itself
+        return _finalize(
+            _value_to_cited(
+                fy_row, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
+            )
+        )
+
+    newest_rows = [v for v in quarterly if _parse_date(v.get("end", "")) == newest_end]
+    # The MRP is the year-to-date window, never longer than its quarter tag
+    # allows: AMZN 10-Qs also carry a trailing-twelve-month figure tagged Q3.
+    ytd_rows = [
+        v
+        for v in newest_rows
+        if (_duration_days(v) or 0)
+        <= _quarter_months(str(v.get("fp", ""))) * 31 + _MATCH_TOLERANCE_DAYS
+    ]
+    newest_rows = ytd_rows or newest_rows
+    newest_mrp = max(
+        newest_rows,
+        key=lambda v: (_duration_days(v) or -1, *_native_first_key(v, accn_max_end)),
+    )
+    mrp_fp = str(newest_mrp.get("fp", "")).upper()
+    mrp_fy = int(newest_mrp.get("fy") or 0)
+    # Step back one year at a time from each actual period end, so 52/53-week
+    # calendars never drift outside the match tolerance over several years.
+    mrp: dict[str, Any] | None = newest_mrp
+    for _ in range(max(0, years_back)):
+        assert mrp is not None
+        mrp = _pick_near(
+            quarterly,
+            (_parse_date(mrp.get("end", "")) or date.min) - timedelta(days=365),
+            accn_max_end,
+            duration=_duration_days(newest_mrp),
+        )
+        if mrp is None:
+            break
+    if mrp is None:
         _record_incomputable(
-            f"no {newest_fp} anchor for FY{target_fy}; refusing to anchor "
+            f"no {mrp_fp} anchor for FY{mrp_fy - years_back}; refusing to anchor "
             f"{fiscal_period_label} to a different fiscal year"
         )
         return _finalize(None)
-    mrp = anchor
-
     mrp_fp = str(mrp.get("fp", "")).upper()
     mrp_fy = int(mrp.get("fy") or 0)
 
-    if years_back == 0 and mrp_fp == "Q4":
-        annual_mrp = _annual_for_fy(values, mrp_fy)
-        if annual_mrp is not None and _is_full_fiscal_year(annual_mrp):
-            return _finalize(
-                _value_to_cited(
-                    annual_mrp,
-                    metric,
-                    concept,
-                    unit,
-                    company,
-                    cik,
-                    taxonomy=taxonomy,
-                    doc_map=doc_map,
-                )
+    if mrp_fp == "Q4" and _is_full_fiscal_year(mrp):
+        # A Q4 entry spanning the whole fiscal year already is the LTM.
+        return _finalize(
+            _value_to_cited(
+                mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
             )
-        if _is_full_fiscal_year(mrp):
-            return _finalize(
-                _value_to_cited(
-                    mrp, metric, concept, unit, company, cik, taxonomy=taxonomy, doc_map=doc_map
-                )
-            )
-        # Standalone Q4 stub (~3 months): not a full-year value, so fall
-        # through to three-component math instead of mislabeling it as LTM.
+        )
 
-    annual = _annual_history(values)
-    if not annual:
+    if not full_years:
         _record_incomputable(f"no annual history for concept (MRP={mrp_fp} FY{mrp_fy})")
         return _finalize(None)
 
-    lfy_target_fy = mrp_fy - 1
-    lfy = next((v for v in annual if int(v.get("fy") or 0) == lfy_target_fy), None)
+    # LFY is the fiscal year that ends the day before the MRP window starts.
+    # A gap (an older annual, or a standalone non-Q1 MRP) would double-count or
+    # drop months in MRP + LFY - MRP_prior, so it fails closed.
+    mrp_start = _parse_date(mrp.get("start", "")) or date.min
+    lfy = _pick_near(full_years, mrp_start - timedelta(days=1), accn_max_end)
     if lfy is None:
-        # An older annual would double-count the gap years in
-        # MRP + LFY - MRP_prior; LTM requires exactly the prior FY.
         _record_incomputable(
-            f"no FY{lfy_target_fy} annual (MRP={mrp_fp} FY{mrp_fy} requires "
-            f"the immediately prior fiscal year)"
+            f"no FY{mrp_fy - 1} annual ending just before {mrp_start} "
+            f"(MRP={mrp_fp} FY{mrp_fy} requires the immediately prior fiscal year)"
         )
         return _finalize(None)
 
-    lfy_fy = int(lfy.get("fy") or 0)
-    prior_year = [
-        v
-        for v in quarterly
-        if str(v.get("fp", "")).upper() == mrp_fp
-        and int(v.get("fy") or 0) == lfy_fy
-        and v.get("val") is not None
-    ]
-    if _is_standalone_quarter(mrp):
-        # The anchor is a standalone ~3-month window; the subtrahend must
-        # match that shape or MRP + LFY - MRP_prior subtracts the wrong span.
-        prior_year = [v for v in prior_year if _is_standalone_quarter(v)]
-    mrp_prior = _pick_cumulative_quarter(prior_year)
+    mrp_end = _parse_date(mrp.get("end", "")) or date.min
+    mrp_prior = _pick_near(
+        quarterly,
+        mrp_end - timedelta(days=365),
+        accn_max_end,
+        duration=_duration_days(mrp),
+    )
     if mrp_prior is None:
         _record_incomputable(
-            f"no matching {mrp_fp} cumulative entry for FY{lfy_fy} (MRP={mrp_fp} FY{mrp_fy})"
+            f"no matching {mrp_fp} cumulative entry for FY{int(lfy.get('fy') or 0)} "
+            f"(MRP={mrp_fp} FY{mrp_fy})"
         )
         return _finalize(None)
 
@@ -927,7 +928,9 @@ def _select_ltm_like(
             unit=unit,
             metric=metric,
             concept=concept,
-            period_start=lfy_cited.period_start,
+            # The trailing window starts the day after last year's YTD ends, not
+            # at LFY's start (that spans ~21 months and skews FX averaging).
+            period_start=(_parse_date(mrp_prior.get("end", "")) or date.min) + timedelta(days=1),
             period_end=mrp_cited.period_end,
             fiscal_year=mrp_cited.fiscal_year,
             fiscal_period=fiscal_period_label,
@@ -1286,8 +1289,14 @@ def select_quarterly_series(
     else:
         quarterly = [v for v in values if _is_quarterly(v) and v.get("val") is not None]
 
+    # (fy, fp) describe the filing, not the period: each 10-Q also carries the
+    # prior-year comparative under the same tags, so the later end must win.
     quarterly.sort(
-        key=lambda v: (int(v.get("fy") or 0), _quarter_months(str(v.get("fp", "")))),
+        key=lambda v: (
+            int(v.get("fy") or 0),
+            _quarter_months(str(v.get("fp", ""))),
+            _parse_date(v.get("end", "")) or date.min,
+        ),
         reverse=True,
     )
 
@@ -1559,6 +1568,6 @@ def is_snapshot_pseudo_period(period: str) -> bool:
     """Return True for selectors that only exist for S-1 snapshot data.
 
     Snapshot pseudo-periods bypass the regular companyfacts lookup path
-    and are routed through edgarpack.query.s1_financials.
+    and are routed through edgarpack.query.registration.
     """
     return period == "pro-forma"

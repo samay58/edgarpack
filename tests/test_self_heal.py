@@ -522,12 +522,29 @@ class TestTryLearn(unittest.TestCase):
         assert result is not None and not isinstance(result, list)
         self.assertEqual(result.source, "learned:fuzzy")
         self.assertEqual(result.value, 28_000_000_000)
+        # A self-derived check cannot prove the concept is right; the value
+        # says so instead of passing as independently verified.
+        self.assertTrue(any("only against its own prior year" in w for w in result.warnings))
 
         reg = LearnedRegistry(db_path=self.db_path)
         row = reg.lookup("0001045810", "operating_cash_flow")
         assert row is not None
         self.assertTrue(row.verified)
-        self.assertEqual(row.verif_method, "order_of_magnitude")
+        self.assertEqual(row.verif_method, "self_history")
+
+        # The cached reuse carries the same warning.
+        again = try_learn(
+            metric="operating_cash_flow",
+            meta=meta,
+            facts=facts,
+            cik="0001045810",
+            company="NVIDIA CORP",
+            doc_map={},
+            registry_path=self.db_path,
+        )
+        assert again is not None and not isinstance(again, list)
+        self.assertEqual(again.source, "learned:cached")
+        self.assertTrue(any("only against its own prior year" in w for w in again.warnings))
 
     def test_no_prior_year_and_single_annual_stays_unverified(self) -> None:
         """One annual entry leaves nothing to verify against: the row persists

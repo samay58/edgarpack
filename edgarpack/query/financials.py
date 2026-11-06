@@ -40,6 +40,7 @@ from .models import CitedValue, DerivedValue, Diagnostic, MetricScalar, MetricVa
 from .periods import (
     _annual_for_fy,
     _extract_values,
+    _is_per_share_metric,
     _unit_for_concept,
     _value_to_cited,
     parse_fact_ids_from_html,
@@ -336,6 +337,86 @@ def _candidate_concepts_for_metric(
 _ANNUAL_FORMS = {"10-K", "10-K/A", "20-F", "20-F/A", "ANNUAL-REPORT", "ANNUAL REPORT"}
 
 
+_WINDOW_PERIOD_RE = re.compile(r"^(ltm|mrq)(?:-(\d+))?$")
+# Slack for 52/53-week calendars. Under a quarter on purpose: ORCL left its
+# newest quarter's revenue off `Revenues`, and a one-quarter-old LTM must fall
+# through to the concept that has it rather than misalign derived ratios.
+_WINDOW_LAG_DAYS = 45
+
+
+def _company_latest_period_end(facts: dict[str, Any], max_days: int) -> _date | None:
+    """Newest end of a reporting window (80 to ``max_days`` long) in any us-gaap / IFRS concept.
+
+    Instants and short durations are skipped: subsequent-event facts are dated
+    after the period, and would make every current window look stale.
+    """
+    best: _date | None = None
+    for taxonomy in ("us-gaap", "ifrs-full"):
+        tax_data = facts.get(taxonomy, {})
+        if not isinstance(tax_data, dict):
+            continue
+        for concept_data in tax_data.values():
+            units = concept_data.get("units", {}) if isinstance(concept_data, dict) else {}
+            for entries in units.values() if isinstance(units, dict) else ():
+                for entry in entries if isinstance(entries, list) else ():
+                    try:
+                        start = _date.fromisoformat(str(entry.get("start", "")))
+                        end = _date.fromisoformat(str(entry.get("end", "")))
+                        filed = _date.fromisoformat(str(entry.get("filed", "")))
+                    except ValueError:
+                        continue
+                    if not 80 <= (end - start).days <= max_days:
+                        continue
+                    # A period cannot end after its filing; this skips typo dates.
+                    if end <= filed and (best is None or end > best):
+                        best = end
+    return best
+
+
+def _reject_stale_window(
+    value: MetricValue,
+    facts: dict[str, Any],
+    metric: str,
+    concept: str,
+    period: str,
+    period_offset: int,
+    diagnostics: list[Diagnostic],
+) -> MetricValue:
+    """Drop an ltm/mrq value whose window ends years before the company's latest.
+
+    The lfy family has an exact fiscal-year guard; without this one, a concept
+    the filer stopped using (GOOGL's pre-2025 revenue tag) answers ``ltm-1``
+    with a window from 2024 under the LTM-1 label.
+    """
+    match = _WINDOW_PERIOD_RE.match(period.strip().lower())
+    if match is None or value is None or isinstance(value, list):
+        return value
+    if _is_per_share_metric(metric):
+        # Per-share LTM deliberately shows the annual value, flagged ltm_degraded.
+        return value
+    # mrq compares against the newest quarter-length window: after a 10-K the
+    # newest standalone quarter legitimately trails the fiscal year end.
+    latest = _company_latest_period_end(facts, 100 if match.group(1) == "mrq" else 380)
+    if latest is None or value.period_end is None:
+        return value
+    years_back = int(match.group(2) or 0) - period_offset
+    floor_days = 365 * max(0, years_back) + _WINDOW_LAG_DAYS
+    if (latest - value.period_end).days <= floor_days:
+        return value
+    diagnostics.append(
+        Diagnostic(
+            metric=metric,
+            kind="period_mismatch",
+            message=(
+                f"{metric} concept {concept} answered {period} with a window ending "
+                f"{value.period_end}, but the company reports through {latest}; "
+                f"rejecting a stale window under the {period} label."
+            ),
+        )
+    )
+    return None
+
+
 def _company_latest_annual_fy(facts: dict[str, Any]) -> int | None:
     """Best company-level FY anchor for exact lfy/annual period matching."""
     best: int | None = None
@@ -544,6 +625,9 @@ def _select_metric_period_value(
                 period=period,
                 period_offset=period_offset,
                 diagnostics=local_diagnostics,
+            )
+            value = _reject_stale_window(
+                value, facts, metric, concept, period, period_offset, local_diagnostics
             )
         if isinstance(value, list):
             if value:
@@ -793,7 +877,7 @@ async def financials(
 
     pack_root_path = Path(pack_root) if pack_root is not None else DEFAULT_PACKS_DIR
     if metrics is None:
-        from .s1_financials import (
+        from .registration.integrate import (
             default_registration_query_metrics,
             has_registration_pack_for_cik,
         )
@@ -812,7 +896,7 @@ async def financials(
     # (company-specific discovered slugs, populated by `edgarpack which`).
     # S-1 snapshot slugs are also accepted; they pass through the guard and
     # resolve via augment_with_s1_snapshot at the end of the function.
-    from .s1_financials import METRIC_SLUGS as _S1_METRIC_SLUGS
+    from .registration.snapshot import METRIC_SLUGS as _S1_METRIC_SLUGS
 
     discovered_slugs = _discovered_slugs_for_cik(cik)
     resolved_list: list[str] = []
@@ -1156,7 +1240,7 @@ async def financials(
     resolved_requested = [resolve_alias((m or "").strip().lower()) for m in requested_for_s1_aug]
     any_empty = any(result.metrics.get(m) is None for m in resolved_requested)
     if any_empty or period == "pro-forma":
-        from .s1_financials import augment_with_s1_snapshot
+        from .registration.integrate import augment_with_s1_snapshot
 
         result = await augment_with_s1_snapshot(
             result=result,

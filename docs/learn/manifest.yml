@@ -100,9 +100,9 @@ trails:
     estimated_minutes: 14
     covers:
       - edgarpack/parse/s1_headings.py
-      - edgarpack/query/s1_financials.py:46
-      - edgarpack/query/s1_financials.py:720
-      - edgarpack/query/s1_financials.py:1318
+      - edgarpack/query/registration/snapshot.py:41
+      - edgarpack/query/registration/llm.py:580
+      - edgarpack/query/registration/integrate.py:597
       - edgarpack/diff/timeline.py:136
     why: "S-1 values do not come from ordinary companyfacts. This path explains the exception."
 
@@ -165,7 +165,7 @@ refs:
     why: "Metric aliasing, preset expansion, and suggestion errors."
 
   - id: ref-s1-financials
-    module: edgarpack/query/s1_financials.py
+    module: edgarpack/query/registration/
     why: "S-1 snapshot extraction and registration-pack lookup."
 
   - id: ref-diff-reports

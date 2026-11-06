@@ -6,7 +6,7 @@ from pathlib import Path
 
 from edgarpack.cli import main
 from edgarpack.distill import check_distill_bundle
-from edgarpack.query.s1_financials import SCHEMA_VERSION, source_sha256_for_pack
+from edgarpack.query.registration.snapshot import SCHEMA_VERSION, source_sha256_for_pack
 
 _S1_TEXT = """\
 # Prospectus Summary

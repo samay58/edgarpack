@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from ..pack.manifest import load_manifest_dict
+from ..query.registration.snapshot import SnapshotResult, load_validated_snapshot
 from ..query.registration_profile import build_registration_profile
-from ..query.s1_financials import SnapshotResult, load_validated_snapshot
 from ..sec.submissions import is_registration_form
 from .models import (
     DistillBundle,

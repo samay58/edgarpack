@@ -13,11 +13,13 @@ import pytest
 
 from edgarpack.query.financials import financials
 from edgarpack.query.models import DerivedValue, QueryResult
-from edgarpack.query.s1_financials import (
-    SCHEMA_VERSION,
-    SnapshotResult,
+from edgarpack.query.registration.integrate import (
     augment_with_s1_snapshot,
     default_registration_query_metrics,
+)
+from edgarpack.query.registration.snapshot import (
+    SCHEMA_VERSION,
+    SnapshotResult,
     source_sha256_for_pack,
 )
 

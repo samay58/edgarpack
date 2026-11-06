@@ -163,17 +163,17 @@ For duration metrics (P&L, cash flow):
 LTM = MRP_cumulative + LFY_annual - MRP_prior_year_cumulative
 ```
 
-Where MRP is the most recent quarterly cumulative value, LFY is the last full fiscal year, and MRP_prior is the same quarter from the prior fiscal year. When the MRP is Q4/FY, `ltm` returns it directly (no formula needed). For Q1, cumulative and standalone are identical, so the formula still works.
+Where MRP is the most recent quarterly cumulative (year-to-date) value, LFY is the full fiscal year that ends the day before the MRP window starts, and MRP_prior is the same-length window ending one year before the MRP. For Q1, cumulative and standalone are identical, so the formula still works.
 
-`ltm-1` uses the same formula, but shifts the quarter anchor one fiscal year back before computing the window. Unlike `ltm`, `ltm-1` does not short-circuit on a shifted Q4/FY anchor when full formula components are available.
+The three parts are matched by period dates, not by the companyfacts `fy` / `fp` tags. Those tags describe the filing, not the period: every 10-Q repeats last year's window under this year's tags, and some filers (Salesforce) tag a 10-K one fiscal year off from the 10-Qs covering the same months. When a filing reports the same window as its own period and another repeats it as a comparative, the filing's own figure wins; a comparative is used only when no filing reports the window as its own (a filer that changed XBRL tags).
+
+When a 10-K is newer than every 10-Q (the full year has been filed), `ltm` is that fiscal year, cited directly, and `ltm-N` steps back N whole fiscal years. A Q4 entry that spans the full year is likewise returned directly.
+
+`ltm-N` anchors on the window ending N years before the latest quarter. If any part is missing (no anchor that far back, no fiscal year ending right before the anchor, or no prior-year window of the same length), the result is `None` plus an `ltm_incomputable` diagnostic. It never substitutes a nearer year or a differently shaped window.
 
 For instant metrics (balance sheet): both `ltm` and `ltm-1` return the most recent reported value.
 
 For per-share metrics (for example `eps_basic`, `eps_diluted`): `ltm` and `ltm-1` use annual fallbacks (`LFY` / `LFY-1`) instead of additive LTM math, because per-share values are non-additive across periods.
-
-### LTM-1 Fallback Behavior
-
-`ltm-1` is anchored one fiscal year behind the latest quarter. If SEC history is missing required prior-year components for the full formula window, the selector degrades gracefully to the best anchored reported value instead of raising an error or fabricating values.
 
 ## Concept Resolution
 
@@ -192,7 +192,9 @@ Three guards run on every metric to filter out misleading values before they rea
 
 ### Staleness Guard
 
-Values whose fiscal year is too far behind the current calendar year are rejected as stale and returned as `None`. The default threshold is 2 fiscal years. `ltm-1` uses 3 years (it naturally references one year back). Series selectors (`annual:N`, `quarterly:N`) skip the check entirely since the caller explicitly requests historical data.
+Values whose fiscal year is too far behind the current calendar year are rejected as stale and returned as `None`. The default threshold is 2 fiscal years. Offset selectors (`lfy-N`, `ltm-N`, `mrq-N` for N >= 1) and series selectors (`annual:N`, `quarterly:N`) skip this check, since the caller explicitly asks for history.
+
+`ltm`, `ltm-N`, `mrq` and `mrq-N` have a second guard: a value whose window ends more than N years plus 45 days before the company's newest filed reporting window is rejected with a `period_mismatch` diagnostic, and the next candidate concept gets a turn. `mrq` measures against the newest quarter-length window, so the last 10-Q quarter stays valid after a 10-K. This stops a concept the filer stopped using (or left off its newest quarter) from answering with an old window under a current label.
 
 Staleness applies to both direct metrics and derived-metric components. If any component of a derived metric is stale, the whole derived value is `None`.
 

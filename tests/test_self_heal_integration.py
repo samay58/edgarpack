@@ -216,12 +216,13 @@ class TestSelfHealIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ocf.concept, "CashProvidedByOperatingActivitiesNovel2026")
         diag_kinds = [d.kind for d in result.diagnostics]
         self.assertNotIn("learned_mapping_unverified", diag_kinds)
+        self.assertTrue(any("only against its own prior year" in w for w in ocf.warnings))
 
         reg = LearnedRegistry(db_path=self.db_path)
         row = reg.lookup("0001045810", "operating_cash_flow")
         assert row is not None
         self.assertTrue(row.verified)
-        self.assertEqual(row.verif_method, "order_of_magnitude")
+        self.assertEqual(row.verif_method, "self_history")
 
     async def test_registry_hit_returns_learned_cached(self) -> None:
         """Pre-seeded registry row short-circuits self-heal and returns

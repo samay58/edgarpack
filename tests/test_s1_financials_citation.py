@@ -3,12 +3,12 @@
 from datetime import date
 
 from edgarpack.query.models import CitedValue
-from edgarpack.query.s1_financials import (
-    SnapshotFact,
+from edgarpack.query.registration.integrate import (
     pick_snapshot_fact,
     snapshot_fact_to_cited_value,
     snapshots_for_cik,
 )
+from edgarpack.query.registration.snapshot import SnapshotFact
 
 
 def test_snapshot_fact_to_cited_value_preserves_core_fields():

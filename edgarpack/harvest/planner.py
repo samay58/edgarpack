@@ -56,12 +56,11 @@ class HarvestPlan(BaseModel):
 
 async def _list_registration_filings(cik: str, limit: int) -> list[FilingMeta]:
     collected: list[FilingMeta] = []
+    # No per-form try/except: a fetch failure (e.g. an SEC rate-limit cooldown)
+    # must reach plan_harvest's handler and land as a PlanError, not read as
+    # "no registration filings".
     for form in REGISTRATION_FORMS:
-        try:
-            hits = await list_filings(cik, form_type=form, limit=limit)
-        except Exception:
-            continue
-        collected.extend(hits)
+        collected.extend(await list_filings(cik, form_type=form, limit=limit))
 
     seen: set[str] = set()
     unique: list[FilingMeta] = []

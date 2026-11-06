@@ -76,7 +76,7 @@ class CitedValue(BaseModel):
 
     # S-1 snapshot provenance. Default False so every existing periodic-
     # filing path works unchanged. Set True only for rows sourced from
-    # s1_financials.extract_or_load_snapshot. pro_forma_note holds the
+    # registration.llm.extract_or_load_snapshot. pro_forma_note holds the
     # filing's stated assumption (e.g. "assumes IPO price $32.50").
     is_pro_forma: bool = False
     pro_forma_note: str | None = None

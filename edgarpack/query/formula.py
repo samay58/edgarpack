@@ -1,6 +1,6 @@
 """Positional arithmetic-formula evaluation shared by the SEC and S-1 query paths.
 
-Dependency-free on purpose: both financials.py and s1_financials.py import this,
+Dependency-free on purpose: both financials.py and registration/integrate.py import this,
 so it must not import either (keeps the import graph acyclic).
 """
 

@@ -62,19 +62,3 @@ TOPIC_CATALOG: list[TopicCategory] = [
         ],
     ),
 ]
-
-
-def get_category_for_topic(topic: str) -> str | None:
-    """Get the parent category name for a topic tag."""
-    for cat in TOPIC_CATALOG:
-        if topic in cat.topics:
-            return cat.name
-    return None
-
-
-def list_all_topics() -> list[str]:
-    """Return a flat list of all known topic tags."""
-    topics: list[str] = []
-    for cat in TOPIC_CATALOG:
-        topics.extend(cat.topics)
-    return topics

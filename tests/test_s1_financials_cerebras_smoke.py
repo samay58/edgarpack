@@ -27,10 +27,8 @@ async def test_cerebras_2024_s1_yields_revenue_in_expected_band():
     if not pack.exists():
         pytest.skip("pack not built: run `edgarpack harvest --universe cerebras.toml` first")
 
-    from edgarpack.query.s1_financials import (
-        extract_or_load_snapshot,
-        pick_snapshot_fact,
-    )
+    from edgarpack.query.registration.integrate import pick_snapshot_fact
+    from edgarpack.query.registration.llm import extract_or_load_snapshot
 
     result = await extract_or_load_snapshot(pack, force=True)
     assert result.extraction_status == "ok", f"extraction failed: {result.extraction_status}"

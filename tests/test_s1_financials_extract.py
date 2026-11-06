@@ -16,29 +16,33 @@ from unittest.mock import patch  # noqa: F401 (kept available for future tests)
 
 import pytest
 
-from edgarpack.query.s1_financials import (
+from edgarpack.query.registration.integrate import has_registration_pack_for_cik
+from edgarpack.query.registration.llm import (
     _MAX_OUTPUT_TOKENS,
-    METRIC_SLUGS,
     MODEL_ID,
     PROMPT_SYSTEM,
-    SCHEMA_VERSION,
     MissingAnthropicKeyError,
-    SnapshotFact,
-    SnapshotResult,
     _call_haiku_extract,
-    _detect_presentation_currency,
-    _extract_summary_table_facts,
     _gate_llm_facts,
     _s1_max_output_tokens,
     _s1_model_id,
-    _summary_period_from_context,
     build_extraction_prompt,
     extract_or_load_snapshot,
-    find_financial_data_section,
-    has_registration_pack_for_cik,
     parse_llm_response,
     parse_llm_response_with_salvage,
+)
+from edgarpack.query.registration.snapshot import (
+    METRIC_SLUGS,
+    SCHEMA_VERSION,
+    SnapshotFact,
+    SnapshotResult,
     source_sha256_for_pack,
+)
+from edgarpack.query.registration.table_parse import (
+    _detect_presentation_currency,
+    _extract_summary_table_facts,
+    _summary_period_from_context,
+    find_financial_data_section,
 )
 
 

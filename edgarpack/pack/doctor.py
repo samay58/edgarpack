@@ -117,7 +117,7 @@ def _registration_health(
 
     cache = pack_dir / "s1_financials.json"
     if cache.exists():
-        from ..query.s1_financials import load_validated_snapshot
+        from ..query.registration.snapshot import load_validated_snapshot
 
         snapshot, status = load_validated_snapshot(pack_dir)
         if status in {"cache_stale_schema", "cache_stale_source"}:

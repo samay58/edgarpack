@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from edgarpack.query.s1_financials import has_registration_pack_for_cik
+from edgarpack.query.registration.integrate import has_registration_pack_for_cik
 
 
 def _write_pack(root: Path, accession: str, form_type: str, cik: str = "0002021728") -> Path:

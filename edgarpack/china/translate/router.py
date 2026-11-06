@@ -234,29 +234,6 @@ class SectionRouter:
             return "specialized"
         return "standard"
 
-    def _is_numeric_heavy_markdown_table(self, paragraph: str) -> bool:
-        lines = [line.strip() for line in paragraph.splitlines() if line.strip()]
-        rows = [line for line in lines if line.startswith("|") and line.endswith("|")]
-        if len(rows) < 2:
-            return False
-
-        total_cells = 0
-        structured_cells = 0
-        for row in rows:
-            cells = row.split("|")[1:-1]
-            if not cells:
-                continue
-            if all(
-                not cell.strip() or _TABLE_SEPARATOR_RE.fullmatch(cell.strip()) for cell in cells
-            ):
-                continue
-            for cell in cells[1:]:
-                total_cells += 1
-                if self._is_structured_table_value(cell):
-                    structured_cells += 1
-
-        return total_cells > 0 and structured_cells / total_cells >= 0.7
-
     def _is_markdown_table(self, paragraph: str) -> bool:
         lines = [line.strip() for line in paragraph.splitlines() if line.strip()]
         rows = [line for line in lines if line.startswith("|") and line.endswith("|")]
@@ -756,17 +733,6 @@ class SectionRouter:
                 best_index = index
 
         return " ".join(words[:best_index]) + "<br>" + " ".join(words[best_index:])
-
-    def _romanize_label(self, label: str) -> str | None:
-        try:
-            from pypinyin import lazy_pinyin
-        except ImportError:
-            return None
-
-        romanized = "_".join(lazy_pinyin(label))
-        romanized = re.sub(r"[^a-z0-9_]", "", romanized.lower())
-        romanized = re.sub(r"_+", "_", romanized).strip("_")
-        return romanized or None
 
     def _is_structured_table_value(self, cell: str) -> bool:
         cleaned = cell.replace("**", "").replace("__", "").replace("<br>", "")

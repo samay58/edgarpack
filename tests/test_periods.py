@@ -643,13 +643,13 @@ class TestSelectLtm(unittest.TestCase):
             },
             {
                 "val": 140_000_000_000,
-                "start": "2025-01-01",
-                "end": "2025-12-31",
-                "fy": 2025,
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "fy": 2022,
                 "fp": "FY",
                 "form": "10-K",
-                "accn": "0000000001-26-000001",
-                "filed": "2026-03-01",
+                "accn": "0000000001-23-000001",
+                "filed": "2023-03-01",
             },
         ]
         facts = _make_facts("Revenues", values)
@@ -828,8 +828,8 @@ class TestSelectLtmMinus1(unittest.TestCase):
         self.assertEqual(diagnostics[0].kind, "ltm_incomputable")
         self.assertIn("LTM-1", diagnostics[0].message)
 
-    def test_ltm_minus_1_q4_anchor_uses_formula_when_prior_available(self) -> None:
-        """LTM-1 should not short-circuit on Q4 anchors when formula inputs exist."""
+    def test_ltm_minus_1_after_10k_is_prior_full_year(self) -> None:
+        """When the newest data is a 10-K, LTM-1 is the prior fiscal year, cited directly."""
         values = [
             {
                 "val": 70_000_000_000,
@@ -896,12 +896,10 @@ class TestSelectLtmMinus1(unittest.TestCase):
         result = select_ltm_n(
             facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
         )
-        self.assertIsNotNone(result)
-        self.assertIsInstance(result, DerivedValue)
-        # Anchor is Q4 FY2022 -> 80 + 70 - 70 = 80
+        assert isinstance(result, CitedValue) and not isinstance(result, DerivedValue)
         self.assertEqual(result.value, 80_000_000_000)
-        self.assertEqual(result.components["mrp"].fiscal_year, 2022)
-        self.assertEqual(result.components["mrp_prior"].fiscal_year, 2021)
+        self.assertEqual(result.fiscal_period, "FY")
+        self.assertEqual(result.period_end, date(2022, 12, 31))
 
     def test_ltm_minus_1_annual_only_skips_stub_periods(self) -> None:
         """Annual-only LTM-1 should skip known partial-year annual windows."""
@@ -1752,6 +1750,20 @@ class TestSelectLtmN(unittest.TestCase):
                     "filed": f"{fy}-11-15",
                 }
             )
+        # Newest data is a quarter after the last 10-K, so LTM-N is
+        # quarter-anchored three-component math, not a whole fiscal year.
+        values.append(
+            {
+                "val": 75_000_000_000,
+                "start": f"{base_fy + 1}-01-01",
+                "end": f"{base_fy + 1}-09-30",
+                "fy": base_fy + 1,
+                "fp": "Q3",
+                "form": "10-Q",
+                "accn": f"0000000001-{str(base_fy + 1)[-2:]}-000004",
+                "filed": f"{base_fy + 1}-11-15",
+            }
+        )
         return values
 
     def test_ltm_2_resolves_to_window_two_years_back(self) -> None:
@@ -2039,19 +2051,18 @@ class TestLtmQ4StubFallthrough(unittest.TestCase):
         },
     ]
 
-    def test_q4_stub_uses_three_component_math(self) -> None:
-        """Old behavior returned the 3-month Q4 stub (30B) labeled as LTM.
-        Correct LTM = Q4'24 + FY2023 - Q4'23 = 30 + 100 - 25 = 105."""
+    def test_q4_stub_fails_closed_without_fy2024_annual(self) -> None:
+        """The 3-month Q4 stub must not be labeled LTM (an old bug), and
+        Q4'24 + FY2023 - Q4'23 is not twelve contiguous months either: it is
+        Jan-Sep 2023 plus Oct-Dec 2024. Without the FY2024 annual the honest
+        answer is None plus a diagnostic."""
         facts = _make_facts("Revenues", self._VALUES)
-        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
-        self.assertIsNotNone(result)
-        assert result is not None
-        self.assertIsInstance(result, DerivedValue)
-        assert isinstance(result, DerivedValue)
-        self.assertEqual(result.value, 105_000_000_000)
-        self.assertEqual(result.fiscal_period, "LTM")
-        self.assertEqual(result.components["mrp"].value, 30_000_000_000)
-        self.assertEqual(result.components["mrp_prior"].value, 25_000_000_000)
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, diagnostics=diagnostics
+        )
+        self.assertIsNone(result)
+        self.assertEqual([d.kind for d in diagnostics], ["ltm_incomputable"])
 
 
 class TestLtmNExactAnchor(unittest.TestCase):
@@ -2479,3 +2490,259 @@ class TestChinaDeterministicSelection(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _comparative_bearing_facts() -> dict:
+    """Calendar-year filer shaped like real companyfacts.
+
+    Each 10-Q and 10-K repeats the prior-year comparative under the filing's
+    own (fy, fp) tags, and FY2024 is a leap year, so its Jan-Sep window is one
+    day longer than its neighbours'. Selectors that rank by duration or by
+    (fy, fp) alone pick the comparative instead of the filing's own period.
+    """
+    ytd = {2023: 200, 2024: 250, 2025: 300, 2026: 360}
+    q3 = {2023: 75, 2024: 90, 2025: 105, 2026: 130}
+    fy_total = {2023: 280, 2024: 340, 2025: 400}
+
+    def row(y: int, start: str, end: str, val: int, form: str, fp: str, filed: str) -> dict:
+        return {
+            "val": val,
+            "start": start,
+            "end": end,
+            "fy": y,
+            "fp": fp,
+            "form": form,
+            "accn": f"0000000001-{y % 100:02d}-{form[-1]}{fp}",
+            "filed": filed,
+        }
+
+    values: list[dict] = []
+    for y in (2024, 2025, 2026):
+        filed = f"{y}-10-30"
+        for period_year in (y - 1, y):  # comparative first, as companyfacts lists by end
+            values.append(
+                row(
+                    y,
+                    f"{period_year}-01-01",
+                    f"{period_year}-09-30",
+                    ytd[period_year],
+                    "10-Q",
+                    "Q3",
+                    filed,
+                )
+            )
+            values.append(
+                row(
+                    y,
+                    f"{period_year}-07-01",
+                    f"{period_year}-09-30",
+                    q3[period_year],
+                    "10-Q",
+                    "Q3",
+                    filed,
+                )
+            )
+    for y in (2024, 2025):
+        for period_year in (y - 1, y):
+            values.append(
+                row(
+                    y,
+                    f"{period_year}-01-01",
+                    f"{period_year}-12-31",
+                    fy_total[period_year],
+                    "10-K",
+                    "FY",
+                    f"{y + 1}-02-10",
+                )
+            )
+    return _make_facts("Revenues", values)
+
+
+class TestComparativeBearingFilings(unittest.TestCase):
+    """Regression: prior-year comparatives share the filing's (fy, fp) tags."""
+
+    def test_ltm_subtracts_prior_year_ytd_not_two_years_back(self) -> None:
+        facts = _comparative_bearing_facts()
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=0
+        )
+        assert isinstance(result, DerivedValue)
+        # 360 (Jan-Sep 2026) + 400 (FY2025) - 300 (Jan-Sep 2025)
+        self.assertEqual(result.value, 460)
+        self.assertEqual(result.components["mrp_prior"].period_end, date(2025, 9, 30))
+
+    def test_ltm_minus_1_anchors_on_the_filings_own_period(self) -> None:
+        facts = _comparative_bearing_facts()
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
+        assert isinstance(result, DerivedValue)
+        # 300 (Jan-Sep 2025) + 340 (FY2024) - 250 (Jan-Sep 2024)
+        self.assertEqual(result.value, 390)
+        self.assertEqual(result.components["mrp"].period_end, date(2025, 9, 30))
+        self.assertEqual(result.components["mrp_prior"].period_end, date(2024, 9, 30))
+
+    def test_quarterly_series_labels_match_period_end(self) -> None:
+        facts = _comparative_bearing_facts()
+        results = select_quarterly_series(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, n=3
+        )
+        self.assertEqual(
+            [(r.fiscal_year, r.value, r.period_end) for r in results],
+            [
+                (2026, 130, date(2026, 9, 30)),
+                (2025, 105, date(2025, 9, 30)),
+                (2024, 90, date(2024, 9, 30)),
+            ],
+        )
+
+
+class TestLtmAfterTenK(unittest.TestCase):
+    """Regression: AAPL filed its FY2026 10-K (to 2026-09-26) after its Q3 10-Q,
+    and LTM kept returning the June window. The newer full year is the LTM."""
+
+    def _facts(self) -> dict:
+        def row(val, start, end, fy, fp, form, filed):
+            return {
+                "val": val,
+                "start": start,
+                "end": end,
+                "fy": fy,
+                "fp": fp,
+                "form": form,
+                "accn": f"0000000001-{fy % 100}-{fp}",
+                "filed": filed,
+            }
+
+        return _make_facts(
+            "Revenues",
+            [
+                row(391, "2023-10-01", "2024-09-28", 2024, "FY", "10-K", "2024-11-01"),
+                row(416, "2024-09-29", "2025-09-27", 2025, "FY", "10-K", "2025-10-31"),
+                row(314, "2024-09-29", "2025-06-28", 2025, "Q3", "10-Q", "2025-08-01"),
+                row(364, "2025-09-28", "2026-06-27", 2026, "Q3", "10-Q", "2026-07-31"),
+                row(416, "2024-09-29", "2025-09-27", 2026, "FY", "10-K", "2026-11-03"),
+                row(479, "2025-09-28", "2026-09-26", 2026, "FY", "10-K", "2026-11-03"),
+            ],
+        )
+
+    def test_ltm_is_the_newer_fiscal_year(self) -> None:
+        result = select_ltm_n(self._facts(), "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        assert result is not None
+        self.assertEqual((result.value, result.period_end), (479, date(2026, 9, 26)))
+
+    def test_ltm_minus_1_is_the_fiscal_year_before(self) -> None:
+        result = select_ltm_n(
+            self._facts(), "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
+        assert result is not None
+        self.assertEqual((result.value, result.period_end), (416, date(2025, 9, 27)))
+
+
+class TestLtmMatchesByPeriodDates(unittest.TestCase):
+    """LTM parts are matched by period dates, not companyfacts (fy, fp) tags."""
+
+    @staticmethod
+    def _row(val, start, end, fy, fp, form, accn, filed):
+        return {
+            "val": val,
+            "start": start,
+            "end": end,
+            "fy": fy,
+            "fp": fp,
+            "form": form,
+            "accn": accn,
+            "filed": filed,
+        }
+
+    def test_10k_tagged_a_fiscal_year_off_from_its_10qs(self) -> None:
+        """CRM: the 10-K for Feb 2025-Jan 2026 is tagged FY2025 while the 10-Qs
+        for the same months say FY2026. Tag matching paired the overlapping
+        year (LTM-1 $43.1B, LTM None); dates give the real values."""
+        r = self._row
+        facts = _make_facts(
+            "Revenues",
+            [
+                r(37_895, "2024-02-01", "2025-01-31", 2024, "FY", "10-K", "k25", "2025-03-05"),
+                r(41_525, "2025-02-01", "2026-01-31", 2025, "FY", "10-K", "k26", "2026-03-02"),
+                r(18_458, "2024-02-01", "2024-07-31", 2025, "Q2", "10-Q", "q24", "2024-08-29"),
+                r(18_458, "2024-02-01", "2024-07-31", 2026, "Q2", "10-Q", "q25", "2025-09-04"),
+                r(20_065, "2025-02-01", "2025-07-31", 2026, "Q2", "10-Q", "q25", "2025-09-04"),
+                r(20_065, "2025-02-01", "2025-07-31", 2027, "Q2", "10-Q", "q26", "2026-08-27"),
+                r(22_478, "2026-02-01", "2026-07-31", 2027, "Q2", "10-Q", "q26", "2026-08-27"),
+            ],
+        )
+        ltm = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        ltm_1 = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
+        assert isinstance(ltm, DerivedValue) and isinstance(ltm_1, DerivedValue)
+        self.assertEqual(ltm.value, 22_478 + 41_525 - 20_065)
+        self.assertEqual(ltm_1.value, 20_065 + 37_895 - 18_458)
+        self.assertEqual(ltm_1.components["lfy"].period_end, date(2025, 1, 31))
+
+    def test_year_reported_only_as_a_comparative(self) -> None:
+        """GOOGL moved revenue to a new tag in 2025, so FY2024 and Jan-Sep 2024
+        exist under it only as comparatives. LTM-1 must still resolve."""
+        r = self._row
+        facts = _make_facts(
+            "Revenues",
+            [
+                r(350, "2024-01-01", "2024-12-31", 2025, "FY", "10-K", "k25", "2026-02-05"),
+                r(403, "2025-01-01", "2025-12-31", 2025, "FY", "10-K", "k25", "2026-02-05"),
+                r(254, "2024-01-01", "2024-09-30", 2025, "Q3", "10-Q", "q25", "2025-10-30"),
+                r(289, "2025-01-01", "2025-09-30", 2025, "Q3", "10-Q", "q25", "2025-10-30"),
+                r(289, "2025-01-01", "2025-09-30", 2026, "Q3", "10-Q", "q26", "2026-10-29"),
+                r(357, "2026-01-01", "2026-09-30", 2026, "Q3", "10-Q", "q26", "2026-10-29"),
+            ],
+        )
+        ltm_1 = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, years_back=1
+        )
+        assert isinstance(ltm_1, DerivedValue)
+        self.assertEqual(ltm_1.value, 289 + 350 - 254)
+
+    def test_trailing_twelve_month_row_in_a_10q_is_not_the_ytd(self) -> None:
+        """AMZN 10-Qs also tag a 12-month window as Q3; the YTD must be the MRP."""
+        r = self._row
+        facts = _make_facts(
+            "Revenues",
+            [
+                r(400, "2025-01-01", "2025-12-31", 2025, "FY", "10-K", "k25", "2026-02-05"),
+                r(300, "2025-01-01", "2025-09-30", 2025, "Q3", "10-Q", "q25", "2025-10-30"),
+                r(300, "2025-01-01", "2025-09-30", 2026, "Q3", "10-Q", "q26", "2026-10-29"),
+                r(360, "2026-01-01", "2026-09-30", 2026, "Q3", "10-Q", "q26", "2026-10-29"),
+                r(460, "2025-10-01", "2026-09-30", 2026, "Q3", "10-Q", "q26", "2026-10-29"),
+            ],
+        )
+        result = select_ltm_n(facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK)
+        assert isinstance(result, DerivedValue)
+        self.assertEqual(result.value, 360 + 400 - 300)
+
+    def test_standalone_q3_without_ytd_fails_closed(self) -> None:
+        """Q3 + FY - Q3_prior is not twelve months; with no Jan-Sep window the
+        selector must refuse rather than return that sum as LTM."""
+        r = self._row
+        facts = _make_facts(
+            "Revenues",
+            [
+                r(400, "2025-01-01", "2025-12-31", 2025, "FY", "10-K", "k25", "2026-02-05"),
+                r(105, "2025-07-01", "2025-09-30", 2025, "Q3", "10-Q", "q25", "2025-10-30"),
+                r(130, "2026-07-01", "2026-09-30", 2026, "Q3", "10-Q", "q26", "2026-10-29"),
+            ],
+        )
+        diagnostics: list[Diagnostic] = []
+        result = select_ltm_n(
+            facts, "Revenues", "revenue", DURATION_META, COMPANY, CIK, diagnostics=diagnostics
+        )
+        self.assertIsNone(result)
+        self.assertEqual([d.kind for d in diagnostics], ["ltm_incomputable"])
+
+
+def test_ltm_window_spans_twelve_months() -> None:
+    """The LTM DerivedValue window is the trailing year, not LFY start..MRP end."""
+    result = select_ltm_n(
+        _comparative_bearing_facts(), "Revenues", "revenue", DURATION_META, COMPANY, CIK
+    )
+    assert isinstance(result, DerivedValue)
+    assert (result.period_start, result.period_end) == (date(2025, 10, 1), date(2026, 9, 30))

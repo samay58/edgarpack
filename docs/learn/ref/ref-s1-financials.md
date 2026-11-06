@@ -1,6 +1,6 @@
 # Reference: query/s1_financials.py
 
-`edgarpack/query/s1_financials.py` (1,138 lines)
+`edgarpack/query/s1_financials.py` (1,138 lines) was split into `edgarpack/query/registration/` (`snapshot.py`, `table_parse.py`, `llm.py`, `integrate.py`) and the old module was removed. The concepts below still hold; the `s1_financials.py:N` line references predate the split, so search the package for the named symbol.
 `edgarpack/parse/s1_headings.py` (111 lines, covered in the [Build-time companion](#build-time-companion-parses1_headingspy) section below)
 
 The pre-IPO snapshot extractor. Companyfacts is empty for filers that have not filed a 10-K / 10-Q / 20-F yet, and Cerebras-era S-1 primary documents carry no embedded iXBRL. The real numbers live in the filing's prose. This module first tries deterministic parsing for common selected/summary financial tables, falls back to one Haiku 4.5 call only when needed, caches the result next to the pack, and feeds it into the existing `financials()` output as `CitedValue` rows tagged `s1_snapshot` or `s1_pro_forma`. See [Trail 7](../trail-7-s1-pre-ipo.md) for the end-to-end story.

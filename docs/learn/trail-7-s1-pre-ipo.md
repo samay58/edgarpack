@@ -122,12 +122,12 @@ edgarpack timeline --series registration --cik 0002021728 --packs ./packs
 - `edgarpack/parse/s1_headings.py:69` extracts TOC section pairs.
 - `edgarpack/parse/s1_headings.py:88` injects headings into registration HTML.
 - `edgarpack/query/financials.py:1109` through `edgarpack/query/financials.py:1134` run S-1 augmentation after the periodic query path.
-- `edgarpack/query/s1_financials.py:1318` starts S-1 result augmentation.
-- `edgarpack/query/s1_financials.py:720` loads or extracts the snapshot cache.
-- `edgarpack/query/s1_financials.py:146` finds selected or summary financial data sections.
-- `edgarpack/query/s1_financials.py:586` builds the LLM extraction prompt when fallback is needed.
-- `edgarpack/query/s1_financials.py:641` parses LLM JSON into snapshot facts.
-- `edgarpack/query/s1_financials.py:911` converts snapshot facts to cited values.
-- `edgarpack/query/s1_financials.py:953` selects a snapshot fact for a requested period.
+- `edgarpack/query/registration/integrate.py:597` starts S-1 result augmentation.
+- `edgarpack/query/registration/llm.py:580` loads or extracts the snapshot cache.
+- `edgarpack/query/registration/table_parse.py:43` finds selected or summary financial data sections.
+- `edgarpack/query/registration/llm.py:98` builds the LLM extraction prompt when fallback is needed.
+- `edgarpack/query/registration/llm.py:324` parses LLM JSON into snapshot facts.
+- `edgarpack/query/registration/integrate.py:121` converts snapshot facts to cited values.
+- `edgarpack/query/registration/integrate.py:167` selects a snapshot fact for a requested period.
 - `edgarpack/query/periods.py:267` and `edgarpack/query/periods.py:288` exclude registration forms from periodic annual and quarterly checks.
 - `edgarpack/cli.py:2851` renders registration timelines.

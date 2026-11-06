@@ -87,13 +87,9 @@ Without this filter, a query for NVIDIA's revenue would risk returning a segment
 - Group by fiscal year. For each group, pick the "best" entry via `_best_annual_entry`. Prefer full-year durations, fall back to any annual entry.
 - Sort by `_annual_sort_key` (fiscal year, filed date, end date) reversed.
 
-### _pick_cumulative_quarter(values)
+### _accession_max_end(values) and _pick_near(rows, end, accn_max_end, duration)
 
-`edgarpack/query/periods.py:406`. From a list of quarterly entries, pick the cumulative-YTD one. Uses `_is_cumulative_quarter` (duration > 100 days for Q2-Q4; Q1 cumulative == standalone at ~90 days).
-
-### _pick_anchor_quarter(quarterly, newest_mrp, years_back)
-
-`edgarpack/query/periods.py:419`. The LTM anchor selector. For `years_back=0`, returns `newest_mrp`. For `years_back=1`, scans backward for the same fiscal period (Q1/Q2/Q3/Q4) one fiscal year earlier.
+`edgarpack/query/periods.py`. LTM matches its parts by period dates, never by the companyfacts `fy` / `fp` tags, which describe the filing (every 10-Q repeats last year's window under this year's tags). `_accession_max_end` records each filing's own period end; `_pick_near` returns the row ending within 10 days of a target date (and, when given, spanning about the same number of days), preferring the filing that reports that window as its own period, then the newest filing.
 
 ### _select_ltm_like(facts, concept, metric, meta, company, cik, years_back, fiscal_period_label, taxonomy, doc_map)
 
@@ -101,9 +97,9 @@ Without this filter, a query for NVIDIA's revenue would risk returning a segment
 
 1. If per-share metric: use annual history directly (per-share values are not additive).
 2. If instant metric: fall back to `select_mrp`.
-3. Otherwise: build the quarterly list, sort by recency, pick the cumulative MRP, compute the anchor via `_pick_anchor_quarter`.
-4. If anchor is Q4 or FY and `years_back=0`, short-circuit to the annual value for that fiscal year.
-5. Otherwise: pull LFY from `_annual_history`, pull same-period-prior-year from the quarterly list via `_pick_cumulative_quarter`, compute `ltm_val = mrp + lfy - mrp_prior`.
+3. If a full-year annual ends on or after the newest quarter, return that fiscal year (`ltm`) or the one N years back (`ltm-N`).
+4. Otherwise: the MRP is the newest year-to-date window (never longer than its quarter tag allows); `ltm-N` steps back one year at a time by date. A full-year Q4 MRP is returned directly.
+5. LFY is the full year ending the day before the MRP starts; MRP_prior is the same-length window ending a year before the MRP. Any missing part returns `None` plus `ltm_incomputable`. Otherwise `ltm_val = mrp + lfy - mrp_prior`.
 6. Stock split contamination check on per-share metrics (5x divergence triggers a warning).
 7. Return a `DerivedValue` with `components = {"mrp", "lfy", "mrp_prior"}`.
 
@@ -148,7 +144,6 @@ Returns `None` on any parse failure (bad number, empty text, etc.).
 - `_duration_days(v)` (line 279): days between start and end.
 - `_is_full_fiscal_year(v)` (line 292): duration within `[350, 380]` days.
 - `_is_standalone_quarter(v)` (line 355): duration <= 100 days.
-- `_is_cumulative_quarter(v)` (line 369): Q1 standalone or Q2-Q4 cumulative (>100 days).
 - `_is_per_share_metric(metric)` (line 385): metric name contains `"per_share"` or `"eps"`.
 
 Each of these encodes a decision that would be wrong if inverted. Read them as named invariants rather than utility functions.
@@ -158,7 +153,7 @@ Each of these encodes a decision that would be wrong if inverted. Read them as n
 ## Invariants
 
 - **Consolidated entries win over segment breakouts**. Enforced by `_filter_segment_entries` and applied in `_extract_values` before any selector sees the data.
-- **Cumulative quarterly values are used for LTM math, not standalone quarterly**. Enforced by `_pick_cumulative_quarter` at multiple call sites in `_select_ltm_like`.
+- **Cumulative quarterly values are used for LTM math, not standalone quarterly**. Enforced by the year-to-date MRP pick and the duration match on MRP_prior in `_select_ltm_like`.
 - **Standalone quarterly values are used for `select_mrq`**. Enforced by `_is_standalone_quarter` filter in `select_mrq`.
 - **Per-share metrics degrade to annual values in LTM**. Enforced in `_select_ltm_like` at line 482 (`if _is_per_share_metric(metric)`).
 - **Balance-sheet metrics degrade to `select_mrp` in LTM**. Enforced at line 501 (`if not meta.duration`).

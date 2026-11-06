@@ -20,7 +20,7 @@ from edgarpack.query.kpi_discover import (
 )
 from edgarpack.query.layer_zero import MetricNotFound
 from edgarpack.query.models import CitedValue, QueryResult
-from edgarpack.query.s1_financials import SCHEMA_VERSION, source_sha256_for_pack
+from edgarpack.query.registration.snapshot import SCHEMA_VERSION, source_sha256_for_pack
 
 
 def _build_args(*, company=None, cik=None, form="10-K", accession=None, tmp_path=None):

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from ..sec.submissions import is_registration_form
 from .kpi_discover import DisclosureHit, FramingHit, extract_s1_metrics_from_pack
-from .s1_financials import load_validated_snapshot
+from .registration.snapshot import load_validated_snapshot
 
 PROFILE_SCHEMA_VERSION = 1
 

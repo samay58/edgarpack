@@ -129,3 +129,32 @@ async def test_planner_skips_private_company_before_sec_resolution(tmp_path):
     assert plan.items == []
     assert plan.skipped == []
     assert plan.errors == []
+
+
+@pytest.mark.asyncio
+async def test_planner_records_registration_fetch_failure_as_plan_error(tmp_path):
+    """A rate-limit cooldown mid-listing must surface as a PlanError, not read
+    as a filer with no registration filings."""
+    from edgarpack.sec.client import SECRateLimitError
+
+    spec = CompanySpec(name="Cerebras Systems", forms_s1=4)
+    cfg = UniverseConfig(companies=[spec])
+
+    async def fake_list_filings(cik, form_type=None, limit=10, force=False):
+        if form_type == "S-1/A":
+            raise SECRateLimitError(
+                url="https://www.sec.gov/x", status_code=429, headers={}, content=b""
+            )
+        return [_filing("0000001-25-000001", "S-1", "2025-09-30")] if form_type == "S-1" else []
+
+    async def fake_resolve(spec):
+        return "0002021728", "Cerebras Systems Inc"
+
+    registry = PackRegistry(tmp_path / "registry.db")
+    with patch("edgarpack.harvest.planner.list_filings", new=fake_list_filings):
+        with patch("edgarpack.harvest.planner.resolve_filer", new=fake_resolve):
+            plan = await plan_harvest(cfg, registry)
+
+    assert plan.items == []
+    assert len(plan.errors) == 1
+    assert "rate limit" in plan.errors[0].error.lower()

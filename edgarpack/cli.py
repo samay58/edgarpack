@@ -1623,7 +1623,7 @@ def _registration_shortcut_pack_exists(
     form_type: str,
     accession: str | None,
 ) -> bool:
-    from .query.s1_financials import has_registration_pack_for_cik
+    from .query.registration.integrate import has_registration_pack_for_cik
 
     return has_registration_pack_for_cik(
         cik,
@@ -2023,12 +2023,6 @@ def _acquire_hk_filing(client: Any, code: str) -> tuple[Any, str, list[str]]:
     from .china.build_if_needed import _acquire_hk_filing as acquire_hk_filing
 
     return acquire_hk_filing(client, code)
-
-
-def _acquire_and_build_hk(code: str, packs_root: Path) -> Path:
-    from .china.build_if_needed import build_hk_latest_pack
-
-    return build_hk_latest_pack(code, packs_root, publish_debug_on_failure=True).pack_dir
 
 
 def _print_hk_facts_summary(pack_path: Path, facts_path: Path) -> None:
@@ -3806,77 +3800,6 @@ def _cmd_which(args: Any) -> int:
         print()
         print(s1_block)
     return 0
-
-
-def _cached_s1_queryable_metrics(pack_dir: Path) -> list[str]:
-    """Return user-facing financial metrics available in a current registration cache."""
-    from .query.s1_financials import SCHEMA_VERSION, SnapshotResult, source_sha256_for_pack
-
-    cache = pack_dir / "s1_financials.json"
-    if not cache.exists():
-        return []
-    try:
-        snapshot = SnapshotResult.from_json(cache.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, KeyError, TypeError):
-        return []
-    if snapshot.schema_version != SCHEMA_VERSION:
-        return []
-    if snapshot.source_sha256 != source_sha256_for_pack(pack_dir):
-        return []
-
-    raw_metrics = {
-        fact.metric
-        for fact in snapshot.facts
-        if fact.is_audited
-        and not fact.is_pro_forma
-        and (fact.fiscal_period or "FY").upper() == "FY"
-    }
-    display_metrics: set[str] = set()
-    for metric in raw_metrics:
-        if metric == "operating_income_loss":
-            display_metrics.add("operating_income")
-        elif metric == "net_income_loss":
-            display_metrics.add("net_income")
-        else:
-            display_metrics.add(metric)
-
-    if {"operating_cash_flow", "capex"}.issubset(raw_metrics):
-        display_metrics.add("free_cash_flow")
-    if {"gross_profit", "revenue"}.issubset(raw_metrics):
-        display_metrics.add("gross_margin")
-    if {"operating_income_loss", "revenue"}.issubset(raw_metrics):
-        display_metrics.add("operating_margin")
-    if {"net_income_loss", "revenue"}.issubset(raw_metrics):
-        display_metrics.add("net_margin")
-    if {"operating_cash_flow", "capex", "revenue"}.issubset(raw_metrics):
-        display_metrics.add("fcf_margin")
-    if {"capex", "revenue"}.issubset(raw_metrics):
-        display_metrics.add("capex_intensity")
-
-    preferred_order = [
-        "revenue",
-        "gross_profit",
-        "gross_margin",
-        "adjusted_gross_profit",
-        "operating_income",
-        "operating_margin",
-        "net_income",
-        "net_margin",
-        "adjusted_ebitda",
-        "operating_cash_flow",
-        "capex",
-        "free_cash_flow",
-        "fcf_margin",
-        "capex_intensity",
-        "cash_and_equivalents",
-        "total_assets",
-        "stockholders_equity",
-        "shares_outstanding_basic",
-        "eps_basic",
-    ]
-    ordered = [metric for metric in preferred_order if metric in display_metrics]
-    ordered.extend(sorted(display_metrics - set(ordered)))
-    return ordered
 
 
 def _render_which_s1_metrics(

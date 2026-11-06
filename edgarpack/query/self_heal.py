@@ -4,7 +4,9 @@ Resolution order inside this module:
     1. LearnedRegistry cache hit (handled in try_learn)
     2. _fuzzy_match: token-based scoring over the company's actual concepts
     3. _llm_propose: subprocess to codex/claude if available
-    4. _verify_order_of_magnitude against a prior-year ground truth
+    4. verify_order_of_magnitude against a prior-year ground truth (the
+       concept's own history when no independent value is supplied, recorded
+       as verif_method='self_history' and warned on every use)
 
 See docs/superpowers/specs/2026-04-11-self-heal-v1-design.md for the full
 design rationale.
@@ -510,6 +512,15 @@ def _append_warning(value: CitedValue | list[CitedValue], warning: str) -> None:
         item.warnings.append(warning)
 
 
+# A ground truth taken from the proposed concept's own history catches a scale
+# jump but cannot show the concept is the right one, so say so on every use.
+_SELF_HISTORY = "self_history"
+_SELF_HISTORY_WARNING = (
+    "Learned mapping {concept} was checked only against its own prior year, "
+    "not an independent value; confirm it with `edgarpack learned verify`."
+)
+
+
 def try_learn(
     metric: str,
     meta: MetricMeta,
@@ -582,6 +593,8 @@ def try_learn(
                 if cited is not None:
                     reg.bump_hit_count(cik, metric)
                     _set_source(cited, "learned:cached")
+                    if cached.verif_method == _SELF_HISTORY:
+                        _append_warning(cited, _SELF_HISTORY_WARNING.format(concept=cached.concept))
                     return cited
             elif diagnostics is not None:
                 diagnostics.append(
@@ -643,6 +656,7 @@ def try_learn(
         # path has no prior-year value on hand, so derive one from the
         # proposed concept's own annual history when the caller did not
         # supply an explicit one.
+        self_checked = prior_year_cited is None
         if prior_year_cited is None:
             prior_year_cited = _prior_year_ground_truth(
                 facts,
@@ -657,6 +671,9 @@ def try_learn(
         cited_value = _numeric_sample(cited)
         prior_numeric = prior_value if isinstance(prior_value, (int, float)) else None
         verified = verify_order_of_magnitude(cited_value, prior_numeric)
+        verif_method: str | None = None
+        if prior_year_cited is not None:
+            verif_method = _SELF_HISTORY if self_checked else "order_of_magnitude"
 
         # 7. Persist
         reg.upsert(
@@ -666,7 +683,7 @@ def try_learn(
             taxonomy=taxonomy,
             source=source_tag,
             verified=verified,
-            verif_method="order_of_magnitude" if prior_year_cited else None,
+            verif_method=verif_method,
             value_sample=float(cited_value) if cited_value is not None else None,
         )
 
@@ -684,6 +701,8 @@ def try_learn(
                     )
                 )
             return None
+        if self_checked:
+            _append_warning(cited, _SELF_HISTORY_WARNING.format(concept=concept))
         return cited
     finally:
         reg.close()

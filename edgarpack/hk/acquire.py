@@ -28,10 +28,6 @@ _USER_AGENT = "edgarpack/0.1 (+https://github.com)"
 # Financial Statements/ESG Information > Annual Report.
 _ANNUAL_REPORT_T1CODE = "40000"
 _ANNUAL_REPORT_T2CODE = "40100"
-# Announcements and Notices > Financial Information > Final Results.
-_FINAL_RESULTS_T1CODE = "10000"
-_FINAL_RESULTS_T2GCODE = "3"
-_FINAL_RESULTS_T2CODE = "13300"
 
 _STALENESS_FLOOR_MONTHS = 18
 
@@ -294,36 +290,6 @@ def list_annual_reports(
     )
     resp.raise_for_status()
     return parse_filing_search_payload(resp.text, step="annual report search")
-
-
-def list_results_announcements(
-    client: httpx.Client,
-    stock_id: int,
-    *,
-    from_date: str = "19990101",
-    to_date: str | None = None,
-) -> list[HKEXFilingRow]:
-    """List final-results announcements. Not consumed by the build flow yet.
-
-    Final results land roughly three weeks ahead of the annual report and
-    share the same row shape; exposed as a sibling for a future faster-signal
-    path or cross-check, not wired into `find_latest_annual_report`.
-    """
-    _rate_limit()
-    resp = client.get(
-        _SERVLET_URL,
-        params=_filing_search_params(
-            stock_id,
-            t1code=_FINAL_RESULTS_T1CODE,
-            t2code=_FINAL_RESULTS_T2CODE,
-            t2gcode=_FINAL_RESULTS_T2GCODE,
-            from_date=from_date,
-            to_date=to_date or date.today().strftime("%Y%m%d"),
-        ),
-        headers={"Referer": _REFERER},
-    )
-    resp.raise_for_status()
-    return parse_filing_search_payload(resp.text, step="final results search")
 
 
 _NON_ANNUAL_REPORT_TITLE_MARKERS = (
